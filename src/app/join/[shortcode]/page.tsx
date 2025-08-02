@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
@@ -14,9 +15,9 @@ import { useState, useEffect } from 'react';
 import { CreateWizardForm } from '@/components/CreateWizardForm';
 
 interface JoinShortcodePageProps {
-  params: {
+  params: Promise<{
     shortcode: string;
-  };
+  }>;
 }
 
 export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
@@ -25,9 +26,10 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   const [selectedWizards, setSelectedWizards] = useState<Id<"wizards">[]>([]);
   const [isJoining, setIsJoining] = useState(false);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
+  const { shortcode } = use(params);
 
   const duel = useQuery(api.duels.getDuelByShortcode, { 
-    shortcode: params.shortcode.toUpperCase() 
+    shortcode: shortcode.toUpperCase() 
   });
   
   const wizards = useQuery(api.wizards.getUserWizards, 
@@ -105,7 +107,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
               <CardHeader>
                 <CardTitle>❌ Duel Not Found</CardTitle>
                 <CardDescription>
-                  The shortcode "{params.shortcode.toUpperCase()}" doesn't match any active duels.
+                  The shortcode "{params.shortcode.toUpperCase()}" doesn&apos;t match any active duels.
                 </CardDescription>
               </CardHeader>
               <CardContent>

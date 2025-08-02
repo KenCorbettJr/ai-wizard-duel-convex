@@ -11,10 +11,10 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     illustrationURL: v.optional(v.string()),
-    illustration: v.optional(v.string()),
+    illustration: v.optional(v.string()), // Convex storage ID
     illustrationGeneratedAt: v.optional(v.number()),
     illustrationVersion: v.optional(v.number()),
-    illustrations: v.optional(v.array(v.string())),
+    illustrations: v.optional(v.array(v.string())), // Array of Convex storage IDs
     isAIPowered: v.optional(v.boolean()),
     wins: v.optional(v.number()),
     losses: v.optional(v.number()),

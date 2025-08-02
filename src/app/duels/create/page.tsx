@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CreateDuelForm } from '@/components/CreateDuelForm';
 import { DuelCreatedSuccess } from '@/components/DuelCreatedSuccess';
 import { Id } from '../../../convex/_generated/dataModel';
@@ -12,7 +12,10 @@ import { Id } from '../../../convex/_generated/dataModel';
 export default function CreateDuelPage() {
   const { user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [createdDuelId, setCreatedDuelId] = useState<Id<"duels"> | null>(null);
+  
+  const preSelectedWizardId = searchParams.get('wizardId') as Id<"wizards"> | null;
 
   const handleSuccess = (duelId: Id<"duels">) => {
     setCreatedDuelId(duelId);
@@ -73,6 +76,7 @@ export default function CreateDuelPage() {
             <CreateDuelForm 
               onClose={handleClose}
               onSuccess={handleSuccess}
+              preSelectedWizardId={preSelectedWizardId}
             />
           )}
         </div>

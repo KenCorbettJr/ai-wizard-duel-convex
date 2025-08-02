@@ -12,11 +12,14 @@ import { Id } from '../../convex/_generated/dataModel';
 interface CreateDuelFormProps {
   onClose: () => void;
   onSuccess: (duelId: Id<"duels">) => void;
+  preSelectedWizardId?: Id<"wizards">;
 }
 
-export function CreateDuelForm({ onClose, onSuccess }: CreateDuelFormProps) {
+export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: CreateDuelFormProps) {
   const { user } = useUser();
-  const [selectedWizards, setSelectedWizards] = useState<Id<"wizards">[]>([]);
+  const [selectedWizards, setSelectedWizards] = useState<Id<"wizards">[]>(
+    preSelectedWizardId ? [preSelectedWizardId] : []
+  );
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(3);
   const [isCreating, setIsCreating] = useState(false);
 

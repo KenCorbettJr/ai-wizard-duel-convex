@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
@@ -12,18 +13,19 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
 interface DuelPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function DuelPage({ params }: DuelPageProps) {
   const { user } = useUser();
   const [spellDescription, setSpellDescription] = useState('');
   const [isCasting, setIsCasting] = useState(false);
+  const { id } = use(params);
 
   const duel = useQuery(api.duels.getDuel, { 
-    duelId: params.id as Id<"duels"> 
+    duelId: id as Id<"duels"> 
   });
   const startDuel = useMutation(api.duels.startDuel);
   const castSpell = useMutation(api.duels.castSpell);

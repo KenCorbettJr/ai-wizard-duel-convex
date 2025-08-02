@@ -528,6 +528,19 @@ export const updateFeaturedIllustration = mutation({
   },
 });
 
+// Get duels for a specific wizard
+export const getWizardDuels = query({
+  args: { wizardId: v.id("wizards") },
+  handler: async (ctx, { wizardId }) => {
+    const duels = await ctx.db.query("duels").collect();
+    
+    // Filter duels that include this wizard
+    return duels
+      .filter((duel) => duel.wizards.includes(wizardId))
+      .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
+  },
+});
+
 // Get duel statistics for a player
 export const getPlayerDuelStats = query({
   args: { userId: v.string() },

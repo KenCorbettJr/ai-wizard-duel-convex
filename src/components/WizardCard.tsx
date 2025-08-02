@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Wizard } from "@/types/wizard";
 import Image from "next/image";
+import Link from "next/link";
+import { ConvexImage } from "./ConvexImage";
 
 interface WizardCardProps {
   wizard: Wizard;
   onEdit?: (wizard: Wizard) => void;
   onDelete?: (wizardId: string) => void;
   onDuel?: (wizard: Wizard) => void;
+  onRegenerateIllustration?: (wizardId: string) => void;
 }
 
-export function WizardCard({ wizard, onEdit, onDelete, onDuel }: WizardCardProps) {
+export function WizardCard({ wizard, onEdit, onDelete, onDuel, onRegenerateIllustration }: WizardCardProps) {
   const winRate = wizard.wins && wizard.losses 
     ? Math.round((wizard.wins / (wizard.wins + wizard.losses)) * 100)
     : 0;
@@ -24,7 +27,12 @@ export function WizardCard({ wizard, onEdit, onDelete, onDuel }: WizardCardProps
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">
-              {wizard.name}
+              <Link 
+                href={`/wizards/${wizard._id}`}
+                className="hover:text-blue-600 transition-colors"
+              >
+                {wizard.name}
+              </Link>
               {wizard.isAIPowered && (
                 <Badge variant="secondary" className="text-xs">
                   🤖 AI
@@ -35,15 +43,25 @@ export function WizardCard({ wizard, onEdit, onDelete, onDuel }: WizardCardProps
               {wizard.description}
             </CardDescription>
           </div>
-          {wizard.illustrationURL && (
+          {(wizard.illustrationURL || wizard.illustration) && (
             <div className="ml-4 flex-shrink-0">
-              <Image
-                src={wizard.illustrationURL}
-                alt={wizard.name}
-                width={60}
-                height={60}
-                className="rounded-lg object-cover"
-              />
+              {wizard.illustration ? (
+                <ConvexImage
+                  storageId={wizard.illustration}
+                  alt={wizard.name}
+                  width={60}
+                  height={60}
+                  className="rounded-lg object-cover"
+                />
+              ) : wizard.illustrationURL ? (
+                <Image
+                  src={wizard.illustrationURL}
+                  alt={wizard.name}
+                  width={60}
+                  height={60}
+                  className="rounded-lg object-cover"
+                />
+              ) : null}
             </div>
           )}
         </div>
@@ -60,7 +78,16 @@ export function WizardCard({ wizard, onEdit, onDelete, onDuel }: WizardCardProps
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Link href={`/wizards/${wizard._id}`}>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex-1"
+            >
+              👁️ View
+            </Button>
+          </Link>
           {onDuel && (
             <Button 
               size="sm" 
@@ -77,6 +104,16 @@ export function WizardCard({ wizard, onEdit, onDelete, onDuel }: WizardCardProps
               onClick={() => onEdit(wizard)}
             >
               ✏️ Edit
+            </Button>
+          )}
+          {wizard.isAIPowered && onRegenerateIllustration && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => onRegenerateIllustration(wizard._id)}
+              title="Regenerate AI illustration"
+            >
+              🎨
             </Button>
           )}
           {onDelete && (

@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
 
 // Get all wizards for a specific user
 export const getUserWizards = query({
@@ -37,6 +38,16 @@ export const createWizard = mutation({
       losses: 0,
       illustrationVersion: 1,
     });
+
+    // Schedule illustration generation if AI-powered
+    if (args.isAIPowered) {
+      ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
+        wizardId,
+        name: args.name,
+        description: args.description,
+      });
+    }
+
     return wizardId;
   },
 });
@@ -79,6 +90,11 @@ export const updateWizard = mutation({
       throw new Error("Wizard not found");
     }
 
+    // Check if name or description changed and wizard is AI-powered
+    const nameChanged = updates.name && updates.name !== wizard.name;
+    const descriptionChanged = updates.description && updates.description !== wizard.description;
+    const shouldRegenerateIllustration = (nameChanged || descriptionChanged) && wizard.isAIPowered;
+
     await ctx.db.patch(wizardId, {
       ...updates,
       illustrationVersion: updates.illustration
@@ -88,6 +104,47 @@ export const updateWizard = mutation({
         ? Date.now()
         : wizard.illustrationGeneratedAt,
     });
+
+    // Schedule illustration regeneration if name or description changed
+    if (shouldRegenerateIllustration) {
+      ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
+        wizardId,
+        name: updates.name || wizard.name,
+        description: updates.description || wizard.description,
+      });
+    }
+  },
+});
+
+// Get illustration URL from storage
+export const getIllustrationUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, { storageId }) => {
+    return await ctx.storage.getUrl(storageId);
+  },
+});
+
+// Manually trigger illustration generation for a wizard
+export const regenerateIllustration = mutation({
+  args: { wizardId: v.id("wizards") },
+  handler: async (ctx, { wizardId }) => {
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      throw new Error("Wizard not found");
+    }
+
+    if (!wizard.isAIPowered) {
+      throw new Error("Only AI-powered wizards can have illustrations generated");
+    }
+
+    // Schedule illustration generation
+    ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
+      wizardId,
+      name: wizard.name,
+      description: wizard.description,
+    });
+
+    return { success: true };
   },
 });
 

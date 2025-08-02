@@ -100,6 +100,7 @@ export default function Dashboard() {
     user?.id ? { userId: user.id } : "skip"
   )
   const deleteWizard = useMutation(api.wizards.deleteWizard)
+  const regenerateIllustration = useMutation(api.wizards.regenerateIllustration)
 
   const handleDeleteWizard = async (wizardId: string) => {
     if (confirm('Are you sure you want to delete this wizard?')) {
@@ -108,6 +109,15 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Failed to delete wizard:', error)
       }
+    }
+  }
+
+  const handleRegenerateIllustration = async (wizardId: string) => {
+    try {
+      await regenerateIllustration({ wizardId: wizardId as unknown })
+    } catch (error) {
+      console.error('Failed to regenerate illustration:', error)
+      alert('Failed to regenerate illustration. Please try again.')
     }
   }
 
@@ -283,6 +293,7 @@ export default function Dashboard() {
                   key={wizard._id}
                   wizard={wizard}
                   onDelete={handleDeleteWizard}
+                  onRegenerateIllustration={handleRegenerateIllustration}
                   onDuel={(wizard) => {
                     // TODO: Implement duel functionality
                     console.log('Starting duel with:', wizard.name)
