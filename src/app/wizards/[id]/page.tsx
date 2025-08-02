@@ -1,17 +1,19 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
+import { EditWizardForm } from "@/components/EditWizardForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trophy, Skull, TrendingUp, Calendar, Users, Zap } from "lucide-react";
+import { ArrowLeft, Trophy, Skull, TrendingUp, Calendar, Users, Zap, Edit } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 interface WizardPageProps {
   params: Promise<{
@@ -21,8 +23,10 @@ interface WizardPageProps {
 
 export default function WizardPage({ params }: WizardPageProps) {
   const router = useRouter();
+  const { user } = useUser();
   const { id } = use(params);
   const wizardId = id as Id<"wizards">;
+  const [isEditing, setIsEditing] = useState(false);
   
   const wizard = useQuery(api.wizards.getWizard, { wizardId });
   const wizardDuels = useQuery(api.duels.getWizardDuels, { wizardId });
@@ -63,6 +67,25 @@ export default function WizardPage({ params }: WizardPageProps) {
   const activeDuels = wizardDuels?.filter(duel => 
     duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS"
   ) || [];
+
+  const isOwner = user && wizard && user.id === wizard.owner;
+
+  const handleEditSuccess = () => {
+    setIsEditing(false);
+    // The wizard data will automatically refresh due to Convex reactivity
+  };
+
+  if (isEditing && wizard) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <EditWizardForm
+          wizard={wizard}
+          onClose={() => setIsEditing(false)}
+          onSuccess={handleEditSuccess}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -156,6 +179,16 @@ export default function WizardPage({ params }: WizardPageProps) {
                   ⚔️ Challenge to Duel
                 </Button>
               </Link>
+              {isOwner && (
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Wizard
+                </Button>
+              )}
               <Link href="/dashboard">
                 <Button variant="outline" size="lg">
                   View All Wizards
