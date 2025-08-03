@@ -1,5 +1,4 @@
 import * as fal from "@fal-ai/serverless-client";
-import sharp from "sharp";
 
 export async function generateImage(
   illustrationPrompt: string
@@ -45,15 +44,7 @@ export async function generateImage(
 
     const imageBuffer = await response.arrayBuffer();
 
-    const processedImage = await sharp(Buffer.from(imageBuffer))
-      .resize(1024, 1024, { 
-        fit: 'cover',
-        position: 'center'
-      })
-      .webp({ quality: 80 })
-      .toBuffer();
-
-    return processedImage.buffer;
+    return imageBuffer;
   } catch (error) {
     console.error("Error generating image with Fal:", error);
     throw new Error(

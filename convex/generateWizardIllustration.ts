@@ -21,8 +21,8 @@ export const generateWizardIllustration = action({
       // Generate the image using Fal
       const imageBuffer = await generateImage(enhancedPrompt);
 
-      // Store the image in Convex File Storage
-      const storageId = await ctx.storage.store(new Blob([imageBuffer], { type: "image/webp" }));
+      // Store the image in Convex File Storage (Fal AI typically returns PNG)
+      const storageId = await ctx.storage.store(new Blob([imageBuffer], { type: "image/png" }));
 
       // Update the wizard with the new illustration
       await ctx.runMutation(api.wizards.updateWizard, {
