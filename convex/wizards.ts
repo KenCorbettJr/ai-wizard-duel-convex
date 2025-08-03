@@ -93,10 +93,7 @@ export const updateWizard = mutation({
     // Check if name or description changed and wizard is/will be AI-powered
     const nameChanged = updates.name !== undefined && updates.name !== wizard.name;
     const descriptionChanged = updates.description !== undefined && updates.description !== wizard.description;
-    const isAIPowered = updates.isAIPowered !== undefined ? updates.isAIPowered : wizard.isAIPowered;
-    const shouldRegenerateIllustration = (nameChanged || descriptionChanged) && isAIPowered;
-
-    console.log(`Wizard update: nameChanged=${nameChanged}, descriptionChanged=${descriptionChanged}, isAIPowered=${isAIPowered}, shouldRegenerate=${shouldRegenerateIllustration}`);
+    const shouldRegenerateIllustration = nameChanged || descriptionChanged;
 
     await ctx.db.patch(wizardId, {
       ...updates,

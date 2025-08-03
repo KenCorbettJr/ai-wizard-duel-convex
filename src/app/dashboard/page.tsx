@@ -18,6 +18,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { 
+  Swords, 
+  Users, 
+  Wand2, 
+  BarChart3, 
+  Trophy, 
+  Loader2 
+} from "lucide-react";
 
 function ActiveDuelsCard({ userId }: { userId?: string }) {
   const playerDuels = useQuery(
@@ -43,8 +51,11 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>⚔️ Active Duels</CardTitle>
-        <CardDescription>Your ongoing magical battles</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Swords className="h-5 w-5" />
+          Active Duels
+        </CardTitle>
+        <CardDescription>Your ongoing magical duels</CardDescription>
       </CardHeader>
       <CardContent>
         {activeDuels.length === 0 ? (
@@ -156,9 +167,9 @@ export default function Dashboard() {
     wizards?.reduce((sum, wizard) => sum + (wizard.wins || 0), 0) || 0;
   const totalLosses =
     wizards?.reduce((sum, wizard) => sum + (wizard.losses || 0), 0) || 0;
-  const totalBattles = totalWins + totalLosses;
+  const totalDuels = totalWins + totalLosses;
   const winRate =
-    totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0;
+    totalDuels > 0 ? Math.round((totalWins / totalDuels) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
@@ -179,7 +190,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">Wizard Dashboard</h2>
           <p className="text-muted-foreground">
-            Manage your magical adventures and view your battle history
+            Manage your magical adventures and view your duel history
           </p>
         </div>
 
@@ -187,10 +198,11 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                ⚔️ Create Duel
+                <Swords className="h-5 w-5" />
+                Create Duel
               </CardTitle>
               <CardDescription>
-                Start a new magical battle and wait for opponents
+                Start a new magical duel and wait for opponents
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -203,10 +215,11 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                👥 Join Duel
+                <Users className="h-5 w-5" />
+                Join Duel
               </CardTitle>
               <CardDescription>
-                Find an open duel and join the battle
+                Find an open duel and join the fight
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -221,9 +234,10 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                🧙‍♂️ Create Wizard
+                <Wand2 className="h-5 w-5" />
+                Create Wizard
               </CardTitle>
-              <CardDescription>Create a new wizard for battle</CardDescription>
+              <CardDescription>Create a new wizard for dueling</CardDescription>
             </CardHeader>
             <CardContent>
               <Button
@@ -248,7 +262,10 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>📊 Your Stats</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Your Stats
+              </CardTitle>
               <CardDescription>Your overall magical prowess</CardDescription>
             </CardHeader>
             <CardContent>
@@ -258,8 +275,8 @@ export default function Dashboard() {
                   <span className="font-bold">{wizards?.length || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Battles:</span>
-                  <span className="font-bold">{totalBattles}</span>
+                  <span className="text-muted-foreground">Total Duels:</span>
+                  <span className="font-bold">{totalDuels}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Victories:</span>
@@ -279,14 +296,17 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>🏆 Battle History</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Completed Duels
+              </CardTitle>
               <CardDescription>Your recent magical encounters</CardDescription>
             </CardHeader>
             <CardContent>
-              {totalBattles === 0 ? (
+              {totalDuels === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-muted-foreground mb-4">
-                    No battles yet. Create a wizard and start dueling!
+                    No duels yet. Create a wizard and start dueling!
                   </p>
                   <Link href="/duels">
                     <Button variant="outline">View All Duels</Button>
@@ -295,7 +315,7 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-3">
                   <div className="text-center text-muted-foreground mb-4">
-                    Battle history coming soon...
+                    Duel history coming soon...
                   </div>
                   <Link href="/duels">
                     <Button variant="outline" className="w-full">
@@ -312,13 +332,15 @@ export default function Dashboard() {
           <h3 className="text-2xl font-bold mb-4">Your Wizards</h3>
           {wizards === undefined ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
               <p className="text-muted-foreground mt-2">Loading wizards...</p>
             </div>
           ) : wizards.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <div className="text-6xl mb-4">🧙‍♂️</div>
+                <div className="mb-4">
+                  <Wand2 className="h-16 w-16 mx-auto text-purple-600" />
+                </div>
                 <h3 className="text-xl font-semibold mb-2">No wizards yet!</h3>
                 <p className="text-muted-foreground mb-4">
                   Create your first wizard to start your magical journey.

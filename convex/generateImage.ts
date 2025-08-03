@@ -1,12 +1,24 @@
 import * as fal from "@fal-ai/serverless-client";
+import sharp from "sharp";
 
-export async function generateImage(illustrationPrompt: string, falKey: string): Promise<ArrayBuffer> {
-  // Configure fal client with API key
-  fal.config({
-    credentials: falKey,
-  });
-
+export async function generateImage(
+  illustrationPrompt: string
+): Promise<ArrayBuffer> {
   try {
+    // Get FAL API key from environment
+    const falKey = process.env.FAL_KEY;
+    if (!falKey) {
+      console.error("FAL_KEY environment variable is not set");
+      throw new Error(
+        "FAL_KEY environment variable is not set. Please add it to your environment variables."
+      );
+    }
+
+    // Configure fal client with API key
+    fal.config({
+      credentials: falKey,
+    });
+
     const result = await fal.subscribe("fal-ai/flux/schnell", {
       input: {
         prompt: illustrationPrompt,
@@ -18,7 +30,7 @@ export async function generateImage(illustrationPrompt: string, falKey: string):
     });
 
     // Get the image URL from the result
-    const imageUrl = result.data.images[0]?.url;
+    const imageUrl = result.images[0]?.url;
     if (!imageUrl) {
       throw new Error("No image generated from Fal service");
     }
@@ -26,12 +38,26 @@ export async function generateImage(illustrationPrompt: string, falKey: string):
     // Fetch the image data
     const response = await fetch(imageUrl);
     if (!response.ok) {
-      throw new Error(`Failed to fetch generated image: ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch generated image: ${response.statusText}`
+      );
     }
 
-    return await response.arrayBuffer();
+    const imageBuffer = await response.arrayBuffer();
+
+    const processedImage = await sharp(Buffer.from(imageBuffer))
+      .resize(1024, 1024, { 
+        fit: 'cover',
+        position: 'center'
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    return processedImage.buffer;
   } catch (error) {
     console.error("Error generating image with Fal:", error);
-    throw new Error(`Image generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 }

@@ -60,7 +60,7 @@ export default function WizardPage({ params }: WizardPageProps) {
             Wizard Not Found
           </h1>
           <p className="text-muted-foreground mb-6">
-            The wizard you're looking for doesn't exist.
+            The wizard you&apos;re looking for doesn&apos;t exist.
           </p>
           <Button onClick={() => router.back()}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -107,175 +107,180 @@ export default function WizardPage({ params }: WizardPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="mb-6">
+      <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
+      </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Wizard Image */}
-          <div className="flex-shrink-0">
-            {wizard.illustration || wizard.illustrationURL ? (
-              <div className="w-64 h-64 rounded-lg overflow-hidden bg-muted">
-                {wizard.illustration ? (
-                  <ConvexImage
-                    storageId={wizard.illustration}
-                    alt={wizard.name}
-                    width={256}
-                    height={256}
-                    className="w-full h-full object-cover"
-                  />
-                ) : wizard.illustrationURL ? (
-                  <Image
-                    src={wizard.illustrationURL}
-                    alt={wizard.name}
-                    width={256}
-                    height={256}
-                    className="w-full h-full object-cover"
-                  />
-                ) : null}
-              </div>
-            ) : (
-              <div className="w-64 h-64 rounded-lg bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center">
-                <Zap className="w-16 h-16 text-white" />
-              </div>
-            )}
+      {/* Hero Image Section */}
+      <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] mb-8 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+        {wizard.illustration || wizard.illustrationURL ? (
+          <div className="w-full h-full relative overflow-hidden">
+            {wizard.illustration ? (
+              <ConvexImage
+                storageId={wizard.illustration}
+                alt={wizard.name}
+                width={1200}
+                height={600}
+                className="w-full h-full object-contain"
+              />
+            ) : wizard.illustrationURL ? (
+              <Image
+                src={wizard.illustrationURL}
+                alt={wizard.name}
+                fill
+                className="object-contain"
+                priority
+              />
+            ) : null}
+            {/* Subtle gradient overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           </div>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center">
+            <Zap className="w-24 h-24 text-white" />
+          </div>
+        )}
 
-          {/* Wizard Info */}
-          <div className="flex-1">
-            <div className="flex items-start gap-3 mb-4">
-              <h1 className="text-3xl font-bold text-foreground">
-                {wizard.name}
-              </h1>
-              {wizard.isAIPowered && (
-                <Badge variant="secondary" className="text-sm">
-                  🤖 AI Powered
-                </Badge>
-              )}
-            </div>
-
-            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              {wizard.description}
-            </p>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg text-center border border-green-200 dark:border-green-800">
-                <Trophy className="w-6 h-6 text-green-600 dark:text-green-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  {wizard.wins || 0}
-                </div>
-                <div className="text-sm text-green-600 dark:text-green-400">
-                  Wins
-                </div>
-              </div>
-
-              <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg text-center border border-red-200 dark:border-red-800">
-                <Skull className="w-6 h-6 text-red-600 dark:text-red-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-                  {wizard.losses || 0}
-                </div>
-                <div className="text-sm text-red-600 dark:text-red-400">
-                  Losses
-                </div>
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg text-center border border-blue-200 dark:border-blue-800">
-                <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {winRate}%
-                </div>
-                <div className="text-sm text-blue-600 dark:text-blue-400">
-                  Win Rate
-                </div>
-              </div>
-
-              <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg text-center border border-purple-200 dark:border-purple-800">
-                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  {totalDuels}
-                </div>
-                <div className="text-sm text-purple-600 dark:text-purple-400">
-                  Total Duels
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Link href={`/duels/create?wizardId=${wizard._id}`}>
-                <Button size="lg">⚔️ Challenge to Duel</Button>
-              </Link>
-              {isOwner && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Wizard
-                </Button>
-              )}
-              <Link href="/dashboard">
-                <Button variant="outline" size="lg">
-                  View All Wizards
-                </Button>
-              </Link>
-            </div>
+        {/* Wizard name overlay */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg">
+              {wizard.name}
+            </h1>
+            {wizard.isAIPowered && (
+              <Badge
+                variant="secondary"
+                className="text-sm bg-white/90 text-gray-800"
+              >
+                🤖 AI Powered
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Duel History */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground">Duel History</h2>
+      {/* Content Section */}
+      <div className="container mx-auto px-4 pb-8">
+        {/* Wizard Description */}
+        <div className="text-center mb-8">
+          <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            {wizard.description}
+          </p>
+        </div>
 
-        {activeDuels.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-3">
-              Active Duels
-            </h3>
-            <div className="grid gap-4">
-              {activeDuels.map((duel) => (
-                <DuelCard key={duel._id} duel={duel} wizardId={wizardId} />
-              ))}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+          <div className="bg-green-50 dark:bg-green-950/30 p-6 rounded-lg text-center border border-green-200 dark:border-green-800">
+            <Trophy className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+              {wizard.wins || 0}
+            </div>
+            <div className="text-sm text-green-600 dark:text-green-400">
+              Wins
             </div>
           </div>
-        )}
 
-        {completedDuels.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-3">
-              Completed Duels
-            </h3>
-            <div className="grid gap-4">
-              {completedDuels.map((duel) => (
-                <DuelCard key={duel._id} duel={duel} wizardId={wizardId} />
-              ))}
+          <div className="bg-red-50 dark:bg-red-950/30 p-6 rounded-lg text-center border border-red-200 dark:border-red-800">
+            <Skull className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-red-700 dark:text-red-300">
+              {wizard.losses || 0}
+            </div>
+            <div className="text-sm text-red-600 dark:text-red-400">Losses</div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-6 rounded-lg text-center border border-blue-200 dark:border-blue-800">
+            <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+              {winRate}%
+            </div>
+            <div className="text-sm text-blue-600 dark:text-blue-400">
+              Win Rate
             </div>
           </div>
-        )}
 
-        {totalDuels === 0 && (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                No Duels Yet
+          <div className="bg-purple-50 dark:bg-purple-950/30 p-6 rounded-lg text-center border border-purple-200 dark:border-purple-800">
+            <Users className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+              {totalDuels}
+            </div>
+            <div className="text-sm text-purple-600 dark:text-purple-400">
+              Total Duels
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
+          {isOwner ? (
+            <Button
+              size="lg"
+              onClick={() => setIsEditing(true)}
+              className="text-lg px-8 py-3"
+            >
+              <Edit className="w-5 h-5 mr-2" />
+              Edit Wizard
+            </Button>
+          ) : (
+            <Link href={`/duels/create?wizardId=${wizard._id}`}>
+              <Button size="lg" className="text-lg px-8 py-3">
+                ⚔️ Challenge to Duel
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {/* Duel History */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-foreground">Duel History</h2>
+
+          {activeDuels.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-3">
+                Active Duels
               </h3>
-              <p className="text-muted-foreground mb-4">
-                This wizard hasn&apos;t participated in any duels.
-              </p>
-              <Link href={`/duels/create?wizardId=${wizard._id}`}>
-                <Button>Start First Duel</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
+              <div className="grid gap-4">
+                {activeDuels.map((duel) => (
+                  <DuelCard key={duel._id} duel={duel} wizardId={wizardId} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {completedDuels.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-3">
+                Completed Duels
+              </h3>
+              <div className="grid gap-4">
+                {completedDuels.map((duel) => (
+                  <DuelCard key={duel._id} duel={duel} wizardId={wizardId} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {totalDuels === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  No Duels Yet
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  This wizard hasn&apos;t participated in any duels.
+                </p>
+                <Link href={`/duels/create?wizardId=${wizard._id}`}>
+                  <Button>Start First Duel</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

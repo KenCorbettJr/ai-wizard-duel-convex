@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [new URL('https://doting-bloodhound-926.convex.cloud/api/storage/**')],
+  },
 };
 
 export default nextConfig;

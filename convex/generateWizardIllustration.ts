@@ -13,20 +13,13 @@ export const generateWizardIllustration = action({
     console.log(`Starting illustration generation for wizard ${wizardId} (${name})`);
     
     try {
-      // Get FAL API key from environment
-      const falKey = process.env.FAL_KEY;
-      if (!falKey) {
-        console.error("FAL_KEY environment variable is not set");
-        throw new Error("FAL_KEY environment variable is not set. Please add it to your environment variables.");
-      }
-
       // Create a detailed illustration prompt
       const enhancedPrompt = `Low poly illustration of a wizard named ${name}: ${description}. Dynamic lighting, magical particles, spell effects, action pose, magical implement, thematic background.`;
 
       console.log("Generating illustration with prompt:", enhancedPrompt);
 
       // Generate the image using Fal
-      const imageBuffer = await generateImage(enhancedPrompt, falKey);
+      const imageBuffer = await generateImage(enhancedPrompt);
 
       // Store the image in Convex File Storage
       const storageId = await ctx.storage.store(new Blob([imageBuffer], { type: "image/webp" }));
