@@ -1,14 +1,27 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import FeatureCard from '@/components/FeatureCard'
+import DuelExample from '@/components/DuelExample'
+import {
+  Brain,
+  Flame,
+  Sparkles,
+  Map,
+  MessageCircle,
+  Timer,
+  ShieldPlus,
+  ScanHeart,
+  Trophy,
+} from 'lucide-react'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <nav className="flex items-center justify-between p-6">
-        <h1 className="text-2xl font-bold">AI Wizard Duel</h1>
+    <div className="min-h-screen">
+      {/* Navigation */}
+      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-6">
+        <h1 className="text-2xl font-bold text-white">AI Wizard Duel</h1>
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <SignedIn>
@@ -25,63 +38,228 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="container mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">
-            Welcome to AI Wizard Duel
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Challenge your friends in epic AI-powered wizard battles. Cast spells, summon creatures, and prove your magical prowess!
+      {/* Hero Section */}
+      <section className="hero bg-gradient-to-b from-background to-secondary/30 dark:from-background dark:to-secondary relative">
+        <div className="absolute inset-0 hero-gradient" />
+        <div className="container mx-auto h-[95vh] relative z-10 flex items-end">
+          <div className="text-center max-w-2xl mx-auto p-4 mt-96">
+            <h1 className="text-6xl font-bold mb-6 text-white">AI Wizard Duel</h1>
+            <p className="text-2xl text-foreground mb-6">
+              Where Wizards Clash and Legends Rise!
+            </p>
+            <SignedOut>
+              <SignInButton>
+                <Button size="lg" className="text-lg drop-shadow-xl mb-12">
+                  Start Dueling
+                </Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard">
+                <Button size="lg" className="text-lg drop-shadow-xl mb-12">
+                  Start Dueling
+                </Button>
+              </Link>
+            </SignedIn>
+          </div>
+        </div>
+      </section>
+
+      {/* Unique Gameplay Mechanics */}
+      <section className="bg-background py-16 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6">Unique Gameplay Mechanics</h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              In AI Wizard Duel, both wizards submit their spells without knowing
+              what the other wizard will do. The spells are then narrated as if
+              they both happened at the same time, creating a dynamic and
+              unpredictable battle experience.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FeatureCard
+                icon={Map}
+                title="Strategic Planning"
+                description="Plan your spells carefully, as you won't know your opponent's moves until it's too late!"
+              />
+              <FeatureCard
+                icon={Timer}
+                title="Simultaneous Actions"
+                description="Experience the thrill of simultaneous spellcasting, where every decision counts."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Creative Freedom */}
+      <section className="bg-secondary/30 py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-6">Only Limited By Your Imagination</h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Create spells that go beyond traditional magic. Summon mythical
+                creatures, bend the elements, or invent entirely new forms of
+                magic. Whatever you decide, our AI brings your creative spells to
+                life weaving them into an epic tale.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <FeatureCard
+                  icon={Brain}
+                  title="Creative Freedom"
+                  description="Cast any spell that your mind can imagine! The more creative, the better!"
+                />
+                <FeatureCard
+                  icon={Flame}
+                  title="Dynamic Storytelling"
+                  description="The spells of both wizards are woven into an epic tale of magic and wonder."
+                />
+              </div>
+            </div>
+            <DuelExample
+              imageUrl="/images/ice-phoenix.jpeg"
+              description="A phoenix made of crystalline ice"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Points and Hit Points */}
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6">Master the Art of Magical Combat</h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              Victory in AI Wizard Duel requires more than raw power. It demands
+              strategy, timing, and creative thinking. The goal is simple, earn
+              more points than your opponent while making sure you don't run out
+              of hit points!
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FeatureCard
+                icon={ScanHeart}
+                title="Strategic Point System"
+                description="Earn points for effective spells, but try not to die in the process!"
+              />
+              <FeatureCard
+                icon={ShieldPlus}
+                title="Balance Offense and Defense"
+                description="Use both offensive and defensive magic to outlast your opponent."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Epic Battles */}
+      <section className="bg-secondary/30 dark:bg-secondary py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <DuelExample
+              imageUrl="/images/epic-duel.jpeg"
+              description="Two wizards locked in an epic battle of light and shadow"
+            />
+            <div>
+              <h2 className="text-3xl font-bold mb-6">Epic Magical Battles</h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Every duel tells a unique story. Cast spells that interact in
+                unexpected ways, create magical chain reactions, and experience
+                battles that unfold like chapters in a fantasy novel.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <FeatureCard
+                  icon={Sparkles}
+                  title="Magical Synergies"
+                  description="Combine spells for powerful effects"
+                />
+                <FeatureCard
+                  icon={MessageCircle}
+                  title="Dynamic Narration"
+                  description="Every spell adds to a riveting tale of magic and wonder."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Fun and Hilarious */}
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6">Fun and Hilarious Duels</h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              AI Wizard Duel isn't just about strategy and creativity; it's also
+              about having fun! The unpredictable nature of simultaneous
+              spellcasting often leads to hilarious and unexpected outcomes.
+              Challenge your friends to a wizard duel and experience a better way
+              to settle disputes!
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FeatureCard
+                emoji="😂"
+                title="Unpredictable Outcomes"
+                description="Because anything can happen in a wizard duel, the results are often hilariously entertaining!"
+              />
+              <FeatureCard
+                emoji="🪨 📃 ✂️"
+                title="Better Than Rock-Paper-Scissors"
+                description="Dueling is a fun and magical way to challenge your friends and see who is the better wizard!"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Leaderboard */}
+      <section className="bg-secondary/30 py-16">
+        <div className="container mx-auto px-4 text-center">
+          <Trophy className="w-12 h-12 mb-4 text-primary inline-block" />
+          <h2 className="text-3xl font-bold mb-6">Leaderboard</h2>
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            See who&apos;s mastering the arcane arts! Our leaderboard tracks the most
+            successful wizards. Climb the ranks, earn recognition, and perhaps one
+            day your name will be whispered with awe throughout the magical realm.
           </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>🧙‍♂️ Epic Battles</CardTitle>
-              <CardDescription>
-                Engage in turn-based magical combat with AI-generated spells and creatures
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Each duel is unique with procedurally generated magical abilities and strategic gameplay.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>⚡ Real-time Magic</CardTitle>
-              <CardDescription>
-                Experience seamless multiplayer battles powered by Convex
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Challenge friends or random opponents in fast-paced magical duels.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center mt-12">
-          <SignedOut>
-            <SignInButton>
-              <Button size="lg" className="text-lg px-8 py-3">
-                Start Your Magical Journey
-              </Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard">
-              <Button size="lg" className="text-lg px-8 py-3">
-                Enter the Arena
+          <div className="flex gap-4 justify-center">
+            <Link href="/leaderboard">
+              <Button variant="outline" size="lg">
+                Check Out Leaderboard
               </Button>
             </Link>
-          </SignedIn>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Call to Action */}
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6">Begin Your Magical Journey</h2>
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Step into a world where your magical creativity knows no bounds. Join
+            other wizards in creating spectacular magical duels that push the
+            boundaries of imagination.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/duels">
+              <Button variant="outline" size="lg">
+                Watch Duels
+              </Button>
+            </Link>
+            <SignedOut>
+              <SignInButton>
+                <Button size="lg">Start Dueling</Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard">
+                <Button size="lg">Start Dueling</Button>
+              </Link>
+            </SignedIn>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

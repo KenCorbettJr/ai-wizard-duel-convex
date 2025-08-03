@@ -90,10 +90,13 @@ export const updateWizard = mutation({
       throw new Error("Wizard not found");
     }
 
-    // Check if name or description changed and wizard is AI-powered
-    const nameChanged = updates.name && updates.name !== wizard.name;
-    const descriptionChanged = updates.description && updates.description !== wizard.description;
-    const shouldRegenerateIllustration = (nameChanged || descriptionChanged) && wizard.isAIPowered;
+    // Check if name or description changed and wizard is/will be AI-powered
+    const nameChanged = updates.name !== undefined && updates.name !== wizard.name;
+    const descriptionChanged = updates.description !== undefined && updates.description !== wizard.description;
+    const isAIPowered = updates.isAIPowered !== undefined ? updates.isAIPowered : wizard.isAIPowered;
+    const shouldRegenerateIllustration = (nameChanged || descriptionChanged) && isAIPowered;
+
+    console.log(`Wizard update: nameChanged=${nameChanged}, descriptionChanged=${descriptionChanged}, isAIPowered=${isAIPowered}, shouldRegenerate=${shouldRegenerateIllustration}`);
 
     await ctx.db.patch(wizardId, {
       ...updates,
@@ -105,7 +108,7 @@ export const updateWizard = mutation({
         : wizard.illustrationGeneratedAt,
     });
 
-    // Schedule illustration regeneration if name or description changed
+    // Schedule illustration regeneration if name or description changed and wizard is AI-powered
     if (shouldRegenerateIllustration) {
       ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
         wizardId,

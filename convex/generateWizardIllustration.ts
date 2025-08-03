@@ -10,21 +10,20 @@ export const generateWizardIllustration = action({
     description: v.string(),
   },
   handler: async (ctx, { wizardId, name, description }) => {
+    console.log(`Starting illustration generation for wizard ${wizardId} (${name})`);
+    
     try {
-      // Create a detailed illustration prompt
-      const illustrationPrompt = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" in an action pose that would fit this type of wizard. The wizard has this description: ${description}. Use Dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them. If it makes sense, have them holding a magical implement or familiar. Match the background to the wizard's theme. Only give me the image prompt, no other text.`;
-
-      // For now, we'll use the description directly as the prompt
-      // In a production app, you might want to use an AI service to enhance the prompt
-      const enhancedPrompt = `Low poly illustration of a wizard named ${name}: ${description}. Dynamic lighting, magical particles, spell effects, action pose, magical implement, thematic background.`;
-
-      console.log("Generating illustration with prompt:", enhancedPrompt);
-
       // Get FAL API key from environment
       const falKey = process.env.FAL_KEY;
       if (!falKey) {
-        throw new Error("FAL_KEY environment variable is not set");
+        console.error("FAL_KEY environment variable is not set");
+        throw new Error("FAL_KEY environment variable is not set. Please add it to your environment variables.");
       }
+
+      // Create a detailed illustration prompt
+      const enhancedPrompt = `Low poly illustration of a wizard named ${name}: ${description}. Dynamic lighting, magical particles, spell effects, action pose, magical implement, thematic background.`;
+
+      console.log("Generating illustration with prompt:", enhancedPrompt);
 
       // Generate the image using Fal
       const imageBuffer = await generateImage(enhancedPrompt, falKey);
@@ -43,6 +42,12 @@ export const generateWizardIllustration = action({
 
     } catch (error) {
       console.error(`Error generating illustration for wizard ${wizardId}:`, error);
+      
+      // If it's an environment variable issue, provide helpful guidance
+      if (error instanceof Error && error.message.includes("FAL_KEY")) {
+        throw new Error("Image generation is not configured. Please add your FAL_KEY to the environment variables.");
+      }
+      
       throw new Error(`Failed to generate wizard illustration: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },

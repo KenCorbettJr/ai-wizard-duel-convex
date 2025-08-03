@@ -120,3 +120,15 @@
     @apply bg-background text-foreground;
   }
 }
+/* Hero section styles */
+.hero {
+  background-image: url("/images/hero.jpg");
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
+  text-shadow: 0 0.5em 2em rgba(0, 0, 0, 1), 0 0.25em 1em rgba(0, 0, 0, 0.5);
+}
+
+.hero-gradient {
+  background: radial-gradient(circle, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+}

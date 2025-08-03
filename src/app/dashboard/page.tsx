@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
-import { CreateWizardForm } from "@/components/CreateWizardForm";
+import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import Link from "next/link";
@@ -122,7 +122,7 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
 
 export default function Dashboard() {
   const { user } = useUser();
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const wizards = useQuery(
     api.wizards.getUserWizards,
@@ -229,7 +229,7 @@ export default function Dashboard() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setShowCreateForm(true)}
+                onClick={() => setShowCreateModal(true)}
               >
                 Create New Wizard
               </Button>
@@ -237,16 +237,13 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {showCreateForm && (
-          <div className="mb-8">
-            <CreateWizardForm
-              onClose={() => setShowCreateForm(false)}
-              onSuccess={() => {
-                // Wizard list will automatically update due to Convex reactivity
-              }}
-            />
-          </div>
-        )}
+        <CreateWizardModal
+          open={showCreateModal}
+          onOpenChange={setShowCreateModal}
+          onSuccess={() => {
+            // Wizard list will automatically update due to Convex reactivity
+          }}
+        />
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
@@ -326,7 +323,7 @@ export default function Dashboard() {
                 <p className="text-muted-foreground mb-4">
                   Create your first wizard to start your magical journey.
                 </p>
-                <Button onClick={() => setShowCreateForm(true)}>
+                <Button onClick={() => setShowCreateModal(true)}>
                   Create Your First Wizard
                 </Button>
               </CardContent>

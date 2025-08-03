@@ -25,6 +25,7 @@ interface WizardFormProps {
   wizardId?: Id<"wizards">;
   onClose: () => void;
   onSuccess: () => void;
+  inModal?: boolean;
 }
 
 export function WizardForm({ 
@@ -32,7 +33,8 @@ export function WizardForm({
   initialData, 
   wizardId, 
   onClose, 
-  onSuccess 
+  onSuccess,
+  inModal = false
 }: WizardFormProps) {
   const { user } = useUser();
   const createWizard = useMutation(api.wizards.createWizard);
@@ -78,6 +80,8 @@ export function WizardForm({
       }
     } catch (error) {
       console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} wizard:`, error);
+      // You might want to show a toast notification here
+      alert(`Error ${mode === 'create' ? 'creating' : 'updating'} wizard. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -98,30 +102,7 @@ export function WizardForm({
 
   const isFormValid = formData.name.trim() && formData.description.trim();
 
-  return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>
-              {mode === 'create' ? 'Create New Wizard' : 'Edit Wizard'}
-            </CardTitle>
-            <CardDescription>
-              {mode === 'create' 
-                ? 'Design your magical companion' 
-                : 'Update your wizard\'s details. Changes to name or description will regenerate the illustration if AI-powered.'
-              }
-            </CardDescription>
-          </div>
-          {mode === 'edit' && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent>
+  const formContent = (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Wizard Name</Label>
@@ -221,6 +202,37 @@ export function WizardForm({
             </Button>
           </div>
         </form>
+  );
+
+  if (inModal) {
+    return formContent;
+  }
+
+  return (
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>
+              {mode === 'create' ? 'Create New Wizard' : 'Edit Wizard'}
+            </CardTitle>
+            <CardDescription>
+              {mode === 'create' 
+                ? 'Design your magical companion' 
+                : 'Update your wizard\'s details. Changes to name or description will regenerate the illustration if AI-powered.'
+              }
+            </CardDescription>
+          </div>
+          {mode === 'edit' && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        {formContent}
       </CardContent>
     </Card>
   );

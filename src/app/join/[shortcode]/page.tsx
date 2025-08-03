@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
-import { CreateWizardForm } from '@/components/CreateWizardForm';
+import { CreateWizardModal } from '@/components/CreateWizardModal';
 
 interface JoinShortcodePageProps {
   params: Promise<{
@@ -25,7 +25,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   const router = useRouter();
   const [selectedWizards, setSelectedWizards] = useState<Id<"wizards">[]>([]);
   const [isJoining, setIsJoining] = useState(false);
-  const [showCreateWizard, setShowCreateWizard] = useState(false);
+  const [showCreateWizardModal, setShowCreateWizardModal] = useState(false);
   const { shortcode } = use(params);
 
   const duel = useQuery(api.duels.getDuelByShortcode, { 
@@ -247,12 +247,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                 </CardContent>
               </Card>
 
-              {showCreateWizard ? (
-                <CreateWizardForm 
-                  onClose={() => setShowCreateWizard(false)}
-                  onSuccess={handleWizardCreated}
-                />
-              ) : !wizards || wizards.length === 0 ? (
+              {!wizards || wizards.length === 0 ? (
                 <Card>
                   <CardHeader>
                     <CardTitle>🧙‍♂️ Create Your First Wizard</CardTitle>
@@ -264,7 +259,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                     <p className="text-gray-600 mb-4">
                       Create your magical wizard to participate in this epic duel!
                     </p>
-                    <Button onClick={() => setShowCreateWizard(true)}>
+                    <Button onClick={() => setShowCreateWizardModal(true)}>
                       Create Wizard
                     </Button>
                   </CardContent>
