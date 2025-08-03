@@ -67,7 +67,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
           <CardDescription>You need at least one wizard to join a duel</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             Create a wizard first before joining a duel.
           </p>
           <div className="flex gap-2">
@@ -88,7 +88,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
           <CardDescription>No duels available to join right now</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             There are no open duels waiting for players. Create your own duel to get started!
           </p>
           <div className="flex gap-2">
@@ -111,7 +111,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Available Duels
           </label>
           <div className="space-y-3">
@@ -120,15 +120,15 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
                 key={duel._id}
                 className={`p-4 border rounded-lg cursor-pointer transition-all ${
                   selectedDuel === duel._id
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/50'
+                    : 'border-border hover:border-muted-foreground'
                 }`}
                 onClick={() => setSelectedDuel(duel._id)}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">
+                      <h4 className="font-medium text-foreground">
                         {typeof duel.numberOfRounds === 'number' 
                           ? `${duel.numberOfRounds} Round Duel`
                           : 'Duel to the Death'
@@ -138,7 +138,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
                         {duel.wizards.length} wizard{duel.wizards.length !== 1 ? 's' : ''}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Created {new Date(duel.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -155,7 +155,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
 
         {selectedDuel && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Select Your Wizards
             </label>
             <div className="grid grid-cols-1 gap-3">
@@ -164,15 +164,15 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
                   key={wizard._id}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
                     selectedWizards.includes(wizard._id)
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/50'
+                      : 'border-border hover:border-muted-foreground'
                   }`}
                   onClick={() => handleWizardToggle(wizard._id)}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium">{wizard.name}</h4>
-                      <p className="text-sm text-gray-600 truncate">
+                      <h4 className="font-medium text-foreground">{wizard.name}</h4>
+                      <p className="text-sm text-muted-foreground truncate">
                         {wizard.description}
                       </p>
                     </div>
@@ -195,7 +195,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
               ))}
             </div>
             {selectedWizards.length === 0 && (
-              <p className="text-sm text-red-600 mt-1">
+              <p className="text-sm text-destructive mt-1">
                 Please select at least one wizard
               </p>
             )}

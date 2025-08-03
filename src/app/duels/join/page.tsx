@@ -47,21 +47,21 @@ export default function JoinDuelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <Navbar />
 
       <main className="container mx-auto px-6 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Join a Duel</h2>
-            <p className="text-gray-600">
+            <h2 className="text-3xl font-bold text-foreground mb-2">Join a Duel</h2>
+            <p className="text-muted-foreground">
               Find an open duel and join the magical battle
             </p>
           </div>
 
           <div className="space-y-6">
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-4">
+              <div className="inline-flex items-center gap-2 text-sm text-muted-foreground mb-4">
                 <span>Have a shortcode?</span>
                 <ShortcodeInput />
               </div>

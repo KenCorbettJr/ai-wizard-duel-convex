@@ -8,6 +8,8 @@ import { useUser } from '@clerk/nextjs';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
+import { ConvexImage } from './ConvexImage';
+import Image from 'next/image';
 
 interface CreateDuelFormProps {
   onClose: () => void;
@@ -17,8 +19,8 @@ interface CreateDuelFormProps {
 
 export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: CreateDuelFormProps) {
   const { user } = useUser();
-  const [selectedWizards, setSelectedWizards] = useState<Id<"wizards">[]>(
-    preSelectedWizardId ? [preSelectedWizardId] : []
+  const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
+    preSelectedWizardId || null
   );
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(3);
   const [isCreating, setIsCreating] = useState(false);
@@ -28,23 +30,19 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
   );
   const createDuel = useMutation(api.duels.createDuel);
 
-  const handleWizardToggle = (wizardId: Id<"wizards">) => {
-    setSelectedWizards(prev => 
-      prev.includes(wizardId) 
-        ? prev.filter(id => id !== wizardId)
-        : [...prev, wizardId]
-    );
+  const handleWizardSelect = (wizardId: Id<"wizards">) => {
+    setSelectedWizard(wizardId);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id || selectedWizards.length === 0) return;
+    if (!user?.id || !selectedWizard) return;
 
     setIsCreating(true);
     try {
       const duelId = await createDuel({
         numberOfRounds,
-        wizards: selectedWizards,
+        wizards: [selectedWizard],
         players: [user.id], // Creator is the first player
       });
       onSuccess(duelId);
@@ -63,7 +61,7 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
           <CardDescription>You need at least one wizard to create a duel</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             Create a wizard first before starting a duel.
           </p>
           <div className="flex gap-2">
@@ -87,28 +85,56 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Your Wizards
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Select Your Wizard
             </label>
             <div className="grid grid-cols-1 gap-3">
               {wizards.map((wizard) => (
                 <div
                   key={wizard._id}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                    selectedWizards.includes(wizard._id)
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                    selectedWizard === wizard._id
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/50'
+                      : 'border-border hover:border-muted-foreground'
                   }`}
-                  onClick={() => handleWizardToggle(wizard._id)}
+                  onClick={() => handleWizardSelect(wizard._id)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{wizard.name}</h4>
-                      <p className="text-sm text-gray-600 truncate">
+                  <div className="flex items-center gap-3">
+                    {/* Wizard Image */}
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                      {wizard.illustration ? (
+                        <ConvexImage
+                          storageId={wizard.illustration}
+                          alt={wizard.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : wizard.illustrationURL ? (
+                        <Image
+                          src={wizard.illustrationURL}
+                          alt={wizard.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                          {wizard.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Wizard Info */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-foreground">{wizard.name}</h4>
+                      <p className="text-sm text-muted-foreground truncate">
                         {wizard.description}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    
+                    {/* Stats and Selection Indicator */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {wizard.wins || wizard.losses ? (
                         <Badge variant="outline">
                           {wizard.wins || 0}W - {wizard.losses || 0}L
@@ -116,7 +142,7 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
                       ) : (
                         <Badge variant="secondary">New</Badge>
                       )}
-                      {selectedWizards.includes(wizard._id) && (
+                      {selectedWizard === wizard._id && (
                         <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs">✓</span>
                         </div>
@@ -126,15 +152,15 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
                 </div>
               ))}
             </div>
-            {selectedWizards.length === 0 && (
-              <p className="text-sm text-red-600 mt-1">
-                Please select at least one wizard
+            {!selectedWizard && (
+              <p className="text-sm text-destructive mt-1">
+                Please select a wizard
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Duel Length
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -144,13 +170,13 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
                   type="button"
                   className={`p-3 border rounded-lg text-center transition-all ${
                     numberOfRounds === rounds
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/50'
+                      : 'border-border hover:border-muted-foreground'
                   }`}
                   onClick={() => setNumberOfRounds(rounds)}
                 >
-                  <div className="font-medium">{rounds} Rounds</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="font-medium text-foreground">{rounds} Rounds</div>
+                  <div className="text-sm text-muted-foreground">
                     {rounds === 3 ? 'Quick' : rounds === 5 ? 'Standard' : 'Epic'}
                   </div>
                 </button>
@@ -159,13 +185,13 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
                 type="button"
                 className={`p-3 border rounded-lg text-center transition-all ${
                   numberOfRounds === "TO_THE_DEATH"
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/50'
+                    : 'border-border hover:border-muted-foreground'
                 }`}
                 onClick={() => setNumberOfRounds("TO_THE_DEATH")}
               >
-                <div className="font-medium">To the Death</div>
-                <div className="text-sm text-gray-600">Until one falls</div>
+                <div className="font-medium text-foreground">To the Death</div>
+                <div className="text-sm text-muted-foreground">Until one falls</div>
               </button>
             </div>
           </div>
@@ -173,7 +199,7 @@ export function CreateDuelForm({ onClose, onSuccess, preSelectedWizardId }: Crea
           <div className="flex gap-3">
             <Button
               type="submit"
-              disabled={selectedWizards.length === 0 || isCreating}
+              disabled={!selectedWizard || isCreating}
               className="flex-1"
             >
               {isCreating ? 'Creating...' : 'Create Duel'}

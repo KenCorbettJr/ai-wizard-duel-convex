@@ -74,20 +74,20 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-lg">
-            <span className="text-purple-800 font-medium">Shortcode:</span>
-            <code className="text-2xl font-mono font-bold text-purple-900 tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+            <span className="text-purple-800 dark:text-purple-200 font-medium">Shortcode:</span>
+            <code className="text-2xl font-mono font-bold text-purple-900 dark:text-purple-100 tracking-wider">
               {duel.shortcode}
             </code>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-900">Duel Details:</h4>
+          <h4 className="font-medium text-foreground">Duel Details:</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Type:</span>
-              <span className="font-medium">
+              <span className="text-muted-foreground">Type:</span>
+              <span className="font-medium text-foreground">
                 {typeof duel.numberOfRounds === 'number' 
                   ? `${duel.numberOfRounds} Rounds`
                   : 'To the Death'
@@ -95,22 +95,22 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Wizards:</span>
-              <span className="font-medium">{duel.wizards.length}</span>
+              <span className="text-muted-foreground">Wizards:</span>
+              <span className="font-medium text-foreground">{duel.wizards.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Status:</span>
+              <span className="text-muted-foreground">Status:</span>
               <Badge variant="secondary">Waiting for Players</Badge>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Players:</span>
-              <span className="font-medium">{duel.players.length}</span>
+              <span className="text-muted-foreground">Players:</span>
+              <span className="font-medium text-foreground">{duel.players.length}</span>
             </div>
           </div>
         </div>
 
         <div className="border-t pt-4">
-          <h4 className="font-medium text-gray-900 mb-3">Share Your Duel:</h4>
+          <h4 className="font-medium text-foreground mb-3">Share Your Duel:</h4>
           <div className="space-y-3">
             <div className="flex gap-2">
               <Button onClick={handleShare} className="flex-1">
@@ -120,7 +120,7 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
                 📋 Copy
               </Button>
             </div>
-            <div className="text-xs text-gray-600 text-center">
+            <div className="text-xs text-muted-foreground text-center">
               Share the shortcode <strong>{duel.shortcode}</strong> or send the link to invite players
             </div>
           </div>
