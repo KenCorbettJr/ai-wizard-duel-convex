@@ -1,7 +1,7 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
+import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { Navbar } from '@/components/Navbar'
 import FeatureCard from '@/components/FeatureCard'
 import DuelExample from '@/components/DuelExample'
 import {
@@ -20,23 +20,9 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-6">
-        <h1 className="text-2xl font-bold text-white">AI Wizard Duel</h1>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <SignedIn>
-            <Link href="/dashboard">
-              <Button variant="outline">Dashboard</Button>
-            </Link>
-            <UserButton />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton>
-              <Button>Sign In</Button>
-            </SignInButton>
-          </SignedOut>
-        </div>
-      </nav>
+      <div className="absolute top-0 left-0 right-0 z-50">
+        <Navbar transparent />
+      </div>
 
       {/* Hero Section */}
       <section className="hero bg-gradient-to-b from-background to-secondary/30 dark:from-background dark:to-secondary relative">
@@ -190,7 +176,7 @@ export default function Home() {
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl font-bold mb-6">Fun and Hilarious Duels</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              AI Wizard Duel isn't just about strategy and creativity; it's also
+              AI Wizard Duel isn't just about strategy and creativity; it&apos;s also
               about having fun! The unpredictable nature of simultaneous
               spellcasting often leads to hilarious and unexpected outcomes.
               Challenge your friends to a wizard duel and experience a better way

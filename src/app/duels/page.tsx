@@ -1,13 +1,13 @@
 "use client";
 
 import { useUser } from '@clerk/nextjs';
-import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Navbar } from '@/components/Navbar';
 
 export default function DuelsPage() {
   const { user } = useUser();
@@ -34,20 +34,7 @@ export default function DuelsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
-      <nav className="flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm">
-        <Link href="/">
-          <h1 className="text-2xl font-bold text-gray-900">AI Wizard Duel</h1>
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard">
-            <span className="text-purple-600 hover:text-purple-800 font-medium">
-              ← Back to Dashboard
-            </span>
-          </Link>
-          <span className="text-gray-700">Welcome, {user?.firstName || 'Wizard'}!</span>
-          <UserButton />
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="container mx-auto px-6 py-12">
         <div className="mb-8">

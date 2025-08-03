@@ -1,7 +1,6 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { UserButton } from "@clerk/nextjs";
 import {
   Card,
   CardContent,
@@ -12,20 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
+import { Navbar } from "@/components/Navbar";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { 
-  Swords, 
-  Users, 
-  Wand2, 
-  BarChart3, 
-  Trophy, 
-  Loader2 
-} from "lucide-react";
+import { Swords, Users, Wand2, BarChart3, Trophy, Loader2 } from "lucide-react";
 
 function ActiveDuelsCard({ userId }: { userId?: string }) {
   const playerDuels = useQuery(
@@ -173,18 +165,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
-      <nav className="flex items-center justify-between p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-        <Link href="/">
-          <h1 className="text-2xl font-bold">AI Wizard Duel</h1>
-        </Link>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <span className="text-muted-foreground">
-            Welcome, {user?.firstName || "Wizard"}!
-          </span>
-          <UserButton />
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="container mx-auto px-6 py-12">
         <div className="mb-8">
