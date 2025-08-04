@@ -72,7 +72,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   };
 
   const handleWizardCreated = () => {
-    setShowCreateWizard(false);
+    setShowCreateWizardModal(false);
   };
 
   // Loading state
@@ -99,7 +99,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
               <CardHeader>
                 <CardTitle>❌ Duel Not Found</CardTitle>
                 <CardDescription>
-                  The shortcode "{params.shortcode.toUpperCase()}&quot; doesn&apos;t match any active duels.
+                  The shortcode &quot;{shortcode.toUpperCase()}&quot; doesn&apos;t match any active duels.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -305,7 +305,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setShowCreateWizard(true)}
+                        onClick={() => setShowCreateWizardModal(true)}
                         disabled={isJoining}
                       >
                         Create New Wizard
@@ -318,6 +318,12 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
           )}
         </div>
       </main>
+
+      <CreateWizardModal
+        open={showCreateWizardModal}
+        onOpenChange={setShowCreateWizardModal}
+        onSuccess={handleWizardCreated}
+      />
     </div>
   );
 }

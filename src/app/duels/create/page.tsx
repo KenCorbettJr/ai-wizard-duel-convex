@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CreateDuelForm } from '@/components/CreateDuelForm';
 import { DuelCreatedSuccess } from '@/components/DuelCreatedSuccess';
 import { Navbar } from '@/components/Navbar';
-import { Id } from '../../../convex/_generated/dataModel';
+import { Id } from '../../../../convex/_generated/dataModel';
 
 export default function CreateDuelPage() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function CreateDuelPage() {
             <CreateDuelForm 
               onClose={handleClose}
               onSuccess={handleSuccess}
-              preSelectedWizardId={preSelectedWizardId}
+              preSelectedWizardId={preSelectedWizardId || undefined}
             />
           )}
         </div>

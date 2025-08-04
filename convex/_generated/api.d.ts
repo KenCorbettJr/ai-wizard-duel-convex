@@ -13,8 +13,12 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as ai_getAI from "../ai/getAI.js";
+import type * as aiTextGeneration from "../aiTextGeneration.js";
+import type * as duelIntroduction from "../duelIntroduction.js";
 import type * as duels from "../duels.js";
 import type * as generateImage from "../generateImage.js";
+import type * as generateRoundIllustration from "../generateRoundIllustration.js";
 import type * as generateWizardIllustration from "../generateWizardIllustration.js";
 import type * as messages from "../messages.js";
 import type * as wizards from "../wizards.js";
@@ -28,8 +32,12 @@ import type * as wizards from "../wizards.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "ai/getAI": typeof ai_getAI;
+  aiTextGeneration: typeof aiTextGeneration;
+  duelIntroduction: typeof duelIntroduction;
   duels: typeof duels;
   generateImage: typeof generateImage;
+  generateRoundIllustration: typeof generateRoundIllustration;
   generateWizardIllustration: typeof generateWizardIllustration;
   messages: typeof messages;
   wizards: typeof wizards;

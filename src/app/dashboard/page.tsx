@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { Navbar } from "@/components/Navbar";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import Link from "next/link";
 import { useState } from "react";
@@ -131,29 +131,9 @@ export default function Dashboard() {
     api.wizards.getUserWizards,
     user?.id ? { userId: user.id } : "skip"
   );
-  const deleteWizard = useMutation(api.wizards.deleteWizard);
-  const regenerateIllustration = useMutation(
-    api.wizards.regenerateIllustration
-  );
 
-  const handleDeleteWizard = async (wizardId: string) => {
-    if (confirm("Are you sure you want to delete this wizard?")) {
-      try {
-        await deleteWizard({ wizardId: wizardId as unknown });
-      } catch (error) {
-        console.error("Failed to delete wizard:", error);
-      }
-    }
-  };
 
-  const handleRegenerateIllustration = async (wizardId: string) => {
-    try {
-      await regenerateIllustration({ wizardId: wizardId as unknown });
-    } catch (error) {
-      console.error("Failed to regenerate illustration:", error);
-      alert("Failed to regenerate illustration. Please try again.");
-    }
-  };
+
 
   const totalWins =
     wizards?.reduce((sum, wizard) => sum + (wizard.wins || 0), 0) || 0;
@@ -337,12 +317,7 @@ export default function Dashboard() {
                 <WizardCard
                   key={wizard._id}
                   wizard={wizard}
-                  onDelete={handleDeleteWizard}
-                  onRegenerateIllustration={handleRegenerateIllustration}
-                  onDuel={(wizard) => {
-                    // TODO: Implement duel functionality
-                    console.log("Starting duel with:", wizard.name);
-                  }}
+
                 />
               ))}
             </div>

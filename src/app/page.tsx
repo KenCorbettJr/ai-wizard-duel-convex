@@ -119,7 +119,7 @@ export default function Home() {
             <p className="text-lg text-muted-foreground mb-8">
               Victory in AI Wizard Duel requires more than raw power. It demands
               strategy, timing, and creative thinking. The goal is simple, earn
-              more points than your opponent while making sure you don't run out
+              more points than your opponent while making sure you don&apos;t run out
               of hit points!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,7 +176,7 @@ export default function Home() {
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl font-bold mb-6">Fun and Hilarious Duels</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              AI Wizard Duel isn't just about strategy and creativity; it&apos;s also
+              AI Wizard Duel isn&apos;t just about strategy and creativity; it&apos;s also
               about having fun! The unpredictable nature of simultaneous
               spellcasting often leads to hilarious and unexpected outcomes.
               Challenge your friends to a wizard duel and experience a better way

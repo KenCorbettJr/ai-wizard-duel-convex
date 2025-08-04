@@ -7,12 +7,12 @@ import Image from "next/image";
 interface ConvexImageProps {
   storageId: string;
   alt: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   className?: string;
 }
 
-export function ConvexImage({ storageId, alt, width, height, className }: ConvexImageProps) {
+export function ConvexImage({ storageId, alt, width = 400, height = 300, className }: ConvexImageProps) {
   const imageUrl = useQuery(api.wizards.getIllustrationUrl, { storageId });
 
   if (!imageUrl) {

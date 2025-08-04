@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { updateWizardStats } from "./wizards";
+import { api } from "./_generated/api";
 
 // Types for better type safety
 export type DuelStatus =
@@ -79,6 +80,18 @@ export const getDuelRounds = query({
       .withIndex("by_duel", (q) => q.eq("duelId", duelId))
       .order("asc")
       .collect();
+  },
+});
+
+// Get the introduction round (round 0) for a duel
+export const getIntroductionRound = query({
+  args: { duelId: v.id("duels") },
+  handler: async (ctx, { duelId }) => {
+    return await ctx.db
+      .query("duelRounds")
+      .withIndex("by_duel", (q) => q.eq("duelId", duelId))
+      .filter((q) => q.eq(q.field("roundNumber"), 0))
+      .first();
   },
 });
 
@@ -201,16 +214,9 @@ export const startDuel = mutation({
       throw new Error("Duel cannot be started");
     }
 
-    // Create the first round
-    await ctx.db.insert("duelRounds", {
+    // Schedule the introduction generation
+    ctx.scheduler.runAfter(0, api.duelIntroduction.generateDuelIntroduction, {
       duelId,
-      roundNumber: 1,
-      type: "SPELL_CASTING" as DuelRoundType,
-      status: "WAITING_FOR_SPELLS" as DuelRoundStatus,
-    });
-
-    await ctx.db.patch(duelId, {
-      status: "IN_PROGRESS" as DuelStatus,
     });
 
     return duelId;
@@ -349,13 +355,13 @@ export const completeRound = mutation({
       // Update wizard stats
       if (shouldEndDuel.winners && shouldEndDuel.losers) {
         for (const winnerId of shouldEndDuel.winners) {
-          await ctx.runMutation(updateWizardStats, {
+          await ctx.runMutation(api.wizards.updateWizardStats, {
             wizardId: winnerId,
             won: true,
           });
         }
         for (const loserId of shouldEndDuel.losers) {
-          await ctx.runMutation(updateWizardStats, {
+          await ctx.runMutation(api.wizards.updateWizardStats, {
             wizardId: loserId,
             won: false,
           });
@@ -587,5 +593,84 @@ export const getPlayerDuelStats = query({
     });
 
     return stats;
+  },
+});
+
+// Create introduction round (round 0)
+export const createIntroductionRound = mutation({
+  args: {
+    duelId: v.id("duels"),
+    outcome: v.object({
+      narrative: v.string(),
+      result: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationPrompt: v.optional(v.string()),
+      pointsAwarded: v.optional(v.object({})),
+      healthChange: v.optional(v.object({})),
+    }),
+  },
+  handler: async (ctx, { duelId, outcome }) => {
+    const roundId = await ctx.db.insert("duelRounds", {
+      duelId,
+      roundNumber: 0, // Introduction round
+      type: "SPELL_CASTING" as DuelRoundType,
+      status: "COMPLETED" as DuelRoundStatus,
+      outcome,
+    });
+
+    return roundId;
+  },
+});
+
+// Update round illustration
+export const updateRoundIllustration = mutation({
+  args: {
+    roundId: v.id("duelRounds"),
+    illustration: v.string(),
+  },
+  handler: async (ctx, { roundId, illustration }) => {
+    const round = await ctx.db.get(roundId);
+    if (!round) {
+      throw new Error("Round not found");
+    }
+
+    const updatedOutcome = {
+      ...round.outcome,
+      illustration,
+      narrative: round.outcome?.narrative || "",
+    };
+
+    await ctx.db.patch(roundId, {
+      outcome: updatedOutcome,
+    });
+
+    return roundId;
+  },
+});
+
+// Start duel after introduction (move to round 1)
+export const startDuelAfterIntroduction = mutation({
+  args: { duelId: v.id("duels") },
+  handler: async (ctx, { duelId }) => {
+    const duel = await ctx.db.get(duelId);
+    if (!duel) {
+      throw new Error("Duel not found");
+    }
+
+    // Create the first actual round
+    await ctx.db.insert("duelRounds", {
+      duelId,
+      roundNumber: 1,
+      type: "SPELL_CASTING" as DuelRoundType,
+      status: "WAITING_FOR_SPELLS" as DuelRoundStatus,
+    });
+
+    await ctx.db.patch(duelId, {
+      status: "IN_PROGRESS" as DuelStatus,
+      currentRound: 1,
+      needActionsFrom: duel.wizards, // All wizards need to act
+    });
+
+    return duelId;
   },
 });

@@ -1,3 +1,5 @@
+"use node";
+
 import * as fal from "@fal-ai/serverless-client";
 
 export async function generateImage(
@@ -18,7 +20,14 @@ export async function generateImage(
       credentials: falKey,
     });
 
-    const result = await fal.subscribe("fal-ai/flux/schnell", {
+
+    interface FalImageResult {
+      images?: Array<{
+        url?: string;
+      }>
+    }
+
+    const result: FalImageResult = await fal.subscribe("fal-ai/flux/schnell", {
       input: {
         prompt: illustrationPrompt,
         image_size: "square_hd", // 1024x1024
@@ -28,8 +37,9 @@ export async function generateImage(
       },
     });
 
+
     // Get the image URL from the result
-    const imageUrl = result.images[0]?.url;
+    const imageUrl = result.images?.[0]?.url;
     if (!imageUrl) {
       throw new Error("No image generated from Fal service");
     }

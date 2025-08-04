@@ -13,6 +13,7 @@ import { Navbar } from '@/components/Navbar';
 import { useState } from 'react';
 import { Swords, Clock, Sparkles, ScrollText, Heart, Star } from 'lucide-react';
 import { ConvexImage } from '@/components/ConvexImage';
+import { DuelIntroduction } from '@/components/DuelIntroduction';
 
 interface DuelPageProps {
   params: Promise<{
@@ -299,6 +300,24 @@ export default function DuelPage({ params }: DuelPageProps) {
             </Card>
           )}
 
+          {/* Show introduction for in-progress or completed duels */}
+          {(duel.status === "IN_PROGRESS" || duel.status === "COMPLETED") && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ScrollText className="h-5 w-5" />
+                  Arena Introduction
+                </CardTitle>
+                <CardDescription>
+                  The Arcane Arbiter introduces the combatants
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DuelIntroduction duelId={duel._id} />
+              </CardContent>
+            </Card>
+          )}
+
           {duel.rounds && duel.rounds.length > 0 && (
             <Card>
               <CardHeader>
@@ -312,7 +331,9 @@ export default function DuelPage({ params }: DuelPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {duel.rounds.map((round) => (
+                  {duel.rounds
+                    .filter(round => round.roundNumber > 0) // Exclude introduction round
+                    .map((round) => (
                     <div key={round._id} className="border-l-4 border-purple-200 dark:border-purple-700 pl-4">
                       <div className="flex items-center gap-2 mb-2">
                         <h4 className="font-medium text-foreground">Round {round.roundNumber}</h4>
@@ -321,6 +342,15 @@ export default function DuelPage({ params }: DuelPageProps) {
                       {round.outcome && (
                         <div className="text-sm text-muted-foreground">
                           <p>{round.outcome.narrative}</p>
+                          {round.outcome.illustration && (
+                            <div className="mt-2 max-w-md">
+                              <ConvexImage
+                                storageId={round.outcome.illustration}
+                                alt={`Round ${round.roundNumber} illustration`}
+                                className="w-full rounded-lg"
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
