@@ -24,33 +24,36 @@ export const getWizard = query({
 // Create a new wizard
 export const createWizard = mutation({
   args: {
-    owner: v.string(),
     name: v.string(),
     description: v.string(),
-    illustrationURL: v.optional(v.string()),
-    illustration: v.optional(v.string()),
-    isAIPowered: v.optional(v.boolean()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { name, description }) => {
+    // Get the current user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const wizardId = await ctx.db.insert("wizards", {
-      ...args,
+      owner: identity.subject,
+      name,
+      description,
       wins: 0,
       losses: 0,
       illustrationVersion: 1,
+      isAIPowered: false, // User-created wizards are not AI-powered
     });
 
-    // Schedule illustration generation if AI-powered
-    if (args.isAIPowered) {
-      ctx.scheduler.runAfter(
-        0,
-        api.generateWizardIllustration.generateWizardIllustration,
-        {
-          wizardId,
-          name: args.name,
-          description: args.description,
-        },
-      );
-    }
+    // Always schedule illustration generation for new wizards
+    ctx.scheduler.runAfter(
+      0,
+      api.generateWizardIllustration.generateWizardIllustration,
+      {
+        wizardId,
+        name,
+        description,
+      }
+    );
 
     return wizardId;
   },
@@ -94,7 +97,7 @@ export const updateWizard = mutation({
       throw new Error("Wizard not found");
     }
 
-    // Check if name or description changed and wizard is/will be AI-powered
+    // Check if name or description changed
     const nameChanged =
       updates.name !== undefined && updates.name !== wizard.name;
     const descriptionChanged =
@@ -112,7 +115,7 @@ export const updateWizard = mutation({
         : wizard.illustrationGeneratedAt,
     });
 
-    // Schedule illustration regeneration if name or description changed and wizard is AI-powered
+    // Schedule illustration regeneration if name or description changed
     if (shouldRegenerateIllustration) {
       ctx.scheduler.runAfter(
         0,
@@ -121,7 +124,7 @@ export const updateWizard = mutation({
           wizardId,
           name: updates.name || wizard.name,
           description: updates.description || wizard.description,
-        },
+        }
       );
     }
   },
@@ -144,13 +147,7 @@ export const regenerateIllustration = mutation({
       throw new Error("Wizard not found");
     }
 
-    if (!wizard.isAIPowered) {
-      throw new Error(
-        "Only AI-powered wizards can have illustrations generated",
-      );
-    }
-
-    // Schedule illustration generation
+    // Schedule illustration generation for any wizard
     ctx.scheduler.runAfter(
       0,
       api.generateWizardIllustration.generateWizardIllustration,
@@ -158,7 +155,7 @@ export const regenerateIllustration = mutation({
         wizardId,
         name: wizard.name,
         description: wizard.description,
-      },
+      }
     );
 
     return { success: true };

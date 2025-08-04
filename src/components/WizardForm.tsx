@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
+
 import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+
 import {
   Card,
   CardContent,
@@ -22,7 +22,6 @@ import { Loader2, Save, X, Plus } from "lucide-react";
 interface WizardFormData {
   name: string;
   description: string;
-  isAIPowered: boolean;
 }
 
 interface WizardFormProps {
@@ -42,7 +41,6 @@ export function WizardForm({
   onSuccess,
   inModal = false,
 }: WizardFormProps) {
-  const { user } = useUser();
   const createWizard = useMutation(api.wizards.createWizard);
   const updateWizard = useMutation(api.wizards.updateWizard);
   const regenerateIllustration = useMutation(
@@ -53,7 +51,6 @@ export function WizardForm({
     initialData || {
       name: "",
       description: "",
-      isAIPowered: false,
     },
   );
 
@@ -62,24 +59,20 @@ export function WizardForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id || !formData.name.trim() || !formData.description.trim())
-      return;
+    if (!formData.name.trim() || !formData.description.trim()) return;
 
     setIsSubmitting(true);
     try {
       if (mode === "create") {
         await createWizard({
-          owner: user.id,
           name: formData.name.trim(),
           description: formData.description.trim(),
-          isAIPowered: formData.isAIPowered,
         });
       } else if (mode === "edit" && wizardId) {
         await updateWizard({
           wizardId,
           name: formData.name.trim(),
           description: formData.description.trim(),
-          isAIPowered: formData.isAIPowered,
         });
       }
 
@@ -102,7 +95,7 @@ export function WizardForm({
   };
 
   const handleRegenerateIllustration = async () => {
-    if (!formData.isAIPowered || !wizardId) return;
+    if (!wizardId) return;
 
     setIsRegenerating(true);
     try {
@@ -145,21 +138,7 @@ export function WizardForm({
         />
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="ai-powered"
-          checked={formData.isAIPowered}
-          onCheckedChange={(checked) =>
-            setFormData({ ...formData, isAIPowered: checked })
-          }
-          disabled={isSubmitting}
-        />
-        <Label htmlFor="ai-powered">
-          AI-Powered (Generate illustrations automatically)
-        </Label>
-      </div>
-
-      {mode === "edit" && formData.isAIPowered && (
+      {mode === "edit" && (
         <div className="p-4 bg-blue-50 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
