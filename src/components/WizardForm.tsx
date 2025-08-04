@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-
+import { useUser } from "@clerk/nextjs";
 import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ export function WizardForm({
   onSuccess,
   inModal = false,
 }: WizardFormProps) {
+  const { user } = useUser();
   const createWizard = useMutation(api.wizards.createWizard);
   const updateWizard = useMutation(api.wizards.updateWizard);
   const regenerateIllustration = useMutation(
@@ -59,12 +60,13 @@ export function WizardForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.description.trim()) return;
+    if (!user?.id || !formData.name.trim() || !formData.description.trim()) return;
 
     setIsSubmitting(true);
     try {
       if (mode === "create") {
         await createWizard({
+          owner: user.id,
           name: formData.name.trim(),
           description: formData.description.trim(),
         });

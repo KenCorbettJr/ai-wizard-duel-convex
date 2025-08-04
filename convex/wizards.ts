@@ -24,18 +24,13 @@ export const getWizard = query({
 // Create a new wizard
 export const createWizard = mutation({
   args: {
+    owner: v.string(),
     name: v.string(),
     description: v.string(),
   },
-  handler: async (ctx, { name, description }) => {
-    // Get the current user
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
+  handler: async (ctx, { owner, name, description }) => {
     const wizardId = await ctx.db.insert("wizards", {
-      owner: identity.subject,
+      owner,
       name,
       description,
       wins: 0,
