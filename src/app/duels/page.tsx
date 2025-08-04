@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
+import { Swords, Users, Search } from "lucide-react";
 
 export default function DuelsPage() {
   const { user } = useUser();
@@ -40,15 +41,15 @@ export default function DuelsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <Navbar />
 
       <main className="container mx-auto px-6 py-12">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
             Magical Duels
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Join existing duels or create your own magical battles
           </p>
         </div>
@@ -56,7 +57,10 @@ export default function DuelsPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>⚔️ Create New Duel</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Swords className="h-5 w-5" />
+                Create New Duel
+              </CardTitle>
               <CardDescription>
                 Start a new magical battle and challenge other wizards
               </CardDescription>
@@ -70,7 +74,10 @@ export default function DuelsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>👥 Join Existing Duel</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Join Existing Duel
+              </CardTitle>
               <CardDescription>
                 Find an open duel and join the magical battle
               </CardDescription>
@@ -87,20 +94,22 @@ export default function DuelsPage() {
 
         <div className="grid lg:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <h3 className="text-2xl font-bold text-foreground mb-4">
               Your Duels
             </h3>
             {playerDuels === undefined ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                <p className="text-gray-500 mt-2">Loading your duels...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Loading your duels...</p>
               </div>
             ) : playerDuels.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
-                  <div className="text-6xl mb-4">⚔️</div>
+                  <div className="mb-4 flex justify-center">
+                    <Swords className="h-16 w-16 text-muted-foreground" />
+                  </div>
                   <h3 className="text-xl font-semibold mb-2">No duels yet!</h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Create or join a duel to start your magical battles.
                   </p>
                   <div className="flex gap-2 justify-center">
@@ -146,24 +155,26 @@ export default function DuelsPage() {
           </div>
 
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <h3 className="text-2xl font-bold text-foreground mb-4">
               Available Duels
             </h3>
             {activeDuels === undefined ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                <p className="text-gray-500 mt-2">Loading available duels...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Loading available duels...</p>
               </div>
             ) : activeDuels.filter(
                 (duel) => !duel.players.includes(user?.id || ""),
               ).length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
-                  <div className="text-6xl mb-4">🔍</div>
+                  <div className="mb-4 flex justify-center">
+                    <Search className="h-16 w-16 text-muted-foreground" />
+                  </div>
                   <h3 className="text-xl font-semibold mb-2">
                     No available duels
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Be the first to create a new duel!
                   </p>
                   <Link href="/duels/create">
@@ -193,7 +204,7 @@ export default function DuelsPage() {
                             duel.status === "WAITING_FOR_PLAYERS" && (
                               <span className="ml-2">
                                 • Code:{" "}
-                                <code className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">
+                                <code className="px-1 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs">
                                   {duel.shortcode}
                                 </code>
                               </span>

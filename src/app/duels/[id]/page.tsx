@@ -47,6 +47,10 @@ export default function DuelPage({ params }: DuelPageProps) {
     duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
   );
 
+  // Check for loading and error states
+  const isDuelLoading = duel === undefined;
+  const isDuelError = duel === null;
+
   // Find the user's wizard in this duel
   const userWizard = [wizard1, wizard2].find(
     (wizard) => wizard?.owner === user?.id,
@@ -88,13 +92,70 @@ export default function DuelPage({ params }: DuelPageProps) {
     }
   };
 
-  if (!duel) {
+  // Show loading state
+  if (isDuelLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading duel...</p>
+          <div className="relative mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
+            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            <div className="absolute inset-2 rounded-full h-12 w-12 border-2 border-transparent border-t-purple-500/40 dark:border-t-purple-200/40 animate-spin mx-auto" style={{ animationDuration: '2s' }}></div>
+          </div>
+          <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-8 py-6 shadow-xl dark:shadow-2xl max-w-sm mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400 animate-pulse" />
+              <p className="text-foreground font-semibold">Loading duel...</p>
+            </div>
+            <p className="text-muted-foreground text-sm">Preparing the magical arena</p>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (isDuelError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
+        <Navbar />
+        <main className="container mx-auto px-6 py-12">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-destructive/50 dark:border-destructive/30 bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-xl dark:shadow-2xl">
+              <CardHeader>
+                <CardTitle className="text-destructive dark:text-red-400 flex items-center gap-2">
+                  <Swords className="h-5 w-5" />
+                  Error Loading Duel
+                </CardTitle>
+                <CardDescription className="dark:text-muted-foreground/80">
+                  We couldn't load the duel you're looking for.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground dark:text-muted-foreground/90">
+                  This could happen if:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-1 ml-4">
+                  <li>The duel doesn't exist or has been deleted</li>
+                  <li>You don&apos;t have permission to view this duel</li>
+                  <li>There&apos;s a temporary connection issue</li>
+                </ul>
+                <div className="flex gap-3 pt-4">
+                  <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600">
+                    <Link href="/duels">Browse Duels</Link>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     );
   }
@@ -102,27 +163,66 @@ export default function DuelPage({ params }: DuelPageProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "WAITING_FOR_PLAYERS":
-        return <Badge variant="secondary">Waiting for Players</Badge>;
+        return (
+          <Badge 
+            variant="secondary" 
+            className="bg-orange-100/80 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 border-orange-200/50 dark:border-orange-700/30 flex items-center gap-1"
+          >
+            <Clock className="h-3 w-3" />
+            Waiting for Players
+          </Badge>
+        );
       case "IN_PROGRESS":
-        return <Badge variant="default">In Progress</Badge>;
+        return (
+          <Badge 
+            variant="default" 
+            className="bg-green-100/80 dark:bg-green-900/50 text-green-800 dark:text-green-200 border-green-200/50 dark:border-green-700/30 flex items-center gap-1"
+          >
+            <Sparkles className="h-3 w-3" />
+            In Progress
+          </Badge>
+        );
       case "COMPLETED":
-        return <Badge variant="outline">Completed</Badge>;
+        return (
+          <Badge 
+            variant="outline" 
+            className="bg-blue-100/80 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30 flex items-center gap-1"
+          >
+            <Star className="h-3 w-3" />
+            Completed
+          </Badge>
+        );
       case "CANCELLED":
-        return <Badge variant="destructive">Cancelled</Badge>;
+        return (
+          <Badge 
+            variant="destructive" 
+            className="bg-red-100/80 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 flex items-center gap-1"
+          >
+            <Swords className="h-3 w-3" />
+            Cancelled
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return (
+          <Badge 
+            variant="outline" 
+            className="bg-gray-100/80 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 border-gray-200/50 dark:border-gray-700/30"
+          >
+            {status}
+          </Badge>
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
       <Navbar />
 
       <main className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl font-bold text-foreground">
+              <h2 className="text-3xl font-bold text-foreground dark:text-foreground/95 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
                 {typeof duel.numberOfRounds === "number"
                   ? `${duel.numberOfRounds} Round Duel`
                   : "Duel to the Death"}
@@ -136,13 +236,14 @@ export default function DuelPage({ params }: DuelPageProps) {
               </p>
               {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Share:</span>
-                  <code className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-sm font-mono">
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground/80">Share:</span>
+                  <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30">
                     {duel.shortcode}
                   </code>
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-purple-200 dark:border-purple-700/50 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-300"
                     onClick={() => {
                       const url = `${window.location.origin}/join/${duel.shortcode}`;
                       navigator.clipboard.writeText(url);
@@ -161,7 +262,7 @@ export default function DuelPage({ params }: DuelPageProps) {
               <div className="grid md:grid-cols-2 gap-8 relative">
                 {/* Wizard 1 */}
                 {wizard1 && (
-                  <Card className="overflow-hidden">
+                  <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300">
                     <div className="relative">
                       {wizard1.illustration && (
                         <div className="h-48 w-full overflow-hidden">
@@ -170,21 +271,21 @@ export default function DuelPage({ params }: DuelPageProps) {
                             alt={wizard1.name}
                             width={400}
                             height={192}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           />
                         </div>
                       )}
                       <div className="absolute top-4 right-4 flex gap-2">
                         <Badge
                           variant="secondary"
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
                         >
                           <Star className="h-3 w-3" />
                           {duel.points[duel.wizards[0]] || 0}
                         </Badge>
                         <Badge
                           variant="destructive"
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
                         >
                           <Heart className="h-3 w-3" />
                           {duel.hitPoints[duel.wizards[0]] || 100}
@@ -192,15 +293,15 @@ export default function DuelPage({ params }: DuelPageProps) {
                       </div>
                     </div>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-xl">{wizard1.name}</CardTitle>
-                      <CardDescription>{wizard1.description}</CardDescription>
+                      <CardTitle className="text-xl text-foreground dark:text-foreground/95">{wizard1.name}</CardTitle>
+                      <CardDescription className="dark:text-muted-foreground/80">{wizard1.description}</CardDescription>
                     </CardHeader>
                   </Card>
                 )}
 
                 {/* Wizard 2 */}
                 {wizard2 && (
-                  <Card className="overflow-hidden">
+                  <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300">
                     <div className="relative">
                       {wizard2.illustration && (
                         <div className="h-48 w-full overflow-hidden">
@@ -209,21 +310,21 @@ export default function DuelPage({ params }: DuelPageProps) {
                             alt={wizard2.name}
                             width={400}
                             height={192}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           />
                         </div>
                       )}
                       <div className="absolute top-4 right-4 flex gap-2">
                         <Badge
                           variant="secondary"
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
                         >
                           <Star className="h-3 w-3" />
                           {duel.points[duel.wizards[1]] || 0}
                         </Badge>
                         <Badge
                           variant="destructive"
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
                         >
                           <Heart className="h-3 w-3" />
                           {duel.hitPoints[duel.wizards[1]] || 100}
@@ -231,8 +332,8 @@ export default function DuelPage({ params }: DuelPageProps) {
                       </div>
                     </div>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-xl">{wizard2.name}</CardTitle>
-                      <CardDescription>{wizard2.description}</CardDescription>
+                      <CardTitle className="text-xl text-foreground dark:text-foreground/95">{wizard2.name}</CardTitle>
+                      <CardDescription className="dark:text-muted-foreground/80">{wizard2.description}</CardDescription>
                     </CardHeader>
                   </Card>
                 )}
@@ -240,28 +341,28 @@ export default function DuelPage({ params }: DuelPageProps) {
 
               {/* VS Divider - Desktop */}
               <div className="hidden md:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="bg-card border-2 border-border rounded-full p-4 shadow-lg">
-                  <Swords className="h-8 w-8 text-muted-foreground" />
+                <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-4 shadow-xl dark:shadow-2xl backdrop-blur-sm">
+                  <Swords className="h-8 w-8 text-white animate-pulse" />
                 </div>
               </div>
 
               {/* VS Divider - Mobile */}
               <div className="md:hidden flex justify-center -my-4 relative z-10">
-                <div className="bg-card border-2 border-border rounded-full p-3 shadow-lg">
-                  <Swords className="h-6 w-6 text-muted-foreground" />
+                <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-3 shadow-xl dark:shadow-2xl backdrop-blur-sm">
+                  <Swords className="h-6 w-6 text-white animate-pulse" />
                 </div>
               </div>
             </div>
           )}
 
           {duel.status === "WAITING_FOR_PLAYERS" && (
-            <Card className="mb-8">
+            <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
+                  <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400 animate-pulse" />
                   Waiting for Players
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-muted-foreground/80">
                   {duel.players.length < 2
                     ? "Waiting for more players to join..."
                     : "Ready to start! Click the button below to begin the duel."}
@@ -269,19 +370,25 @@ export default function DuelPage({ params }: DuelPageProps) {
               </CardHeader>
               <CardContent>
                 {!isPlayerInDuel ? (
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground dark:text-muted-foreground/80">
                     You are not part of this duel.
                     <Link
                       href="/duels/join"
-                      className="text-purple-600 dark:text-purple-400 hover:underline ml-1"
+                      className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline ml-1 transition-colors"
                     >
                       Join a different duel
                     </Link>
                   </p>
                 ) : canStartDuel ? (
-                  <Button onClick={handleStartDuel}>Start Duel</Button>
+                  <Button 
+                    onClick={handleStartDuel}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Start Duel
+                  </Button>
                 ) : (
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground dark:text-muted-foreground/80">
                     Waiting for more players to join...
                   </p>
                 )}
@@ -294,13 +401,13 @@ export default function DuelPage({ params }: DuelPageProps) {
             userWizard &&
             userWizardId &&
             duel.needActionsFrom.includes(userWizardId) && (
-              <Card className="mb-8">
+              <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
+                    <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400 animate-pulse" />
                     Cast Your Spell
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="dark:text-muted-foreground/80">
                     Describe the magical spell {userWizard.name} will cast this
                     round
                   </CardDescription>
@@ -311,17 +418,25 @@ export default function DuelPage({ params }: DuelPageProps) {
                       value={spellDescription}
                       onChange={(e) => setSpellDescription(e.target.value)}
                       placeholder="Describe your wizard's spell in detail..."
-                      className="w-full p-3 border border-input bg-background text-foreground rounded-lg resize-none h-24 placeholder:text-muted-foreground"
+                      className="w-full p-4 border border-input/50 dark:border-input/30 bg-background/50 dark:bg-background/30 text-foreground dark:text-foreground/95 rounded-lg resize-none h-28 placeholder:text-muted-foreground/60 dark:placeholder:text-muted-foreground/50 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all backdrop-blur-sm"
                       disabled={isCasting}
                     />
                     <Button
                       onClick={handleCastSpell}
                       disabled={!spellDescription.trim() || isCasting}
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isCasting
-                        ? "Casting Spell..."
-                        : `Cast Spell with ${userWizard.name}`}
+                      {isCasting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                          Casting Spell...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Cast Spell with {userWizard.name}
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -330,13 +445,13 @@ export default function DuelPage({ params }: DuelPageProps) {
 
           {/* Show introduction for in-progress or completed duels */}
           {(duel.status === "IN_PROGRESS" || duel.status === "COMPLETED") && (
-            <Card className="mb-8">
+            <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ScrollText className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
+                  <ScrollText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
                   Arena Introduction
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-muted-foreground/80">
                   The Arcane Arbiter introduces the combatants
                 </CardDescription>
               </CardHeader>
@@ -347,40 +462,46 @@ export default function DuelPage({ params }: DuelPageProps) {
           )}
 
           {duel.rounds && duel.rounds.length > 0 && (
-            <Card>
+            <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ScrollText className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
+                  <ScrollText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
                   Duel History
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-muted-foreground/80">
                   Previous rounds and their outcomes
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {duel.rounds
                     .filter((round) => round.roundNumber > 0) // Exclude introduction round
                     .map((round) => (
                       <div
                         key={round._id}
-                        className="border-l-4 border-purple-200 dark:border-purple-700 pl-4"
+                        className="border-l-4 border-purple-300/60 dark:border-purple-600/40 pl-6 relative"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-foreground">
+                        <div className="absolute -left-2 top-0 w-4 h-4 bg-purple-500 dark:bg-purple-400 rounded-full border-2 border-background"></div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <h4 className="font-semibold text-foreground dark:text-foreground/95">
                             Round {round.roundNumber}
                           </h4>
-                          <Badge variant="outline">{round.status}</Badge>
+                          <Badge 
+                            variant="outline" 
+                            className="border-border/50 dark:border-border/30 bg-background/50 dark:bg-background/30 text-muted-foreground dark:text-muted-foreground/80"
+                          >
+                            {round.status}
+                          </Badge>
                         </div>
                         {round.outcome && (
-                          <div className="text-sm text-muted-foreground">
-                            <p>{round.outcome.narrative}</p>
+                          <div className="text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-3">
+                            <p className="leading-relaxed">{round.outcome.narrative}</p>
                             {round.outcome.illustration && (
-                              <div className="mt-2 max-w-md">
+                              <div className="mt-3 max-w-md">
                                 <ConvexImage
                                   storageId={round.outcome.illustration}
                                   alt={`Round ${round.roundNumber} illustration`}
-                                  className="w-full rounded-lg"
+                                  className="w-full rounded-lg shadow-md dark:shadow-lg border border-border/20 dark:border-border/10"
                                 />
                               </div>
                             )}
