@@ -1,18 +1,24 @@
 "use client";
 
-import { use } from 'react';
-import { useUser } from '@clerk/nextjs';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
-import { Id } from '../../../../convex/_generated/dataModel';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Navbar } from '@/components/Navbar';
-import { useState, useEffect } from 'react';
-import { CreateWizardModal } from '@/components/CreateWizardModal';
+import { use } from "react";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Navbar } from "@/components/Navbar";
+import { useState, useEffect } from "react";
+import { CreateWizardModal } from "@/components/CreateWizardModal";
 
 interface JoinShortcodePageProps {
   params: Promise<{
@@ -28,12 +34,13 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   const [showCreateWizardModal, setShowCreateWizardModal] = useState(false);
   const { shortcode } = use(params);
 
-  const duel = useQuery(api.duels.getDuelByShortcode, { 
-    shortcode: shortcode.toUpperCase() 
+  const duel = useQuery(api.duels.getDuelByShortcode, {
+    shortcode: shortcode.toUpperCase(),
   });
-  
-  const wizards = useQuery(api.wizards.getUserWizards, 
-    user?.id ? { userId: user.id } : "skip"
+
+  const wizards = useQuery(
+    api.wizards.getUserWizards,
+    user?.id ? { userId: user.id } : "skip",
   );
 
   const joinDuel = useMutation(api.duels.joinDuel);
@@ -41,15 +48,17 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (isLoaded && !user) {
-      router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
+      router.push(
+        `/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`,
+      );
     }
   }, [isLoaded, user, router]);
 
   const handleWizardToggle = (wizardId: Id<"wizards">) => {
-    setSelectedWizards(prev => 
-      prev.includes(wizardId) 
-        ? prev.filter(id => id !== wizardId)
-        : [...prev, wizardId]
+    setSelectedWizards((prev) =>
+      prev.includes(wizardId)
+        ? prev.filter((id) => id !== wizardId)
+        : [...prev, wizardId],
     );
   };
 
@@ -61,11 +70,11 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
       await joinDuel({
         duelId: duel._id,
         userId: user.id,
-        wizards: selectedWizards
+        wizards: selectedWizards,
       });
       router.push(`/duels/${duel._id}`);
     } catch (error) {
-      console.error('Failed to join duel:', error);
+      console.error("Failed to join duel:", error);
     } finally {
       setIsJoining(false);
     }
@@ -99,12 +108,14 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
               <CardHeader>
                 <CardTitle>❌ Duel Not Found</CardTitle>
                 <CardDescription>
-                  The shortcode &quot;{shortcode.toUpperCase()}&quot; doesn&apos;t match any active duels.
+                  The shortcode &quot;{shortcode.toUpperCase()}&quot;
+                  doesn&apos;t match any active duels.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  The duel may have been completed, cancelled, or the shortcode might be incorrect.
+                  The duel may have been completed, cancelled, or the shortcode
+                  might be incorrect.
                 </p>
                 <div className="flex gap-2 justify-center">
                   <Link href="/dashboard">
@@ -153,7 +164,10 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Duel</h2>
             <p className="text-gray-600">
-              Shortcode: <span className="font-mono font-bold text-purple-600">{duel.shortcode}</span>
+              Shortcode:{" "}
+              <span className="font-mono font-bold text-purple-600">
+                {duel.shortcode}
+              </span>
             </p>
           </div>
 
@@ -169,17 +183,20 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Status:</span>
-                    <Badge variant={duel.status === "COMPLETED" ? "outline" : "default"}>
+                    <Badge
+                      variant={
+                        duel.status === "COMPLETED" ? "outline" : "default"
+                      }
+                    >
                       {duel.status.replace("_", " ")}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Type:</span>
                     <span className="font-medium">
-                      {typeof duel.numberOfRounds === 'number' 
+                      {typeof duel.numberOfRounds === "number"
                         ? `${duel.numberOfRounds} Round Duel`
-                        : 'Duel to the Death'
-                      }
+                        : "Duel to the Death"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -208,10 +225,9 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Type:</span>
                       <span className="font-medium">
-                        {typeof duel.numberOfRounds === 'number' 
+                        {typeof duel.numberOfRounds === "number"
                           ? `${duel.numberOfRounds} Round Duel`
-                          : 'Duel to the Death'
-                        }
+                          : "Duel to the Death"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -220,7 +236,9 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Created:</span>
-                      <span className="font-medium">{new Date(duel.createdAt).toLocaleDateString()}</span>
+                      <span className="font-medium">
+                        {new Date(duel.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -236,7 +254,8 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-600 mb-4">
-                      Create your magical wizard to participate in this epic duel!
+                      Create your magical wizard to participate in this epic
+                      duel!
                     </p>
                     <Button onClick={() => setShowCreateWizardModal(true)}>
                       Create Wizard
@@ -258,8 +277,8 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                           key={wizard._id}
                           className={`p-3 border rounded-lg cursor-pointer transition-all ${
                             selectedWizards.includes(wizard._id)
-                              ? 'border-purple-500 bg-purple-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? "border-purple-500 bg-purple-50"
+                              : "border-gray-200 hover:border-gray-300"
                           }`}
                           onClick={() => handleWizardToggle(wizard._id)}
                         >
@@ -301,7 +320,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                         disabled={selectedWizards.length === 0 || isJoining}
                         className="flex-1"
                       >
-                        {isJoining ? 'Joining Duel...' : 'Join Duel'}
+                        {isJoining ? "Joining Duel..." : "Join Duel"}
                       </Button>
                       <Button
                         variant="outline"

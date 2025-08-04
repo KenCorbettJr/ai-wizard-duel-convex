@@ -22,13 +22,13 @@ import { Swords, Users, Wand2, BarChart3, Trophy, Loader2 } from "lucide-react";
 function ActiveDuelsCard({ userId }: { userId?: string }) {
   const playerDuels = useQuery(
     api.duels.getPlayerDuels,
-    userId ? { userId } : "skip"
+    userId ? { userId } : "skip",
   );
 
   const activeDuels =
     playerDuels?.filter(
       (duel) =>
-        duel.status === "WAITING_FOR_PLAYERS" || duel.status === "IN_PROGRESS"
+        duel.status === "WAITING_FOR_PLAYERS" || duel.status === "IN_PROGRESS",
     ) || [];
 
   const handleCopyShortcode = async (shortcode: string) => {
@@ -129,11 +129,8 @@ export default function Dashboard() {
 
   const wizards = useQuery(
     api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
-
-
-
 
   const totalWins =
     wizards?.reduce((sum, wizard) => sum + (wizard.wins || 0), 0) || 0;
@@ -314,11 +311,7 @@ export default function Dashboard() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {wizards.map((wizard) => (
-                <WizardCard
-                  key={wizard._id}
-                  wizard={wizard}
-
-                />
+                <WizardCard key={wizard._id} wizard={wizard} />
               ))}
             </div>
           )}

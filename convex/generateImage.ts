@@ -3,7 +3,7 @@
 import * as fal from "@fal-ai/serverless-client";
 
 export async function generateImage(
-  illustrationPrompt: string
+  illustrationPrompt: string,
 ): Promise<ArrayBuffer> {
   try {
     // Get FAL API key from environment
@@ -11,7 +11,7 @@ export async function generateImage(
     if (!falKey) {
       console.error("FAL_KEY environment variable is not set");
       throw new Error(
-        "FAL_KEY environment variable is not set. Please add it to your environment variables."
+        "FAL_KEY environment variable is not set. Please add it to your environment variables.",
       );
     }
 
@@ -20,11 +20,10 @@ export async function generateImage(
       credentials: falKey,
     });
 
-
     interface FalImageResult {
       images?: Array<{
         url?: string;
-      }>
+      }>;
     }
 
     const result: FalImageResult = await fal.subscribe("fal-ai/flux/schnell", {
@@ -37,7 +36,6 @@ export async function generateImage(
       },
     });
 
-
     // Get the image URL from the result
     const imageUrl = result.images?.[0]?.url;
     if (!imageUrl) {
@@ -48,7 +46,7 @@ export async function generateImage(
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch generated image: ${response.statusText}`
+        `Failed to fetch generated image: ${response.statusText}`,
       );
     }
 
@@ -58,7 +56,7 @@ export async function generateImage(
   } catch (error) {
     console.error("Error generating image with Fal:", error);
     throw new Error(
-      `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

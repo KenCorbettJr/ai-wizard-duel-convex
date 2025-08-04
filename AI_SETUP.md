@@ -5,18 +5,23 @@ The duel introduction system now uses Google's Genkit with Gemini 2.5 Flash for 
 ## Setup Instructions
 
 ### 1. Install Dependencies
+
 The required Genkit dependencies have been added to `package.json`:
+
 ```bash
 npm install
 ```
 
 ### 2. Get Google AI API Key
+
 1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Create a new API key
 3. Copy the API key
 
 ### 3. Configure Environment Variables
+
 Add your Google AI API key to `.env.local`:
+
 ```
 GOOGLE_AI_API_KEY=your_actual_google_ai_api_key_here
 ```
@@ -42,6 +47,7 @@ The system uses Google's Genkit framework with Gemini 2.5 Flash to:
 ## Configuration Options
 
 The AI text generation supports:
+
 - **Temperature**: Controls creativity (default: 1.5 for dramatic flair)
 - **Max Tokens**: Controls response length (default: 2000)
 - **System Prompts**: Detailed instructions for consistent output
@@ -49,6 +55,7 @@ The AI text generation supports:
 ## Troubleshooting
 
 If you see "AI text generation not configured" errors:
+
 1. Verify your `GOOGLE_AI_API_KEY` is set in `.env.local`
 2. Restart your development server
 3. Check the console for detailed error messages

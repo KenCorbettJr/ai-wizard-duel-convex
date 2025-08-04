@@ -41,11 +41,15 @@ export const createWizard = mutation({
 
     // Schedule illustration generation if AI-powered
     if (args.isAIPowered) {
-      ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
-        wizardId,
-        name: args.name,
-        description: args.description,
-      });
+      ctx.scheduler.runAfter(
+        0,
+        api.generateWizardIllustration.generateWizardIllustration,
+        {
+          wizardId,
+          name: args.name,
+          description: args.description,
+        },
+      );
     }
 
     return wizardId;
@@ -91,8 +95,11 @@ export const updateWizard = mutation({
     }
 
     // Check if name or description changed and wizard is/will be AI-powered
-    const nameChanged = updates.name !== undefined && updates.name !== wizard.name;
-    const descriptionChanged = updates.description !== undefined && updates.description !== wizard.description;
+    const nameChanged =
+      updates.name !== undefined && updates.name !== wizard.name;
+    const descriptionChanged =
+      updates.description !== undefined &&
+      updates.description !== wizard.description;
     const shouldRegenerateIllustration = nameChanged || descriptionChanged;
 
     await ctx.db.patch(wizardId, {
@@ -107,11 +114,15 @@ export const updateWizard = mutation({
 
     // Schedule illustration regeneration if name or description changed and wizard is AI-powered
     if (shouldRegenerateIllustration) {
-      ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
-        wizardId,
-        name: updates.name || wizard.name,
-        description: updates.description || wizard.description,
-      });
+      ctx.scheduler.runAfter(
+        0,
+        api.generateWizardIllustration.generateWizardIllustration,
+        {
+          wizardId,
+          name: updates.name || wizard.name,
+          description: updates.description || wizard.description,
+        },
+      );
     }
   },
 });
@@ -134,15 +145,21 @@ export const regenerateIllustration = mutation({
     }
 
     if (!wizard.isAIPowered) {
-      throw new Error("Only AI-powered wizards can have illustrations generated");
+      throw new Error(
+        "Only AI-powered wizards can have illustrations generated",
+      );
     }
 
     // Schedule illustration generation
-    ctx.scheduler.runAfter(0, api.generateWizardIllustration.generateWizardIllustration, {
-      wizardId,
-      name: wizard.name,
-      description: wizard.description,
-    });
+    ctx.scheduler.runAfter(
+      0,
+      api.generateWizardIllustration.generateWizardIllustration,
+      {
+        wizardId,
+        name: wizard.name,
+        description: wizard.description,
+      },
+    );
 
     return { success: true };
   },

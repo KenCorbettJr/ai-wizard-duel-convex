@@ -1,14 +1,25 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LucideIcon } from "lucide-react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { LucideIcon } from "lucide-react";
 
 interface FeatureCardProps {
-  icon?: LucideIcon
-  emoji?: string
-  title: string
-  description: string
+  icon?: LucideIcon;
+  emoji?: string;
+  title: string;
+  description: string;
 }
 
-export default function FeatureCard({ icon: Icon, emoji, title, description }: FeatureCardProps) {
+export default function FeatureCard({
+  icon: Icon,
+  emoji,
+  title,
+  description,
+}: FeatureCardProps) {
   return (
     <Card className="h-full">
       <CardHeader className="text-center">
@@ -20,5 +31,5 @@ export default function FeatureCard({ icon: Icon, emoji, title, description }: F
         <CardDescription className="text-center">{description}</CardDescription>
       </CardContent>
     </Card>
-  )
+  );
 }

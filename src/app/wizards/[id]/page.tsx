@@ -85,7 +85,7 @@ export default function WizardPage({ params }: WizardPageProps) {
   const activeDuels =
     wizardDuels?.filter(
       (duel) =>
-        duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS"
+        duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS",
     ) || [];
 
   const isOwner = user && wizard && user.id === wizard.owner;

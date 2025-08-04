@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { JoinDuelForm } from '@/components/JoinDuelForm';
-import { Navbar } from '@/components/Navbar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { JoinDuelForm } from "@/components/JoinDuelForm";
+import { Navbar } from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 function ShortcodeInput() {
-  const [shortcode, setShortcode] = useState('');
+  const [shortcode, setShortcode] = useState("");
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,7 +43,7 @@ export default function JoinDuelPage() {
   };
 
   const handleClose = () => {
-    router.push('/dashboard');
+    router.push("/dashboard");
   };
 
   return (
@@ -53,7 +53,9 @@ export default function JoinDuelPage() {
       <main className="container mx-auto px-6 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Join a Duel</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-2">
+              Join a Duel
+            </h2>
             <p className="text-muted-foreground">
               Find an open duel and join the magical battle
             </p>
@@ -66,11 +68,8 @@ export default function JoinDuelPage() {
                 <ShortcodeInput />
               </div>
             </div>
-            
-            <JoinDuelForm 
-              onClose={handleClose}
-              onSuccess={handleSuccess}
-            />
+
+            <JoinDuelForm onClose={handleClose} onSuccess={handleSuccess} />
           </div>
         </div>
       </main>

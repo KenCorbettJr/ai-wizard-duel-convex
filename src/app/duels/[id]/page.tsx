@@ -1,19 +1,25 @@
 "use client";
 
-import { use } from 'react';
-import { useUser } from '@clerk/nextjs';
-import Link from 'next/link';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
-import { Id } from '../../../../convex/_generated/dataModel';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Navbar } from '@/components/Navbar';
-import { useState } from 'react';
-import { Swords, Clock, Sparkles, ScrollText, Heart, Star } from 'lucide-react';
-import { ConvexImage } from '@/components/ConvexImage';
-import { DuelIntroduction } from '@/components/DuelIntroduction';
+import { use } from "react";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Navbar } from "@/components/Navbar";
+import { useState } from "react";
+import { Swords, Clock, Sparkles, ScrollText, Heart, Star } from "lucide-react";
+import { ConvexImage } from "@/components/ConvexImage";
+import { DuelIntroduction } from "@/components/DuelIntroduction";
 
 interface DuelPageProps {
   params: Promise<{
@@ -23,55 +29,60 @@ interface DuelPageProps {
 
 export default function DuelPage({ params }: DuelPageProps) {
   const { user } = useUser();
-  const [spellDescription, setSpellDescription] = useState('');
+  const [spellDescription, setSpellDescription] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const { id } = use(params);
 
-  const duel = useQuery(api.duels.getDuel, { 
-    duelId: id as Id<"duels"> 
+  const duel = useQuery(api.duels.getDuel, {
+    duelId: id as Id<"duels">,
   });
-  
+
   // Fetch wizard data for each wizard in the duel
-  const wizard1 = useQuery(api.wizards.getWizard, 
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
+  const wizard1 = useQuery(
+    api.wizards.getWizard,
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
-  const wizard2 = useQuery(api.wizards.getWizard, 
-    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
+  const wizard2 = useQuery(
+    api.wizards.getWizard,
+    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
   );
 
   // Find the user's wizard in this duel
-  const userWizard = [wizard1, wizard2].find(wizard => wizard?.owner === user?.id);
+  const userWizard = [wizard1, wizard2].find(
+    (wizard) => wizard?.owner === user?.id,
+  );
   const userWizardId = userWizard?._id;
   const startDuel = useMutation(api.duels.startDuel);
   const castSpell = useMutation(api.duels.castSpell);
 
-  const isPlayerInDuel = duel?.players.includes(user?.id || '');
-  const canStartDuel = duel?.status === "WAITING_FOR_PLAYERS" && 
-                      duel?.players.length >= 2 && 
-                      isPlayerInDuel;
+  const isPlayerInDuel = duel?.players.includes(user?.id || "");
+  const canStartDuel =
+    duel?.status === "WAITING_FOR_PLAYERS" &&
+    duel?.players.length >= 2 &&
+    isPlayerInDuel;
 
   const handleStartDuel = async () => {
     if (!duel) return;
     try {
       await startDuel({ duelId: duel._id });
     } catch (error) {
-      console.error('Failed to start duel:', error);
+      console.error("Failed to start duel:", error);
     }
   };
 
   const handleCastSpell = async () => {
     if (!duel || !spellDescription.trim() || !userWizardId) return;
-    
+
     setIsCasting(true);
     try {
       await castSpell({
         duelId: duel._id,
         wizardId: userWizardId,
-        spellDescription: spellDescription.trim()
+        spellDescription: spellDescription.trim(),
       });
-      setSpellDescription('');
+      setSpellDescription("");
     } catch (error) {
-      console.error('Failed to cast spell:', error);
+      console.error("Failed to cast spell:", error);
     } finally {
       setIsCasting(false);
     }
@@ -112,16 +123,16 @@ export default function DuelPage({ params }: DuelPageProps) {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-3xl font-bold text-foreground">
-                {typeof duel.numberOfRounds === 'number' 
+                {typeof duel.numberOfRounds === "number"
                   ? `${duel.numberOfRounds} Round Duel`
-                  : 'Duel to the Death'
-                }
+                  : "Duel to the Death"}
               </h2>
               {getStatusBadge(duel.status)}
             </div>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground">
-                Round {duel.currentRound} • Created {new Date(duel.createdAt).toLocaleDateString()}
+                Round {duel.currentRound} • Created{" "}
+                {new Date(duel.createdAt).toLocaleDateString()}
               </p>
               {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
                 <div className="flex items-center gap-2">
@@ -164,11 +175,17 @@ export default function DuelPage({ params }: DuelPageProps) {
                         </div>
                       )}
                       <div className="absolute top-4 right-4 flex gap-2">
-                        <Badge variant="secondary" className="flex items-center gap-1">
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
                           <Star className="h-3 w-3" />
                           {duel.points[duel.wizards[0]] || 0}
                         </Badge>
-                        <Badge variant="destructive" className="flex items-center gap-1">
+                        <Badge
+                          variant="destructive"
+                          className="flex items-center gap-1"
+                        >
                           <Heart className="h-3 w-3" />
                           {duel.hitPoints[duel.wizards[0]] || 100}
                         </Badge>
@@ -197,11 +214,17 @@ export default function DuelPage({ params }: DuelPageProps) {
                         </div>
                       )}
                       <div className="absolute top-4 right-4 flex gap-2">
-                        <Badge variant="secondary" className="flex items-center gap-1">
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
                           <Star className="h-3 w-3" />
                           {duel.points[duel.wizards[1]] || 0}
                         </Badge>
-                        <Badge variant="destructive" className="flex items-center gap-1">
+                        <Badge
+                          variant="destructive"
+                          className="flex items-center gap-1"
+                        >
                           <Heart className="h-3 w-3" />
                           {duel.hitPoints[duel.wizards[1]] || 100}
                         </Badge>
@@ -221,7 +244,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                   <Swords className="h-8 w-8 text-muted-foreground" />
                 </div>
               </div>
-              
+
               {/* VS Divider - Mobile */}
               <div className="md:hidden flex justify-center -my-4 relative z-10">
                 <div className="bg-card border-2 border-border rounded-full p-3 shadow-lg">
@@ -231,8 +254,6 @@ export default function DuelPage({ params }: DuelPageProps) {
             </div>
           )}
 
-
-
           {duel.status === "WAITING_FOR_PLAYERS" && (
             <Card className="mb-8">
               <CardHeader>
@@ -241,24 +262,24 @@ export default function DuelPage({ params }: DuelPageProps) {
                   Waiting for Players
                 </CardTitle>
                 <CardDescription>
-                  {duel.players.length < 2 
+                  {duel.players.length < 2
                     ? "Waiting for more players to join..."
-                    : "Ready to start! Click the button below to begin the duel."
-                  }
+                    : "Ready to start! Click the button below to begin the duel."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {!isPlayerInDuel ? (
                   <p className="text-muted-foreground">
-                    You are not part of this duel. 
-                    <Link href="/duels/join" className="text-purple-600 dark:text-purple-400 hover:underline ml-1">
+                    You are not part of this duel.
+                    <Link
+                      href="/duels/join"
+                      className="text-purple-600 dark:text-purple-400 hover:underline ml-1"
+                    >
                       Join a different duel
                     </Link>
                   </p>
                 ) : canStartDuel ? (
-                  <Button onClick={handleStartDuel}>
-                    Start Duel
-                  </Button>
+                  <Button onClick={handleStartDuel}>Start Duel</Button>
                 ) : (
                   <p className="text-muted-foreground">
                     Waiting for more players to join...
@@ -268,37 +289,44 @@ export default function DuelPage({ params }: DuelPageProps) {
             </Card>
           )}
 
-          {duel.status === "IN_PROGRESS" && isPlayerInDuel && userWizard && userWizardId && duel.needActionsFrom.includes(userWizardId) && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" />
-                  Cast Your Spell
-                </CardTitle>
-                <CardDescription>
-                  Describe the magical spell {userWizard.name} will cast this round
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <textarea
-                    value={spellDescription}
-                    onChange={(e) => setSpellDescription(e.target.value)}
-                    placeholder="Describe your wizard's spell in detail..."
-                    className="w-full p-3 border border-input bg-background text-foreground rounded-lg resize-none h-24 placeholder:text-muted-foreground"
-                    disabled={isCasting}
-                  />
-                  <Button
-                    onClick={handleCastSpell}
-                    disabled={!spellDescription.trim() || isCasting}
-                    className="w-full"
-                  >
-                    {isCasting ? 'Casting Spell...' : `Cast Spell with ${userWizard.name}`}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {duel.status === "IN_PROGRESS" &&
+            isPlayerInDuel &&
+            userWizard &&
+            userWizardId &&
+            duel.needActionsFrom.includes(userWizardId) && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Cast Your Spell
+                  </CardTitle>
+                  <CardDescription>
+                    Describe the magical spell {userWizard.name} will cast this
+                    round
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <textarea
+                      value={spellDescription}
+                      onChange={(e) => setSpellDescription(e.target.value)}
+                      placeholder="Describe your wizard's spell in detail..."
+                      className="w-full p-3 border border-input bg-background text-foreground rounded-lg resize-none h-24 placeholder:text-muted-foreground"
+                      disabled={isCasting}
+                    />
+                    <Button
+                      onClick={handleCastSpell}
+                      disabled={!spellDescription.trim() || isCasting}
+                      className="w-full"
+                    >
+                      {isCasting
+                        ? "Casting Spell..."
+                        : `Cast Spell with ${userWizard.name}`}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
           {/* Show introduction for in-progress or completed duels */}
           {(duel.status === "IN_PROGRESS" || duel.status === "COMPLETED") && (
@@ -332,29 +360,34 @@ export default function DuelPage({ params }: DuelPageProps) {
               <CardContent>
                 <div className="space-y-4">
                   {duel.rounds
-                    .filter(round => round.roundNumber > 0) // Exclude introduction round
+                    .filter((round) => round.roundNumber > 0) // Exclude introduction round
                     .map((round) => (
-                    <div key={round._id} className="border-l-4 border-purple-200 dark:border-purple-700 pl-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-medium text-foreground">Round {round.roundNumber}</h4>
-                        <Badge variant="outline">{round.status}</Badge>
-                      </div>
-                      {round.outcome && (
-                        <div className="text-sm text-muted-foreground">
-                          <p>{round.outcome.narrative}</p>
-                          {round.outcome.illustration && (
-                            <div className="mt-2 max-w-md">
-                              <ConvexImage
-                                storageId={round.outcome.illustration}
-                                alt={`Round ${round.roundNumber} illustration`}
-                                className="w-full rounded-lg"
-                              />
-                            </div>
-                          )}
+                      <div
+                        key={round._id}
+                        className="border-l-4 border-purple-200 dark:border-purple-700 pl-4"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-medium text-foreground">
+                            Round {round.roundNumber}
+                          </h4>
+                          <Badge variant="outline">{round.status}</Badge>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {round.outcome && (
+                          <div className="text-sm text-muted-foreground">
+                            <p>{round.outcome.narrative}</p>
+                            {round.outcome.illustration && (
+                              <div className="mt-2 max-w-md">
+                                <ConvexImage
+                                  storageId={round.outcome.illustration}
+                                  alt={`Round ${round.roundNumber} illustration`}
+                                  className="w-full rounded-lg"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                 </div>
               </CardContent>
             </Card>

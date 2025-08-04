@@ -12,12 +12,18 @@ interface ConvexImageProps {
   className?: string;
 }
 
-export function ConvexImage({ storageId, alt, width = 400, height = 300, className }: ConvexImageProps) {
+export function ConvexImage({
+  storageId,
+  alt,
+  width = 400,
+  height = 300,
+  className,
+}: ConvexImageProps) {
   const imageUrl = useQuery(api.wizards.getIllustrationUrl, { storageId });
 
   if (!imageUrl) {
     return (
-      <div 
+      <div
         className={`bg-gray-200 animate-pulse rounded-lg ${className}`}
         style={{ width, height }}
       />

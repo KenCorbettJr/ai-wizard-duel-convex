@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { WizardForm } from './WizardForm';
+import { WizardForm } from "./WizardForm";
 
 interface CreateWizardModalProps {
   open: boolean;
@@ -15,7 +15,11 @@ interface CreateWizardModalProps {
   onSuccess?: () => void;
 }
 
-export function CreateWizardModal({ open, onOpenChange, onSuccess }: CreateWizardModalProps) {
+export function CreateWizardModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: CreateWizardModalProps) {
   const handleClose = () => {
     onOpenChange(false);
   };

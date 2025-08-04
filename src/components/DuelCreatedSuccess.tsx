@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
-import { Id } from '../../convex/_generated/dataModel';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 
 interface DuelCreatedSuccessProps {
   duelId: Id<"duels">;
@@ -14,39 +20,43 @@ interface DuelCreatedSuccessProps {
   onCreateAnother: () => void;
 }
 
-export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: DuelCreatedSuccessProps) {
+export function DuelCreatedSuccess({
+  duelId,
+  onViewDuel,
+  onCreateAnother,
+}: DuelCreatedSuccessProps) {
   const [copied, setCopied] = useState(false);
-  
+
   const duel = useQuery(api.duels.getDuel, { duelId });
 
   const handleCopyLink = async () => {
     if (!duel?.shortcode) return;
-    
+
     const url = `${window.location.origin}/join/${duel.shortcode}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
   const handleShare = async () => {
     if (!duel?.shortcode) return;
-    
+
     const url = `${window.location.origin}/join/${duel.shortcode}`;
     const text = `Join my wizard duel! Use shortcode ${duel.shortcode} or click this link:`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join My Wizard Duel',
+          title: "Join My Wizard Duel",
           text,
           url,
         });
       } catch (error) {
-        console.error('Failed to share:', error);
+        console.error("Failed to share:", error);
         handleCopyLink();
       }
     } else {
@@ -67,7 +77,9 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">🎉 Duel Created Successfully!</CardTitle>
+        <CardTitle className="text-2xl">
+          🎉 Duel Created Successfully!
+        </CardTitle>
         <CardDescription>
           Your magical battle arena is ready for opponents
         </CardDescription>
@@ -75,7 +87,9 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
       <CardContent className="space-y-6">
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-            <span className="text-purple-800 dark:text-purple-200 font-medium">Shortcode:</span>
+            <span className="text-purple-800 dark:text-purple-200 font-medium">
+              Shortcode:
+            </span>
             <code className="text-2xl font-mono font-bold text-purple-900 dark:text-purple-100 tracking-wider">
               {duel.shortcode}
             </code>
@@ -88,15 +102,16 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
             <div className="flex justify-between">
               <span className="text-muted-foreground">Type:</span>
               <span className="font-medium text-foreground">
-                {typeof duel.numberOfRounds === 'number' 
+                {typeof duel.numberOfRounds === "number"
                   ? `${duel.numberOfRounds} Rounds`
-                  : 'To the Death'
-                }
+                  : "To the Death"}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Wizards:</span>
-              <span className="font-medium text-foreground">{duel.wizards.length}</span>
+              <span className="font-medium text-foreground">
+                {duel.wizards.length}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Status:</span>
@@ -104,7 +119,9 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Players:</span>
-              <span className="font-medium text-foreground">{duel.players.length}</span>
+              <span className="font-medium text-foreground">
+                {duel.players.length}
+              </span>
             </div>
           </div>
         </div>
@@ -114,14 +131,15 @@ export function DuelCreatedSuccess({ duelId, onViewDuel, onCreateAnother }: Duel
           <div className="space-y-3">
             <div className="flex gap-2">
               <Button onClick={handleShare} className="flex-1">
-                {copied ? '✓ Copied!' : '📤 Share Link'}
+                {copied ? "✓ Copied!" : "📤 Share Link"}
               </Button>
               <Button variant="outline" onClick={handleCopyLink}>
                 📋 Copy
               </Button>
             </div>
             <div className="text-xs text-muted-foreground text-center">
-              Share the shortcode <strong>{duel.shortcode}</strong> or send the link to invite players
+              Share the shortcode <strong>{duel.shortcode}</strong> or send the
+              link to invite players
             </div>
           </div>
         </div>

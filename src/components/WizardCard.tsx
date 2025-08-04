@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wizard } from "@/types/wizard";
 import Image from "next/image";
@@ -13,9 +19,10 @@ interface WizardCardProps {
 }
 
 export function WizardCard({ wizard }: WizardCardProps) {
-  const winRate = wizard.wins && wizard.losses 
-    ? Math.round((wizard.wins / (wizard.wins + wizard.losses)) * 100)
-    : 0;
+  const winRate =
+    wizard.wins && wizard.losses
+      ? Math.round((wizard.wins / (wizard.wins + wizard.losses)) * 100)
+      : 0;
 
   return (
     <Link href={`/wizards/${wizard._id}`} className="block">
@@ -42,12 +49,15 @@ export function WizardCard({ wizard }: WizardCardProps) {
             ) : null}
           </div>
         )}
-        
+
         <CardHeader className="pb-3 px-6 pt-6">
           <CardTitle className="text-lg flex items-center gap-2">
             {wizard.name}
             {wizard.isAIPowered && (
-              <Badge variant="secondary" className="text-xs flex items-center gap-1">
+              <Badge
+                variant="secondary"
+                className="text-xs flex items-center gap-1"
+              >
                 <Bot className="w-3 h-3" />
                 AI
               </Badge>
@@ -57,7 +67,7 @@ export function WizardCard({ wizard }: WizardCardProps) {
             {wizard.description}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="pt-0 px-6 pb-6">
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">

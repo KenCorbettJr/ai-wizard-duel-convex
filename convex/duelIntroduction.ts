@@ -31,7 +31,7 @@ export const generateDuelIntroduction = action({
   },
   handler: async (
     ctx,
-    { duelId }
+    { duelId },
   ): Promise<{ success: boolean; introRoundId: Id<"duelRounds"> }> => {
     console.log(`Starting introduction generation for duel ${duelId}`);
 
@@ -45,8 +45,8 @@ export const generateDuelIntroduction = action({
       // Get wizard data
       const wizards = await Promise.all(
         duel.wizards.map((wizardId: Id<"wizards">) =>
-          ctx.runQuery(api.wizards.getWizard, { wizardId })
-        )
+          ctx.runQuery(api.wizards.getWizard, { wizardId }),
+        ),
       );
 
       if (wizards.length < 2 || wizards.some((w: WizardData | null) => !w)) {
@@ -65,7 +65,7 @@ export const generateDuelIntroduction = action({
       const introduction = await generateIntroductionText(
         duel,
         wizard1,
-        wizard2
+        wizard2,
       );
 
       // Create the introduction round (round 0)
@@ -78,7 +78,7 @@ export const generateDuelIntroduction = action({
             result: introduction.result,
             illustrationPrompt: introduction.illustrationPrompt,
           },
-        }
+        },
       );
 
       // Generate the illustration
@@ -92,7 +92,7 @@ export const generateDuelIntroduction = action({
               illustrationPrompt: introduction.illustrationPrompt,
               duelId,
               roundNumber: "0",
-            }
+            },
           );
         } catch (error) {
           console.error("Failed to schedule introduction illustration:", error);
@@ -108,7 +108,7 @@ export const generateDuelIntroduction = action({
     } catch (error) {
       console.error(`Error generating introduction for duel ${duelId}:`, error);
       throw new Error(
-        `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   },
@@ -118,7 +118,7 @@ export const generateDuelIntroduction = action({
 async function generateIntroductionText(
   duel: { numberOfRounds: number | "TO_THE_DEATH" },
   wizard1: WizardData,
-  wizard2: WizardData
+  wizard2: WizardData,
 ): Promise<IntroductionResponse> {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"

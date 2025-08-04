@@ -28,7 +28,9 @@ export function DuelIntroduction({ duelId }: DuelIntroductionProps) {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-pulse h-4 w-32 bg-muted rounded mx-auto mb-4"></div>
-          <p className="text-muted-foreground">The Arcane Arbiter is preparing the introduction...</p>
+          <p className="text-muted-foreground">
+            The Arcane Arbiter is preparing the introduction...
+          </p>
         </div>
       </div>
     );
@@ -53,7 +55,7 @@ export function DuelIntroduction({ duelId }: DuelIntroductionProps) {
           <h2 className="text-2xl font-bold mb-4 text-center">
             🏟️ Welcome to the Enchanted Arena! 🏟️
           </h2>
-          
+
           <div className="whitespace-pre-line text-foreground leading-relaxed">
             {introRound.outcome.narrative}
           </div>

@@ -14,24 +14,31 @@ interface NavbarProps {
   onBackClick?: () => void;
 }
 
-export function Navbar({ transparent = false, className, showBackButton = false, onBackClick }: NavbarProps) {
+export function Navbar({
+  transparent = false,
+  className,
+  showBackButton = false,
+  onBackClick,
+}: NavbarProps) {
   return (
-    <nav className={cn(
-      "flex items-center justify-between p-6",
-      transparent 
-        ? "bg-transparent" 
-        : "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
-      className
-    )}>
+    <nav
+      className={cn(
+        "flex items-center justify-between p-6",
+        transparent
+          ? "bg-transparent"
+          : "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
+        className,
+      )}
+    >
       <div className="flex items-center gap-4">
         {showBackButton && onBackClick && (
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={onBackClick}
             className={cn(
               "hover:bg-white/20",
-              transparent ? "text-white hover:text-white" : ""
+              transparent ? "text-white hover:text-white" : "",
             )}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -39,10 +46,12 @@ export function Navbar({ transparent = false, className, showBackButton = false,
           </Button>
         )}
         <Link href="/">
-          <h1 className={cn(
-            "text-2xl font-bold",
-            transparent ? "text-white" : ""
-          )}>
+          <h1
+            className={cn(
+              "text-2xl font-bold",
+              transparent ? "text-white" : "",
+            )}
+          >
             AI Wizard Duel
           </h1>
         </Link>

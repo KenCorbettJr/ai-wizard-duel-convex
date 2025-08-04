@@ -11,7 +11,7 @@ export interface AITextGenerationConfig {
 export async function generateText(
   prompt: string,
   systemPrompt?: string,
-  config: AITextGenerationConfig = {}
+  config: AITextGenerationConfig = {},
 ): Promise<string> {
   console.log("AI Text Generation called with:", {
     prompt,
@@ -37,7 +37,7 @@ export async function generateText(
   } catch (error) {
     console.error("AI text generation failed:", error);
     throw new Error(
-      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

@@ -52,9 +52,11 @@ export const getDuelByShortcode = query({
   handler: async (ctx, { shortcode }) => {
     const duel = await ctx.db
       .query("duels")
-      .withIndex("by_shortcode", (q) => q.eq("shortcode", shortcode.toUpperCase()))
+      .withIndex("by_shortcode", (q) =>
+        q.eq("shortcode", shortcode.toUpperCase()),
+      )
       .first();
-    
+
     if (!duel) return null;
 
     // Get all rounds for this duel
@@ -97,8 +99,8 @@ export const getIntroductionRound = query({
 
 // Helper function to generate a unique shortcode
 function generateShortcode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
   for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -272,7 +274,7 @@ export const castSpell = mutation({
 
     // Remove wizard from needActionsFrom
     const updatedNeedActions = duel.needActionsFrom.filter(
-      (id) => id !== wizardId
+      (id) => id !== wizardId,
     );
     await ctx.db.patch(duelId, {
       needActionsFrom: updatedNeedActions,
@@ -334,9 +336,9 @@ export const completeRound = mutation({
         ([wizardId, healthChange]) => {
           updatedHitPoints[wizardId] = Math.max(
             0,
-            (updatedHitPoints[wizardId] || 100) + (healthChange as number)
+            (updatedHitPoints[wizardId] || 100) + (healthChange as number),
           );
-        }
+        },
       );
     }
 
@@ -398,7 +400,7 @@ function checkDuelEndConditions(
     currentRound: number;
     points: Record<string, number>;
   },
-  hitPoints: Record<string, number>
+  hitPoints: Record<string, number>,
 ): {
   shouldEnd: boolean;
   winners?: Id<"wizards">[];
@@ -406,7 +408,7 @@ function checkDuelEndConditions(
 } {
   // Check if any wizard has 0 hit points (death condition)
   const aliveWizards = duel.wizards.filter(
-    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0
+    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0,
   );
 
   if (aliveWizards.length <= 1) {
@@ -414,7 +416,7 @@ function checkDuelEndConditions(
       shouldEnd: true,
       winners: aliveWizards,
       losers: duel.wizards.filter(
-        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId)
+        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId),
       ),
     };
   }
@@ -434,11 +436,11 @@ function checkDuelEndConditions(
     wizardScores.sort(
       (
         a: { points: number; hitPoints: number },
-        b: { points: number; hitPoints: number }
+        b: { points: number; hitPoints: number },
       ) => {
         if (a.points !== b.points) return b.points - a.points;
         return b.hitPoints - a.hitPoints;
-      }
+      },
     );
 
     const highestScore = wizardScores[0];
@@ -446,7 +448,7 @@ function checkDuelEndConditions(
       .filter(
         (w: { points: number; hitPoints: number; wizardId: Id<"wizards"> }) =>
           w.points === highestScore.points &&
-          w.hitPoints === highestScore.hitPoints
+          w.hitPoints === highestScore.hitPoints,
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -456,7 +458,7 @@ function checkDuelEndConditions(
           !(
             w.points === highestScore.points &&
             w.hitPoints === highestScore.hitPoints
-          )
+          ),
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -539,7 +541,7 @@ export const getWizardDuels = query({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
     const duels = await ctx.db.query("duels").collect();
-    
+
     // Filter duels that include this wizard
     return duels
       .filter((duel) => duel.wizards.includes(wizardId))
@@ -573,7 +575,7 @@ export const getPlayerDuelStats = query({
           });
 
           const hasWinningWizard = duel.winners?.some((winnerId) =>
-            playerWizards.includes(winnerId)
+            playerWizards.includes(winnerId),
           );
 
           if (hasWinningWizard) {
