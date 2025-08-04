@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/Navbar';
 import { useState } from 'react';
-import { Swords, Trophy, Clock, Sparkles, ScrollText, Heart, Star } from 'lucide-react';
+import { Swords, Clock, Sparkles, ScrollText, Heart, Star } from 'lucide-react';
 import { ConvexImage } from '@/components/ConvexImage';
 
 interface DuelPageProps {
@@ -37,6 +37,10 @@ export default function DuelPage({ params }: DuelPageProps) {
   const wizard2 = useQuery(api.wizards.getWizard, 
     duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
+
+  // Find the user's wizard in this duel
+  const userWizard = [wizard1, wizard2].find(wizard => wizard?.owner === user?.id);
+  const userWizardId = userWizard?._id;
   const startDuel = useMutation(api.duels.startDuel);
   const castSpell = useMutation(api.duels.castSpell);
 
@@ -54,14 +58,14 @@ export default function DuelPage({ params }: DuelPageProps) {
     }
   };
 
-  const handleCastSpell = async (wizardId: Id<"wizards">) => {
-    if (!duel || !spellDescription.trim()) return;
+  const handleCastSpell = async () => {
+    if (!duel || !spellDescription.trim() || !userWizardId) return;
     
     setIsCasting(true);
     try {
       await castSpell({
         duelId: duel._id,
-        wizardId,
+        wizardId: userWizardId,
         spellDescription: spellDescription.trim()
       });
       setSpellDescription('');
@@ -226,58 +230,7 @@ export default function DuelPage({ params }: DuelPageProps) {
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Swords className="h-5 w-5" />
-                  Duel Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Players:</span>
-                    <span className="font-medium text-foreground">{duel.players.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Wizards:</span>
-                    <span className="font-medium text-foreground">{duel.wizards.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Current Round:</span>
-                    <span className="font-medium text-foreground">{duel.currentRound}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5" />
-                  Wizard Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {duel.wizards.map((wizardId) => (
-                    <div key={wizardId} className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Wizard {wizardId.slice(-4)}</span>
-                      <div className="flex gap-2">
-                        <Badge variant="outline">
-                          {duel.points[wizardId] || 0} pts
-                        </Badge>
-                        <Badge variant="secondary">
-                          {duel.hitPoints[wizardId] || 100} HP
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
           {duel.status === "WAITING_FOR_PLAYERS" && (
             <Card className="mb-8">
@@ -314,7 +267,7 @@ export default function DuelPage({ params }: DuelPageProps) {
             </Card>
           )}
 
-          {duel.status === "IN_PROGRESS" && isPlayerInDuel && (
+          {duel.status === "IN_PROGRESS" && isPlayerInDuel && userWizard && userWizardId && duel.needActionsFrom.includes(userWizardId) && (
             <Card className="mb-8">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -322,7 +275,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                   Cast Your Spell
                 </CardTitle>
                 <CardDescription>
-                  Describe the magical spell your wizard will cast this round
+                  Describe the magical spell {userWizard.name} will cast this round
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -334,19 +287,13 @@ export default function DuelPage({ params }: DuelPageProps) {
                     className="w-full p-3 border border-input bg-background text-foreground rounded-lg resize-none h-24 placeholder:text-muted-foreground"
                     disabled={isCasting}
                   />
-                  <div className="flex gap-2">
-                    {duel.wizards
-                      .filter(wizardId => duel.needActionsFrom.includes(wizardId))
-                      .map((wizardId) => (
-                        <Button
-                          key={wizardId}
-                          onClick={() => handleCastSpell(wizardId)}
-                          disabled={!spellDescription.trim() || isCasting}
-                        >
-                          {isCasting ? 'Casting...' : `Cast with Wizard ${wizardId.slice(-4)}`}
-                        </Button>
-                      ))}
-                  </div>
+                  <Button
+                    onClick={handleCastSpell}
+                    disabled={!spellDescription.trim() || isCasting}
+                    className="w-full"
+                  >
+                    {isCasting ? 'Casting Spell...' : `Cast Spell with ${userWizard.name}`}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
