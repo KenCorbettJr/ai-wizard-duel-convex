@@ -15,6 +15,12 @@ import {
   ScanHeart,
   Trophy,
 } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
+};
 
 export default function Home() {
   return (
