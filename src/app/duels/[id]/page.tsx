@@ -40,11 +40,11 @@ export default function DuelPage({ params }: DuelPageProps) {
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
   );
   const wizard2 = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
+    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
 
   // Check for loading and error states
@@ -53,7 +53,7 @@ export default function DuelPage({ params }: DuelPageProps) {
 
   // Find the user's wizard in this duel
   const userWizard = [wizard1, wizard2].find(
-    (wizard) => wizard?.owner === user?.id,
+    (wizard) => wizard?.owner === user?.id
   );
   const userWizardId = userWizard?._id;
   const startDuel = useMutation(api.duels.startDuel);
@@ -99,15 +99,26 @@ export default function DuelPage({ params }: DuelPageProps) {
         <div className="text-center">
           <div className="relative mb-6">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
-            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-            <div className="absolute inset-2 rounded-full h-12 w-12 border-2 border-transparent border-t-purple-500/40 dark:border-t-purple-200/40 animate-spin mx-auto" style={{ animationDuration: '2s' }}></div>
+            <div
+              className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto"
+              style={{
+                animationDirection: "reverse",
+                animationDuration: "1.5s",
+              }}
+            ></div>
+            <div
+              className="absolute inset-2 rounded-full h-12 w-12 border-2 border-transparent border-t-purple-500/40 dark:border-t-purple-200/40 animate-spin mx-auto"
+              style={{ animationDuration: "2s" }}
+            ></div>
           </div>
           <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-8 py-6 shadow-xl dark:shadow-2xl max-w-sm mx-auto">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400 animate-pulse" />
               <p className="text-foreground font-semibold">Loading duel...</p>
             </div>
-            <p className="text-muted-foreground text-sm">Preparing the magical arena</p>
+            <p className="text-muted-foreground text-sm">
+              Preparing the magical arena
+            </p>
           </div>
         </div>
       </div>
@@ -128,7 +139,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                   Error Loading Duel
                 </CardTitle>
                 <CardDescription className="dark:text-muted-foreground/80">
-                  We couldn't load the duel you're looking for.
+                  We couldn&apos;t load the duel you&apos;re looking for.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -136,16 +147,20 @@ export default function DuelPage({ params }: DuelPageProps) {
                   This could happen if:
                 </p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-1 ml-4">
-                  <li>The duel doesn't exist or has been deleted</li>
+                  <li>The duel doesn&apos;t exist or has been deleted</li>
                   <li>You don&apos;t have permission to view this duel</li>
                   <li>There&apos;s a temporary connection issue</li>
                 </ul>
                 <div className="flex gap-3 pt-4">
-                  <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600">
+                  <Button
+                    asChild
+                    variant="default"
+                    className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600"
+                  >
                     <Link href="/duels">Browse Duels</Link>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
                     onClick={() => window.location.reload()}
                   >
@@ -164,8 +179,8 @@ export default function DuelPage({ params }: DuelPageProps) {
     switch (status) {
       case "WAITING_FOR_PLAYERS":
         return (
-          <Badge 
-            variant="secondary" 
+          <Badge
+            variant="secondary"
             className="bg-orange-100/80 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 border-orange-200/50 dark:border-orange-700/30 flex items-center gap-1"
           >
             <Clock className="h-3 w-3" />
@@ -174,8 +189,8 @@ export default function DuelPage({ params }: DuelPageProps) {
         );
       case "IN_PROGRESS":
         return (
-          <Badge 
-            variant="default" 
+          <Badge
+            variant="default"
             className="bg-green-100/80 dark:bg-green-900/50 text-green-800 dark:text-green-200 border-green-200/50 dark:border-green-700/30 flex items-center gap-1"
           >
             <Sparkles className="h-3 w-3" />
@@ -184,8 +199,8 @@ export default function DuelPage({ params }: DuelPageProps) {
         );
       case "COMPLETED":
         return (
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className="bg-blue-100/80 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30 flex items-center gap-1"
           >
             <Star className="h-3 w-3" />
@@ -194,8 +209,8 @@ export default function DuelPage({ params }: DuelPageProps) {
         );
       case "CANCELLED":
         return (
-          <Badge 
-            variant="destructive" 
+          <Badge
+            variant="destructive"
             className="bg-red-100/80 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 flex items-center gap-1"
           >
             <Swords className="h-3 w-3" />
@@ -204,8 +219,8 @@ export default function DuelPage({ params }: DuelPageProps) {
         );
       default:
         return (
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className="bg-gray-100/80 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 border-gray-200/50 dark:border-gray-700/30"
           >
             {status}
@@ -236,7 +251,9 @@ export default function DuelPage({ params }: DuelPageProps) {
               </p>
               {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground dark:text-muted-foreground/80">Share:</span>
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground/80">
+                    Share:
+                  </span>
                   <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30">
                     {duel.shortcode}
                   </code>
@@ -262,80 +279,92 @@ export default function DuelPage({ params }: DuelPageProps) {
               <div className="grid md:grid-cols-2 gap-8 relative">
                 {/* Wizard 1 */}
                 {wizard1 && (
-                  <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300">
-                    <div className="relative">
-                      {wizard1.illustration && (
-                        <div className="h-48 w-full overflow-hidden">
-                          <ConvexImage
-                            storageId={wizard1.illustration}
-                            alt={wizard1.name}
-                            width={400}
-                            height={192}
-                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                          />
+                  <Link href={`/wizards/${wizard1._id}`} className="block">
+                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
+                      <div className="relative">
+                        {wizard1.illustration && (
+                          <div className="h-48 w-full overflow-hidden">
+                            <ConvexImage
+                              storageId={wizard1.illustration}
+                              alt={wizard1.name}
+                              width={400}
+                              height={192}
+                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            />
+                          </div>
+                        )}
+                        <div className="absolute top-4 right-4 flex gap-2">
+                          <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
+                          >
+                            <Star className="h-3 w-3" />
+                            {duel.points[duel.wizards[0]] || 0}
+                          </Badge>
+                          <Badge
+                            variant="destructive"
+                            className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
+                          >
+                            <Heart className="h-3 w-3" />
+                            {duel.hitPoints[duel.wizards[0]] || 100}
+                          </Badge>
                         </div>
-                      )}
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <Badge
-                          variant="secondary"
-                          className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
-                        >
-                          <Star className="h-3 w-3" />
-                          {duel.points[duel.wizards[0]] || 0}
-                        </Badge>
-                        <Badge
-                          variant="destructive"
-                          className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
-                        >
-                          <Heart className="h-3 w-3" />
-                          {duel.hitPoints[duel.wizards[0]] || 100}
-                        </Badge>
                       </div>
-                    </div>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl text-foreground dark:text-foreground/95">{wizard1.name}</CardTitle>
-                      <CardDescription className="dark:text-muted-foreground/80">{wizard1.description}</CardDescription>
-                    </CardHeader>
-                  </Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xl text-foreground dark:text-foreground/95">
+                          {wizard1.name}
+                        </CardTitle>
+                        <CardDescription className="dark:text-muted-foreground/80">
+                          {wizard1.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
                 )}
 
                 {/* Wizard 2 */}
                 {wizard2 && (
-                  <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300">
-                    <div className="relative">
-                      {wizard2.illustration && (
-                        <div className="h-48 w-full overflow-hidden">
-                          <ConvexImage
-                            storageId={wizard2.illustration}
-                            alt={wizard2.name}
-                            width={400}
-                            height={192}
-                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                          />
+                  <Link href={`/wizards/${wizard2._id}`} className="block">
+                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
+                      <div className="relative">
+                        {wizard2.illustration && (
+                          <div className="h-48 w-full overflow-hidden">
+                            <ConvexImage
+                              storageId={wizard2.illustration}
+                              alt={wizard2.name}
+                              width={400}
+                              height={192}
+                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            />
+                          </div>
+                        )}
+                        <div className="absolute top-4 right-4 flex gap-2">
+                          <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
+                          >
+                            <Star className="h-3 w-3" />
+                            {duel.points[duel.wizards[1]] || 0}
+                          </Badge>
+                          <Badge
+                            variant="destructive"
+                            className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
+                          >
+                            <Heart className="h-3 w-3" />
+                            {duel.hitPoints[duel.wizards[1]] || 100}
+                          </Badge>
                         </div>
-                      )}
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <Badge
-                          variant="secondary"
-                          className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
-                        >
-                          <Star className="h-3 w-3" />
-                          {duel.points[duel.wizards[1]] || 0}
-                        </Badge>
-                        <Badge
-                          variant="destructive"
-                          className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
-                        >
-                          <Heart className="h-3 w-3" />
-                          {duel.hitPoints[duel.wizards[1]] || 100}
-                        </Badge>
                       </div>
-                    </div>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl text-foreground dark:text-foreground/95">{wizard2.name}</CardTitle>
-                      <CardDescription className="dark:text-muted-foreground/80">{wizard2.description}</CardDescription>
-                    </CardHeader>
-                  </Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xl text-foreground dark:text-foreground/95">
+                          {wizard2.name}
+                        </CardTitle>
+                        <CardDescription className="dark:text-muted-foreground/80">
+                          {wizard2.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
                 )}
               </div>
 
@@ -380,7 +409,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                     </Link>
                   </p>
                 ) : canStartDuel ? (
-                  <Button 
+                  <Button
                     onClick={handleStartDuel}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                   >
@@ -486,8 +515,8 @@ export default function DuelPage({ params }: DuelPageProps) {
                           <h4 className="font-semibold text-foreground dark:text-foreground/95">
                             Round {round.roundNumber}
                           </h4>
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className="border-border/50 dark:border-border/30 bg-background/50 dark:bg-background/30 text-muted-foreground dark:text-muted-foreground/80"
                           >
                             {round.status}
@@ -495,7 +524,9 @@ export default function DuelPage({ params }: DuelPageProps) {
                         </div>
                         {round.outcome && (
                           <div className="text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-3">
-                            <p className="leading-relaxed">{round.outcome.narrative}</p>
+                            <p className="leading-relaxed">
+                              {round.outcome.narrative}
+                            </p>
                             {round.outcome.illustration && (
                               <div className="mt-3 max-w-md">
                                 <ConvexImage

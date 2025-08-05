@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { Navbar } from "@/components/Navbar";
+import { ConvexImage } from "@/components/ConvexImage";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -64,48 +66,11 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
         ) : (
           <div className="space-y-3">
             {activeDuels.slice(0, 3).map((duel) => (
-              <div
+              <DashboardDuelCard
                 key={duel._id}
-                className="flex items-center justify-between p-2 border rounded"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge
-                      variant={
-                        duel.status === "WAITING_FOR_PLAYERS"
-                          ? "secondary"
-                          : "default"
-                      }
-                    >
-                      {duel.status === "WAITING_FOR_PLAYERS"
-                        ? "Waiting"
-                        : "Active"}
-                    </Badge>
-                    {duel.shortcode &&
-                      duel.status === "WAITING_FOR_PLAYERS" && (
-                        <code
-                          className="text-xs px-1 py-0.5 bg-purple-100 text-purple-800 rounded cursor-pointer hover:bg-purple-200"
-                          onClick={() => handleCopyShortcode(duel.shortcode!)}
-                          title="Click to copy share link"
-                        >
-                          {duel.shortcode}
-                        </code>
-                      )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {typeof duel.numberOfRounds === "number"
-                      ? `${duel.numberOfRounds} rounds`
-                      : "To the death"}{" "}
-                    • {duel.players.length} player
-                    {duel.players.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <Link href={`/duels/${duel._id}`}>
-                  <Button variant="outline" size="sm">
-                    View
-                  </Button>
-                </Link>
-              </div>
+                duel={duel}
+                onCopyShortcode={handleCopyShortcode}
+              />
             ))}
             {activeDuels.length > 3 && (
               <div className="text-center pt-2">
@@ -317,6 +282,114 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+interface DashboardDuelCardProps {
+  duel: {
+    _id: string;
+    status: string;
+    wizards: Id<"wizards">[];
+    players: string[];
+    shortcode?: string;
+    numberOfRounds: number | "TO_THE_DEATH";
+    featuredIllustration?: string;
+    currentRound?: number;
+  };
+  onCopyShortcode: (shortcode: string) => void;
+}
+
+function DashboardDuelCard({ duel, onCopyShortcode }: DashboardDuelCardProps) {
+  // Fetch wizard details for all wizards in the duel
+  const wizard1 = useQuery(
+    api.wizards.getWizard,
+    duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
+  );
+  const wizard2 = useQuery(
+    api.wizards.getWizard,
+    duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
+  );
+  const wizard3 = useQuery(
+    api.wizards.getWizard,
+    duel.wizards[2] ? { wizardId: duel.wizards[2] } : "skip"
+  );
+
+  const wizards = [wizard1, wizard2, wizard3].filter((w) => w !== undefined && w !== null);
+  const isLoading = (duel.wizards[0] && wizard1 === undefined) || 
+                   (duel.wizards[1] && wizard2 === undefined) ||
+                   (duel.wizards[2] && wizard3 === undefined);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between p-2 border rounded">
+        <div className="flex-1">
+          <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+          <div className="h-3 bg-muted rounded w-1/2"></div>
+        </div>
+        <div className="h-8 w-16 bg-muted rounded"></div>
+      </div>
+    );
+  }
+
+  const wizardNames = wizards.map((wizard) => wizard?.name).filter(Boolean);
+  const duelTitle = wizardNames.length > 0 ? wizardNames.join(" vs ") : "Duel";
+
+  return (
+    <div className="flex items-center gap-3 p-2 border rounded">
+      {/* Featured illustration thumbnail */}
+      {duel.featuredIllustration && (
+        <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+          <ConvexImage
+            storageId={duel.featuredIllustration}
+            alt="Duel illustration"
+            width={48}
+            height={48}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <Badge
+            variant={
+              duel.status === "WAITING_FOR_PLAYERS" ? "secondary" : "default"
+            }
+          >
+            {duel.status === "WAITING_FOR_PLAYERS" ? "Waiting" : "Active"}
+          </Badge>
+          {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
+            <code
+              className="text-xs px-1 py-0.5 bg-purple-100 text-purple-800 rounded cursor-pointer hover:bg-purple-200"
+              onClick={() => onCopyShortcode(duel.shortcode!)}
+              title="Click to copy share link"
+            >
+              {duel.shortcode}
+            </code>
+          )}
+        </div>
+        <p className="text-sm font-medium text-foreground truncate mb-1">
+          {duelTitle}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {duel.status === "IN_PROGRESS" && duel.currentRound && typeof duel.numberOfRounds === "number" && (
+            <>Round {duel.currentRound} of {duel.numberOfRounds} • </>
+          )}
+          {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds === "TO_THE_DEATH" && (
+            <>Round {duel.currentRound} • </>
+          )}
+          {typeof duel.numberOfRounds === "number"
+            ? `${duel.numberOfRounds} rounds`
+            : "To the death"}
+        </p>
+      </div>
+      
+      <Link href={`/duels/${duel._id}`}>
+        <Button variant="outline" size="sm">
+          View
+        </Button>
+      </Link>
     </div>
   );
 }

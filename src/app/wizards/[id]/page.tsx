@@ -286,17 +286,38 @@ interface DuelCardProps {
     _id: string;
     status: string;
     createdAt: number;
-    wizards: string[];
+    wizards: Id<"wizards">[];
     players: string[];
-    winners?: string[];
-    losers?: string[];
+    winners?: Id<"wizards">[];
+    losers?: Id<"wizards">[];
     points: Record<string, number>;
     hitPoints: Record<string, number>;
+    featuredIllustration?: string;
+    currentRound?: number;
   };
   wizardId: Id<"wizards">;
 }
 
 function DuelCard({ duel, wizardId }: DuelCardProps) {
+  // Fetch wizard details for all wizards in the duel (up to 3 wizards)
+  const wizard1 = useQuery(
+    api.wizards.getWizard,
+    duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
+  );
+  const wizard2 = useQuery(
+    api.wizards.getWizard,
+    duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
+  );
+  const wizard3 = useQuery(
+    api.wizards.getWizard,
+    duel.wizards[2] ? { wizardId: duel.wizards[2] } : "skip"
+  );
+
+  const wizards = [wizard1, wizard2, wizard3].filter((w) => w !== undefined && w !== null);
+  const isLoading = (duel.wizards[0] && wizard1 === undefined) || 
+                   (duel.wizards[1] && wizard2 === undefined) ||
+                   (duel.wizards[2] && wizard3 === undefined);
+
   const isWinner = duel.winners?.includes(wizardId);
   const isLoser = duel.losers?.includes(wizardId);
 
@@ -343,6 +364,34 @@ function DuelCard({ duel, wizardId }: DuelCardProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <div className="h-4 bg-muted rounded w-24"></div>
+            </div>
+            <div className="h-6 bg-muted rounded w-16"></div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="h-4 bg-muted rounded w-32 mb-2"></div>
+              <div className="h-3 bg-muted rounded w-24"></div>
+            </div>
+            <div className="h-8 w-20 bg-muted rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const wizardNames = wizards.map((wizard) => wizard?.name).filter(Boolean);
+  const duelTitle = wizardNames.length > 0 ? wizardNames.join(" vs ") : "Duel";
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -358,15 +407,41 @@ function DuelCard({ duel, wizardId }: DuelCardProps) {
       </CardHeader>
 
       <CardContent>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              {duel.wizards.length} wizard{duel.wizards.length !== 1 ? "s" : ""}{" "}
-              • {duel.players.length} player
-              {duel.players.length !== 1 ? "s" : ""}
+        <div className="flex items-center gap-3">
+          {/* Featured illustration thumbnail */}
+          {duel.featuredIllustration && (
+            <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
+              <ConvexImage
+                storageId={duel.featuredIllustration}
+                alt="Duel illustration"
+                width={64}
+                height={64}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground mb-1 truncate">
+              {duelTitle}
+            </p>
+            <p className="text-xs text-muted-foreground mb-1">
+              {duel.status === "IN_PROGRESS" && duel.currentRound && typeof duel.numberOfRounds === "number" && (
+                <>Round {duel.currentRound} of {duel.numberOfRounds}</>
+              )}
+              {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds === "TO_THE_DEATH" && (
+                <>Round {duel.currentRound}</>
+              )}
+              {duel.status !== "IN_PROGRESS" && (
+                <>
+                  {typeof duel.numberOfRounds === "number"
+                    ? `${duel.numberOfRounds} rounds`
+                    : "To the death"}
+                </>
+              )}
             </p>
             {duel.status === "COMPLETED" && (
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span>Points: {duel.points[wizardId] || 0}</span>
                 <span>HP: {duel.hitPoints[wizardId] || 0}/100</span>
               </div>
