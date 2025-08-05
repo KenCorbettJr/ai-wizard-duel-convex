@@ -64,13 +64,6 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     api.wizards.getWizard,
     duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
-  const wizard2 = useQuery(
-    api.wizards.getWizard,
-    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
-  );
-
-  // Combine wizards into an array, filtering out null values
-  const duelWizards = [wizard1, wizard2].filter(Boolean);
 
   const joinDuel = useMutation(api.duels.joinDuel);
 

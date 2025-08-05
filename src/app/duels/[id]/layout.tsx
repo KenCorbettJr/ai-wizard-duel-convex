@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
-import { ConvexHttpClient } from "convex/browser";
 
 interface DuelLayoutProps {
   params: Promise<{ id: string }>;

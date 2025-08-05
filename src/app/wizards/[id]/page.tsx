@@ -294,6 +294,7 @@ interface DuelCardProps {
     hitPoints: Record<string, number>;
     featuredIllustration?: string;
     currentRound?: number;
+    numberOfRounds?: number | "TO_THE_DEATH";
   };
   wizardId: Id<"wizards">;
 }
@@ -426,13 +427,13 @@ function DuelCard({ duel, wizardId }: DuelCardProps) {
               {duelTitle}
             </p>
             <p className="text-xs text-muted-foreground mb-1">
-              {duel.status === "IN_PROGRESS" && duel.currentRound && typeof duel.numberOfRounds === "number" && (
+              {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds && typeof duel.numberOfRounds === "number" && (
                 <>Round {duel.currentRound} of {duel.numberOfRounds}</>
               )}
               {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds === "TO_THE_DEATH" && (
                 <>Round {duel.currentRound}</>
               )}
-              {duel.status !== "IN_PROGRESS" && (
+              {duel.status !== "IN_PROGRESS" && duel.numberOfRounds && (
                 <>
                   {typeof duel.numberOfRounds === "number"
                     ? `${duel.numberOfRounds} rounds`

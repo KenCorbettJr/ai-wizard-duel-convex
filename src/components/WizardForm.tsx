@@ -22,6 +22,7 @@ import { Loader2, Save, X, Plus } from "lucide-react";
 interface WizardFormData {
   name: string;
   description: string;
+  isAIPowered?: boolean;
 }
 
 interface WizardFormProps {
