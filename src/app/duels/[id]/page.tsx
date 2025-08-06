@@ -20,6 +20,7 @@ import { useState } from "react";
 import { Swords, Clock, Sparkles, ScrollText, Heart, Star } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import { DuelIntroduction } from "@/components/DuelIntroduction";
+import { WizardCard } from "@/components/WizardCard";
 
 interface DuelPageProps {
   params: Promise<{
@@ -279,53 +280,14 @@ export default function DuelPage({ params }: DuelPageProps) {
               <div className="flex flex-col relative items-stretch md:flex-row">
                 {/* Wizard 1 */}
                 {wizard1 && (
-                  <Link
-                    href={`/wizards/${wizard1._id}`}
-                    className="block flex-1 flex flex-col"
-                  >
-                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex">
-                      <div className="relative">
-                        {wizard1.illustration && (
-                          <div className="h-60 w-full overflow-hidden">
-                            <ConvexImage
-                              storageId={wizard1.illustration}
-                              alt={wizard1.name}
-                              width={400}
-                              height={192}
-                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                            />
-                          </div>
-                        )}
-                        <div className="absolute top-4 right-4 flex gap-2">
-                          <Badge
-                            variant="secondary"
-                            className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
-                          >
-                            <Star className="h-3 w-3" />
-                            {duel.points[duel.wizards[0]] || 0}
-                          </Badge>
-                          <Badge
-                            variant="destructive"
-                            className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
-                          >
-                            <Heart className="h-3 w-3" />
-                            {duel.hitPoints[duel.wizards[0]] || 100}
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-xl text-foreground dark:text-foreground/95">
-                          {wizard1.name}
-                        </CardTitle>
-                        <CardDescription className="dark:text-muted-foreground/80">
-                          {wizard1.description}
-                        </CardDescription>
-                      </CardHeader>
-                    </Card>
-                  </Link>
+                  <WizardCard
+                    wizard={wizard1}
+                    points={duel.points[duel.wizards[0]] || 0}
+                    hitPoints={duel.hitPoints[duel.wizards[0]] || 100}
+                  />
                 )}
 
-                <div class="flex items-center justify-center">
+                <div className="flex items-center justify-center">
                   <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-2 shadow-xl dark:shadow-2xl backdrop-blur-sm scale-150 transform z-10 relative">
                     <Swords className="h-6 w-6 text-white animate-pulse" />
                   </div>
@@ -333,50 +295,11 @@ export default function DuelPage({ params }: DuelPageProps) {
 
                 {/* Wizard 2 */}
                 {wizard2 && (
-                  <Link
-                    href={`/wizards/${wizard2._id}`}
-                    className="block flex-1 flex flex-col"
-                  >
-                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] pt-0 flex-1">
-                      <div className="relative">
-                        {wizard2.illustration && (
-                          <div className="h-60 w-full overflow-hidden">
-                            <ConvexImage
-                              storageId={wizard2.illustration}
-                              alt={wizard2.name}
-                              width={400}
-                              height={192}
-                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                            />
-                          </div>
-                        )}
-                        <div className="absolute top-4 right-4 flex gap-2">
-                          <Badge
-                            variant="secondary"
-                            className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
-                          >
-                            <Star className="h-3 w-3" />
-                            {duel.points[duel.wizards[1]] || 0}
-                          </Badge>
-                          <Badge
-                            variant="destructive"
-                            className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
-                          >
-                            <Heart className="h-3 w-3" />
-                            {duel.hitPoints[duel.wizards[1]] || 100}
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-xl text-foreground dark:text-foreground/95">
-                          {wizard2.name}
-                        </CardTitle>
-                        <CardDescription className="dark:text-muted-foreground/80">
-                          {wizard2.description}
-                        </CardDescription>
-                      </CardHeader>
-                    </Card>
-                  </Link>
+                  <WizardCard
+                    wizard={wizard2}
+                    points={duel.points[duel.wizards[1]] || 0}
+                    hitPoints={duel.hitPoints[duel.wizards[1]] || 100}
+                  />
                 )}
               </div>
             </div>

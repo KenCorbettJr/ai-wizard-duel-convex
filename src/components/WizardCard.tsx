@@ -1,91 +1,78 @@
 "use client";
 
+import Link from "next/link";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wizard } from "@/types/wizard";
-import Image from "next/image";
-import Link from "next/link";
-import { ConvexImage } from "./ConvexImage";
-import { Trophy, Skull, BarChart3, Bot } from "lucide-react";
+import { Star, Heart } from "lucide-react";
+import { ConvexImage } from "@/components/ConvexImage";
+import { Id } from "../../convex/_generated/dataModel";
 
 interface WizardCardProps {
-  wizard: Wizard;
+  wizard: {
+    _id: Id<"wizards">;
+    name: string;
+    description: string;
+    illustration?: Id<"_storage">;
+  };
+  points: number;
+  hitPoints: number;
+  className?: string;
 }
 
-export function WizardCard({ wizard }: WizardCardProps) {
-  const winRate =
-    wizard.wins && wizard.losses
-      ? Math.round((wizard.wins / (wizard.wins + wizard.losses)) * 100)
-      : 0;
-
+export function WizardCard({
+  wizard,
+  points,
+  hitPoints,
+  className = "",
+}: WizardCardProps) {
   return (
-    <Link href={`/wizards/${wizard._id}`} className="block">
-      <Card className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer overflow-hidden p-0">
-        {/* Large wizard image at the top */}
-        {(wizard.illustrationURL || wizard.illustration) && (
-          <div className="relative w-full h-56 overflow-hidden">
-            {wizard.illustration ? (
+    <Link
+      href={`/wizards/${wizard._id}`}
+      className={`block flex-1 flex flex-col ${className}`}
+    >
+      <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex">
+        <div className="relative">
+          {wizard.illustration && (
+            <div className="h-60 w-full overflow-hidden">
               <ConvexImage
                 storageId={wizard.illustration}
                 alt={wizard.name}
                 width={400}
-                height={224}
-                className="w-full h-full object-cover"
+                height={192}
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
               />
-            ) : wizard.illustrationURL ? (
-              <Image
-                src={wizard.illustrationURL}
-                alt={wizard.name}
-                width={400}
-                height={224}
-                className="w-full h-full object-cover"
-              />
-            ) : null}
+            </div>
+          )}
+          <div className="absolute top-4 right-4 flex gap-2">
+            <Badge
+              variant="secondary"
+              className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
+            >
+              <Star className="h-3 w-3" />
+              {points}
+            </Badge>
+            <Badge
+              variant="destructive"
+              className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
+            >
+              <Heart className="h-3 w-3" />
+              {hitPoints}
+            </Badge>
           </div>
-        )}
-
-        <CardHeader className="pb-3 px-6 pt-6">
-          <CardTitle className="text-lg flex items-center gap-2">
+        </div>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl text-foreground dark:text-foreground/95">
             {wizard.name}
-            {wizard.isAIPowered && (
-              <Badge
-                variant="secondary"
-                className="text-xs flex items-center gap-1"
-              >
-                <Bot className="w-3 h-3" />
-                AI
-              </Badge>
-            )}
           </CardTitle>
-          <CardDescription className="mt-1">
+          <CardDescription className="dark:text-muted-foreground/80">
             {wizard.description}
           </CardDescription>
         </CardHeader>
-
-        <CardContent className="pt-0 px-6 pb-6">
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <Trophy className="w-4 h-4" />
-              <span>{wizard.wins || 0} wins</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Skull className="w-4 h-4" />
-              <span>{wizard.losses || 0} losses</span>
-            </div>
-            {(wizard.wins || wizard.losses) && (
-              <div className="flex items-center gap-1">
-                <BarChart3 className="w-4 h-4" />
-                <span>{winRate}% win rate</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
       </Card>
     </Link>
   );
