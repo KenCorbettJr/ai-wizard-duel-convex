@@ -27,7 +27,7 @@ export default defineSchema({
       v.literal("WAITING_FOR_PLAYERS"),
       v.literal("IN_PROGRESS"),
       v.literal("COMPLETED"),
-      v.literal("CANCELLED"),
+      v.literal("CANCELLED")
     ),
     currentRound: v.number(),
     createdAt: v.number(),
@@ -51,6 +51,7 @@ export default defineSchema({
       v.literal("SPELL_CASTING"),
       v.literal("COUNTER_SPELL"),
       v.literal("FINAL_ROUND"),
+      v.literal("CONCLUSION")
     ),
     spells: v.optional(
       v.record(
@@ -59,8 +60,8 @@ export default defineSchema({
           description: v.string(),
           castBy: v.id("wizards"),
           timestamp: v.number(),
-        }),
-      ),
+        })
+      )
     ), // Dictionary of wizard ID to spell
     outcome: v.optional(
       v.object({
@@ -70,12 +71,12 @@ export default defineSchema({
         illustrationPrompt: v.optional(v.string()),
         pointsAwarded: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to points
         healthChange: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to health change
-      }),
+      })
     ),
     status: v.union(
       v.literal("WAITING_FOR_SPELLS"),
       v.literal("PROCESSING"),
-      v.literal("COMPLETED"),
+      v.literal("COMPLETED")
     ),
   }).index("by_duel", ["duelId"]),
 });

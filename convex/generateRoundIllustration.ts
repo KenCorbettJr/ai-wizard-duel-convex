@@ -13,7 +13,7 @@ export const generateRoundIllustration = action({
   },
   handler: async (ctx, { illustrationPrompt, duelId, roundNumber }) => {
     console.log(
-      `Starting illustration generation for duel ${duelId}, round ${roundNumber}`,
+      `Starting illustration generation for duel ${duelId}, round ${roundNumber}`
     );
 
     try {
@@ -22,13 +22,14 @@ export const generateRoundIllustration = action({
 
       // Store the image in Convex File Storage
       const storageId = await ctx.storage.store(
-        new Blob([imageBuffer], { type: "image/png" }),
+        new Blob([imageBuffer], { type: "image/png" })
       );
 
       // Find the round to update
       const rounds = await ctx.runQuery(api.duels.getDuelRounds, { duelId });
       const targetRound = rounds.find(
-        (round) => round.roundNumber.toString() === roundNumber,
+        (round: { roundNumber: number }) =>
+          round.roundNumber.toString() === roundNumber
       );
 
       if (targetRound) {
@@ -48,16 +49,16 @@ export const generateRoundIllustration = action({
       }
 
       console.log(
-        `Successfully generated illustration for duel ${duelId}, round ${roundNumber}`,
+        `Successfully generated illustration for duel ${duelId}, round ${roundNumber}`
       );
       return { success: true, storageId };
     } catch (error) {
       console.error(
         `Error generating illustration for duel ${duelId}, round ${roundNumber}:`,
-        error,
+        error
       );
       throw new Error(
-        `Failed to generate round illustration: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to generate round illustration: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   },

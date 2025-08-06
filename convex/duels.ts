@@ -1,7 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { updateWizardStats } from "./wizards";
+
 import { api } from "./_generated/api";
 
 // Types for better type safety
@@ -11,7 +11,11 @@ export type DuelStatus =
   | "COMPLETED"
   | "CANCELLED";
 export type DuelRoundStatus = "WAITING_FOR_SPELLS" | "PROCESSING" | "COMPLETED";
-export type DuelRoundType = "SPELL_CASTING" | "COUNTER_SPELL" | "FINAL_ROUND";
+export type DuelRoundType =
+  | "SPELL_CASTING"
+  | "COUNTER_SPELL"
+  | "FINAL_ROUND"
+  | "CONCLUSION";
 export type DuelLengthOption = "TO_THE_DEATH";
 
 // Get all duels for a specific player
@@ -53,7 +57,7 @@ export const getDuelByShortcode = query({
     const duel = await ctx.db
       .query("duels")
       .withIndex("by_shortcode", (q) =>
-        q.eq("shortcode", shortcode.toUpperCase()),
+        q.eq("shortcode", shortcode.toUpperCase())
       )
       .first();
 
@@ -274,16 +278,22 @@ export const castSpell = mutation({
 
     // Remove wizard from needActionsFrom
     const updatedNeedActions = duel.needActionsFrom.filter(
-      (id) => id !== wizardId,
+      (id) => id !== wizardId
     );
     await ctx.db.patch(duelId, {
       needActionsFrom: updatedNeedActions,
     });
 
-    // If all wizards have cast spells, mark round as ready for processing
+    // If all wizards have cast spells, mark round as ready for processing and trigger processing
     if (updatedNeedActions.length === 0) {
       await ctx.db.patch(currentRound._id, {
         status: "PROCESSING" as DuelRoundStatus,
+      });
+
+      // Schedule round processing
+      ctx.scheduler.runAfter(0, api.processDuelRound.processDuelRound, {
+        duelId,
+        roundId: currentRound._id,
       });
     }
 
@@ -336,9 +346,9 @@ export const completeRound = mutation({
         ([wizardId, healthChange]) => {
           updatedHitPoints[wizardId] = Math.max(
             0,
-            (updatedHitPoints[wizardId] || 100) + (healthChange as number),
+            (updatedHitPoints[wizardId] || 100) + (healthChange as number)
           );
-        },
+        }
       );
     }
 
@@ -400,7 +410,7 @@ function checkDuelEndConditions(
     currentRound: number;
     points: Record<string, number>;
   },
-  hitPoints: Record<string, number>,
+  hitPoints: Record<string, number>
 ): {
   shouldEnd: boolean;
   winners?: Id<"wizards">[];
@@ -408,7 +418,7 @@ function checkDuelEndConditions(
 } {
   // Check if any wizard has 0 hit points (death condition)
   const aliveWizards = duel.wizards.filter(
-    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0,
+    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0
   );
 
   if (aliveWizards.length <= 1) {
@@ -416,7 +426,7 @@ function checkDuelEndConditions(
       shouldEnd: true,
       winners: aliveWizards,
       losers: duel.wizards.filter(
-        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId),
+        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId)
       ),
     };
   }
@@ -436,11 +446,11 @@ function checkDuelEndConditions(
     wizardScores.sort(
       (
         a: { points: number; hitPoints: number },
-        b: { points: number; hitPoints: number },
+        b: { points: number; hitPoints: number }
       ) => {
         if (a.points !== b.points) return b.points - a.points;
         return b.hitPoints - a.hitPoints;
-      },
+      }
     );
 
     const highestScore = wizardScores[0];
@@ -448,7 +458,7 @@ function checkDuelEndConditions(
       .filter(
         (w: { points: number; hitPoints: number; wizardId: Id<"wizards"> }) =>
           w.points === highestScore.points &&
-          w.hitPoints === highestScore.hitPoints,
+          w.hitPoints === highestScore.hitPoints
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -458,7 +468,7 @@ function checkDuelEndConditions(
           !(
             w.points === highestScore.points &&
             w.hitPoints === highestScore.hitPoints
-          ),
+          )
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -575,7 +585,7 @@ export const getPlayerDuelStats = query({
           });
 
           const hasWinningWizard = duel.winners?.some((winnerId) =>
-            playerWizards.includes(winnerId),
+            playerWizards.includes(winnerId)
           );
 
           if (hasWinningWizard) {
@@ -674,5 +684,58 @@ export const startDuelAfterIntroduction = mutation({
     });
 
     return duelId;
+  },
+});
+// Manually trigger round processing (useful for testing or retries)
+export const triggerRoundProcessing = mutation({
+  args: {
+    duelId: v.id("duels"),
+    roundId: v.id("duelRounds"),
+  },
+  handler: async (ctx, { duelId, roundId }) => {
+    const round = await ctx.db.get(roundId);
+    if (!round) {
+      throw new Error("Round not found");
+    }
+
+    if (round.status !== "PROCESSING") {
+      await ctx.db.patch(roundId, {
+        status: "PROCESSING" as DuelRoundStatus,
+      });
+    }
+
+    // Schedule round processing
+    ctx.scheduler.runAfter(0, api.processDuelRound.processDuelRound, {
+      duelId,
+      roundId,
+    });
+
+    return roundId;
+  },
+});
+// Create conclusion round (final round after duel completion)
+export const createConclusionRound = mutation({
+  args: {
+    duelId: v.id("duels"),
+    roundNumber: v.number(),
+    outcome: v.object({
+      narrative: v.string(),
+      result: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationPrompt: v.optional(v.string()),
+      pointsAwarded: v.optional(v.object({})),
+      healthChange: v.optional(v.object({})),
+    }),
+  },
+  handler: async (ctx, { duelId, roundNumber, outcome }) => {
+    const roundId = await ctx.db.insert("duelRounds", {
+      duelId,
+      roundNumber,
+      type: "CONCLUSION" as DuelRoundType,
+      status: "COMPLETED" as DuelRoundStatus,
+      outcome,
+    });
+
+    return roundId;
   },
 });
