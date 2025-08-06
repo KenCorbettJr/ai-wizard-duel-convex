@@ -2,10 +2,6 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  messages: defineTable({
-    text: v.string(),
-    author: v.string(),
-  }),
   wizards: defineTable({
     owner: v.string(), // User ID from Clerk
     name: v.string(),
@@ -49,7 +45,6 @@ export default defineSchema({
     roundNumber: v.number(),
     type: v.union(
       v.literal("SPELL_CASTING"),
-      v.literal("COUNTER_SPELL"),
       v.literal("FINAL_ROUND"),
       v.literal("CONCLUSION")
     ),
