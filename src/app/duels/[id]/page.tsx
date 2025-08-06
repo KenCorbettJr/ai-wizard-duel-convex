@@ -276,14 +276,17 @@ export default function DuelPage({ params }: DuelPageProps) {
           {/* Wizard Display Section */}
           {duel.wizards.length >= 2 && (wizard1 || wizard2) && (
             <div className="mb-8 relative">
-              <div className="grid md:grid-cols-2 gap-8 relative">
+              <div className="flex flex-col relative items-stretch md:flex-row">
                 {/* Wizard 1 */}
                 {wizard1 && (
-                  <Link href={`/wizards/${wizard1._id}`} className="block">
-                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
+                  <Link
+                    href={`/wizards/${wizard1._id}`}
+                    className="block flex-1 flex flex-col"
+                  >
+                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex">
                       <div className="relative">
                         {wizard1.illustration && (
-                          <div className="h-48 w-full overflow-hidden">
+                          <div className="h-60 w-full overflow-hidden">
                             <ConvexImage
                               storageId={wizard1.illustration}
                               alt={wizard1.name}
@@ -322,13 +325,22 @@ export default function DuelPage({ params }: DuelPageProps) {
                   </Link>
                 )}
 
+                <div class="flex items-center justify-center">
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-2 shadow-xl dark:shadow-2xl backdrop-blur-sm scale-150 transform z-10 relative">
+                    <Swords className="h-6 w-6 text-white animate-pulse" />
+                  </div>
+                </div>
+
                 {/* Wizard 2 */}
                 {wizard2 && (
-                  <Link href={`/wizards/${wizard2._id}`} className="block">
-                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
+                  <Link
+                    href={`/wizards/${wizard2._id}`}
+                    className="block flex-1 flex flex-col"
+                  >
+                    <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] pt-0 flex-1">
                       <div className="relative">
                         {wizard2.illustration && (
-                          <div className="h-48 w-full overflow-hidden">
+                          <div className="h-60 w-full overflow-hidden">
                             <ConvexImage
                               storageId={wizard2.illustration}
                               alt={wizard2.name}
@@ -366,20 +378,6 @@ export default function DuelPage({ params }: DuelPageProps) {
                     </Card>
                   </Link>
                 )}
-              </div>
-
-              {/* VS Divider - Desktop */}
-              <div className="hidden md:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-4 shadow-xl dark:shadow-2xl backdrop-blur-sm">
-                  <Swords className="h-8 w-8 text-white animate-pulse" />
-                </div>
-              </div>
-
-              {/* VS Divider - Mobile */}
-              <div className="md:hidden flex justify-center -my-4 relative z-10">
-                <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-3 shadow-xl dark:shadow-2xl backdrop-blur-sm">
-                  <Swords className="h-6 w-6 text-white animate-pulse" />
-                </div>
               </div>
             </div>
           )}

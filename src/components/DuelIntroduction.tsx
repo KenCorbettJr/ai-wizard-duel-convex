@@ -53,7 +53,7 @@ export function DuelIntroduction({ duelId }: DuelIntroductionProps) {
       <div className="prose prose-lg max-w-none dark:prose-invert">
         <div className="bg-card border rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-4 text-center">
-            🏟️ Welcome to the Enchanted Arena! 🏟️
+            Welcome to the Enchanted Arena!
           </h2>
 
           <div className="whitespace-pre-line text-foreground leading-relaxed">
