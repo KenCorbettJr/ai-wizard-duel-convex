@@ -45,6 +45,7 @@ export default defineSchema({
     roundNumber: v.number(),
     type: v.union(
       v.literal("SPELL_CASTING"),
+      v.literal("COUNTER_SPELL"),
       v.literal("FINAL_ROUND"),
       v.literal("CONCLUSION")
     ),

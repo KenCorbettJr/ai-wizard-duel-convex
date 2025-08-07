@@ -60,6 +60,15 @@ export default function DuelPage({ params }: DuelPageProps) {
   const startDuel = useMutation(api.duels.startDuel);
   const castSpell = useMutation(api.duels.castSpell);
 
+  // Get the current round to check if user has already cast a spell
+  const currentRound = duel?.rounds?.find(
+    (round) => round.roundNumber === duel.currentRound
+  );
+  const hasUserCastSpell =
+    currentRound?.spells && userWizardId
+      ? currentRound.spells[userWizardId] !== undefined
+      : false;
+
   const isPlayerInDuel = duel?.players.includes(user?.id || "");
   const canStartDuel =
     duel?.status === "WAITING_FOR_PLAYERS" &&
@@ -235,7 +244,7 @@ export default function DuelPage({ params }: DuelPageProps) {
       <Navbar />
 
       <main className="container mx-auto px-6 py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto pb-48">
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-3xl font-bold text-foreground dark:text-foreground/95 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
@@ -284,6 +293,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                     wizard={wizard1}
                     points={duel.points[duel.wizards[0]] || 0}
                     hitPoints={duel.hitPoints[duel.wizards[0]] || 100}
+                    isUserWizard={wizard1.owner === user?.id}
                   />
                 )}
 
@@ -299,6 +309,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                     wizard={wizard2}
                     points={duel.points[duel.wizards[1]] || 0}
                     hitPoints={duel.hitPoints[duel.wizards[1]] || 100}
+                    isUserWizard={wizard2.owner === user?.id}
                   />
                 )}
               </div>
@@ -346,48 +357,81 @@ export default function DuelPage({ params }: DuelPageProps) {
             </Card>
           )}
 
+          {/* Floating Spell Input - Fixed position when user needs to act */}
           {duel.status === "IN_PROGRESS" &&
             isPlayerInDuel &&
             userWizard &&
             userWizardId &&
-            duel.needActionsFrom.includes(userWizardId) && (
+            !hasUserCastSpell && (
+              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-6">
+                <Card className="bg-card/95 dark:bg-card/98 backdrop-blur-md border-2 border-purple-500/50 dark:border-purple-400/50 shadow-2xl dark:shadow-3xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95 text-lg">
+                      <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400 animate-pulse" />
+                      Cast Your Spell
+                    </CardTitle>
+                    <CardDescription className="dark:text-muted-foreground/80 text-sm">
+                      Describe the magical spell {userWizard.name} will cast
+                      this round
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <textarea
+                        value={spellDescription}
+                        onChange={(e) => setSpellDescription(e.target.value)}
+                        placeholder="Describe your wizard's spell in detail..."
+                        className="w-full p-3 border border-input/50 dark:border-input/30 bg-background/50 dark:bg-background/30 text-foreground dark:text-foreground/95 rounded-lg resize-none h-24 placeholder:text-muted-foreground/60 dark:placeholder:text-muted-foreground/50 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all backdrop-blur-sm text-sm"
+                        disabled={isCasting}
+                      />
+                      <Button
+                        onClick={handleCastSpell}
+                        disabled={!spellDescription.trim() || isCasting}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isCasting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                            Casting Spell...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Cast Spell with {userWizard.name}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+          {/* Show waiting message when user has cast but others haven't */}
+          {duel.status === "IN_PROGRESS" &&
+            isPlayerInDuel &&
+            userWizard &&
+            userWizardId &&
+            hasUserCastSpell &&
+            duel.needActionsFrom.length > 0 && (
               <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                    <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400 animate-pulse" />
-                    Cast Your Spell
+                    <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400 animate-pulse" />
+                    Waiting for Other Wizards
                   </CardTitle>
                   <CardDescription className="dark:text-muted-foreground/80">
-                    Describe the magical spell {userWizard.name} will cast this
-                    round
+                    {userWizard.name} has cast their spell. Waiting for{" "}
+                    {duel.needActionsFrom.length} other wizard
+                    {duel.needActionsFrom.length !== 1 ? "s" : ""} to cast their
+                    spells.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <textarea
-                      value={spellDescription}
-                      onChange={(e) => setSpellDescription(e.target.value)}
-                      placeholder="Describe your wizard's spell in detail..."
-                      className="w-full p-4 border border-input/50 dark:border-input/30 bg-background/50 dark:bg-background/30 text-foreground dark:text-foreground/95 rounded-lg resize-none h-28 placeholder:text-muted-foreground/60 dark:placeholder:text-muted-foreground/50 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all backdrop-blur-sm"
-                      disabled={isCasting}
-                    />
-                    <Button
-                      onClick={handleCastSpell}
-                      disabled={!spellDescription.trim() || isCasting}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isCasting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
-                          Casting Spell...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Cast Spell with {userWizard.name}
-                        </>
-                      )}
-                    </Button>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground/80">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-orange-200/30 dark:border-orange-700/30 border-t-orange-500 dark:border-t-orange-400"></div>
+                    The round will continue once all wizards have cast their
+                    spells...
                   </div>
                 </CardContent>
               </Card>

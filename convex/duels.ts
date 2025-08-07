@@ -309,8 +309,8 @@ export const completeRound = mutation({
       result: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationPrompt: v.optional(v.string()),
-      pointsAwarded: v.optional(v.object({})),
-      healthChange: v.optional(v.object({})),
+      pointsAwarded: v.optional(v.record(v.string(), v.number())),
+      healthChange: v.optional(v.record(v.string(), v.number())),
     }),
   },
   handler: async (ctx, { roundId, outcome }) => {
@@ -617,8 +617,8 @@ export const createIntroductionRound = mutation({
       result: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationPrompt: v.optional(v.string()),
-      pointsAwarded: v.optional(v.object({})),
-      healthChange: v.optional(v.object({})),
+      pointsAwarded: v.optional(v.record(v.string(), v.number())),
+      healthChange: v.optional(v.record(v.string(), v.number())),
     }),
   },
   handler: async (ctx, { duelId, outcome }) => {
@@ -723,8 +723,8 @@ export const createConclusionRound = mutation({
       result: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationPrompt: v.optional(v.string()),
-      pointsAwarded: v.optional(v.object({})),
-      healthChange: v.optional(v.object({})),
+      pointsAwarded: v.optional(v.record(v.string(), v.number())),
+      healthChange: v.optional(v.record(v.string(), v.number())),
     }),
   },
   handler: async (ctx, { duelId, roundNumber, outcome }) => {

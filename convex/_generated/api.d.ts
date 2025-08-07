@@ -20,7 +20,6 @@ import type * as duels from "../duels.js";
 import type * as generateImage from "../generateImage.js";
 import type * as generateRoundIllustration from "../generateRoundIllustration.js";
 import type * as generateWizardIllustration from "../generateWizardIllustration.js";
-import type * as messages from "../messages.js";
 import type * as processDuelRound from "../processDuelRound.js";
 import type * as wizards from "../wizards.js";
 
@@ -40,7 +39,6 @@ declare const fullApi: ApiFromModules<{
   generateImage: typeof generateImage;
   generateRoundIllustration: typeof generateRoundIllustration;
   generateWizardIllustration: typeof generateWizardIllustration;
-  messages: typeof messages;
   processDuelRound: typeof processDuelRound;
   wizards: typeof wizards;
 }>;
