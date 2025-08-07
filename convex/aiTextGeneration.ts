@@ -11,14 +11,8 @@ export interface AITextGenerationConfig {
 export async function generateText(
   prompt: string,
   systemPrompt?: string,
-  config: AITextGenerationConfig = {},
+  config: AITextGenerationConfig = {}
 ): Promise<string> {
-  console.log("AI Text Generation called with:", {
-    prompt,
-    systemPrompt,
-    config,
-  });
-
   try {
     const ai = getGemni20FlashAI();
 
@@ -35,9 +29,8 @@ export async function generateText(
 
     return response.text;
   } catch (error) {
-    console.error("AI text generation failed:", error);
     throw new Error(
-      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }

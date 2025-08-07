@@ -9,8 +9,18 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/tests/setup.ts'],
+    environmentMatchGlobs: [
+      // all tests in convex/ will run in edge-runtime
+      ["convex/**", "edge-runtime"],
+      // all other tests use jsdom
+      ["**", "jsdom"],
+    ],
+    setupFiles: ['./src/tests/setup.ts', './convex/test-setup.ts'],
+    server: { deps: { inline: ["convex-test"] } },
+    // Suppress console output during tests for cleaner output
+    silent: false,
+    reporter: ['verbose'],
+    onConsoleLog: () => false, // Suppress console.log during tests
   },
   resolve: {
     alias: {
