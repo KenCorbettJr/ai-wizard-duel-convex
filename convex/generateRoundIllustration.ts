@@ -2,7 +2,6 @@
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { generateImage } from "./generateImage";
 import { api } from "./_generated/api";
 
 export const generateRoundIllustration = action({
@@ -18,7 +17,9 @@ export const generateRoundIllustration = action({
 
     try {
       // Generate the image using Fal
-      const imageBuffer = await generateImage(illustrationPrompt);
+      const imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
+        prompt: illustrationPrompt,
+      });
 
       // Store the image in Convex File Storage
       const storageId = await ctx.storage.store(

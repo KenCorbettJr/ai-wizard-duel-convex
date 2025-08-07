@@ -25,7 +25,6 @@ import {
   Swords,
   Users,
   Calendar,
-  Check,
   Trophy,
   Sparkles,
   UserPlus,

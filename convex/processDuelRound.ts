@@ -4,7 +4,7 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
-import { Id } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
 
 // Types for the battle round response
 export interface BattleRoundResponse {
@@ -609,7 +609,7 @@ Write a final narration of the duel.`;
 
 // Helper function to generate fallback conclusion
 function generateFallbackConclusion(
-  duel: unknown,
+  duel: Doc<"duels"> & { rounds: Doc<"duelRounds">[] },
   wizard1: WizardData,
   wizard2: WizardData
 ): { narration: string; result: string; illustrationPrompt: string } {

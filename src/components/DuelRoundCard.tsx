@@ -3,15 +3,16 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Clock, Sparkles } from "lucide-react";
+import { Doc } from "../../convex/_generated/dataModel";
 
 interface DuelRoundCardProps {
-  round: any; // Using any for now to avoid type complexity
-  duel: any;
+  round: Doc<"duelRounds">;
+  duel: Doc<"duels">;
 }
 
 export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
@@ -125,7 +126,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
     return <span className="text-red-600 font-bold">{value}</span>;
   };
 
-  const WizardName = ({ wizardId }: { wizardId: any }) => {
+  const WizardName = ({ wizardId }: { wizardId: string }) => {
     const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
     return (
       <span className="font-semibold">{wizard?.name || "Loading..."}</span>
@@ -182,7 +183,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
         {round.status === "WAITING_FOR_SPELLS" && !isWaitingForMyAction() && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 font-medium">
-              Actions Submitted. Awaiting other wizard's actions.
+              Actions Submitted. Awaiting other wizard&apos;s actions.
             </p>
           </div>
         )}

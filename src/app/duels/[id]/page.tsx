@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { useState } from "react";
 import { Swords, Clock, Sparkles, ScrollText, Star } from "lucide-react";
-import { ConvexImage } from "@/components/ConvexImage";
+
 import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
 import { DuelRoundCard } from "@/components/DuelRoundCard";

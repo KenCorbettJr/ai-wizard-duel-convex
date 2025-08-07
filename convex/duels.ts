@@ -353,7 +353,10 @@ export const completeRound = mutation({
     }
 
     // Check if duel should end
-    const shouldEndDuel = checkDuelEndConditions(duel, updatedHitPoints);
+    const shouldEndDuel = checkDuelEndConditions(
+      { ...duel, points: updatedPoints },
+      updatedHitPoints
+    );
 
     if (shouldEndDuel.shouldEnd) {
       await ctx.db.patch(duel._id, {
