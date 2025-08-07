@@ -4,12 +4,12 @@ import { vi } from "vitest";
 // This file suppresses console output during tests for cleaner test results
 
 // Store original console methods
-const originalConsole = {
-  log: console.log,
-  error: console.error,
-  warn: console.warn,
-  info: console.info,
-};
+// const originalConsole = {
+//   log: console.log,
+//   error: console.error,
+//   warn: console.warn,
+//   info: console.info,
+// };
 
 // Mock console methods globally for all tests
 console.log = vi.fn();

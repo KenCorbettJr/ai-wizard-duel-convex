@@ -15,7 +15,7 @@ export default defineConfig({
       // all other tests use jsdom
       ["**", "jsdom"],
     ],
-    setupFiles: ['./src/tests/setup.ts', './convex/test-setup.ts'],
+    setupFiles: ['./src/tests/setup.ts', './src/tests/convex-setup.ts'],
     server: { deps: { inline: ["convex-test"] } },
     // Suppress console output during tests for cleaner output
     silent: false,

@@ -21,7 +21,6 @@ import {
   Users,
   Calendar,
   Check,
-  Trophy,
   Sparkles,
   UserPlus,
   AlertCircle,
