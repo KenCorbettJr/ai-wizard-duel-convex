@@ -2,7 +2,6 @@
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { generateImage } from "./generateImage";
 import { api } from "./_generated/api";
 
 export const generateWizardIllustration = action({
@@ -13,7 +12,7 @@ export const generateWizardIllustration = action({
   },
   handler: async (ctx, { wizardId, name, description }) => {
     console.log(
-      `Starting illustration generation for wizard ${wizardId} (${name})`,
+      `Starting illustration generation for wizard ${wizardId} (${name})`
     );
 
     try {
@@ -23,11 +22,13 @@ export const generateWizardIllustration = action({
       console.log("Generating illustration with prompt:", enhancedPrompt);
 
       // Generate the image using Fal
-      const imageBuffer = await generateImage(enhancedPrompt);
+      const imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
+        prompt: enhancedPrompt,
+      });
 
       // Store the image in Convex File Storage (Fal AI typically returns PNG)
       const storageId = await ctx.storage.store(
-        new Blob([imageBuffer], { type: "image/png" }),
+        new Blob([imageBuffer], { type: "image/png" })
       );
 
       // Update the wizard with the new illustration
@@ -41,18 +42,18 @@ export const generateWizardIllustration = action({
     } catch (error) {
       console.error(
         `Error generating illustration for wizard ${wizardId}:`,
-        error,
+        error
       );
 
       // If it's an environment variable issue, provide helpful guidance
       if (error instanceof Error && error.message.includes("FAL_KEY")) {
         throw new Error(
-          "Image generation is not configured. Please add your FAL_KEY to the environment variables.",
+          "Image generation is not configured. Please add your FAL_KEY to the environment variables."
         );
       }
 
       throw new Error(
-        `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   },

@@ -1,8 +1,8 @@
-import { Id } from "./_generated/dataModel";
+import { Id, TableNames } from "./_generated/dataModel";
 
 // Generate a proper Convex ID for testing
 // Convex IDs follow the pattern: k{table_number}{random_string}
-export function generateTestId<T extends string>(table: T): Id<T> {
+export function generateTestId<T extends TableNames>(table: T): Id<T> {
   // Generate a random string that looks like a real Convex ID
   // Real Convex IDs are base32-encoded and around 26 characters
   const chars = "0123456789abcdefghjkmnpqrstvwxyz"; // base32 alphabet
@@ -16,7 +16,7 @@ export function generateTestId<T extends string>(table: T): Id<T> {
 }
 
 // Generate multiple test IDs
-export function generateTestIds<T extends string>(
+export function generateTestIds<T extends TableNames>(
   table: T,
   count: number
 ): Id<T>[] {
