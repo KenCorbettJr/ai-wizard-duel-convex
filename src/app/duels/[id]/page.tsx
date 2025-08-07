@@ -21,6 +21,8 @@ import { Swords, Clock, Sparkles, ScrollText, Star } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
+import { DuelRoundCard } from "@/components/DuelRoundCard";
+import { CastSpellModal } from "@/components/CastSpellModal";
 
 interface DuelPageProps {
   params: Promise<{
@@ -357,54 +359,20 @@ export default function DuelPage({ params }: DuelPageProps) {
             </Card>
           )}
 
-          {/* Floating Spell Input - Fixed position when user needs to act */}
+          {/* Cast Spell Modal */}
           {duel.status === "IN_PROGRESS" &&
             isPlayerInDuel &&
             userWizard &&
             userWizardId &&
             !hasUserCastSpell && (
-              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-6">
-                <Card className="bg-card/95 dark:bg-card/98 backdrop-blur-md border-2 border-purple-500/50 dark:border-purple-400/50 shadow-2xl dark:shadow-3xl">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95 text-lg">
-                      <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400 animate-pulse" />
-                      Cast Your Spell
-                    </CardTitle>
-                    <CardDescription className="dark:text-muted-foreground/80 text-sm">
-                      Describe the magical spell {userWizard.name} will cast
-                      this round
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <textarea
-                        value={spellDescription}
-                        onChange={(e) => setSpellDescription(e.target.value)}
-                        placeholder="Describe your wizard's spell in detail..."
-                        className="w-full p-3 border border-input/50 dark:border-input/30 bg-background/50 dark:bg-background/30 text-foreground dark:text-foreground/95 rounded-lg resize-none h-24 placeholder:text-muted-foreground/60 dark:placeholder:text-muted-foreground/50 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all backdrop-blur-sm text-sm"
-                        disabled={isCasting}
-                      />
-                      <Button
-                        onClick={handleCastSpell}
-                        disabled={!spellDescription.trim() || isCasting}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isCasting ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
-                            Casting Spell...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4 mr-2" />
-                            Cast Spell with {userWizard.name}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <CastSpellModal
+                currentRound={duel.currentRound}
+                wizardName={userWizard.name}
+                spellDescription={spellDescription}
+                onSpellDescriptionChange={setSpellDescription}
+                onCastSpell={handleCastSpell}
+                isCasting={isCasting}
+              />
             )}
 
           {/* Show waiting message when user has cast but others haven't */}
@@ -455,59 +423,15 @@ export default function DuelPage({ params }: DuelPageProps) {
             </Card>
           )}
 
+          {/* Individual Round Cards */}
           {duel.rounds && duel.rounds.length > 0 && (
-            <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                  <ScrollText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
-                  Duel History
-                </CardTitle>
-                <CardDescription className="dark:text-muted-foreground/80">
-                  Previous rounds and their outcomes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {duel.rounds
-                    .filter((round) => round.roundNumber > 0) // Exclude introduction round
-                    .map((round) => (
-                      <div
-                        key={round._id}
-                        className="border-l-4 border-purple-300/60 dark:border-purple-600/40 pl-6 relative"
-                      >
-                        <div className="absolute -left-2 top-0 w-4 h-4 bg-purple-500 dark:bg-purple-400 rounded-full border-2 border-background"></div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <h4 className="font-semibold text-foreground dark:text-foreground/95">
-                            Round {round.roundNumber}
-                          </h4>
-                          <Badge
-                            variant="outline"
-                            className="border-border/50 dark:border-border/30 bg-background/50 dark:bg-background/30 text-muted-foreground dark:text-muted-foreground/80"
-                          >
-                            {round.status}
-                          </Badge>
-                        </div>
-                        {round.outcome && (
-                          <div className="text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-3">
-                            <p className="leading-relaxed">
-                              {round.outcome.narrative}
-                            </p>
-                            {round.outcome.illustration && (
-                              <div className="mt-3 max-w-md">
-                                <ConvexImage
-                                  storageId={round.outcome.illustration}
-                                  alt={`Round ${round.roundNumber} illustration`}
-                                  className="w-full rounded-lg shadow-md dark:shadow-lg border border-border/20 dark:border-border/10"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {duel.rounds
+                .filter((round) => round.roundNumber > 0) // Exclude introduction round
+                .map((round) => (
+                  <DuelRoundCard key={round._id} round={round} duel={duel} />
+                ))}
+            </div>
           )}
         </div>
       </main>
