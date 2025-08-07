@@ -161,6 +161,10 @@ export const regenerateIllustration = mutation({
 export const deleteWizard = mutation({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
-    await ctx.db.delete(wizardId);
+    const wizard = await ctx.db.get(wizardId);
+    if (wizard) {
+      await ctx.db.delete(wizardId);
+    }
+    // Silently succeed if wizard doesn't exist
   },
 });
