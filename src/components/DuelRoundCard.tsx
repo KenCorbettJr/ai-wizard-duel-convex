@@ -7,6 +7,7 @@ import { api } from "../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConvexImage } from "@/components/ConvexImage";
+import { TimeAgo } from "@/components/TimeAgo";
 import { Clock, Sparkles } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 
@@ -90,7 +91,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
           className="bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700/50"
         >
           <Clock className="h-3 w-3 mr-1" />
-          Your Turn
+          Your Turn - <TimeAgo timestamp={round._creationTime} />
         </Badge>
       );
     }

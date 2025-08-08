@@ -30,6 +30,15 @@ export function CastSpellModal({
 }: CastSpellModalProps) {
   const [isModalCollapsed, setIsModalCollapsed] = useState(false);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (!isCasting && spellDescription.trim()) {
+        onCastSpell();
+      }
+    }
+  };
+
   return (
     <Card className="bg-card/95 dark:bg-card/98 backdrop-blur-md border-2 border-purple-500/50 dark:border-purple-400/50 shadow-2xl dark:shadow-3xl transition-all duration-300 ease-in-out gap-3 fixed -bottom-3 w-full z-50 max-w-4xl">
       <CardHeader className="gap-0">
@@ -63,6 +72,7 @@ export function CastSpellModal({
             <textarea
               value={spellDescription}
               onChange={(e) => onSpellDescriptionChange(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder={`What will ${wizardName} do in round ${currentRound}?`}
               className="w-full p-3 border border-input/50 dark:border-input/30 bg-background/50 dark:bg-background/30 text-foreground dark:text-foreground/95 rounded-lg resize-none h-24 placeholder:text-muted-foreground/60 dark:placeholder:text-muted-foreground/50 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all backdrop-blur-sm text-sm"
               disabled={isCasting}
