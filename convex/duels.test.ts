@@ -92,7 +92,7 @@ describe("Duels", () => {
     });
 
     const duel = await t.query(api.duels.getDuel, { duelId });
-    const shortcode = duel?.shortcode!;
+    const shortcode = duel?.shortcode as string;
 
     const foundDuel = await t.query(api.duels.getDuelByShortcode, {
       shortcode,
