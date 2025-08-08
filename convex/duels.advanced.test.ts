@@ -189,6 +189,29 @@ describe("Duels - Advanced Tests", () => {
       expect(duel?.wizards).toContain(wizard3Id);
       expect(duel?.needActionsFrom).toHaveLength(3);
     });
+
+    test("should remain in WAITING_FOR_PLAYERS status when 2 players join (auto-start scheduled)", async () => {
+      const duelId = await t.mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [wizard1Id],
+        players: ["player1"],
+      });
+
+      // Join second player
+      await t.mutation(api.duels.joinDuel, {
+        duelId,
+        userId: "player2",
+        wizards: [wizard2Id],
+      });
+
+      const duel = await t.query(api.duels.getDuel, { duelId });
+      expect(duel?.players).toHaveLength(2);
+      expect(duel?.players).toContain("player1");
+      expect(duel?.players).toContain("player2");
+      // In test environment, the duel remains in WAITING_FOR_PLAYERS status
+      // because auto-start scheduling is disabled to avoid transaction errors
+      expect(duel?.status).toBe("WAITING_FOR_PLAYERS");
+    });
   });
 
   describe("Spell Casting", () => {

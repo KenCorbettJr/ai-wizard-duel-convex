@@ -59,7 +59,6 @@ export default function DuelPage({ params }: DuelPageProps) {
     (wizard) => wizard?.owner === user?.id
   );
   const userWizardId = userWizard?._id;
-  const startDuel = useMutation(api.duels.startDuel);
   const castSpell = useMutation(api.duels.castSpell);
 
   // Get the current round to check if user has already cast a spell
@@ -72,19 +71,6 @@ export default function DuelPage({ params }: DuelPageProps) {
       : false;
 
   const isPlayerInDuel = duel?.players.includes(user?.id || "");
-  const canStartDuel =
-    duel?.status === "WAITING_FOR_PLAYERS" &&
-    duel?.players.length >= 2 &&
-    isPlayerInDuel;
-
-  const handleStartDuel = async () => {
-    if (!duel) return;
-    try {
-      await startDuel({ duelId: duel._id });
-    } catch (error) {
-      console.error("Failed to start duel:", error);
-    }
-  };
 
   const handleCastSpell = async () => {
     if (!duel || !spellDescription.trim() || !userWizardId) return;
@@ -323,12 +309,14 @@ export default function DuelPage({ params }: DuelPageProps) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
                   <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400 animate-pulse" />
-                  Waiting for Players
+                  {duel.players.length < 2
+                    ? "Waiting for Players"
+                    : "Preparing Duel"}
                 </CardTitle>
                 <CardDescription className="dark:text-muted-foreground/80">
                   {duel.players.length < 2
                     ? "Waiting for more players to join..."
-                    : "Ready to start! Click the button below to begin the duel."}
+                    : "Generating magical introduction and preparing the arena..."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -342,18 +330,17 @@ export default function DuelPage({ params }: DuelPageProps) {
                       Join a different duel
                     </Link>
                   </p>
-                ) : canStartDuel ? (
-                  <Button
-                    onClick={handleStartDuel}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Start Duel
-                  </Button>
-                ) : (
+                ) : duel.players.length < 2 ? (
                   <p className="text-muted-foreground dark:text-muted-foreground/80">
                     Waiting for more players to join...
                   </p>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>
+                    <p className="text-muted-foreground dark:text-muted-foreground/80">
+                      The Arcane Arbiter is preparing the magical arena...
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>

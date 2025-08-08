@@ -203,6 +203,21 @@ export const joinDuel = mutation({
       needActionsFrom: updatedNeedActionsFrom,
     });
 
+    // Auto-start the duel if we now have 2 players
+    if (updatedPlayers.length >= 2) {
+      // Schedule the duel introduction generation which will automatically start the duel
+      // Skip scheduling in test environment to avoid transaction escape errors
+      if (process.env.NODE_ENV !== "test") {
+        await ctx.scheduler.runAfter(
+          0,
+          api.duelIntroduction.generateDuelIntroduction,
+          {
+            duelId,
+          }
+        );
+      }
+    }
+
     return duelId;
   },
 });
@@ -288,8 +303,13 @@ export const castSpell = mutation({
         status: "PROCESSING" as DuelRoundStatus,
       });
 
-      // Skip round processing scheduling to avoid transaction escape errors in tests
-      // Round processing can be triggered manually for testing
+      // Schedule round processing
+      if (process.env.NODE_ENV !== "test") {
+        await ctx.scheduler.runAfter(0, api.processDuelRound.processDuelRound, {
+          duelId,
+          roundId: currentRound._id,
+        });
+      }
     }
 
     return currentRound._id;
@@ -723,8 +743,13 @@ export const triggerRoundProcessing = mutation({
       });
     }
 
-    // Skip round processing scheduling to avoid transaction escape errors in tests
-    // Round processing can be triggered manually for testing
+    // Schedule round processing
+    if (process.env.NODE_ENV !== "test") {
+      await ctx.scheduler.runAfter(0, api.processDuelRound.processDuelRound, {
+        duelId,
+        roundId,
+      });
+    }
 
     return roundId;
   },

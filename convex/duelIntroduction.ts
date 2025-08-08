@@ -84,7 +84,17 @@ export const generateDuelIntroduction = action({
       // Generate the illustration
       if (introduction.illustrationPrompt) {
         // Skip introduction illustration scheduling to avoid transaction escape errors in tests
-        // Illustrations are not critical for core duel functionality
+        if (process.env.NODE_ENV !== "test") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.generateRoundIllustration.generateRoundIllustration,
+            {
+              illustrationPrompt: introduction.illustrationPrompt,
+              duelId,
+              roundNumber: "0", // Introduction round
+            }
+          );
+        }
       }
 
       // Start the duel (move to first actual round)

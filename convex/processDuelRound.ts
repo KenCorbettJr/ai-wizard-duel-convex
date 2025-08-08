@@ -4,7 +4,7 @@ import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
-import { Id, Doc } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
 
 // Types for the battle round response
 export interface BattleRoundResponse {
@@ -151,8 +151,14 @@ export const processDuelRound = action({
         },
       });
 
-      // Skip illustration scheduling completely to avoid transaction escape errors
-      // Illustrations are not critical for core duel processing functionality
+      // Schedule round illustration generation
+      if (process.env.NODE_ENV !== "test" && battleResult.illustrationPrompt) {
+        await ctx.runMutation(api.duels.scheduleRoundIllustration, {
+          illustrationPrompt: battleResult.illustrationPrompt,
+          duelId,
+          roundNumber: round.roundNumber.toString(),
+        });
+      }
 
       // Check if we need to generate a conclusion
       const updatedDuel = await ctx.runQuery(api.duels.getDuel, { duelId });
@@ -582,8 +588,19 @@ Write a final narration of the duel.`;
       },
     });
 
-    // Skip conclusion illustration scheduling to avoid transaction escape errors
-    // Illustrations are not critical for core duel processing functionality
+    // Schedule conclusion illustration generation
+    if (
+      process.env.NODE_ENV !== "test" &&
+      (parsedResponse.illustrationPrompt || true)
+    ) {
+      await ctx.runMutation(api.duels.scheduleRoundIllustration, {
+        illustrationPrompt:
+          parsedResponse.illustrationPrompt ||
+          `Low poly art showing the conclusion of a wizard duel in an arena.`,
+        duelId,
+        roundNumber: conclusionRoundNumber.toString(),
+      });
+    }
   } catch (error) {
     console.error("Failed to generate duel conclusion:", error);
     // Continue without conclusion - the duel is still marked as completed
@@ -592,7 +609,7 @@ Write a final narration of the duel.`;
 
 // Helper function to generate fallback conclusion
 function generateFallbackConclusion(
-  duel: Doc<"duels"> & { rounds: Doc<"duelRounds">[] },
+  duel: DuelData & { winners?: Id<"wizards">[]; losers?: Id<"wizards">[] },
   wizard1: WizardData,
   wizard2: WizardData
 ): { narration: string; result: string; illustrationPrompt: string } {

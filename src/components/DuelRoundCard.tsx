@@ -45,7 +45,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200/30 border-t-purple-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>
             <span className="ml-2 text-muted-foreground">
               Loading round data...
             </span>
@@ -68,6 +68,16 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
     );
   };
 
+  const hasOtherWizardSubmitted = () => {
+    if (!round.spells || !userWizard) return false;
+
+    // Check if any wizard other than the current user has submitted a spell
+    const otherWizards = duel.wizards.filter(
+      (wizardId) => wizardId !== userWizard._id
+    );
+    return otherWizards.some((wizardId) => round.spells![wizardId]);
+  };
+
   const getStatusBadge = () => {
     if (round.status === "COMPLETED") {
       return null; // No badge for completed rounds
@@ -77,7 +87,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
       return (
         <Badge
           variant="default"
-          className="bg-orange-100 text-orange-800 border-orange-200"
+          className="bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700/50"
         >
           <Clock className="h-3 w-3 mr-1" />
           Your Turn
@@ -89,7 +99,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
       return (
         <Badge
           variant="secondary"
-          className="bg-blue-100 text-blue-800 border-blue-200"
+          className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700/50"
         >
           <Clock className="h-3 w-3 mr-1" />
           Actions Submitted
@@ -101,7 +111,7 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
       return (
         <Badge
           variant="secondary"
-          className="bg-purple-100 text-purple-800 border-purple-200"
+          className="bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700/50"
         >
           <Sparkles className="h-3 w-3 mr-1 animate-pulse" />
           Awaiting Narration
@@ -172,25 +182,38 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isWaitingForMyAction() && (
-          <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <p className="text-orange-800 font-medium">
+        {isWaitingForMyAction() && hasOtherWizardSubmitted() && (
+          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/50 rounded-lg">
+            <p className="text-orange-800 dark:text-orange-200 font-medium">
               The other wizard has submitted their actions.
             </p>
           </div>
         )}
 
+        {isWaitingForMyAction() && !hasOtherWizardSubmitted() && (
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
+            <p className="text-blue-800 dark:text-blue-200 font-medium">
+              Waiting for all wizards to submit their actions.
+            </p>
+          </div>
+        )}
+
         {round.status === "WAITING_FOR_SPELLS" && !isWaitingForMyAction() && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-800 font-medium">
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
+            <p className="text-blue-800 dark:text-blue-200 font-medium">
               Actions Submitted. Awaiting other wizard&apos;s actions.
             </p>
           </div>
         )}
 
         {round.status === "PROCESSING" && (
-          <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <p className="text-purple-800 font-medium">Awaiting narration.</p>
+          <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>
+              <p className="text-purple-800 dark:text-purple-200 font-medium">
+                The Arcane Arbiter is weaving the tale of this round...
+              </p>
+            </div>
           </div>
         )}
 

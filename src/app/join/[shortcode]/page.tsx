@@ -69,6 +69,9 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
 
   const joinDuel = useMutation(api.duels.joinDuel);
 
+  // Check if user is already in the duel (moved before early returns)
+  const isAlreadyInDuel = duel?.players?.includes(user?.id || "") || false;
+
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (isLoaded && !user) {
@@ -77,6 +80,13 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
       );
     }
   }, [isLoaded, user, router]);
+
+  // Redirect if user is already in the duel (moved before early returns)
+  useEffect(() => {
+    if (isAlreadyInDuel && duel?._id) {
+      router.push(`/duels/${duel._id}`);
+    }
+  }, [isAlreadyInDuel, router, duel?._id]);
 
   const handleWizardSelect = (wizardId: Id<"wizards">) => {
     setSelectedWizard(wizardId);
@@ -217,10 +227,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     );
   }
 
-  // Check if user is already in the duel
-  const isAlreadyInDuel = duel.players.includes(user.id);
   if (isAlreadyInDuel) {
-    router.push(`/duels/${duel._id}`);
     return null;
   }
 

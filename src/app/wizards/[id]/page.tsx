@@ -85,7 +85,7 @@ export default function WizardPage({ params }: WizardPageProps) {
   const activeDuels =
     wizardDuels?.filter(
       (duel) =>
-        duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS",
+        duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS"
     ) || [];
 
   const isOwner = user && wizard && user.id === wizard.owner;
@@ -211,7 +211,7 @@ export default function WizardPage({ params }: WizardPageProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {isOwner ? (
+          {isOwner && (
             <Button
               size="lg"
               onClick={() => setIsEditing(true)}
@@ -220,13 +220,12 @@ export default function WizardPage({ params }: WizardPageProps) {
               <Edit className="w-5 h-5 mr-2" />
               Edit Wizard
             </Button>
-          ) : (
-            <Link href={`/duels/create?wizardId=${wizard._id}`}>
-              <Button size="lg" className="text-lg px-8 py-3">
-                ⚔️ Challenge to Duel
-              </Button>
-            </Link>
           )}
+          <Link href={`/duels/create?wizardId=${wizard._id}`}>
+            <Button size="lg" className="text-lg px-8 py-3">
+              ⚔️ {isOwner ? "Start New Duel" : "Challenge to Duel"}
+            </Button>
+          </Link>
         </div>
 
         {/* Duel History */}
@@ -314,10 +313,13 @@ function DuelCard({ duel, wizardId }: DuelCardProps) {
     duel.wizards[2] ? { wizardId: duel.wizards[2] } : "skip"
   );
 
-  const wizards = [wizard1, wizard2, wizard3].filter((w) => w !== undefined && w !== null);
-  const isLoading = (duel.wizards[0] && wizard1 === undefined) || 
-                   (duel.wizards[1] && wizard2 === undefined) ||
-                   (duel.wizards[2] && wizard3 === undefined);
+  const wizards = [wizard1, wizard2, wizard3].filter(
+    (w) => w !== undefined && w !== null
+  );
+  const isLoading =
+    (duel.wizards[0] && wizard1 === undefined) ||
+    (duel.wizards[1] && wizard2 === undefined) ||
+    (duel.wizards[2] && wizard3 === undefined);
 
   const isWinner = duel.winners?.includes(wizardId);
   const isLoser = duel.losers?.includes(wizardId);
@@ -421,18 +423,25 @@ function DuelCard({ duel, wizardId }: DuelCardProps) {
               />
             </div>
           )}
-          
+
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground mb-1 truncate">
               {duelTitle}
             </p>
             <p className="text-xs text-muted-foreground mb-1">
-              {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds && typeof duel.numberOfRounds === "number" && (
-                <>Round {duel.currentRound} of {duel.numberOfRounds}</>
-              )}
-              {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds === "TO_THE_DEATH" && (
-                <>Round {duel.currentRound}</>
-              )}
+              {duel.status === "IN_PROGRESS" &&
+                duel.currentRound &&
+                duel.numberOfRounds &&
+                typeof duel.numberOfRounds === "number" && (
+                  <>
+                    Round {duel.currentRound} of {duel.numberOfRounds}
+                  </>
+                )}
+              {duel.status === "IN_PROGRESS" &&
+                duel.currentRound &&
+                duel.numberOfRounds === "TO_THE_DEATH" && (
+                  <>Round {duel.currentRound}</>
+                )}
               {duel.status !== "IN_PROGRESS" && duel.numberOfRounds && (
                 <>
                   {typeof duel.numberOfRounds === "number"
