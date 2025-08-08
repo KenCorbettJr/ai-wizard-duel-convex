@@ -3,7 +3,7 @@ import { expect, test, describe, beforeEach, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
-import { generateTestId } from "./test-utils";
+import { generateTestId } from "./test_utils";
 
 // Mock the AI text generation
 const mockGenerateText = vi.fn();
@@ -789,9 +789,21 @@ describe("Process Duel Round", () => {
         duelId: finalDuelId,
       });
       const conclusionRound = rounds.find((r) => r.type === "CONCLUSION");
+      const finalRegularRound = rounds.find(
+        (r) => r.type === "SPELL_CASTING" && r.roundNumber === 1
+      );
+
       expect(conclusionRound).toBeDefined();
+      expect(finalRegularRound).toBeDefined();
       expect(conclusionRound?.outcome?.narrative).toContain(
         "concludes with Gandalf victorious"
+      );
+
+      // Verify that conclusion round has a unique round number (should be 2, not 1)
+      expect(conclusionRound?.roundNumber).toBe(2);
+      expect(finalRegularRound?.roundNumber).toBe(1);
+      expect(conclusionRound?.roundNumber).not.toBe(
+        finalRegularRound?.roundNumber
       );
     });
   });

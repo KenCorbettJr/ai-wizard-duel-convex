@@ -27,7 +27,7 @@ export function Navbar({
         transparent
           ? "bg-transparent"
           : "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
-        className,
+        className
       )}
     >
       <div className="flex items-center gap-4">
@@ -38,7 +38,7 @@ export function Navbar({
             onClick={onBackClick}
             className={cn(
               "hover:bg-white/20",
-              transparent ? "text-white hover:text-white" : "",
+              transparent ? "text-white hover:text-white" : ""
             )}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -49,7 +49,7 @@ export function Navbar({
           <h1
             className={cn(
               "text-2xl font-bold",
-              transparent ? "text-white" : "",
+              transparent ? "text-white" : ""
             )}
           >
             AI Wizard Duel
@@ -61,6 +61,9 @@ export function Navbar({
         <SignedIn>
           <Link href="/dashboard">
             <Button variant="outline">Dashboard</Button>
+          </Link>
+          <Link href="/stats">
+            <Button variant="outline">Stats</Button>
           </Link>
           <UserButton />
         </SignedIn>

@@ -77,7 +77,7 @@
   - Create performance tests for concurrent duel handling
   - _Requirements: All requirements - testing coverage_
 
-- [ ] 12. Build duel management and administration features
+- [x] 12. Build duel management and administration features
   - Implement duel cancellation functionality
   - Add duel search and filtering capabilities
   - Create active duel monitoring dashboard

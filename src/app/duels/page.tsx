@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
-import { Swords, Users, Search } from "lucide-react";
+import { Swords, Users, Search, Shield } from "lucide-react";
 
 export default function DuelsPage() {
   const { user } = useUser();
@@ -22,8 +22,13 @@ export default function DuelsPage() {
   const activeDuels = useQuery(api.duels.getActiveDuels);
   const playerDuels = useQuery(
     api.duels.getPlayerDuels,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? { userId: user.id } : "skip"
   );
+
+  // Check if user has admin privileges (in development or with admin role)
+  const isAdmin =
+    user?.publicMetadata?.role === "admin" ||
+    process.env.NODE_ENV === "development";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -54,7 +59,7 @@ export default function DuelsPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -90,6 +95,27 @@ export default function DuelsPage() {
               </Link>
             </CardContent>
           </Card>
+
+          {isAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Admin Dashboard
+                </CardTitle>
+                <CardDescription>
+                  Monitor and manage duels across the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/admin/duels">
+                  <Button variant="outline" className="w-full">
+                    Admin Panel
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -100,7 +126,9 @@ export default function DuelsPage() {
             {playerDuels === undefined ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto"></div>
-                <p className="text-muted-foreground mt-2">Loading your duels...</p>
+                <p className="text-muted-foreground mt-2">
+                  Loading your duels...
+                </p>
               </div>
             ) : playerDuels.length === 0 ? (
               <Card>
@@ -161,10 +189,12 @@ export default function DuelsPage() {
             {activeDuels === undefined ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-400 mx-auto"></div>
-                <p className="text-muted-foreground mt-2">Loading available duels...</p>
+                <p className="text-muted-foreground mt-2">
+                  Loading available duels...
+                </p>
               </div>
             ) : activeDuels.filter(
-                (duel) => !duel.players.includes(user?.id || ""),
+                (duel) => !duel.players.includes(user?.id || "")
               ).length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">

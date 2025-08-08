@@ -3,7 +3,7 @@ import { expect, test, describe, beforeEach, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
-import { generateTestId } from "./test-utils";
+import { generateTestId } from "./test_utils";
 
 // Mock the AI text generation
 const mockGenerateText = vi.fn();
