@@ -807,4 +807,92 @@ describe("Process Duel Round", () => {
       );
     });
   });
+
+  describe("Previous Rounds Context", () => {
+    test("should include previous round context in AI prompt", async () => {
+      // Mock AI response for multiple rounds
+      mockGenerateText
+        .mockResolvedValueOnce(
+          JSON.stringify({
+            narration: "First round battle begins!",
+            result: "Round 1 complete",
+            illustrationPrompt: "First round illustration",
+            wizard1: { pointsEarned: 5, healthChange: -10 },
+            wizard2: { pointsEarned: 3, healthChange: -5 },
+          })
+        )
+        .mockResolvedValueOnce(
+          JSON.stringify({
+            narration: "Second round continues the epic battle!",
+            result: "Round 2 complete",
+            illustrationPrompt: "Second round illustration",
+            wizard1: { pointsEarned: 4, healthChange: -15 },
+            wizard2: { pointsEarned: 6, healthChange: -8 },
+          })
+        );
+
+      // Start the duel
+      await t.mutation(api.duels.startDuelAfterIntroduction, { duelId });
+
+      // Cast spells for round 1
+      await t.mutation(api.duels.castSpell, {
+        duelId,
+        wizardId: wizard1Id,
+        spellDescription: "Fireball attack",
+      });
+
+      await t.mutation(api.duels.castSpell, {
+        duelId,
+        wizardId: wizard2Id,
+        spellDescription: "Ice shield defense",
+      });
+
+      // Process round 1
+      const rounds1 = await t.query(api.duels.getDuelRounds, { duelId });
+      const round1 = rounds1.find((r) => r.roundNumber === 1);
+      expect(round1).toBeDefined();
+
+      await t.action(api.processDuelRound.processDuelRound, {
+        duelId,
+        roundId: round1!._id,
+      });
+
+      // Cast spells for round 2
+      await t.mutation(api.duels.castSpell, {
+        duelId,
+        wizardId: wizard1Id,
+        spellDescription: "Lightning bolt",
+      });
+
+      await t.mutation(api.duels.castSpell, {
+        duelId,
+        wizardId: wizard2Id,
+        spellDescription: "Healing potion",
+      });
+
+      // Process round 2
+      const rounds2 = await t.query(api.duels.getDuelRounds, { duelId });
+      const round2 = rounds2.find((r) => r.roundNumber === 2);
+      expect(round2).toBeDefined();
+
+      await t.action(api.processDuelRound.processDuelRound, {
+        duelId,
+        roundId: round2!._id,
+      });
+
+      // Verify that the second AI call included context from the first round
+      expect(mockGenerateText).toHaveBeenCalledTimes(2);
+
+      // Check the second call's prompt includes previous round context
+      const secondCallArgs = mockGenerateText.mock.calls[1];
+      const secondPrompt = secondCallArgs[0];
+
+      expect(secondPrompt).toContain("=== Previous Rounds ===");
+      expect(secondPrompt).toContain("Round 1");
+      expect(secondPrompt).toContain("First round battle begins!");
+      expect(secondPrompt).toContain("Gandalf (+5)");
+      expect(secondPrompt).toContain("Saruman (+3)");
+      expect(secondPrompt).toContain("=== Round 2 ===");
+    });
+  });
 });

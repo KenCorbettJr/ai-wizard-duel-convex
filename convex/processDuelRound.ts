@@ -114,6 +114,7 @@ export const processDuelRound = action({
 
       // Generate the battle round using AI
       const battleResult = await generateBattleRound(
+        ctx,
         duel as DuelData,
         round as RoundData,
         wizard1,
@@ -207,6 +208,7 @@ function getBoundedHealthChange(
 
 // Helper function to generate battle round using AI
 async function generateBattleRound(
+  ctx: ActionCtx,
   duel: DuelData,
   round: RoundData,
   wizard1: WizardData,
@@ -225,7 +227,26 @@ async function generateBattleRound(
   // Determine action order randomly
   const firstWizard = Math.random() < 0.5 ? 1 : 2;
 
-  const systemPrompt = generateSystemPrompt(duel, wizard1, wizard2);
+  // Get all previous rounds for context
+  const allRounds = await ctx.runQuery(api.duels.getDuelRounds, {
+    duelId: duel._id,
+  });
+  const previousRounds = allRounds
+    .filter(
+      (r: { roundNumber: number; status: string }) =>
+        r.roundNumber < round.roundNumber && r.status === "COMPLETED"
+    )
+    .sort(
+      (a: { roundNumber: number }, b: { roundNumber: number }) =>
+        a.roundNumber - b.roundNumber
+    );
+
+  const systemPrompt = generateSystemPrompt(
+    duel,
+    wizard1,
+    wizard2,
+    previousRounds
+  );
 
   const roundActions = generateRoundActions(
     wizard1,
@@ -240,7 +261,13 @@ async function generateBattleRound(
     firstWizard
   );
 
-  const prompt = `=== Round ${round.roundNumber} ===\n${roundActions}`;
+  const previousRoundsContext = generatePreviousRoundsContext(
+    previousRounds,
+    wizard1,
+    wizard2
+  );
+
+  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}`;
 
   try {
     const aiResponse = await generateText(prompt, systemPrompt, {
@@ -280,16 +307,77 @@ async function generateBattleRound(
     );
   }
 }
+// Helper function to generate previous rounds context
+function generatePreviousRoundsContext(
+  previousRounds: any[],
+  wizard1: WizardData,
+  wizard2: WizardData
+): string {
+  if (previousRounds.length === 0) {
+    return "=== Previous Rounds ===\nThis is the first round of combat. No previous rounds to reference.";
+  }
+
+  let context = "=== Previous Rounds ===\n";
+  context += "Here is what has happened in the duel so far:\n\n";
+
+  previousRounds.forEach((round) => {
+    if (round.roundNumber === 0) {
+      // Introduction round
+      context += `**Introduction**: ${round.outcome?.narrative || "The duel began."}\n\n`;
+    } else {
+      // Battle round
+      context += `**Round ${round.roundNumber}**:\n`;
+      if (round.outcome?.narrative) {
+        context += `${round.outcome.narrative}\n`;
+      }
+      if (round.outcome?.result) {
+        context += `Result: ${round.outcome.result}\n`;
+      }
+      if (round.outcome?.pointsAwarded) {
+        const wizard1Points = round.outcome.pointsAwarded[wizard1._id] || 0;
+        const wizard2Points = round.outcome.pointsAwarded[wizard2._id] || 0;
+        context += `Points awarded: ${wizard1.name} (+${wizard1Points}), ${wizard2.name} (+${wizard2Points})\n`;
+      }
+      if (round.outcome?.healthChange) {
+        const wizard1Health = round.outcome.healthChange[wizard1._id] || 0;
+        const wizard2Health = round.outcome.healthChange[wizard2._id] || 0;
+        if (wizard1Health !== 0 || wizard2Health !== 0) {
+          context += `Health changes: ${wizard1.name} (${wizard1Health > 0 ? "+" : ""}${wizard1Health}), ${wizard2.name} (${wizard2Health > 0 ? "+" : ""}${wizard2Health})\n`;
+        }
+      }
+      context += "\n";
+    }
+  });
+
+  context +=
+    "Use this context to maintain narrative consistency and build upon previous events in the duel.\n";
+  return context;
+}
+
 // Helper function to generate system prompt
 function generateSystemPrompt(
   duel: DuelData,
   wizard1: WizardData,
-  wizard2: WizardData
+  wizard2: WizardData,
+  previousRounds: any[] = []
 ): string {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
       ? "to the death"
       : `a ${duel.numberOfRounds} round duel`;
+
+  const contextualGuidance =
+    previousRounds.length > 0
+      ? `\n\n## Narrative Continuity
+You have access to the complete history of this duel. Use this context to:
+- Reference previous events and their consequences
+- Build upon established magical themes and strategies
+- Maintain consistency with the arena environment and atmosphere
+- Show character development and adaptation throughout the duel
+- Create satisfying narrative progression that acknowledges past rounds
+
+The wizards and spectators remember everything that has happened. Make sure your narration reflects the ongoing story of this epic magical confrontation.`
+      : "";
 
   return `# Wizard Duel System Guidelines
 You are the Arcane Arbiter, an impartial magical referee for wizard duels. Your role is to interpret, adjudicate, and narrate magical combat between two wizards. Remember, both actions happen simultaneously, so carefully consider how each wizard's actions affect the other.
@@ -380,7 +468,7 @@ You must return ONLY a valid JSON object with the following structure:
 - In case of a tie, the wizard with the most health points remaining wins
 - If both wizards have the same health points, declare a draw
 
-Remember to maintain impartiality while creating a dramatic and engaging narrative experience that makes both players feel their magical prowess is respected.`;
+Remember to maintain impartiality while creating a dramatic and engaging narrative experience that makes both players feel their magical prowess is respected.${contextualGuidance}`;
 }
 
 // Helper function to generate round actions text
@@ -513,6 +601,75 @@ The crowd watches in awe as the magical energies settle, revealing the results o
   };
 }
 
+// Helper function to generate complete duel history context for conclusions
+function generateDuelHistoryContext(
+  completedRounds: unknown[],
+  wizard1: WizardData,
+  wizard2: WizardData
+): string {
+  if (completedRounds.length === 0) {
+    return "=== DUEL HISTORY ===\nNo rounds completed.";
+  }
+
+  let context = "=== COMPLETE DUEL HISTORY ===\n";
+  context +=
+    "Here is the complete story of this epic magical confrontation:\n\n";
+
+  completedRounds.forEach((round) => {
+    if (round.roundNumber === 0) {
+      // Introduction round
+      context += `**DUEL INTRODUCTION**:\n`;
+      if (round.outcome?.narrative) {
+        context += `${round.outcome.narrative}\n\n`;
+      }
+    } else {
+      // Battle round
+      context += `**ROUND ${round.roundNumber}**:\n`;
+
+      // Include spell actions if available
+      if (round.spells) {
+        const wizard1Spell = round.spells[wizard1._id];
+        const wizard2Spell = round.spells[wizard2._id];
+        if (wizard1Spell || wizard2Spell) {
+          context += `Actions taken:\n`;
+          if (wizard1Spell) {
+            context += `- ${wizard1.name}: "${wizard1Spell.description}"\n`;
+          }
+          if (wizard2Spell) {
+            context += `- ${wizard2.name}: "${wizard2Spell.description}"\n`;
+          }
+          context += "\n";
+        }
+      }
+
+      if (round.outcome?.narrative) {
+        context += `${round.outcome.narrative}\n\n`;
+      }
+
+      if (round.outcome?.result) {
+        context += `Round Result: ${round.outcome.result}\n`;
+      }
+
+      if (round.outcome?.pointsAwarded) {
+        const wizard1Points = round.outcome.pointsAwarded[wizard1._id] || 0;
+        const wizard2Points = round.outcome.pointsAwarded[wizard2._id] || 0;
+        context += `Points Earned: ${wizard1.name} (+${wizard1Points}), ${wizard2.name} (+${wizard2Points})\n`;
+      }
+
+      if (round.outcome?.healthChange) {
+        const wizard1Health = round.outcome.healthChange[wizard1._id] || 0;
+        const wizard2Health = round.outcome.healthChange[wizard2._id] || 0;
+        if (wizard1Health !== 0 || wizard2Health !== 0) {
+          context += `Health Impact: ${wizard1.name} (${wizard1Health > 0 ? "+" : ""}${wizard1Health}), ${wizard2.name} (${wizard2Health > 0 ? "+" : ""}${wizard2Health})\n`;
+        }
+      }
+      context += "\n";
+    }
+  });
+
+  return context;
+}
+
 // Helper function to generate duel conclusion
 async function generateDuelConclusion(
   ctx: ActionCtx,
@@ -529,26 +686,67 @@ async function generateDuelConclusion(
     const wizard1FinalHealth = duel.hitPoints[wizard1ID] || 0;
     const wizard2FinalHealth = duel.hitPoints[wizard2ID] || 0;
 
-    const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel. Write a final narration highlighting the decisive moments of the battle, congratulating the winner on their prowess, and acknowledging the loser's valiant effort.
+    // Get all rounds for complete duel history
+    const rounds = await ctx.runQuery(api.duels.getDuelRounds, { duelId });
+    const completedRounds = rounds
+      .filter((r: { status: string }) => r.status === "COMPLETED")
+      .sort(
+        (a: { roundNumber: number }, b: { roundNumber: number }) =>
+          a.roundNumber - b.roundNumber
+      );
+
+    const introductionRound = completedRounds.find(
+      (round: { roundNumber: number }) => round.roundNumber === 0
+    );
+    const arenaDescription =
+      introductionRound?.outcome?.illustrationPrompt ||
+      "a mysterious and grand magical arena";
+
+    // Determine winner and loser
+    const winnerId = duel.winners?.[0];
+    const winner = winnerId === wizard1ID ? wizard1 : wizard2;
+    const loser = winnerId === wizard1ID ? wizard2 : wizard1;
+
+    // Generate complete duel history for context
+    const duelHistory = generateDuelHistoryContext(
+      completedRounds,
+      wizard1,
+      wizard2
+    );
+
+    const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel. You have access to the complete history of this epic magical confrontation. Write a final narration that:
+
+- References key moments and turning points from throughout the duel
+- Highlights the decisive moments that led to victory
+- Shows how both wizards evolved and adapted during the battle
+- Congratulates the winner on their prowess and strategy
+- Acknowledges the loser's valiant effort and memorable moments
+- Creates a satisfying conclusion that honors the entire journey
 
 You must return ONLY a valid JSON object with these exact keys:
 {
-  "narration": "A final narration of the duel highlighting decisive moments, congratulating the winner, and acknowledging the loser's effort.",
-  "result": "A brief summary of the duel conclusion.",
-  "illustrationPrompt": "A detailed prompt showing the winning wizard celebrating and the losing wizard in the background looking dejected in the Enchanted Arena with remnants of the duel around them."
+  "narration": "A comprehensive final narration that weaves together the entire duel story, highlighting key moments, character development, and the path to victory. This should feel like the climactic conclusion to an epic tale.",
+  "result": "A brief but impactful summary of the duel conclusion that captures the essence of the victory.",
+  "illustrationPrompt": "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
 }
 
 Do not award any points or health points in this conclusion.`;
 
-    const prompt = `All the rounds are complete. The duel is over. The final scores are:
-- ${wizard1.name}: ${wizard1FinalPoints} points
-- ${wizard2.name}: ${wizard2FinalPoints} points
+    const prompt = `${duelHistory}
 
-The final health points are:
-- ${wizard1.name}: ${wizard1FinalHealth} health
-- ${wizard2.name}: ${wizard2FinalHealth} health
+=== FINAL RESULTS ===
+The duel is now complete. The final scores are:
+- ${wizard1.name}: ${wizard1FinalPoints} points, ${wizard1FinalHealth} health
+- ${wizard2.name}: ${wizard2FinalPoints} points, ${wizard2FinalHealth} health
 
-Write a final narration of the duel.`;
+The winner is ${winner.name}. The loser is ${loser.name}.
+
+The arena is described as: ${arenaDescription}.
+
+Winning Wizard Description: ${winner.description}
+Losing Wizard Description: ${loser.description}
+
+Write a final narration that brings together the entire story of this duel, highlighting the journey both wizards took and the key moments that determined the outcome.`;
 
     const aiResponse = await generateText(prompt, systemPrompt, {
       temperature: 1.5,
@@ -613,22 +811,18 @@ function generateFallbackConclusion(
   wizard1: WizardData,
   wizard2: WizardData
 ): { narration: string; result: string; illustrationPrompt: string } {
-  const winner = duel.winners?.[0];
+  const winnerId = duel.winners?.[0];
+  const winner = winnerId === wizard1._id ? wizard1 : wizard2;
+  const loser = winnerId === wizard1._id ? wizard2 : wizard1;
 
-  let winnerName = "Unknown";
-  let loserName = "Unknown";
-
-  if (winner === wizard1._id) {
-    winnerName = wizard1.name;
-    loserName = wizard2.name;
-  } else if (winner === wizard2._id) {
-    winnerName = wizard2.name;
-    loserName = wizard1.name;
-  }
+  const winnerName = winner?.name || "Unknown";
+  const loserName = loser?.name || "Unknown";
+  const winnerDescription = winner?.description || "A victorious wizard";
+  const loserDescription = loser?.description || "A defeated wizard";
 
   return {
     narration: `The final spell echoes through the Enchanted Arena as the dust settles on this epic magical confrontation. ${winnerName} emerges victorious, their mastery of the arcane arts proven beyond doubt. ${loserName} fought valiantly, displaying remarkable magical prowess throughout the duel. Both wizards have earned the respect of all who witnessed this spectacular display of magical combat. The arena falls silent as the magical barriers dissipate, marking the end of this legendary duel.`,
     result: `${winnerName} claims victory in an epic magical duel!`,
-    illustrationPrompt: `Low poly art style illustration of ${winnerName} celebrating victory in a magical arena while ${loserName} looks dejected in the background. Enchanted Arena with magical remnants, spell residue, and mystical particles floating in the air. Dynamic lighting, wide shot from spectator perspective.`,
+    illustrationPrompt: `Low poly art style illustration of ${winnerName} (${winnerDescription}) celebrating victory in a magical arena, arms raised in triumph. In the background, ${loserName} (${loserDescription}) looks dejected, head bowed in defeat. The Enchanted Arena is filled with magical remnants, spell residue, and mystical particles floating in the air. Dynamic lighting, wide shot from spectator perspective, capturing the grandeur of the moment.`,
   };
 }
