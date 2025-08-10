@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "local": "concurrently \"next dev --turbopack\" \"convex dev\"",
-    "dev": "cp .env.emulate .emv.local && npm run local",
-    "emulate": "cp .env.emulate .emv.local && docker-compose up -d && npm run local",
+    "dev": "cp .env.emulate .env.local && npm run local",
+    "emulate": "cp .env.emulate .env.local && docker-compose up -d && npm run local",
     "dashboard": "convex dashboard",
     "build": "next build",
     "start": "next start",
@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:coverage": "vitest run --coverage --coverage.reporter=text",
-    "clear-emulate-db": "docker compose down -v && docker compose up -d"
+    "clear-emulate-db": "docker compose down -v && docker compose up -d && npm run new-emulate-creds",
+    "new-emulate-creds": "sed -i '' \"/^CONVEX_SELF_HOSTED_ADMIN_KEY=/d\" .env.emulate && echo \"CONVEX_SELF_HOSTED_ADMIN_KEY='$(docker compose exec -T backend ./generate_admin_key.sh)'\" >> .env.emulate"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
