@@ -35,11 +35,12 @@ export default function WizardPage({ params }: WizardPageProps) {
   const router = useRouter();
   const { user } = useUser();
   const { id } = use(params);
-  const wizardId = id as Id<"wizards">;
+
   const [isEditing, setIsEditing] = useState(false);
 
-  const wizard = useQuery(api.wizards.getWizard, { wizardId });
-  const wizardDuels = useQuery(api.duels.getWizardDuels, { wizardId });
+  // Use safe queries that handle invalid IDs gracefully
+  const wizard = useQuery(api.wizards.getWizardSafe, { wizardId: id });
+  const wizardDuels = useQuery(api.duels.getWizardDuelsSafe, { wizardId: id });
 
   if (wizard === undefined || wizardDuels === undefined) {
     return (
@@ -221,7 +222,7 @@ export default function WizardPage({ params }: WizardPageProps) {
               Edit Wizard
             </Button>
           )}
-          <Link href={`/duels/create?wizardId=${wizard._id}`}>
+          <Link href={`/duels/create?wizardId=${id}`}>
             <Button size="lg" className="text-lg px-8 py-3">
               ⚔️ {isOwner ? "Start New Duel" : "Challenge to Duel"}
             </Button>
@@ -239,7 +240,7 @@ export default function WizardPage({ params }: WizardPageProps) {
               </h3>
               <div className="grid gap-4">
                 {activeDuels.map((duel) => (
-                  <DuelCard key={duel._id} duel={duel} wizardId={wizardId} />
+                  <DuelCard key={duel._id} duel={duel} wizardId={id} />
                 ))}
               </div>
             </div>
@@ -252,7 +253,7 @@ export default function WizardPage({ params }: WizardPageProps) {
               </h3>
               <div className="grid gap-4">
                 {completedDuels.map((duel) => (
-                  <DuelCard key={duel._id} duel={duel} wizardId={wizardId} />
+                  <DuelCard key={duel._id} duel={duel} wizardId={id} />
                 ))}
               </div>
             </div>
@@ -268,7 +269,7 @@ export default function WizardPage({ params }: WizardPageProps) {
                 <p className="text-muted-foreground mb-4">
                   This wizard hasn&apos;t participated in any duels.
                 </p>
-                <Link href={`/duels/create?wizardId=${wizard._id}`}>
+                <Link href={`/duels/create?wizardId=${id}`}>
                   <Button>Start First Duel</Button>
                 </Link>
               </CardContent>
@@ -295,7 +296,7 @@ interface DuelCardProps {
     currentRound?: number;
     numberOfRounds?: number | "TO_THE_DEATH";
   };
-  wizardId: Id<"wizards">;
+  wizardId: string;
 }
 
 function DuelCard({ duel, wizardId }: DuelCardProps) {
@@ -321,8 +322,8 @@ function DuelCard({ duel, wizardId }: DuelCardProps) {
     (duel.wizards[1] && wizard2 === undefined) ||
     (duel.wizards[2] && wizard3 === undefined);
 
-  const isWinner = duel.winners?.includes(wizardId);
-  const isLoser = duel.losers?.includes(wizardId);
+  const isWinner = duel.winners?.includes(wizardId as Id<"wizards">);
+  const isLoser = duel.losers?.includes(wizardId as Id<"wizards">);
 
   const getStatusBadge = () => {
     switch (duel.status) {

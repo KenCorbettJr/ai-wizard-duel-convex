@@ -21,6 +21,22 @@ export const getWizard = query({
   },
 });
 
+// Get a specific wizard by ID with string validation
+export const getWizardSafe = query({
+  args: { wizardId: v.string() },
+  handler: async (ctx, { wizardId }) => {
+    try {
+      // Try to use the string as a Convex ID
+      const id = wizardId as any; // Cast to bypass TypeScript validation
+      return await ctx.db.get(id);
+    } catch (error) {
+      // If the ID is invalid, return null instead of throwing
+      console.warn("Invalid wizard ID:", wizardId, error);
+      return null;
+    }
+  },
+});
+
 // Create a new wizard
 export const createWizard = mutation({
   args: {

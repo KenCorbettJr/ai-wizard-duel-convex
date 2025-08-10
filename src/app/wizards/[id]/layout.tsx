@@ -8,20 +8,25 @@ interface WizardLayoutProps {
   children: React.ReactNode;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
   const { id } = await params;
-  
+
   try {
-    // Fetch wizard data
-    const wizard = await fetchQuery(api.wizards.getWizard, {
-      wizardId: id as Id<"wizards">,
+    // Fetch wizard data using safe query
+    const wizard = await fetchQuery(api.wizards.getWizardSafe, {
+      wizardId: id,
     });
 
     if (wizard) {
-      const winLossRecord = wizard.wins || wizard.losses 
-        ? ` (${wizard.wins || 0}W-${wizard.losses || 0}L)`
-        : '';
-      
+      const winLossRecord =
+        wizard.wins || wizard.losses
+          ? ` (${wizard.wins || 0}W-${wizard.losses || 0}L)`
+          : "";
+
       const baseMetadata = {
         title: `${wizard.name}${winLossRecord}`,
         description: `View ${wizard.name}'s profile, stats, and duel history in AI Wizard Duel. ${wizard.description}`,
@@ -32,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
         if (convexUrl) {
           const imageUrl = `${convexUrl}/api/storage/${wizard.illustration}`;
-          
+
           return {
             ...baseMetadata,
             openGraph: {
@@ -48,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
               ],
             },
             twitter: {
-              card: 'summary_large_image',
+              card: "summary_large_image",
               title: baseMetadata.title,
               description: baseMetadata.description,
               images: [imageUrl],
@@ -62,13 +67,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     return {
       title: "Wizard Profile",
-      description: "View wizard profile, stats, and duel history in AI Wizard Duel.",
+      description:
+        "View wizard profile, stats, and duel history in AI Wizard Duel.",
     };
   } catch (error) {
     console.error("Error generating metadata:", error);
     return {
       title: "Wizard Profile",
-      description: "View wizard profile, stats, and duel history in AI Wizard Duel.",
+      description:
+        "View wizard profile, stats, and duel history in AI Wizard Duel.",
     };
   }
 }

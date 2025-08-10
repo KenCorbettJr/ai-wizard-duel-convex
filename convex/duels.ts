@@ -577,6 +577,25 @@ export const getWizardDuels = query({
   },
 });
 
+// Get duels for a specific wizard with string validation
+export const getWizardDuelsSafe = query({
+  args: { wizardId: v.string() },
+  handler: async (ctx, { wizardId }) => {
+    try {
+      const id = wizardId as any; // Cast to bypass TypeScript validation
+      const duels = await ctx.db.query("duels").collect();
+
+      // Filter duels that include this wizard
+      return duels
+        .filter((duel) => duel.wizards.includes(id))
+        .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
+    } catch (error) {
+      console.warn("Invalid wizard ID for duels:", wizardId, error);
+      return [];
+    }
+  },
+});
+
 // Get duel statistics for a player
 export const getPlayerDuelStats = query({
   args: { userId: v.string() },
