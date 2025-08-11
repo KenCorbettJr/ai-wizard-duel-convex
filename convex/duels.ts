@@ -29,6 +29,21 @@ export const getPlayerDuels = query({
   },
 });
 
+// Get completed duels for a specific player
+export const getPlayerCompletedDuels = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const duels = await ctx.db.query("duels").collect();
+
+    // Filter duels that include this player and are completed
+    return duels
+      .filter(
+        (duel) => duel.players.includes(userId) && duel.status === "COMPLETED"
+      )
+      .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
+  },
+});
+
 // Get a specific duel by ID
 export const getDuel = query({
   args: { duelId: v.id("duels") },
@@ -1037,6 +1052,33 @@ export const forceCancelDuel = mutation({
     }
 
     return duelId;
+  },
+});
+
+// Get all recent duels from the platform (for watching duels)
+export const getAllRecentDuels = query({
+  args: {
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, { limit = 20, offset = 0 }) => {
+    const duels = await ctx.db.query("duels").collect();
+
+    // Filter to only show active (in progress) or completed duels
+    const watchableDuels = duels.filter(
+      (duel) => duel.status === "IN_PROGRESS" || duel.status === "COMPLETED"
+    );
+
+    // Sort by creation date (newest first) and apply pagination
+    const sortedDuels = watchableDuels
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(offset, offset + limit);
+
+    return {
+      duels: sortedDuels,
+      total: watchableDuels.length,
+      hasMore: offset + limit < watchableDuels.length,
+    };
   },
 });
 

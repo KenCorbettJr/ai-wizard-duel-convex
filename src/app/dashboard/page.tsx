@@ -12,25 +12,23 @@ import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { Navbar } from "@/components/Navbar";
-import { ConvexImage } from "@/components/ConvexImage";
+import { DuelListItem } from "@/components/DuelListItem";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Swords, Users, Wand2, BarChart3, Trophy, Loader2 } from "lucide-react";
 
 function ActiveDuelsCard({ userId }: { userId?: string }) {
   const playerDuels = useQuery(
     api.duels.getPlayerDuels,
-    userId ? { userId } : "skip",
+    userId ? { userId } : "skip"
   );
 
   const activeDuels =
     playerDuels?.filter(
       (duel) =>
-        duel.status === "WAITING_FOR_PLAYERS" || duel.status === "IN_PROGRESS",
+        duel.status === "WAITING_FOR_PLAYERS" || duel.status === "IN_PROGRESS"
     ) || [];
 
   const handleCopyShortcode = async (shortcode: string) => {
@@ -45,10 +43,12 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Swords className="h-5 w-5" />
-          Active Duels
-        </CardTitle>
+        <Link href="/duels" className="group">
+          <CardTitle className="flex items-center gap-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors cursor-pointer">
+            <Swords className="h-5 w-5" />
+            Active Duels
+          </CardTitle>
+        </Link>
         <CardDescription>Your ongoing magical duels</CardDescription>
       </CardHeader>
       <CardContent>
@@ -66,9 +66,10 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
         ) : (
           <div className="space-y-3">
             {activeDuels.slice(0, 3).map((duel) => (
-              <DashboardDuelCard
+              <DuelListItem
                 key={duel._id}
                 duel={duel}
+                variant="dashboard"
                 onCopyShortcode={handleCopyShortcode}
               />
             ))}
@@ -88,13 +89,61 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
   );
 }
 
+function CompletedDuelsCard({ userId }: { userId?: string }) {
+  const completedDuels = useQuery(
+    api.duels.getPlayerCompletedDuels,
+    userId ? { userId } : "skip"
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <Link href="/duels" className="group">
+          <CardTitle className="flex items-center gap-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors cursor-pointer">
+            <Trophy className="h-5 w-5" />
+            Completed Duels
+          </CardTitle>
+        </Link>
+        <CardDescription>Your recent magical encounters</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!completedDuels || completedDuels.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground mb-4">
+              No duels yet. Create a wizard and start dueling!
+            </p>
+            <Link href="/duels">
+              <Button variant="outline">View All Duels</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {completedDuels.slice(0, 3).map((duel) => (
+              <DuelListItem key={duel._id} duel={duel} variant="dashboard" />
+            ))}
+            {completedDuels.length > 3 && (
+              <div className="text-center pt-2">
+                <Link href="/duels">
+                  <Button variant="outline" size="sm">
+                    View All ({completedDuels.length})
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const wizards = useQuery(
     api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? { userId: user.id } : "skip"
   );
 
   const totalWins =
@@ -217,38 +266,7 @@ export default function Dashboard() {
 
           <ActiveDuelsCard userId={user?.id} />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Completed Duels
-              </CardTitle>
-              <CardDescription>Your recent magical encounters</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {totalDuels === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground mb-4">
-                    No duels yet. Create a wizard and start dueling!
-                  </p>
-                  <Link href="/duels">
-                    <Button variant="outline">View All Duels</Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-center text-muted-foreground mb-4">
-                    Duel history coming soon...
-                  </div>
-                  <Link href="/duels">
-                    <Button variant="outline" className="w-full">
-                      View All Duels
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <CompletedDuelsCard userId={user?.id} />
         </div>
 
         <div className="mb-8">
@@ -282,114 +300,6 @@ export default function Dashboard() {
           )}
         </div>
       </main>
-    </div>
-  );
-}
-
-interface DashboardDuelCardProps {
-  duel: {
-    _id: string;
-    status: string;
-    wizards: Id<"wizards">[];
-    players: string[];
-    shortcode?: string;
-    numberOfRounds: number | "TO_THE_DEATH";
-    featuredIllustration?: string;
-    currentRound?: number;
-  };
-  onCopyShortcode: (shortcode: string) => void;
-}
-
-function DashboardDuelCard({ duel, onCopyShortcode }: DashboardDuelCardProps) {
-  // Fetch wizard details for all wizards in the duel
-  const wizard1 = useQuery(
-    api.wizards.getWizard,
-    duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
-  );
-  const wizard2 = useQuery(
-    api.wizards.getWizard,
-    duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
-  );
-  const wizard3 = useQuery(
-    api.wizards.getWizard,
-    duel.wizards[2] ? { wizardId: duel.wizards[2] } : "skip"
-  );
-
-  const wizards = [wizard1, wizard2, wizard3].filter((w) => w !== undefined && w !== null);
-  const isLoading = (duel.wizards[0] && wizard1 === undefined) || 
-                   (duel.wizards[1] && wizard2 === undefined) ||
-                   (duel.wizards[2] && wizard3 === undefined);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-between p-2 border rounded">
-        <div className="flex-1">
-          <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
-          <div className="h-3 bg-muted rounded w-1/2"></div>
-        </div>
-        <div className="h-8 w-16 bg-muted rounded"></div>
-      </div>
-    );
-  }
-
-  const wizardNames = wizards.map((wizard) => wizard?.name).filter(Boolean);
-  const duelTitle = wizardNames.length > 0 ? wizardNames.join(" vs ") : "Duel";
-
-  return (
-    <div className="flex items-center gap-3 p-2 border rounded">
-      {/* Featured illustration thumbnail */}
-      {duel.featuredIllustration && (
-        <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-          <ConvexImage
-            storageId={duel.featuredIllustration}
-            alt="Duel illustration"
-            width={48}
-            height={48}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <Badge
-            variant={
-              duel.status === "WAITING_FOR_PLAYERS" ? "secondary" : "default"
-            }
-          >
-            {duel.status === "WAITING_FOR_PLAYERS" ? "Waiting" : "Active"}
-          </Badge>
-          {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
-            <code
-              className="text-xs px-1 py-0.5 bg-purple-100 text-purple-800 rounded cursor-pointer hover:bg-purple-200"
-              onClick={() => onCopyShortcode(duel.shortcode!)}
-              title="Click to copy share link"
-            >
-              {duel.shortcode}
-            </code>
-          )}
-        </div>
-        <p className="text-sm font-medium text-foreground truncate mb-1">
-          {duelTitle}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {duel.status === "IN_PROGRESS" && duel.currentRound && typeof duel.numberOfRounds === "number" && (
-            <>Round {duel.currentRound} of {duel.numberOfRounds} • </>
-          )}
-          {duel.status === "IN_PROGRESS" && duel.currentRound && duel.numberOfRounds === "TO_THE_DEATH" && (
-            <>Round {duel.currentRound} • </>
-          )}
-          {typeof duel.numberOfRounds === "number"
-            ? `${duel.numberOfRounds} rounds`
-            : "To the death"}
-        </p>
-      </div>
-      
-      <Link href={`/duels/${duel._id}`}>
-        <Button variant="outline" size="sm">
-          View
-        </Button>
-      </Link>
     </div>
   );
 }

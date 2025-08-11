@@ -29,9 +29,9 @@ describe("Homepage", () => {
     // Go back to home
     cy.visit("/");
 
-    // Test duels link
-    cy.get('a[href="/duels"]').should("be.visible").click();
-    cy.url().should("include", "/duels");
+    // Test watch duels link
+    cy.get('a[href="/duels/watch"]').should("be.visible").click();
+    cy.url().should("include", "/duels/watch");
   });
 
   it("should display feature cards with icons", () => {

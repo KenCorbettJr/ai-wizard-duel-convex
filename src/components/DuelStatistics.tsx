@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DuelListItem } from "@/components/DuelListItem";
 import {
   BarChart3,
   Trophy,
@@ -309,45 +310,14 @@ export function DuelStatistics({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentDuels.map((duel) => {
-                const hasWinningWizard = duel.winners?.some((winnerId) =>
-                  duel.wizards.includes(winnerId)
-                );
-
-                return (
-                  <div
-                    key={duel._id}
-                    className="flex items-center justify-between p-3 border rounded"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Badge
-                        variant={hasWinningWizard ? "default" : "destructive"}
-                      >
-                        {hasWinningWizard ? "Won" : "Lost"}
-                      </Badge>
-                      <div>
-                        <div className="font-medium">
-                          {typeof duel.numberOfRounds === "number"
-                            ? `${duel.numberOfRounds} Round Duel`
-                            : "Duel to the Death"}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {duel.wizards.length} wizards • Round{" "}
-                          {duel.currentRound}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">
-                        {new Date(duel.createdAt).toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(duel.createdAt).toLocaleTimeString()}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {recentDuels.map((duel) => (
+                <DuelListItem
+                  key={duel._id}
+                  duel={duel}
+                  variant="dashboard"
+                  showActions={true}
+                />
+              ))}
             </div>
           </CardContent>
         </Card>

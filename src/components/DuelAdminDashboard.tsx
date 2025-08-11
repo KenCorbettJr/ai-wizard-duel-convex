@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DuelListItem } from "@/components/DuelListItem";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -336,16 +337,18 @@ export function DuelAdminDashboard() {
             <div>
               <Label htmlFor="status-filter">Status</Label>
               <Select
-                value={filters.status || ""}
+                value={filters.status || "all"}
                 onValueChange={(value) =>
                   setFilters({
                     ...filters,
                     status:
-                      (value as
-                        | "WAITING_FOR_PLAYERS"
-                        | "IN_PROGRESS"
-                        | "COMPLETED"
-                        | "CANCELLED") || undefined,
+                      value === "all"
+                        ? undefined
+                        : (value as
+                            | "WAITING_FOR_PLAYERS"
+                            | "IN_PROGRESS"
+                            | "COMPLETED"
+                            | "CANCELLED"),
                   })
                 }
               >
@@ -353,7 +356,7 @@ export function DuelAdminDashboard() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="WAITING_FOR_PLAYERS">Waiting</SelectItem>
                   <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                   <SelectItem value="COMPLETED">Completed</SelectItem>
@@ -380,16 +383,16 @@ export function DuelAdminDashboard() {
             <div>
               <Label htmlFor="rounds-filter">Round Type</Label>
               <Select
-                value={filters.numberOfRounds?.toString() || ""}
+                value={filters.numberOfRounds?.toString() || "all"}
                 onValueChange={(value) =>
                   setFilters({
                     ...filters,
                     numberOfRounds:
-                      value === "TO_THE_DEATH"
-                        ? "TO_THE_DEATH"
-                        : value
-                          ? parseInt(value)
-                          : undefined,
+                      value === "all"
+                        ? undefined
+                        : value === "TO_THE_DEATH"
+                          ? "TO_THE_DEATH"
+                          : parseInt(value),
                   })
                 }
               >
@@ -397,7 +400,7 @@ export function DuelAdminDashboard() {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="3">3 Rounds</SelectItem>
                   <SelectItem value="5">5 Rounds</SelectItem>
                   <SelectItem value="10">10 Rounds</SelectItem>
@@ -436,60 +439,25 @@ export function DuelAdminDashboard() {
                 </div>
                 <div className="space-y-2">
                   {searchResults.duels.map((duel) => (
-                    <div key={duel._id} className="border rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(duel.status)}
-                          <span className="font-medium">
-                            {typeof duel.numberOfRounds === "number"
-                              ? `${duel.numberOfRounds} Round Duel`
-                              : "Duel to the Death"}
-                          </span>
-                          {duel.shortcode && (
-                            <code className="text-xs px-1 py-0.5 bg-purple-100 text-purple-800 rounded">
-                              {duel.shortcode}
-                            </code>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={`/duels/${duel._id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              View
-                            </a>
+                    <div key={duel._id} className="relative">
+                      <DuelListItem
+                        duel={duel}
+                        variant="card"
+                        showActions={false}
+                      />
+                      {duel.status !== "COMPLETED" && (
+                        <div className="absolute top-2 right-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() =>
+                              setDuelToCancel(duel._id as Id<"duels">)
+                            }
+                          >
+                            Cancel
                           </Button>
-                          {duel.status !== "COMPLETED" && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() =>
-                                setDuelToCancel(duel._id as Id<"duels">)
-                              }
-                            >
-                              Cancel
-                            </Button>
-                          )}
                         </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                        <div>
-                          <span>Players:</span> {duel.players.length}
-                        </div>
-                        <div>
-                          <span>Wizards:</span> {duel.wizards.length}
-                        </div>
-                        <div>
-                          <span>Round:</span> {duel.currentRound}
-                        </div>
-                        <div>
-                          <span>Created:</span>{" "}
-                          {new Date(duel.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>

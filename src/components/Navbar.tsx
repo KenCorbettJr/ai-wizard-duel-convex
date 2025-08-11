@@ -59,6 +59,9 @@ export function Navbar({
       <div className="flex items-center gap-4">
         <ThemeToggle />
         <SignedIn>
+          <Link href="/duels/watch">
+            <Button variant="outline">Watch Duels</Button>
+          </Link>
           <Link href="/dashboard">
             <Button variant="outline">Dashboard</Button>
           </Link>
@@ -68,6 +71,9 @@ export function Navbar({
           <UserButton />
         </SignedIn>
         <SignedOut>
+          <Link href="/duels/watch">
+            <Button variant="outline">Watch Duels</Button>
+          </Link>
           <SignInButton>
             <Button>Sign In</Button>
           </SignInButton>

@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
+import { DuelListItem } from "@/components/DuelListItem";
 import { Swords, Users, Search, Shield } from "lucide-react";
 
 export default function DuelsPage() {
@@ -30,21 +30,6 @@ export default function DuelsPage() {
     user?.publicMetadata?.role === "admin" ||
     process.env.NODE_ENV === "development";
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "WAITING_FOR_PLAYERS":
-        return <Badge variant="secondary">Waiting for Players</Badge>;
-      case "IN_PROGRESS":
-        return <Badge variant="default">In Progress</Badge>;
-      case "COMPLETED":
-        return <Badge variant="outline">Completed</Badge>;
-      case "CANCELLED":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <Navbar />
@@ -55,7 +40,8 @@ export default function DuelsPage() {
             Magical Duels
           </h2>
           <p className="text-muted-foreground">
-            Join existing duels or create your own magical battles
+            Manage your active duels, join existing battles, or create new
+            magical encounters
           </p>
         </div>
 
@@ -153,30 +139,7 @@ export default function DuelsPage() {
             ) : (
               <div className="space-y-4">
                 {playerDuels.map((duel) => (
-                  <Card key={duel._id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">
-                          {typeof duel.numberOfRounds === "number"
-                            ? `${duel.numberOfRounds} Round Duel`
-                            : "Duel to the Death"}
-                        </CardTitle>
-                        {getStatusBadge(duel.status)}
-                      </div>
-                      <CardDescription>
-                        Round {duel.currentRound} • {duel.wizards.length}{" "}
-                        wizards • Created{" "}
-                        {new Date(duel.createdAt).toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href={`/duels/${duel._id}`}>
-                        <Button variant="outline" className="w-full">
-                          View Duel
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
+                  <DuelListItem key={duel._id} duel={duel} variant="card" />
                 ))}
               </div>
             )}
@@ -217,45 +180,7 @@ export default function DuelsPage() {
                 {activeDuels
                   .filter((duel) => !duel.players.includes(user?.id || ""))
                   .map((duel) => (
-                    <Card key={duel._id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">
-                            {typeof duel.numberOfRounds === "number"
-                              ? `${duel.numberOfRounds} Round Duel`
-                              : "Duel to the Death"}
-                          </CardTitle>
-                          {getStatusBadge(duel.status)}
-                        </div>
-                        <CardDescription>
-                          {duel.wizards.length} wizards • Created{" "}
-                          {new Date(duel.createdAt).toLocaleDateString()}
-                          {duel.shortcode &&
-                            duel.status === "WAITING_FOR_PLAYERS" && (
-                              <span className="ml-2">
-                                • Code:{" "}
-                                <code className="px-1 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs">
-                                  {duel.shortcode}
-                                </code>
-                              </span>
-                            )}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex gap-2">
-                          <Link href={`/duels/${duel._id}`} className="flex-1">
-                            <Button variant="outline" className="w-full">
-                              View Details
-                            </Button>
-                          </Link>
-                          {duel.status === "WAITING_FOR_PLAYERS" && (
-                            <Link href="/duels/join" className="flex-1">
-                              <Button className="w-full">Join Duel</Button>
-                            </Link>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <DuelListItem key={duel._id} duel={duel} variant="card" />
                   ))}
               </div>
             )}

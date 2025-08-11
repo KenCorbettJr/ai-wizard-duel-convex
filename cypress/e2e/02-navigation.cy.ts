@@ -26,10 +26,19 @@ describe("Navigation", () => {
     cy.visit("/");
 
     // Look for theme toggle button (adjust selector based on your implementation)
-    cy.get('[data-testid="theme-toggle"]').should("exist");
+    cy.get('[data-test-id="theme-toggle"]').should("exist");
 
-    // Test theme switching if implemented
-    // cy.get('[data-testid="theme-toggle"]').click()
-    // cy.get('html').should('have.class', 'dark')
+    cy.log(
+      "Current theme:",
+      Cypress.$("html").hasClass("dark") ? "dark" : "light"
+    );
+    // see if the html has a light or dark class right now
+    if (Cypress.$("html").hasClass("dark")) {
+      cy.get('[data-test-id="theme-toggle"]').click();
+      cy.get("html").should("have.class", "light");
+    } else {
+      cy.get('[data-test-id="theme-toggle"]').click();
+      cy.get("html").should("have.class", "dark");
+    }
   });
 });

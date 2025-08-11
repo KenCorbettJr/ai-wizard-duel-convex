@@ -22,16 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ConvexImage } from "@/components/ConvexImage";
-import {
-  Search,
-  Filter,
-  X,
-  Calendar,
-  Users,
-  Swords,
-  ExternalLink,
-} from "lucide-react";
+import { DuelListItem } from "@/components/DuelListItem";
+import { Search, Filter, X } from "lucide-react";
 
 interface DuelFilters {
   status?: "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -129,14 +121,16 @@ export function DuelSearchFilter({
               <div>
                 <Label htmlFor="status-filter">Status</Label>
                 <Select
-                  value={filters.status || ""}
-                  onValueChange={(value) => updateFilter("status", value)}
+                  value={filters.status || "all"}
+                  onValueChange={(value) =>
+                    updateFilter("status", value === "all" ? undefined : value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all">All statuses</SelectItem>
                     <SelectItem value="WAITING_FOR_PLAYERS">
                       Waiting for Players
                     </SelectItem>
@@ -151,15 +145,15 @@ export function DuelSearchFilter({
               <div>
                 <Label htmlFor="rounds-filter">Round Type</Label>
                 <Select
-                  value={filters.numberOfRounds?.toString() || ""}
+                  value={filters.numberOfRounds?.toString() || "all"}
                   onValueChange={(value) =>
                     updateFilter(
                       "numberOfRounds",
-                      value === "TO_THE_DEATH"
-                        ? "TO_THE_DEATH"
-                        : value
-                          ? parseInt(value)
-                          : undefined
+                      value === "all"
+                        ? undefined
+                        : value === "TO_THE_DEATH"
+                          ? "TO_THE_DEATH"
+                          : parseInt(value)
                     )
                   }
                 >
@@ -167,7 +161,7 @@ export function DuelSearchFilter({
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     <SelectItem value="3">3 Rounds</SelectItem>
                     <SelectItem value="5">5 Rounds</SelectItem>
                     <SelectItem value="10">10 Rounds</SelectItem>
@@ -283,12 +277,13 @@ export function DuelSearchFilter({
           ) : (
             <div className="space-y-3">
               {searchResults.duels.map((duel) => (
-                <DuelResultCard
-                  key={duel._id}
-                  duel={duel}
-                  compact={compact}
-                  onSelect={onDuelSelect}
-                />
+                <div key={duel._id} onClick={() => onDuelSelect?.(duel._id)}>
+                  <DuelListItem
+                    duel={duel}
+                    variant={compact ? "compact" : "card"}
+                    showActions={!onDuelSelect}
+                  />
+                </div>
               ))}
 
               {/* Pagination */}
@@ -322,130 +317,6 @@ export function DuelSearchFilter({
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-interface DuelResultCardProps {
-  duel: {
-    _id: Id<"duels">;
-    status: string;
-    numberOfRounds: number | "TO_THE_DEATH";
-    players: string[];
-    wizards: Id<"wizards">[];
-    currentRound: number;
-    createdAt: number;
-    shortcode?: string;
-    featuredIllustration?: string;
-  };
-  compact?: boolean;
-  onSelect?: (duelId: Id<"duels">) => void;
-}
-
-function DuelResultCard({
-  duel,
-  compact = false,
-  onSelect,
-}: DuelResultCardProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "WAITING_FOR_PLAYERS":
-        return <Badge variant="secondary">Waiting</Badge>;
-      case "IN_PROGRESS":
-        return <Badge variant="default">Active</Badge>;
-      case "COMPLETED":
-        return <Badge variant="outline">Completed</Badge>;
-      case "CANCELLED":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  return (
-    <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          {duel.featuredIllustration && !compact && (
-            <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-              <ConvexImage
-                storageId={duel.featuredIllustration}
-                alt="Duel illustration"
-                width={48}
-                height={48}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              {getStatusBadge(duel.status)}
-              <span className="font-medium">
-                {typeof duel.numberOfRounds === "number"
-                  ? `${duel.numberOfRounds} Round Duel`
-                  : "Duel to the Death"}
-              </span>
-              {duel.shortcode && (
-                <code className="text-xs px-1 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
-                  {duel.shortcode}
-                </code>
-              )}
-            </div>
-
-            {!compact && (
-              <div className="text-sm text-muted-foreground">
-                Created {new Date(duel.createdAt).toLocaleDateString()}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onSelect?.(duel._id)}
-            asChild={!onSelect}
-          >
-            {onSelect ? (
-              "Select"
-            ) : (
-              <a
-                href={`/duels/${duel._id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                View
-              </a>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div className="flex items-center gap-1">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span>{duel.players.length} players</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Swords className="h-4 w-4 text-muted-foreground" />
-          <span>{duel.wizards.length} wizards</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span>Round {duel.currentRound}</span>
-        </div>
-
-        <div className="text-muted-foreground">
-          {compact
-            ? new Date(duel.createdAt).toLocaleDateString()
-            : new Date(duel.createdAt).toLocaleString()}
-        </div>
-      </div>
     </div>
   );
 }

@@ -35,7 +35,6 @@ describe("Duels", () => {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
       players: ["user1", "user2"],
-      sessionId: "session123",
     });
 
     const duel = await t.query(api.duels.getDuel, { duelId });
@@ -248,4 +247,77 @@ describe("Duels", () => {
     expect(activeDuels.map((d) => d._id)).toContain(inProgressDuelId);
     expect(activeDuels.map((d) => d._id)).not.toContain(completedDuelId);
   });
+});
+test("should get completed duels for a player", async () => {
+  const t = convexTest(schema);
+
+  // Create wizards
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "user1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  const wizard2Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "user2",
+      name: "Saruman",
+      description: "A powerful wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create a completed duel
+  const completedDuelId = await t.mutation(api.duels.createDuel, {
+    numberOfRounds: 3,
+    wizards: [wizard1Id, wizard2Id],
+    players: ["user1", "user2"],
+  });
+
+  // Manually set the duel as completed
+  await t.run(async (ctx) => {
+    await ctx.db.patch(completedDuelId, {
+      status: "COMPLETED",
+      winners: [wizard1Id],
+      losers: [wizard2Id],
+    });
+  });
+
+  // Create an in-progress duel (should not appear in completed duels)
+  await t.mutation(api.duels.createDuel, {
+    numberOfRounds: 3,
+    wizards: [wizard1Id, wizard2Id],
+    players: ["user1", "user2"],
+  });
+
+  // Get completed duels for user1
+  const user1CompletedDuels = await t.query(api.duels.getPlayerCompletedDuels, {
+    userId: "user1",
+  });
+
+  expect(user1CompletedDuels).toHaveLength(1);
+  expect(user1CompletedDuels[0]._id).toBe(completedDuelId);
+  expect(user1CompletedDuels[0].status).toBe("COMPLETED");
+
+  // Get completed duels for user2
+  const user2CompletedDuels = await t.query(api.duels.getPlayerCompletedDuels, {
+    userId: "user2",
+  });
+
+  expect(user2CompletedDuels).toHaveLength(1);
+  expect(user2CompletedDuels[0]._id).toBe(completedDuelId);
+
+  // Get completed duels for a user with no duels
+  const user3CompletedDuels = await t.query(api.duels.getPlayerCompletedDuels, {
+    userId: "user3",
+  });
+
+  expect(user3CompletedDuels).toHaveLength(0);
 });

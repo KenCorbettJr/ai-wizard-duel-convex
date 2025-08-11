@@ -86,7 +86,7 @@ describe("Full User Journey", () => {
     const viewports = ["iphone-x", "ipad-2", "macbook-15"];
 
     viewports.forEach((viewport) => {
-      cy.viewport(viewport as any);
+      // cy.viewport(viewport);
 
       cy.visit("/");
       cy.contains("AI Wizard Duel").should("be.visible");

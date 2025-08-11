@@ -14,12 +14,14 @@ import {
   ShieldPlus,
   ScanHeart,
   Trophy,
+  Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Home",
-  description: "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
+  description:
+    "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
 };
 
 export default function Home() {
@@ -38,19 +40,27 @@ export default function Home() {
             <h1 className="text-6xl font-bold mb-6 text-white">
               AI Wizard Duel
             </h1>
-            <p className="text-2xl text-foreground mb-6">
+            <p className="text-2xl text-white mb-6">
               Where Wizards Clash and Legends Rise!
             </p>
             <SignedOut>
               <SignInButton>
-                <Button size="lg" className="text-lg drop-shadow-xl mb-12">
+                <Button
+                  size="lg"
+                  className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
+                >
+                  <Zap className="w-5 h-5 mr-2" />
                   Start Dueling
                 </Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard">
-                <Button size="lg" className="text-lg drop-shadow-xl mb-12">
+                <Button
+                  size="lg"
+                  className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
+                >
+                  <Zap className="w-5 h-5 mr-2" />
                   Start Dueling
                 </Button>
               </Link>
@@ -245,19 +255,31 @@ export default function Home() {
             the boundaries of imagination.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/duels">
+            <Link href="/duels/watch">
               <Button variant="outline" size="lg">
                 Watch Duels
               </Button>
             </Link>
             <SignedOut>
               <SignInButton>
-                <Button size="lg">Start Dueling</Button>
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
+                >
+                  <Zap className="w-5 h-5 mr-2" />
+                  Start Dueling
+                </Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard">
-                <Button size="lg">Start Dueling</Button>
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
+                >
+                  <Zap className="w-5 h-5 mr-2" />
+                  Start Dueling
+                </Button>
               </Link>
             </SignedIn>
           </div>
