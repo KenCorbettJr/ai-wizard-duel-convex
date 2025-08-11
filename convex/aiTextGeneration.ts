@@ -2,6 +2,7 @@
 
 // AI Text Generation Service using Gemini Flash
 import { getGemni20FlashAI } from "./ai/getAI";
+import { isEmulatorMode, generateMockText } from "./mocks/mockServices";
 
 export interface AITextGenerationConfig {
   temperature?: number;
@@ -14,6 +15,13 @@ export async function generateText(
   config: AITextGenerationConfig = {}
 ): Promise<string> {
   try {
+    // Use mock service in emulator mode
+    if (isEmulatorMode()) {
+      console.log("🎭 Using mock AI text generation (emulator mode)");
+      const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+      return generateMockText(fullPrompt);
+    }
+
     const ai = getGemni20FlashAI();
 
     // Combine system prompt and user prompt

@@ -3,11 +3,18 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import * as fal from "@fal-ai/serverless-client";
+import { isEmulatorMode, generateMockImage } from "./mocks/mockServices";
 
 export const generateImage = action({
   args: { prompt: v.string() },
   handler: async (ctx, { prompt }): Promise<ArrayBuffer> => {
     try {
+      // Use mock service in emulator mode
+      if (isEmulatorMode()) {
+        console.log("🎭 Using mock image generation (emulator mode)");
+        return await generateMockImage(prompt);
+      }
+
       // Get FAL API key from environment
       const falKey = process.env.FAL_KEY;
       if (!falKey) {
