@@ -1,10 +1,11 @@
 "use node";
 
+import type { Doc } from "../convex/_generated/dataModel";
 import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
 import { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
 
 // Types for the battle round response
 export interface BattleRoundResponse {
@@ -19,46 +20,6 @@ export interface BattleRoundResponse {
     pointsEarned: number;
     healthChange: number;
   };
-}
-
-// Type for wizard data
-interface WizardData {
-  _id: Id<"wizards">;
-  name: string;
-  description: string;
-  wins?: number;
-  losses?: number;
-  owner: string;
-  illustration?: string;
-}
-
-// Type for duel data
-interface DuelData {
-  _id: Id<"duels">;
-  numberOfRounds: number | "TO_THE_DEATH";
-  wizards: Id<"wizards">[];
-  players: string[];
-  status: string;
-  currentRound: number;
-  points: Record<string, number>;
-  hitPoints: Record<string, number>;
-  sessionId?: string;
-}
-
-// Type for round data
-interface RoundData {
-  _id: Id<"duelRounds">;
-  duelId: Id<"duels">;
-  roundNumber: number;
-  spells?: Record<
-    string,
-    {
-      description: string;
-      castBy: Id<"wizards">;
-      timestamp: number;
-    }
-  >;
-  status: string;
 }
 
 // Generate a luck number (1-10)
@@ -98,7 +59,7 @@ export const processDuelRound = action({
         )
       );
 
-      if (wizards.length < 2 || wizards.some((w: WizardData | null) => !w)) {
+      if (wizards.length < 2 || wizards.some((w) => !w)) {
         throw new Error("Could not fetch all wizard data");
       }
 
@@ -107,16 +68,16 @@ export const processDuelRound = action({
         throw new Error("Could not fetch all wizard data");
       }
 
-      const wizard1 = wizards[0] as WizardData;
-      const wizard2 = wizards[1] as WizardData;
+      const wizard1 = wizards[0];
+      const wizard2 = wizards[1];
       const wizard1ID = duel.wizards[0];
       const wizard2ID = duel.wizards[1];
 
       // Generate the battle round using AI
       const battleResult = await generateBattleRound(
         ctx,
-        duel as DuelData,
-        round as RoundData,
+        duel,
+        round,
         wizard1,
         wizard2,
         wizard1ID,
@@ -209,10 +170,10 @@ function getBoundedHealthChange(
 // Helper function to generate battle round using AI
 async function generateBattleRound(
   ctx: ActionCtx,
-  duel: DuelData,
-  round: RoundData,
-  wizard1: WizardData,
-  wizard2: WizardData,
+  duel: Doc<"duels">,
+  round: Doc<"duelRounds">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
   wizard2ID: Id<"wizards">
 ): Promise<BattleRoundResponse> {
@@ -310,8 +271,8 @@ async function generateBattleRound(
 // Helper function to generate previous rounds context
 function generatePreviousRoundsContext(
   previousRounds: any[],
-  wizard1: WizardData,
-  wizard2: WizardData
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): string {
   if (previousRounds.length === 0) {
     return "=== Previous Rounds ===\nThis is the first round of combat. No previous rounds to reference.";
@@ -356,9 +317,9 @@ function generatePreviousRoundsContext(
 
 // Helper function to generate system prompt
 function generateSystemPrompt(
-  duel: DuelData,
-  wizard1: WizardData,
-  wizard2: WizardData,
+  duel: Doc<"duels">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">,
   previousRounds: any[] = []
 ): string {
   const duelType =
@@ -473,15 +434,15 @@ Remember to maintain impartiality while creating a dramatic and engaging narrati
 
 // Helper function to generate round actions text
 function generateRoundActions(
-  wizard1: WizardData,
-  wizard2: WizardData,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
   wizard2ID: Id<"wizards">,
   wizard1Action: string,
   wizard2Action: string,
   wizard1Luck: number,
   wizard2Luck: number,
-  duel: DuelData,
+  duel: Doc<"duels">,
   firstWizard: number
 ): string {
   function generateWizardAction(
@@ -561,8 +522,8 @@ function validateBattleResponse(response: {
 
 // Helper function to generate fallback battle result
 function generateFallbackBattleResult(
-  wizard1: WizardData,
-  wizard2: WizardData,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">,
   wizard1Action: string,
   wizard2Action: string
 ): BattleRoundResponse {
@@ -603,9 +564,9 @@ The crowd watches in awe as the magical energies settle, revealing the results o
 
 // Helper function to generate complete duel history context for conclusions
 function generateDuelHistoryContext(
-  completedRounds: unknown[],
-  wizard1: WizardData,
-  wizard2: WizardData
+  completedRounds: Array<Doc<"duelRounds">>,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): string {
   if (completedRounds.length === 0) {
     return "=== DUEL HISTORY ===\nNo rounds completed.";
@@ -674,9 +635,9 @@ function generateDuelHistoryContext(
 async function generateDuelConclusion(
   ctx: ActionCtx,
   duelId: Id<"duels">,
-  duel: DuelData & { winners?: Id<"wizards">[]; losers?: Id<"wizards">[] },
-  wizard1: WizardData,
-  wizard2: WizardData,
+  duel: Doc<"duels">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
   wizard2ID: Id<"wizards">
 ): Promise<void> {
@@ -807,9 +768,9 @@ Write a final narration that brings together the entire story of this duel, high
 
 // Helper function to generate fallback conclusion
 function generateFallbackConclusion(
-  duel: DuelData & { winners?: Id<"wizards">[]; losers?: Id<"wizards">[] },
-  wizard1: WizardData,
-  wizard2: WizardData
+  duel: Doc<"duels">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): { narration: string; result: string; illustrationPrompt: string } {
   const winnerId = duel.winners?.[0];
   const winner = winnerId === wizard1._id ? wizard1 : wizard2;

@@ -4,8 +4,11 @@ import { api } from "./_generated/api";
 
 // Get all wizards for a specific user
 export const getUserWizards = query({
-  args: { userId: v.string() },
+  args: { userId: v.optional(v.string()) },
   handler: async (ctx, { userId }) => {
+    if (!userId) {
+      return [];
+    }
     return await ctx.db
       .query("wizards")
       .withIndex("by_owner", (q) => q.eq("owner", userId))
@@ -18,22 +21,6 @@ export const getWizard = query({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
     return await ctx.db.get(wizardId);
-  },
-});
-
-// Get a specific wizard by ID with string validation
-export const getWizardSafe = query({
-  args: { wizardId: v.string() },
-  handler: async (ctx, { wizardId }) => {
-    try {
-      // Try to use the string as a Convex ID
-      const id = wizardId as any; // Cast to bypass TypeScript validation
-      return await ctx.db.get(id);
-    } catch (error) {
-      // If the ID is invalid, return null instead of throwing
-      console.warn("Invalid wizard ID:", wizardId, error);
-      return null;
-    }
   },
 });
 

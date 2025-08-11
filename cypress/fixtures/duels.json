@@ -1,0 +1,57 @@
+{
+  "testDuel": {
+    "title": "Epic Test Battle",
+    "description": "A test duel between two powerful wizards",
+    "maxRounds": 5,
+    "isPublic": true
+  },
+  "duelList": [
+    {
+      "_id": "duel-1",
+      "title": "Fire vs Ice Showdown",
+      "description": "An epic battle between fire and ice magic",
+      "status": "active",
+      "currentRound": 2,
+      "maxRounds": 5,
+      "participants": [
+        {
+          "wizardId": "wizard-1",
+          "userId": "user-1",
+          "hitPoints": 85,
+          "points": 15
+        },
+        {
+          "wizardId": "wizard-2",
+          "userId": "user-2",
+          "hitPoints": 90,
+          "points": 12
+        }
+      ],
+      "_creationTime": 1640995400000
+    },
+    {
+      "_id": "duel-2",
+      "title": "Lightning Storm Duel",
+      "description": "A quick-paced magical battle",
+      "status": "completed",
+      "currentRound": 3,
+      "maxRounds": 3,
+      "winner": "wizard-1",
+      "participants": [
+        {
+          "wizardId": "wizard-1",
+          "userId": "user-1",
+          "hitPoints": 20,
+          "points": 25
+        },
+        {
+          "wizardId": "wizard-3",
+          "userId": "user-3",
+          "hitPoints": 0,
+          "points": 18
+        }
+      ],
+      "_creationTime": 1640995500000
+    }
+  ]
+}

@@ -39,8 +39,9 @@ export function CreateDuelForm({
 
   const wizards = useQuery(
     api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip",
+    { userId: user?.id }
   );
+
   const createDuel = useMutation(api.duels.createDuel);
 
   const handleWizardSelect = (wizardId: Id<"wizards">) => {

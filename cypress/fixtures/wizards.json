@@ -1,0 +1,35 @@
+{
+  "testWizard": {
+    "name": "Cypress Test Wizard",
+    "description": "A powerful wizard created for automated testing purposes. Masters the elements of fire and ice.",
+    "imageUrl": "/images/test-wizard.jpg"
+  },
+  "wizardList": [
+    {
+      "_id": "wizard-1",
+      "name": "Flame Master",
+      "description": "A wizard who commands the power of fire",
+      "imageUrl": "/images/flame-wizard.jpg",
+      "userId": "user-1",
+      "_creationTime": 1640995200000,
+      "stats": {
+        "wins": 10,
+        "losses": 3,
+        "totalDuels": 13
+      }
+    },
+    {
+      "_id": "wizard-2",
+      "name": "Ice Queen",
+      "description": "A sorceress who controls frost and ice",
+      "imageUrl": "/images/ice-wizard.jpg",
+      "userId": "user-2",
+      "_creationTime": 1640995300000,
+      "stats": {
+        "wins": 8,
+        "losses": 5,
+        "totalDuels": 13
+      }
+    }
+  ]
+}

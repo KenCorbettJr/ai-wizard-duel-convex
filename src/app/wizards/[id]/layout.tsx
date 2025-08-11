@@ -17,8 +17,8 @@ export async function generateMetadata({
 
   try {
     // Fetch wizard data using safe query
-    const wizard = await fetchQuery(api.wizards.getWizardSafe, {
-      wizardId: id,
+    const wizard = await fetchQuery(api.wizards.getWizard, {
+      wizardId: id as Id<"wizards">,
     });
 
     if (wizard) {

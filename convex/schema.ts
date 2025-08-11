@@ -30,7 +30,6 @@ export default defineSchema({
     points: v.record(v.string(), v.number()), // Dictionary of wizard ID to points
     hitPoints: v.record(v.string(), v.number()), // Dictionary of wizard ID to hit points
     needActionsFrom: v.array(v.id("wizards")),
-    sessionId: v.optional(v.string()),
     featuredIllustration: v.optional(v.string()),
     winners: v.optional(v.array(v.id("wizards"))),
     losers: v.optional(v.array(v.id("wizards"))),
@@ -38,7 +37,6 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_player", ["players"])
-    .index("by_session", ["sessionId"])
     .index("by_shortcode", ["shortcode"]),
   duelRounds: defineTable({
     duelId: v.id("duels"),

@@ -117,9 +117,8 @@ export const createDuel = mutation({
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
     players: v.array(v.string()),
-    sessionId: v.optional(v.string()),
   },
-  handler: async (ctx, { numberOfRounds, wizards, players, sessionId }) => {
+  handler: async (ctx, { numberOfRounds, wizards, players }) => {
     // Initialize points and hit points for all wizards
     const initialPoints: Record<string, number> = {};
     const initialHitPoints: Record<string, number> = {};
@@ -151,7 +150,6 @@ export const createDuel = mutation({
       points: initialPoints,
       hitPoints: initialHitPoints,
       needActionsFrom: wizards, // All wizards need to act initially
-      sessionId,
       shortcode,
     });
 
@@ -539,17 +537,6 @@ export const getActiveDuels = query({
   },
 });
 
-// Get duels by session ID
-export const getDuelsBySession = query({
-  args: { sessionId: v.string() },
-  handler: async (ctx, { sessionId }) => {
-    return await ctx.db
-      .query("duels")
-      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-      .collect();
-  },
-});
-
 // Update duel featured illustration
 export const updateFeaturedIllustration = mutation({
   args: {
@@ -579,15 +566,14 @@ export const getWizardDuels = query({
 
 // Get duels for a specific wizard with string validation
 export const getWizardDuelsSafe = query({
-  args: { wizardId: v.string() },
+  args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
     try {
-      const id = wizardId as unknown; // Cast to bypass TypeScript validation
       const duels = await ctx.db.query("duels").collect();
 
       // Filter duels that include this wizard
       return duels
-        .filter((duel) => duel.wizards.includes(id))
+        .filter((duel) => duel.wizards.includes(wizardId))
         .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
     } catch (error) {
       console.warn("Invalid wizard ID for duels:", wizardId, error);

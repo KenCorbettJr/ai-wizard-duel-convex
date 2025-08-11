@@ -6,7 +6,6 @@ import { DuelAdminDashboard } from "@/components/DuelAdminDashboard";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";

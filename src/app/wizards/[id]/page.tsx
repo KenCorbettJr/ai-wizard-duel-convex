@@ -39,8 +39,8 @@ export default function WizardPage({ params }: WizardPageProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   // Use safe queries that handle invalid IDs gracefully
-  const wizard = useQuery(api.wizards.getWizardSafe, { wizardId: id });
-  const wizardDuels = useQuery(api.duels.getWizardDuelsSafe, { wizardId: id });
+  const wizard = useQuery(api.wizards.getWizard, { wizardId: id as Id<"wizards"> });
+  const wizardDuels = useQuery(api.duels.getWizardDuelsSafe, { wizardId: id as Id<"wizards"> });
 
   if (wizard === undefined || wizardDuels === undefined) {
     return (

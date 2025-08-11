@@ -1,5 +1,6 @@
 "use node";
 
+import type { Doc } from "../convex/_generated/dataModel";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
@@ -11,17 +12,6 @@ export interface IntroductionResponse {
   narration: string;
   result: string;
   illustrationPrompt: string;
-}
-
-// Type for wizard data
-interface WizardData {
-  _id: Id<"wizards">;
-  name: string;
-  description: string;
-  wins?: number;
-  losses?: number;
-  owner: string;
-  illustration?: string;
 }
 
 // Generate duel introduction using AI
@@ -49,7 +39,7 @@ export const generateDuelIntroduction = action({
         )
       );
 
-      if (wizards.length < 2 || wizards.some((w: WizardData | null) => !w)) {
+      if (wizards.length < 2 || wizards.some((w) => !w)) {
         throw new Error("Could not fetch all wizard data");
       }
 
@@ -58,8 +48,8 @@ export const generateDuelIntroduction = action({
         throw new Error("Could not fetch all wizard data");
       }
 
-      const wizard1 = wizards[0] as WizardData;
-      const wizard2 = wizards[1] as WizardData;
+      const wizard1 = wizards[0];
+      const wizard2 = wizards[1];
 
       // Generate the introduction using AI
       const introduction = await generateIntroductionText(
@@ -113,9 +103,9 @@ export const generateDuelIntroduction = action({
 
 // Helper function to generate introduction text using AI
 async function generateIntroductionText(
-  duel: { numberOfRounds: number | "TO_THE_DEATH" },
-  wizard1: WizardData,
-  wizard2: WizardData
+  duel: Doc<"duels">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): Promise<IntroductionResponse> {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
