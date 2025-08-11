@@ -6,7 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Clock,
   Sparkles,
@@ -276,25 +276,64 @@ export function DuelListItem({
     );
   }
 
-  // Card variant for main pages
+  // Card variant for main pages - Facebook-style post card
   return (
-    <Card
-      className="hover:shadow-md transition-shadow"
-      data-testid="duel-list-item"
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {new Date(duel.createdAt).toLocaleDateString()}
-            </span>
+    <Link href={`/duels/${duel._id}`} className="block">
+      <Card
+        className="hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
+        data-testid="duel-list-item"
+      >
+        {/* Featured illustration as hero image */}
+        {duel.featuredIllustration && (
+          <div className="w-full h-64 overflow-hidden">
+            <ConvexImage
+              storageId={duel.featuredIllustration}
+              alt="Duel illustration"
+              width={500}
+              height={256}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+            />
+          </div>
+        )}
+
+        <CardContent className="p-4">
+          {/* Header with status and date */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>{new Date(duel.createdAt).toLocaleDateString()}</span>
+            </div>
+            {getStatusBadge()}
+          </div>
+
+          {/* Main content */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground leading-tight">
+              {duelTitle}
+            </h3>
+
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>{duel.wizards.length} wizards</span>
+              </div>
+              <span>•</span>
+              <span>{getRoundInfo()}</span>
+            </div>
+
+            {/* Share code for waiting duels */}
             {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Code:</span>
+              <div className="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-950/30 rounded-lg">
+                <span className="text-sm text-muted-foreground">
+                  Share code:
+                </span>
                 <code
-                  className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded cursor-pointer hover:bg-purple-200 dark:hover:bg-purple-800 flex items-center gap-1"
-                  onClick={() => handleCopyShortcode(duel.shortcode!)}
+                  className="text-sm px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded cursor-pointer hover:bg-purple-200 dark:hover:bg-purple-800 flex items-center gap-1"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCopyShortcode(duel.shortcode!);
+                  }}
                   title="Click to copy share link"
                 >
                   {copySuccess ? "Copied!" : duel.shortcode}
@@ -302,67 +341,55 @@ export function DuelListItem({
                 </code>
               </div>
             )}
-          </div>
-          {getStatusBadge()}
-        </div>
-      </CardHeader>
 
-      <CardContent>
-        <div className="flex items-center gap-3">
-          {/* Featured illustration thumbnail */}
-          {duel.featuredIllustration && (
-            <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0">
-              <ConvexImage
-                storageId={duel.featuredIllustration}
-                alt="Duel illustration"
-                width={64}
-                height={64}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground mb-1 truncate">
-              {duelTitle}
-            </p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <Users className="h-3 w-3" />
-              <span>{duel.wizards.length} wizards</span>
-              <span>•</span>
-              <span>{getRoundInfo()}</span>
-            </div>
+            {/* Wizard comparison for completed duels */}
             {duel.status === "COMPLETED" &&
               duel.points &&
-              userWizards.length > 0 && (
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  {userWizards.map((wizard) => (
-                    <div key={wizard._id} className="flex items-center gap-2">
-                      <span>Points: {duel.points?.[wizard._id] || 0}</span>
-                      <span>HP: {duel.hitPoints?.[wizard._id] || 0}/100</span>
-                    </div>
-                  ))}
+              wizards.length > 0 && (
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="text-sm font-medium mb-3">Final Results:</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {wizards.map((wizard) => {
+                      const isWinner = duel.winners?.includes(wizard._id);
+                      const points = duel.points?.[wizard._id] || 0;
+                      const hp = duel.hitPoints?.[wizard._id] || 0;
+
+                      return (
+                        <div
+                          key={wizard._id}
+                          className={`p-3 rounded-lg border-2 transition-colors ${
+                            isWinner
+                              ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-700"
+                              : "bg-background border-border"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-sm">
+                              {wizard.name}
+                            </span>
+                            {isWinner && (
+                              <Crown className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                            )}
+                          </div>
+                          <div className="space-y-1 text-xs text-muted-foreground">
+                            <div className="flex justify-between">
+                              <span>Points:</span>
+                              <span className="font-medium">{points}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>HP:</span>
+                              <span className="font-medium">{hp}/100</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
           </div>
-
-          {showActions && (
-            <div className="flex gap-2">
-              <Link href={`/duels/${duel._id}`}>
-                <Button variant="outline" size="sm">
-                  View Details
-                </Button>
-              </Link>
-              {duel.status === "WAITING_FOR_PLAYERS" &&
-                !duel.players.includes(user?.id || "") && (
-                  <Link href="/duels/join">
-                    <Button size="sm">Join</Button>
-                  </Link>
-                )}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
