@@ -1,13 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Star, Heart } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Id } from "../../convex/_generated/dataModel";
@@ -21,6 +17,7 @@ interface WizardCardProps {
   };
   points?: number;
   hitPoints?: number;
+  maxHitPoints?: number;
   className?: string;
   isUserWizard?: boolean;
 }
@@ -29,6 +26,7 @@ export function WizardCard({
   wizard,
   points,
   hitPoints,
+  maxHitPoints = 100,
   className = "",
   isUserWizard = false,
 }: WizardCardProps) {
@@ -65,33 +63,50 @@ export function WizardCard({
                 Your Wizard
               </Badge>
             )}
-            {points !== undefined && (
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm"
-              >
-                <Star className="h-3 w-3" />
-                {points}
-              </Badge>
-            )}
-            {hitPoints !== undefined && (
-              <Badge
-                variant="destructive"
-                className="flex items-center gap-1 bg-red-100/90 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm"
-              >
-                <Heart className="h-3 w-3" />
-                {hitPoints}
-              </Badge>
-            )}
           </div>
         </div>
         <CardHeader className="pb-3">
-          <CardTitle className="text-xl text-foreground dark:text-foreground/95">
-            {wizard.name}
-          </CardTitle>
-          <CardDescription className="dark:text-muted-foreground/80">
-            {wizard.description}
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-xl text-foreground dark:text-foreground/95">
+              {wizard.name}
+            </CardTitle>
+            {points !== undefined && (
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-0.5">
+                  <Star className="h-5 w-5 text-yellow-500" />
+                  <span className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {points}
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">
+                  points
+                </span>
+              </div>
+            )}
+          </div>
+          {hitPoints !== undefined && (
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Heart className="h-3 w-3 text-red-500" />
+                  Health
+                </span>
+                <span className="font-medium text-foreground">
+                  {hitPoints}/{maxHitPoints}
+                </span>
+              </div>
+              <Progress
+                value={(hitPoints / maxHitPoints) * 100}
+                className={`h-2 ${
+                  hitPoints / maxHitPoints > 0.6
+                    ? "[&>div]:bg-green-500"
+                    : hitPoints / maxHitPoints > 0.3
+                      ? "[&>div]:bg-yellow-500"
+                      : "[&>div]:bg-red-500"
+                }`}
+              />
+            </div>
+          )}
         </CardHeader>
       </Card>
     </Link>
