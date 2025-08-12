@@ -3,6 +3,7 @@
 import { use } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
@@ -16,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Swords, Clock, Sparkles, ScrollText, Star } from "lucide-react";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
@@ -32,8 +33,13 @@ interface DuelPageProps {
 
 export default function DuelPage({ params }: DuelPageProps) {
   const { user } = useUser();
+  const router = useRouter();
   const [spellDescription, setSpellDescription] = useState("");
   const [isCasting, setIsCasting] = useState(false);
+  const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
+    null
+  );
+  const [isJoining, setIsJoining] = useState(false);
   const { id } = use(params);
 
   const duel = useQuery(api.duels.getDuel, {
@@ -50,16 +56,21 @@ export default function DuelPage({ params }: DuelPageProps) {
     duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
 
-  // Check for loading and error states
-  const isDuelLoading = duel === undefined;
-  const isDuelError = duel === null;
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  const castSpell = useMutation(api.duels.castSpell);
+  const joinDuel = useMutation(api.duels.joinDuel);
+
+  // Get user's wizards for joining
+  const wizards = useQuery(
+    api.wizards.getUserWizards,
+    user?.id ? { userId: user.id } : "skip"
+  );
 
   // Find the user's wizard in this duel
   const userWizard = [wizard1, wizard2].find(
     (wizard) => wizard?.owner === user?.id
   );
   const userWizardId = userWizard?._id;
-  const castSpell = useMutation(api.duels.castSpell);
 
   // Get the current round to check if user has already cast a spell
   const currentRound = duel?.rounds?.find(
@@ -71,6 +82,10 @@ export default function DuelPage({ params }: DuelPageProps) {
       : false;
 
   const isPlayerInDuel = duel?.players.includes(user?.id || "");
+
+  // Check for loading and error states
+  const isDuelLoading = duel === undefined;
+  const isDuelError = duel === null;
 
   const handleCastSpell = async () => {
     if (!duel || !spellDescription.trim() || !userWizardId) return;
@@ -87,6 +102,24 @@ export default function DuelPage({ params }: DuelPageProps) {
       console.error("Failed to cast spell:", error);
     } finally {
       setIsCasting(false);
+    }
+  };
+
+  const handleJoinDuel = async () => {
+    if (!user?.id || !duel || !selectedWizard) return;
+
+    setIsJoining(true);
+    try {
+      await joinDuel({
+        duelId: duel._id,
+        userId: user.id,
+        wizards: [selectedWizard],
+      });
+      // No need to redirect, the page will update automatically
+    } catch (error) {
+      console.error("Failed to join duel:", error);
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -321,19 +354,90 @@ export default function DuelPage({ params }: DuelPageProps) {
               </CardHeader>
               <CardContent>
                 {!isPlayerInDuel ? (
-                  <p className="text-muted-foreground dark:text-muted-foreground/80">
-                    You are not part of this duel.
-                    <Link
-                      href="/duels/join"
-                      className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline ml-1 transition-colors"
-                    >
-                      Join a different duel
-                    </Link>
-                  </p>
+                  <div className="space-y-4">
+                    {!wizards || wizards.length === 0 ? (
+                      <div>
+                        <p className="text-muted-foreground dark:text-muted-foreground/80 mb-4">
+                          You need a wizard to join this duel.
+                        </p>
+                        <Link href="/wizards/create">
+                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                            Create Wizard
+                          </Button>
+                        </Link>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-muted-foreground dark:text-muted-foreground/80 mb-4">
+                          Select a wizard to join this duel:
+                        </p>
+                        <div className="space-y-2 mb-4">
+                          {wizards.map((wizard) => (
+                            <div
+                              key={wizard._id}
+                              className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                                selectedWizard === wizard._id
+                                  ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                                  : "border-border hover:border-muted-foreground"
+                              }`}
+                              onClick={() => setSelectedWizard(wizard._id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="font-medium">{wizard.name}</h4>
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    {wizard.description}
+                                  </p>
+                                </div>
+                                {selectedWizard === wizard._id && (
+                                  <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-xs">
+                                      ✓
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          onClick={handleJoinDuel}
+                          disabled={!selectedWizard || isJoining}
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                        >
+                          {isJoining ? "Joining..." : "Join Duel"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ) : duel.players.length < 2 ? (
-                  <p className="text-muted-foreground dark:text-muted-foreground/80">
-                    Waiting for more players to join...
-                  </p>
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground dark:text-muted-foreground/80">
+                      Waiting for more players to join...
+                    </p>
+                    {duel.shortcode && (
+                      <div className="bg-background/50 dark:bg-background/30 rounded-lg p-4 border border-border/30">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Share this duel:
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30">
+                            {duel.shortcode}
+                          </code>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const url = `${window.location.origin}/join/${duel.shortcode}`;
+                              navigator.clipboard.writeText(url);
+                            }}
+                          >
+                            Copy Link
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>

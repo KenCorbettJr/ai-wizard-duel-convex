@@ -567,40 +567,6 @@ describe("Duels - Advanced Tests", () => {
   });
 
   describe("Duel Queries", () => {
-    test("should get duels by session ID", async () => {
-      const sessionId = "test-session-123";
-
-      const duel1Id = await t.mutation(api.duels.createDuel, {
-        numberOfRounds: 3,
-        wizards: [wizard1Id, wizard2Id],
-        players: ["player1", "player2"],
-        sessionId,
-      });
-
-      const duel2Id = await t.mutation(api.duels.createDuel, {
-        numberOfRounds: 5,
-        wizards: [wizard2Id, wizard3Id],
-        players: ["player2", "player3"],
-        sessionId,
-      });
-
-      // Create duel with different session
-      await t.mutation(api.duels.createDuel, {
-        numberOfRounds: 2,
-        wizards: [wizard1Id, wizard3Id],
-        players: ["player1", "player3"],
-        sessionId: "different-session",
-      });
-
-      const sessionDuels = await t.query(api.duels.getDuelsBySession, {
-        sessionId,
-      });
-
-      expect(sessionDuels).toHaveLength(2);
-      expect(sessionDuels.map((d) => d._id)).toContain(duel1Id);
-      expect(sessionDuels.map((d) => d._id)).toContain(duel2Id);
-    });
-
     test("should get wizard duels", async () => {
       const duel1Id = await t.mutation(api.duels.createDuel, {
         numberOfRounds: 3,

@@ -13,11 +13,12 @@ function CreateDuelContent() {
   const [createdDuelId, setCreatedDuelId] = useState<Id<"duels"> | null>(null);
 
   const preSelectedWizardId = searchParams.get(
-    "wizardId",
+    "wizardId"
   ) as Id<"wizards"> | null;
 
   const handleSuccess = (duelId: Id<"duels">) => {
-    setCreatedDuelId(duelId);
+    // Instead of showing success page, redirect directly to join page
+    router.push(`/duels/${duelId}`);
   };
 
   const handleClose = () => {
@@ -70,17 +71,19 @@ export default function CreateDuelPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <Navbar />
-      <Suspense fallback={
-        <div className="container mx-auto px-6 py-12">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="animate-pulse">
-              <div className="h-8 bg-muted rounded w-1/2 mx-auto mb-4"></div>
-              <div className="h-4 bg-muted rounded w-3/4 mx-auto mb-8"></div>
-              <div className="h-64 bg-muted rounded"></div>
+      <Suspense
+        fallback={
+          <div className="container mx-auto px-6 py-12">
+            <div className="max-w-2xl mx-auto text-center">
+              <div className="animate-pulse">
+                <div className="h-8 bg-muted rounded w-1/2 mx-auto mb-4"></div>
+                <div className="h-4 bg-muted rounded w-3/4 mx-auto mb-8"></div>
+                <div className="h-64 bg-muted rounded"></div>
+              </div>
             </div>
           </div>
-        </div>
-      }>
+        }
+      >
         <CreateDuelContent />
       </Suspense>
     </div>
