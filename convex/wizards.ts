@@ -177,3 +177,52 @@ export const deleteWizard = mutation({
     // Silently succeed if wizard doesn't exist
   },
 });
+
+// Get wizards defeated by a specific wizard (trophy hall)
+export const getDefeatedWizards = query({
+  args: { wizardId: v.id("wizards") },
+  handler: async (ctx, { wizardId }) => {
+    // Get all completed duels where this wizard participated
+    const duels = await ctx.db.query("duels").collect();
+
+    const completedDuels = duels.filter(
+      (duel) =>
+        duel.status === "COMPLETED" &&
+        duel.wizards.includes(wizardId) &&
+        duel.winners?.includes(wizardId)
+    );
+
+    // Create a map to track the most recent defeat date for each wizard
+    const defeatedWizardData = new Map<
+      string,
+      { wizard: any; defeatedAt: number }
+    >();
+
+    // Process each duel to get defeated wizards and their defeat dates
+    for (const duel of completedDuels) {
+      if (duel.losers) {
+        for (const loserId of duel.losers) {
+          const wizard = await ctx.db.get(loserId as unknown);
+          if (wizard) {
+            // Use the most recent defeat date if wizard was defeated multiple times
+            const existingData = defeatedWizardData.get(loserId);
+            if (!existingData || duel.createdAt > existingData.defeatedAt) {
+              defeatedWizardData.set(loserId, {
+                wizard,
+                defeatedAt: duel.createdAt,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Convert map to array and sort by defeat date (most recent first)
+    return Array.from(defeatedWizardData.values())
+      .sort((a, b) => b.defeatedAt - a.defeatedAt)
+      .map(({ wizard, defeatedAt }) => ({
+        ...wizard,
+        defeatedAt,
+      }));
+  },
+});

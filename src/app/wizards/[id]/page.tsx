@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
 import { WizardStatistics } from "@/components/WizardStatistics";
+import { TrophyHall } from "@/components/TrophyHall";
 import {
   ArrowLeft,
   Trophy,
@@ -253,6 +254,11 @@ export default function WizardPage({ params }: WizardPageProps) {
             wizardId={id as Id<"wizards">}
             showDetailedHistory={false}
           />
+        </div>
+
+        {/* Trophy Hall */}
+        <div className="mb-12">
+          <TrophyHall wizardId={id as Id<"wizards">} />
         </div>
 
         {/* Duel History */}
