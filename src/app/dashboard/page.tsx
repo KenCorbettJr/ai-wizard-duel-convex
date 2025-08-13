@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
-import { Navbar } from "@/components/Navbar";
 import { DuelListItem } from "@/components/DuelListItem";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -156,9 +155,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">Wizard Dashboard</h2>
           <p className="text-muted-foreground">
@@ -299,7 +296,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

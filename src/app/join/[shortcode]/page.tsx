@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Navbar } from "@/components/Navbar";
 import { useState, useEffect } from "react";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { ConvexImage } from "@/components/ConvexImage";
@@ -149,9 +148,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   if (duel === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-        <Navbar />
-
-        <main className="container mx-auto px-6 py-12">
+        <div className="container mx-auto px-6 py-12">
           <div className="max-w-2xl mx-auto text-center">
             <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
               <CardHeader>
@@ -191,7 +188,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
               </CardContent>
             </Card>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -239,9 +236,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section - Challenger Wizard */}
           {challengerWizard && canJoinDuel && (
@@ -639,7 +634,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
             )}
           </div>
         </div>
-      </main>
+      </div>
 
       <CreateWizardModal
         open={showCreateWizardModal}

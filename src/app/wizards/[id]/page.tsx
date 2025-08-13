@@ -6,7 +6,6 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
 import { EditWizardForm } from "@/components/EditWizardForm";
-import { Navbar } from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,7 +114,18 @@ export default function WizardPage({ params }: WizardPageProps) {
 
   return (
     <div className="min-h-screen">
-      <Navbar showBackButton onBackClick={() => router.back()} />
+      {/* Back button */}
+      <div className="p-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="hover:bg-white/20"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+      </div>
 
       {/* Hero Image Section */}
       <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] mb-8 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { JoinDuelForm } from "@/components/JoinDuelForm";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Swords, Hash } from "lucide-react";
@@ -32,9 +31,9 @@ function ShortcodeInput() {
           maxLength={6}
         />
       </div>
-      <Button 
-        type="submit" 
-        size="sm" 
+      <Button
+        type="submit"
+        size="sm"
         disabled={!shortcode.trim()}
         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
       >
@@ -58,9 +57,7 @@ export default function JoinDuelPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
@@ -103,7 +100,7 @@ export default function JoinDuelPage() {
             <JoinDuelForm onClose={handleClose} onSuccess={handleSuccess} />
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

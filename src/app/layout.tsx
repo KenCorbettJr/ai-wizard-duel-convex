@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@/providers/ClerkProvider";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { AppLayout } from "@/components/AppLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,9 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "AI Wizard Duel",
-    template: "%s | AI Wizard Duel"
+    template: "%s | AI Wizard Duel",
   },
-  description: "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
+  description:
+    "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
 };
 
 export default function RootLayout({
@@ -40,7 +42,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ClerkProvider>
-            <ConvexClientProvider>{children}</ConvexClientProvider>
+            <ConvexClientProvider>
+              <AppLayout>{children}</AppLayout>
+            </ConvexClientProvider>
           </ClerkProvider>
         </ThemeProvider>
       </body>

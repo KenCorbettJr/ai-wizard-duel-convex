@@ -1,9 +1,7 @@
 "use client";
 
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 
@@ -57,27 +55,7 @@ export function Navbar({
         </Link>
       </div>
       <div className="flex items-center gap-4">
-        <ThemeToggle />
-        <SignedIn>
-          <Link href="/duels/watch">
-            <Button variant="outline">Watch Duels</Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button variant="outline">Dashboard</Button>
-          </Link>
-          <Link href="/stats">
-            <Button variant="outline">Stats</Button>
-          </Link>
-          <UserButton />
-        </SignedIn>
-        <SignedOut>
-          <Link href="/duels/watch">
-            <Button variant="outline">Watch Duels</Button>
-          </Link>
-          <SignInButton>
-            <Button>Sign In</Button>
-          </SignInButton>
-        </SignedOut>
+        {/* Controls moved to sidebar - keeping this div for potential future use */}
       </div>
     </nav>
   );

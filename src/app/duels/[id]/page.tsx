@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Navbar } from "@/components/Navbar";
 import { useState, useEffect } from "react";
 import { Swords, Clock, Sparkles, ScrollText, Star } from "lucide-react";
 
@@ -160,8 +159,7 @@ export default function DuelPage({ params }: DuelPageProps) {
   if (isDuelError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-        <Navbar />
-        <main className="container mx-auto px-6 py-12">
+        <div className="container mx-auto px-6 py-12">
           <div className="max-w-2xl mx-auto">
             <Card className="border-destructive/50 dark:border-destructive/30 bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-xl dark:shadow-2xl">
               <CardHeader>
@@ -201,7 +199,7 @@ export default function DuelPage({ params }: DuelPageProps) {
               </CardContent>
             </Card>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -262,9 +260,7 @@ export default function DuelPage({ params }: DuelPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto pb-48">
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -525,7 +521,7 @@ export default function DuelPage({ params }: DuelPageProps) {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

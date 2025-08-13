@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/Navbar";
 import { DuelListItem } from "@/components/DuelListItem";
 import { Swords, Users, Search, Shield } from "lucide-react";
 
@@ -32,9 +31,7 @@ export default function DuelsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">
             Magical Duels
@@ -186,7 +183,7 @@ export default function DuelsPage() {
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

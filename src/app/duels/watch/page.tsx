@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { Navbar } from "@/components/Navbar";
 import { DuelListItem } from "@/components/DuelListItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,9 +27,7 @@ export default function WatchDuelsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <Eye className="h-8 w-8 text-purple-600 dark:text-purple-400" />
@@ -148,7 +145,7 @@ export default function WatchDuelsPage() {
             duels
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

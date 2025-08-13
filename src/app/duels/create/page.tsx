@@ -4,7 +4,6 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CreateDuelForm } from "@/components/CreateDuelForm";
 import { DuelCreatedSuccess } from "@/components/DuelCreatedSuccess";
-import { Navbar } from "@/components/Navbar";
 import { Id } from "../../../../convex/_generated/dataModel";
 
 function CreateDuelContent() {
@@ -70,7 +69,6 @@ function CreateDuelContent() {
 export default function CreateDuelPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <Navbar />
       <Suspense
         fallback={
           <div className="container mx-auto px-6 py-12">

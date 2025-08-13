@@ -1,7 +1,6 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Navbar } from "@/components/Navbar";
 import { DuelStatistics } from "@/components/DuelStatistics";
 import {
   Card,
@@ -32,8 +31,7 @@ export default function StatsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-        <Navbar />
-        <main className="container mx-auto px-6 py-12">
+        <div className="container mx-auto px-6 py-12">
           <Card>
             <CardContent className="text-center py-12">
               <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
@@ -46,16 +44,14 @@ export default function StatsPage() {
               </Link>
             </CardContent>
           </Card>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <Navbar />
-
-      <main className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">
             Duel Statistics
@@ -160,7 +156,7 @@ export default function StatsPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
