@@ -6,9 +6,9 @@ import { Id } from "./_generated/dataModel";
 import { generateTestId } from "./test_utils";
 
 // Mock the AI text generation
-const mockGenerateText = vi.fn();
+const mockGenerateObject = vi.fn();
 vi.mock("./aiTextGeneration", () => ({
-  generateText: mockGenerateText,
+  generateObject: mockGenerateObject,
 }));
 
 describe("Process Duel Round", () => {
@@ -81,7 +81,7 @@ describe("Process Duel Round", () => {
       });
 
       // Mock successful AI response
-      const mockAIResponse = JSON.stringify({
+      const mockAIResponse = {
         narration:
           "The lightning bolt crackles through the air as the fire shield blazes to life!",
         result: "Epic magical clash!",
@@ -94,9 +94,9 @@ describe("Process Duel Round", () => {
           pointsEarned: 5,
           healthChange: -10,
         },
-      });
+      };
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       const result = await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -123,64 +123,6 @@ describe("Process Duel Round", () => {
       expect(duel?.currentRound).toBe(2);
     });
 
-    test("should handle AI response with markdown code blocks", async () => {
-      const roundId = await t.run(async (ctx) => {
-        return await ctx.db.insert("duelRounds", {
-          duelId,
-          roundNumber: 1,
-          type: "SPELL_CASTING",
-          status: "PROCESSING",
-          spells: {
-            [wizard1Id]: {
-              description: "Ice shard",
-              castBy: wizard1Id,
-              timestamp: Date.now(),
-            },
-            [wizard2Id]: {
-              description: "Flame burst",
-              castBy: wizard2Id,
-              timestamp: Date.now(),
-            },
-          },
-        });
-      });
-
-      // Mock AI response with markdown code blocks
-      const mockAIResponse = `\`\`\`json
-{
-  "narration": "Ice meets fire in a spectacular display!",
-  "result": "Elemental clash!",
-  "illustrationPrompt": "Ice and fire colliding",
-  "wizard1": {
-    "pointsEarned": 6,
-    "healthChange": -3
-  },
-  "wizard2": {
-    "pointsEarned": 4,
-    "healthChange": -7
-  }
-}
-\`\`\``;
-
-      mockGenerateText.mockResolvedValue(mockAIResponse);
-
-      const result = await t.action(api.processDuelRound.processDuelRound, {
-        duelId,
-        roundId,
-      });
-
-      expect(result).toEqual({ success: true, roundId });
-
-      const round = await t.run(async (ctx) => {
-        return await ctx.db.get(roundId);
-      });
-
-      expect(round?.outcome?.narrative).toBe(
-        "Ice meets fire in a spectacular display!"
-      );
-      expect(round?.outcome?.result).toBe("Elemental clash!");
-    });
-
     test("should bound health changes correctly", async () => {
       const roundId = await t.run(async (ctx) => {
         return await ctx.db.insert("duelRounds", {
@@ -204,7 +146,7 @@ describe("Process Duel Round", () => {
       });
 
       // Mock AI response with extreme health changes
-      const mockAIResponse = JSON.stringify({
+      const mockAIResponse = {
         narration: "Extreme healing and devastating damage!",
         result: "Life and death magic!",
         illustrationPrompt: "Healing light vs death ray",
@@ -216,9 +158,9 @@ describe("Process Duel Round", () => {
           pointsEarned: 2,
           healthChange: -150, // Should be capped at 0
         },
-      });
+      };
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -253,7 +195,7 @@ describe("Process Duel Round", () => {
         });
       });
 
-      const mockAIResponse = JSON.stringify({
+      const mockAIResponse = {
         narration: "The killing curse strikes true!",
         result: "Wizard defeated!",
         illustrationPrompt: "Defeated wizard falling",
@@ -265,9 +207,9 @@ describe("Process Duel Round", () => {
           pointsEarned: 0,
           healthChange: -100,
         },
-      });
+      };
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -305,7 +247,7 @@ describe("Process Duel Round", () => {
       });
 
       // Mock AI response with invalid JSON
-      mockGenerateText.mockResolvedValue("This is not valid JSON at all!");
+      mockGenerateObject.mockResolvedValue("This is not valid JSON at all!");
 
       const result = await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -346,7 +288,7 @@ describe("Process Duel Round", () => {
       });
 
       // Mock AI to throw an error
-      mockGenerateText.mockRejectedValue(new Error("AI service unavailable"));
+      mockGenerateObject.mockRejectedValue(new Error("AI service unavailable"));
 
       const result = await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -401,7 +343,7 @@ describe("Process Duel Round", () => {
         },
       });
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -583,7 +525,7 @@ describe("Process Duel Round", () => {
         },
       });
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       const result = await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -632,7 +574,7 @@ describe("Process Duel Round", () => {
         },
       });
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       const result = await t.action(api.processDuelRound.processDuelRound, {
         duelId,
@@ -697,7 +639,7 @@ describe("Process Duel Round", () => {
         },
       });
 
-      mockGenerateText.mockResolvedValue(mockAIResponse);
+      mockGenerateObject.mockResolvedValue(mockAIResponse);
 
       await t.action(api.processDuelRound.processDuelRound, {
         duelId: deathDuelId,
@@ -750,30 +692,26 @@ describe("Process Duel Round", () => {
       });
 
       // Mock both the round response and conclusion response
-      mockGenerateText
-        .mockResolvedValueOnce(
-          JSON.stringify({
-            narration: "The final round begins!",
-            result: "Last battle!",
-            illustrationPrompt: "Final confrontation",
-            wizard1: {
-              pointsEarned: 8,
-              healthChange: -5,
-            },
-            wizard2: {
-              pointsEarned: 3,
-              healthChange: -10,
-            },
-          })
-        )
-        .mockResolvedValueOnce(
-          JSON.stringify({
-            narration: "The duel concludes with Gandalf victorious!",
-            result: "Gandalf wins the epic duel!",
-            illustrationPrompt:
-              "Gandalf celebrating victory while Saruman looks defeated",
-          })
-        );
+      mockGenerateObject
+        .mockResolvedValueOnce({
+          narration: "The final round begins!",
+          result: "Last battle!",
+          illustrationPrompt: "Final confrontation",
+          wizard1: {
+            pointsEarned: 8,
+            healthChange: -5,
+          },
+          wizard2: {
+            pointsEarned: 3,
+            healthChange: -10,
+          },
+        })
+        .mockResolvedValueOnce({
+          narration: "The duel concludes with Gandalf victorious!",
+          result: "Gandalf wins the epic duel!",
+          illustrationPrompt:
+            "Gandalf celebrating victory while Saruman looks defeated",
+        });
 
       await t.action(api.processDuelRound.processDuelRound, {
         duelId: finalDuelId,
@@ -811,25 +749,21 @@ describe("Process Duel Round", () => {
   describe("Previous Rounds Context", () => {
     test("should include previous round context in AI prompt", async () => {
       // Mock AI response for multiple rounds
-      mockGenerateText
-        .mockResolvedValueOnce(
-          JSON.stringify({
-            narration: "First round battle begins!",
-            result: "Round 1 complete",
-            illustrationPrompt: "First round illustration",
-            wizard1: { pointsEarned: 5, healthChange: -10 },
-            wizard2: { pointsEarned: 3, healthChange: -5 },
-          })
-        )
-        .mockResolvedValueOnce(
-          JSON.stringify({
-            narration: "Second round continues the epic battle!",
-            result: "Round 2 complete",
-            illustrationPrompt: "Second round illustration",
-            wizard1: { pointsEarned: 4, healthChange: -15 },
-            wizard2: { pointsEarned: 6, healthChange: -8 },
-          })
-        );
+      mockGenerateObject
+        .mockResolvedValueOnce({
+          narration: "First round battle begins!",
+          result: "Round 1 complete",
+          illustrationPrompt: "First round illustration",
+          wizard1: { pointsEarned: 5, healthChange: -10 },
+          wizard2: { pointsEarned: 3, healthChange: -5 },
+        })
+        .mockResolvedValueOnce({
+          narration: "Second round continues the epic battle!",
+          result: "Round 2 complete",
+          illustrationPrompt: "Second round illustration",
+          wizard1: { pointsEarned: 4, healthChange: -15 },
+          wizard2: { pointsEarned: 6, healthChange: -8 },
+        });
 
       // Start the duel
       await t.mutation(api.duels.startDuelAfterIntroduction, { duelId });
@@ -881,10 +815,10 @@ describe("Process Duel Round", () => {
       });
 
       // Verify that the second AI call included context from the first round
-      expect(mockGenerateText).toHaveBeenCalledTimes(2);
+      expect(mockGenerateObject).toHaveBeenCalledTimes(2);
 
       // Check the second call's prompt includes previous round context
-      const secondCallArgs = mockGenerateText.mock.calls[1];
+      const secondCallArgs = mockGenerateObject.mock.calls[1];
       const secondPrompt = secondCallArgs[0];
 
       expect(secondPrompt).toContain("=== Previous Rounds ===");

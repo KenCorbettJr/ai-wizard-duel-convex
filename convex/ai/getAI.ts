@@ -1,6 +1,6 @@
 "use node";
 
-import { genkit } from "genkit";
+import { genkit } from "genkit/beta";
 import { googleAI, gemini20FlashExp } from "@genkit-ai/googleai";
 
 export function getGemni20FlashAI() {

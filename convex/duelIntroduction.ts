@@ -4,15 +4,33 @@ import type { Doc } from "../convex/_generated/dataModel";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
-import { generateText } from "./aiTextGeneration";
+
 import { Id } from "./_generated/dataModel";
+import { z } from "genkit/beta";
+import { isEmulatorMode } from "./mocks/mockServices";
+import { generateObject, generateText } from "./aiTextGeneration";
+
+// Zod schema for structured AI output
+const IntroductionResponseSchema = z.object({
+  narration: z
+    .string()
+    .describe(
+      "A vivid, detailed introduction of the magical combat that is about to take place. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time."
+    ),
+  result: z
+    .string()
+    .describe(
+      "A brief summary of the introduction, this can be a little snarky or humorous if you like."
+    ),
+  illustrationPrompt: z
+    .string()
+    .describe(
+      "A very detailed prompt for a low poly art style illustration capturing the moment from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and dynamic lighting with magical particles."
+    ),
+});
 
 // Types for the introduction response
-export interface IntroductionResponse {
-  narration: string;
-  result: string;
-  illustrationPrompt: string;
-}
+export type IntroductionResponse = z.infer<typeof IntroductionResponseSchema>;
 
 // Generate duel introduction using AI
 export const generateDuelIntroduction = action({
@@ -23,8 +41,6 @@ export const generateDuelIntroduction = action({
     ctx,
     { duelId }
   ): Promise<{ success: boolean; introRoundId: Id<"duelRounds"> }> => {
-    console.log(`Starting introduction generation for duel ${duelId}`);
-
     try {
       // Get the duel data
       const duel = await ctx.runQuery(api.duels.getDuel, { duelId });
@@ -90,10 +106,8 @@ export const generateDuelIntroduction = action({
       // Start the duel (move to first actual round)
       await ctx.runMutation(api.duels.startDuelAfterIntroduction, { duelId });
 
-      console.log(`Successfully generated introduction for duel ${duelId}`);
       return { success: true, introRoundId };
     } catch (error) {
-      console.error(`Error generating introduction for duel ${duelId}:`, error);
       throw new Error(
         `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`
       );
@@ -113,7 +127,12 @@ async function generateIntroductionText(
       : `a ${duel.numberOfRounds} round duel`;
 
   try {
-    // Use AI text generation with Gemini 2.5 Flash
+    // Use structured output with schema for better AI responses
+    if (isEmulatorMode()) {
+      console.log("🎭 Using mock AI introduction generation (emulator mode)");
+      return generateMockIntroduction(duel, wizard1, wizard2);
+    }
+
     const systemPrompt = `# Wizard Duel System Guidelines
 You are the Arcane Arbiter, an impartial magical referee for wizard duels. Your role is to interpret, adjudicate, and narrate magical combat between two wizards.
 
@@ -128,59 +147,38 @@ The two wizards for this duel are:
 ## Duel Structure
 - The duel will be ${duelType}
 - Each wizard begins with 100 health points
-- A wizard losing all health points results in immediate defeat
-
-You must return ONLY a valid JSON object with these exact keys:
-{
-  "narration": "A vivid, detailed introduction of the magical combat that is about to take place. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time.",
-  "result": "A brief summary of the introduction, this can be a little snarky or humorous if you like.",
-  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration capturing the moment from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and dynamic lighting with magical particles."
-}`;
+- A wizard losing all health points results in immediate defeat`;
 
     const prompt = `Introduce the two wizards, ${wizard1.name} and ${wizard2.name}, for their upcoming ${duelType} duel in the Enchanted Arena. Create an epic, dramatic introduction that sets the stage for magical combat.`;
 
-    const aiResponse = await generateText(prompt, systemPrompt, {
-      temperature: 1.5,
-    });
-
-    // Try to parse the JSON response
-    let parsedResponse: IntroductionResponse;
-    try {
-      // Clean the response by removing markdown code blocks if present
-      let cleanedResponse = aiResponse.trim();
-      if (cleanedResponse.startsWith("```")) {
-        cleanedResponse = cleanedResponse
-          .replace(/^```(json)?\s*/, "")
-          .replace(/\s*```$/, "");
-      }
-
-      parsedResponse = JSON.parse(cleanedResponse);
-    } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", parseError);
-      console.log("Raw AI response:", aiResponse);
-      throw new Error("AI returned invalid JSON format");
-    }
-
-    // Validate the response has required fields
-    if (
-      !parsedResponse.narration ||
-      !parsedResponse.result ||
-      !parsedResponse.illustrationPrompt
-    ) {
-      console.error("AI response missing required fields:", parsedResponse);
-      throw new Error("AI response missing required fields");
-    }
-
-    return {
-      narration: parsedResponse.narration,
-      result: parsedResponse.result,
-      illustrationPrompt: parsedResponse.illustrationPrompt,
-    };
+    return await generateObject(
+      prompt,
+      IntroductionResponseSchema,
+      systemPrompt,
+      { temperature: 1.5 }
+    );
   } catch (error) {
     console.error("AI text generation failed, using fallback:", error);
 
     // Fallback template-based introduction
-    const narration = `Welcome, spectators, to the Enchanted Arena! Tonight, we witness an epic magical confrontation ${duelType}!
+    return generateFallbackIntroduction(duel, wizard1, wizard2);
+  }
+}
+
+// Helper function to generate mock introduction for emulator mode
+function generateMockIntroduction(
+  duel: Doc<"duels">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">
+): IntroductionResponse {
+  const duelType =
+    duel.numberOfRounds === "TO_THE_DEATH"
+      ? "to the death"
+      : `a ${duel.numberOfRounds} round duel`;
+
+  // Check if we're in test mode and return test-compatible responses
+  if (process.env.NODE_ENV === "test") {
+    const narration = `Welcome to the Enchanted Arena! Tonight, we witness an epic magical confrontation ${duelType}!
 
 In the eastern corner, we have ${wizard1.name}! ${wizard1.description} This formidable spellcaster enters the arena with ${wizard1.wins || 0} victories and ${wizard1.losses || 0} defeats, their magical aura crackling with anticipation.
 
@@ -202,4 +200,60 @@ Let the magical combat commence!`;
       illustrationPrompt,
     };
   }
+
+  const narration = `🎭 MOCK INTRODUCTION: Welcome, spectators, to the Enchanted Arena! Tonight, we witness a simulated epic magical confrontation ${duelType}!
+
+In the eastern corner, we have ${wizard1.name}! ${wizard1.description} This formidable spellcaster enters the mock arena with ${wizard1.wins || 0} victories and ${wizard1.losses || 0} defeats, their simulated magical aura crackling with anticipation.
+
+And in the western corner, ${wizard2.name}! ${wizard2.description} With a record of ${wizard2.wins || 0} wins and ${wizard2.losses || 0} losses, they stand ready to prove their magical supremacy in this test environment.
+
+The mock arena pulses with simulated ancient magic, its ever-changing landscape ready to challenge both combatants in this demonstration. Mystical energies swirl through the air as these two masters of the arcane arts prepare to unleash their most powerful spells.
+
+Both wizards begin with 100 health points. Victory will come to the one who can outmaneuver, outthink, and outcast their opponent. The crowd falls silent as the magical barriers shimmer into place, and the mock duel is about to begin!
+
+Let the simulated magical combat commence!`;
+
+  const result = `🎭 Mock duel setup: The stage is set for an epic magical duel between ${wizard1.name} and ${wizard2.name}!`;
+
+  const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide shot showing the full arena from an elevated perspective.`;
+
+  return {
+    narration,
+    result,
+    illustrationPrompt,
+  };
+}
+
+// Helper function to generate fallback introduction
+function generateFallbackIntroduction(
+  duel: Doc<"duels">,
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">
+): IntroductionResponse {
+  const duelType =
+    duel.numberOfRounds === "TO_THE_DEATH"
+      ? "to the death"
+      : `a ${duel.numberOfRounds} round duel`;
+
+  const narration = `Welcome, spectators, to the Enchanted Arena! Tonight, we witness an epic magical confrontation ${duelType}!
+
+In the eastern corner, we have ${wizard1.name}! ${wizard1.description} This formidable spellcaster enters the arena with ${wizard1.wins || 0} victories and ${wizard1.losses || 0} defeats, their magical aura crackling with anticipation.
+
+And in the western corner, ${wizard2.name}! ${wizard2.description} With a record of ${wizard2.wins || 0} wins and ${wizard2.losses || 0} losses, they stand ready to prove their magical supremacy.
+
+The arena itself pulses with ancient magic, its ever-changing landscape ready to challenge both combatants. Mystical energies swirl through the air as these two masters of the arcane arts prepare to unleash their most powerful spells.
+
+Both wizards begin with 100 health points. Victory will come to the one who can outmaneuver, outthink, and outcast their opponent. The crowd falls silent as the magical barriers shimmer into place, and the duel is about to begin!
+
+Let the magical combat commence!`;
+
+  const result = `The stage is set for an epic magical duel between ${wizard1.name} and ${wizard2.name}!`;
+
+  const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide shot showing the full arena from an elevated perspective.`;
+
+  return {
+    narration,
+    result,
+    illustrationPrompt,
+  };
 }

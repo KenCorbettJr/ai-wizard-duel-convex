@@ -1,9 +1,46 @@
 "use node";
 
+import type { ZodTypeAny } from "zod";
+
+function generateMockFromSchema<T extends ZodTypeAny>(schema: T): any {
+  const def = schema._def;
+
+  switch (def.typeName) {
+    case "ZodOptional":
+    case "ZodNullable":
+      return generateMockFromSchema(def.innerType);
+    case "ZodString":
+      return "mock-string";
+    case "ZodNumber":
+      return 123;
+    case "ZodBoolean":
+      return true;
+    case "ZodEnum":
+      return def.values[0];
+    case "ZodArray":
+      return [generateMockFromSchema(def.type)];
+    case "ZodObject":
+      const shape = def.shape();
+      const obj: Record<string, any> = {};
+      for (const key in shape) {
+        obj[key] = generateMockFromSchema(shape[key]);
+      }
+      return obj;
+    default:
+      return null;
+  }
+}
+
 /**
  * Mock services for emulator mode
  * Returns fake responses when ENV=emulate to avoid using real external services
  */
+
+export function generateMockObject<T extends ZodTypeAny>(
+  schema: T
+): ReturnType<typeof generateMockFromSchema> {
+  return generateMockFromSchema(schema);
+}
 
 // Mock text generation response
 export function generateMockText(prompt: string): string {
@@ -70,4 +107,9 @@ function simpleHash(str: string): number {
 // Check if we're in emulator mode
 export function isEmulatorMode(): boolean {
   return process.env.ENV === "emulate";
+}
+
+// Check if we're in test mode
+export function isTestMode(): boolean {
+  return process.env.NODE_ENV === "test";
 }

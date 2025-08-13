@@ -45,7 +45,6 @@ describe("Duels", () => {
       players: ["user1", "user2"],
       status: "WAITING_FOR_PLAYERS",
       currentRound: 1,
-      sessionId: "session123",
     });
 
     // Check initial points and hit points

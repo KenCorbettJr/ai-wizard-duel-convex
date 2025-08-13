@@ -309,7 +309,7 @@ describe("Duels - Advanced Tests", () => {
         players: ["player1", "player2"],
       });
 
-      const roundId = await t.run(async (ctx) => {
+      await t.run(async (ctx) => {
         return await ctx.db.insert("duelRounds", {
           duelId,
           roundNumber: 1,
@@ -865,13 +865,6 @@ describe("Duels - Advanced Tests", () => {
     test("should handle empty player queries gracefully", async () => {
       const duels = await t.query(api.duels.getPlayerDuels, {
         userId: "nonexistent-player",
-      });
-      expect(duels).toEqual([]);
-    });
-
-    test("should handle empty session queries gracefully", async () => {
-      const duels = await t.query(api.duels.getDuelsBySession, {
-        sessionId: "nonexistent-session",
       });
       expect(duels).toEqual([]);
     });

@@ -12,10 +12,10 @@ import { vi } from "vitest";
 // };
 
 // Mock console methods globally for all tests
-console.log = vi.fn();
-console.error = vi.fn();
-console.warn = vi.fn();
-console.info = vi.fn();
+// console.log = vi.fn();
+// console.error = vi.fn();
+// console.warn = vi.fn();
+// console.info = vi.fn();
 
 // Restore console methods after all tests (if needed for debugging)
 // Uncomment the lines below if you need to see console output during development

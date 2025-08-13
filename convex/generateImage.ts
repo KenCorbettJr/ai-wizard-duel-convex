@@ -66,7 +66,6 @@ export const generateImage = action({
 
       return imageBuffer;
     } catch (error) {
-      console.error("Error generating image with Fal:", error);
       throw new Error(
         `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
       );

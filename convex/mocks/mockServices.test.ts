@@ -7,9 +7,11 @@ import {
 
 describe("Mock Services", () => {
   const originalEnv = process.env.ENV;
+  const originalNodeEnv = process.env.NODE_ENV;
 
   afterEach(() => {
     process.env.ENV = originalEnv;
+    process.env.NODE_ENV = originalNodeEnv;
   });
 
   describe("isEmulatorMode", () => {
@@ -18,7 +20,7 @@ describe("Mock Services", () => {
       expect(isEmulatorMode()).toBe(true);
     });
 
-    it("should return false when ENV is not emulate", () => {
+    it("should return false when ENV=dev", () => {
       process.env.ENV = "dev";
       expect(isEmulatorMode()).toBe(false);
     });

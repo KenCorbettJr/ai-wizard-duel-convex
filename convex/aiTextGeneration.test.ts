@@ -1,4 +1,4 @@
-import { expect, test, describe, vi, beforeEach } from "vitest";
+import { expect, test, describe, vi, beforeEach, afterEach } from "vitest";
 
 // Mock the AI module before importing the function
 const mockGenerate = vi.fn();
@@ -14,6 +14,11 @@ import { generateText } from "./aiTextGeneration";
 describe("AI Text Generation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NODE_ENV = "development"; // take ourselves out of test mode so we can test the interactions with the AI module
+  });
+
+  afterEach(() => {
+    process.env.NODE_ENV = "test";
   });
 
   test("should generate text with basic prompt", async () => {
