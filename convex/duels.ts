@@ -18,38 +18,66 @@ export type DuelRoundType =
   | "CONCLUSION";
 export type DuelLengthOption = "TO_THE_DEATH";
 
-// Get all duels for a specific player
+// Get all duels for the authenticated player
 export const getPlayerDuels = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const duels = await ctx.db.query("duels").collect();
 
     // Filter duels that include this player
-    return duels.filter((duel) => duel.players.includes(userId));
+    return duels.filter((duel) => duel.players.includes(identity.subject));
   },
 });
 
-// Get completed duels for a specific player
+// Get completed duels for the authenticated player
 export const getPlayerCompletedDuels = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const duels = await ctx.db.query("duels").collect();
 
     // Filter duels that include this player and are completed
     return duels
       .filter(
-        (duel) => duel.players.includes(userId) && duel.status === "COMPLETED"
+        (duel) =>
+          duel.players.includes(identity.subject) && duel.status === "COMPLETED"
       )
       .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
   },
 });
 
-// Get a specific duel by ID
+// Get a specific duel by ID (only for participants or public viewing)
 export const getDuel = query({
   args: { duelId: v.id("duels") },
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
     if (!duel) return null;
+
+    // Allow public viewing of completed duels, but restrict access to private duels
+    const identity = await ctx.auth.getUserIdentity();
+
+    // If user is not authenticated, only show completed duels
+    if (!identity && duel.status !== "COMPLETED") {
+      return null;
+    }
+
+    // If user is authenticated but not a participant, only show completed duels
+    if (
+      identity &&
+      !duel.players.includes(identity.subject) &&
+      duel.status !== "COMPLETED"
+    ) {
+      return null;
+    }
 
     // Get all rounds for this duel
     const rounds = await ctx.db
@@ -131,9 +159,22 @@ export const createDuel = mutation({
   args: {
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
-    players: v.array(v.string()),
   },
-  handler: async (ctx, { numberOfRounds, wizards, players }) => {
+  handler: async (ctx, { numberOfRounds, wizards }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Verify that all wizards belong to the authenticated user
+    for (const wizardId of wizards) {
+      const wizard = await ctx.db.get(wizardId);
+      if (!wizard || wizard.owner !== identity.subject) {
+        throw new Error("Not authorized to use one or more of these wizards");
+      }
+    }
+
+    const players = [identity.subject];
     // Initialize points and hit points for all wizards
     const initialPoints: Record<string, number> = {};
     const initialHitPoints: Record<string, number> = {};
@@ -176,10 +217,23 @@ export const createDuel = mutation({
 export const joinDuel = mutation({
   args: {
     duelId: v.id("duels"),
-    userId: v.string(),
     wizards: v.array(v.id("wizards")),
   },
-  handler: async (ctx, { duelId, userId, wizards }) => {
+  handler: async (ctx, { duelId, wizards }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Verify that all wizards belong to the authenticated user
+    for (const wizardId of wizards) {
+      const wizard = await ctx.db.get(wizardId);
+      if (!wizard || wizard.owner !== identity.subject) {
+        throw new Error("Not authorized to use one or more of these wizards");
+      }
+    }
+
+    const userId = identity.subject;
     const duel = await ctx.db.get(duelId);
     if (!duel) {
       throw new Error("Duel not found");
@@ -263,6 +317,16 @@ export const castSpell = mutation({
     spellDescription: v.string(),
   },
   handler: async (ctx, { duelId, wizardId, spellDescription }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Verify that the wizard belongs to the authenticated user
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard || wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to cast spells with this wizard");
+    }
     const duel = await ctx.db.get(duelId);
     if (!duel) {
       throw new Error("Duel not found");
@@ -285,6 +349,16 @@ export const castSpell = mutation({
 
     if (currentRound.status !== "WAITING_FOR_SPELLS") {
       throw new Error("Round is not accepting spells");
+    }
+
+    // Check if the wizard is participating in this duel
+    if (!duel.wizards.includes(wizardId)) {
+      throw new Error("Wizard is not participating in this duel");
+    }
+
+    // Check if the wizard has already cast a spell this round
+    if (currentRound.spells && currentRound.spells[wizardId]) {
+      throw new Error("Wizard has already cast a spell this round");
     }
 
     // Add the spell to the round
@@ -398,13 +472,13 @@ export const completeRound = mutation({
       // Update wizard stats
       if (shouldEndDuel.winners && shouldEndDuel.losers) {
         for (const winnerId of shouldEndDuel.winners) {
-          await ctx.runMutation(api.wizards.updateWizardStats, {
+          await ctx.runMutation(api.wizards.updateWizardStatsInternal, {
             wizardId: winnerId,
             won: true,
           });
         }
         for (const loserId of shouldEndDuel.losers) {
-          await ctx.runMutation(api.wizards.updateWizardStats, {
+          await ctx.runMutation(api.wizards.updateWizardStatsInternal, {
             wizardId: loserId,
             won: false,
           });
@@ -597,10 +671,16 @@ export const getWizardDuelsSafe = query({
   },
 });
 
-// Get duel statistics for a player
+// Get duel statistics for the authenticated player
 export const getPlayerDuelStats = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
     const duels = await ctx.db.query("duels").collect();
 
     const playerDuels = duels.filter((duel) => duel.players.includes(userId));

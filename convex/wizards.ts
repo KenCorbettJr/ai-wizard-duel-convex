@@ -2,38 +2,59 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 
-// Get all wizards for a specific user
+// Get all wizards for the authenticated user
 export const getUserWizards = query({
-  args: { userId: v.optional(v.string()) },
-  handler: async (ctx, { userId }) => {
-    if (!userId) {
-      return [];
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
     }
+
     return await ctx.db
       .query("wizards")
-      .withIndex("by_owner", (q) => q.eq("owner", userId))
+      .withIndex("by_owner", (q) => q.eq("owner", identity.subject))
       .collect();
   },
 });
 
-// Get a specific wizard by ID
+// Get a specific wizard by ID (only if owned by authenticated user)
 export const getWizard = query({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
-    return await ctx.db.get(wizardId);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      return null;
+    }
+
+    // Only return wizard if user owns it
+    if (wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to access this wizard");
+    }
+
+    return wizard;
   },
 });
 
 // Create a new wizard
 export const createWizard = mutation({
   args: {
-    owner: v.string(),
     name: v.string(),
     description: v.string(),
   },
-  handler: async (ctx, { owner, name, description }) => {
+  handler: async (ctx, { name, description }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const wizardId = await ctx.db.insert("wizards", {
-      owner,
+      owner: identity.subject,
       name,
       description,
       wins: 0,
@@ -60,8 +81,40 @@ export const createWizard = mutation({
   },
 });
 
-// Update wizard stats after a battle
+// Update wizard stats after a battle (only for owned wizards)
 export const updateWizardStats = mutation({
+  args: {
+    wizardId: v.id("wizards"),
+    won: v.boolean(),
+  },
+  handler: async (ctx, { wizardId, won }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      throw new Error("Wizard not found");
+    }
+
+    // Only allow updating stats for owned wizards
+    if (wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to update this wizard");
+    }
+
+    const currentWins = wizard.wins || 0;
+    const currentLosses = wizard.losses || 0;
+
+    await ctx.db.patch(wizardId, {
+      wins: won ? currentWins + 1 : currentWins,
+      losses: won ? currentLosses : currentLosses + 1,
+    });
+  },
+});
+
+// Internal function to update wizard stats (used by system functions like duel completion)
+export const updateWizardStatsInternal = mutation({
   args: {
     wizardId: v.id("wizards"),
     won: v.boolean(),
@@ -82,7 +135,7 @@ export const updateWizardStats = mutation({
   },
 });
 
-// Update wizard details
+// Update wizard details (only for owned wizards)
 export const updateWizard = mutation({
   args: {
     wizardId: v.id("wizards"),
@@ -93,9 +146,19 @@ export const updateWizard = mutation({
     isAIPowered: v.optional(v.boolean()),
   },
   handler: async (ctx, { wizardId, ...updates }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       throw new Error("Wizard not found");
+    }
+
+    // Only allow updating owned wizards
+    if (wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to update this wizard");
     }
 
     // Check if name or description changed
@@ -139,14 +202,32 @@ export const getIllustrationUrl = query({
   },
 });
 
-// Manually trigger illustration generation for a wizard
+// Manually trigger illustration generation for a wizard (only for owned wizards)
 export const regenerateIllustration = mutation({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       throw new Error("Wizard not found");
     }
+
+    // Only allow regenerating illustrations for owned wizards
+    if (wizard.owner !== identity.subject) {
+      throw new Error(
+        "Not authorized to regenerate illustration for this wizard"
+      );
+    }
+
+    // Increment illustration version immediately
+    const currentVersion = wizard.illustrationVersion || 1;
+    await ctx.db.patch(wizardId, {
+      illustrationVersion: currentVersion + 1,
+    });
 
     // Schedule wizard illustration generation
     // Skip scheduling in test environment to avoid transaction escape errors
@@ -166,22 +247,48 @@ export const regenerateIllustration = mutation({
   },
 });
 
-// Delete a wizard
+// Delete a wizard (only for owned wizards)
 export const deleteWizard = mutation({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
-    const wizard = await ctx.db.get(wizardId);
-    if (wizard) {
-      await ctx.db.delete(wizardId);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
     }
-    // Silently succeed if wizard doesn't exist
+
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      return; // Silently succeed if wizard doesn't exist
+    }
+
+    // Only allow deleting owned wizards
+    if (wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to delete this wizard");
+    }
+
+    await ctx.db.delete(wizardId);
   },
 });
 
-// Get wizards defeated by a specific wizard (trophy hall)
+// Get wizards defeated by a specific wizard (trophy hall) - only for owned wizards
 export const getDefeatedWizards = query({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      throw new Error("Wizard not found");
+    }
+
+    // Only allow viewing trophy hall for owned wizards
+    if (wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to view this wizard's trophy hall");
+    }
+
     // Get all completed duels where this wizard participated
     const duels = await ctx.db.query("duels").collect();
 

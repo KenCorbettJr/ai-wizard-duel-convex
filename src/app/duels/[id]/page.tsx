@@ -60,10 +60,7 @@ export default function DuelPage({ params }: DuelPageProps) {
   const joinDuel = useMutation(api.duels.joinDuel);
 
   // Get user's wizards for joining
-  const wizards = useQuery(
-    api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip"
-  );
+  const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   // Find the user's wizard in this duel
   const userWizard = [wizard1, wizard2].find(
@@ -111,7 +108,6 @@ export default function DuelPage({ params }: DuelPageProps) {
     try {
       await joinDuel({
         duelId: duel._id,
-        userId: user.id,
         wizards: [selectedWizard],
       });
       // No need to redirect, the page will update automatically

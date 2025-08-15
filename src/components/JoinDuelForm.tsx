@@ -41,10 +41,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
   const [isJoining, setIsJoining] = useState(false);
 
   const availableDuels = useQuery(api.duels.getActiveDuels);
-  const wizards = useQuery(
-    api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip"
-  );
+  const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   // Filter duels that are waiting for players and not created by current user
   const joinableDuels =
@@ -67,7 +64,6 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
     try {
       await joinDuel({
         duelId: selectedDuel,
-        userId: user.id,
         wizards: [selectedWizard],
       });
       onSuccess(selectedDuel);

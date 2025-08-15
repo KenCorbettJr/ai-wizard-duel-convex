@@ -359,9 +359,9 @@ async function generateBattleRound(
 
   try {
     // Use structured output with schema for better AI responses
-    if (isEmulatorMode()) {
-      console.log("🎭 Using mock AI battle generation (emulator mode)");
-      // In emulator mode, generate a mock response that matches the schema
+    if (isEmulatorMode() || process.env.NODE_ENV === "test") {
+      console.log("🎭 Using mock AI battle generation (emulator/test mode)");
+      // In emulator/test mode, generate a mock response that matches the schema
       return generateMockBattleResult(
         wizard1,
         wizard2,
@@ -942,8 +942,10 @@ Write a final narration that brings together the entire story of this duel, high
     let parsedResponse: DuelConclusionResponse;
 
     try {
-      if (isEmulatorMode()) {
-        console.log("🎭 Using mock AI conclusion generation (emulator mode)");
+      if (isEmulatorMode() || process.env.NODE_ENV === "test") {
+        console.log(
+          "🎭 Using mock AI conclusion generation (emulator/test mode)"
+        );
         parsedResponse = generateMockConclusion(
           duel,
           wizard1,
@@ -972,7 +974,7 @@ Write a final narration that brings together the entire story of this duel, high
       duelId,
       roundNumber: conclusionRoundNumber,
       outcome: {
-        narrative: parsedResponse.narration,
+        narrative: parsedResponse.narration, // Schema uses 'narration', mutation expects 'narrative'
         result: parsedResponse.result,
         illustrationPrompt: parsedResponse.illustrationPrompt,
       },

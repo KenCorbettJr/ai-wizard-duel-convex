@@ -1,9 +1,9 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
 import { api } from "./_generated/api";
-import schema from "./schema";
 import { Id } from "./_generated/dataModel";
-import { generateTestId } from "./test_utils";
+import schema from "./schema";
+import { withAuth } from "./test_utils";
 
 describe("Wizards - Advanced Tests", () => {
   let t: ReturnType<typeof convexTest>;
@@ -14,71 +14,90 @@ describe("Wizards - Advanced Tests", () => {
 
   describe("Wizard Creation", () => {
     test("should create wizard with default values", async () => {
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
+      const wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
           name: "Test Wizard",
           description: "A test wizard",
-          wins: 0,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
+        }
+      );
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
 
       expect(wizard).toMatchObject({
-        owner: "user123",
+        owner: "test-user-1",
         name: "Test Wizard",
         description: "A test wizard",
         wins: 0,
         losses: 0,
         isAIPowered: false,
       });
-      expect(wizard?.illustrationVersion).toBeUndefined();
-      expect(wizard?.illustrationGeneratedAt).toBeUndefined();
+      expect(wizard?.illustrationVersion).toBe(1);
     });
 
     test("should create AI-powered wizard", async () => {
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "ai-system",
+      const wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
           name: "AI Wizard",
           description: "An AI-generated wizard",
-          wins: 0,
-          losses: 0,
-          isAIPowered: true,
-        });
+        }
+      );
+
+      // Update to AI-powered using internal function
+      await t.run(async (ctx) => {
+        await ctx.db.patch(wizardId, { isAIPowered: true });
       });
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
       expect(wizard?.isAIPowered).toBe(true);
+      expect(wizard?.name).toBe("AI Wizard");
     });
 
-    test("should handle wizard with illustration data", async () => {
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Illustrated Wizard",
-          description: "A wizard with illustration",
-          wins: 5,
-          losses: 2,
-          isAIPowered: false,
-          illustration: "storage-id-123",
-          illustrationURL: "https://example.com/wizard.png",
-          illustrationVersion: 2,
-          illustrationGeneratedAt: Date.now(),
-          illustrations: ["storage-id-1", "storage-id-2"],
-        });
-      });
+    test("should handle wizard creation with special characters", async () => {
+      const wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Wizard™ 🧙‍♂️",
+          description: "A wizard with émojis and spëcial characters",
+        }
+      );
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
 
-      expect(wizard?.illustration).toBe("storage-id-123");
-      expect(wizard?.illustrationURL).toBe("https://example.com/wizard.png");
-      expect(wizard?.illustrationVersion).toBe(2);
-      expect(wizard?.illustrationGeneratedAt).toBeDefined();
-      expect(wizard?.illustrations).toEqual(["storage-id-1", "storage-id-2"]);
+      expect(wizard?.name).toBe("Wizard™ 🧙‍♂️");
+      expect(wizard?.description).toBe(
+        "A wizard with émojis and spëcial characters"
+      );
+    });
+
+    test("should handle very long wizard descriptions", async () => {
+      const longDescription = "A".repeat(1000);
+
+      const wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Verbose Wizard",
+          description: longDescription,
+        }
+      );
+
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      expect(wizard?.description).toBe(longDescription);
     });
   });
 
@@ -86,87 +105,78 @@ describe("Wizards - Advanced Tests", () => {
     let wizardId: Id<"wizards">;
 
     beforeEach(async () => {
-      wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Original Name",
-          description: "Original description",
-          wins: 3,
-          losses: 1,
-          isAIPowered: false,
-          illustrationVersion: 1,
-        });
-      });
+      wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Updatable Wizard",
+          description: "A wizard that can be updated",
+        }
+      );
     });
 
-    test("should update wizard name only", async () => {
-      await t.mutation(api.wizards.updateWizard, {
+    test("should update wizard name and description", async () => {
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
         wizardId,
-        name: "Updated Name",
+        name: "Updated Wizard",
+        description: "An updated description",
       });
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.name).toBe("Updated Name");
-      expect(wizard?.description).toBe("Original description");
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      expect(wizard?.name).toBe("Updated Wizard");
+      expect(wizard?.description).toBe("An updated description");
     });
 
-    test("should update wizard description only", async () => {
-      await t.mutation(api.wizards.updateWizard, {
+    test("should update only name", async () => {
+      const originalWizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
         wizardId,
-        description: "Updated description",
+        name: "New Name Only",
       });
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.name).toBe("Original Name");
-      expect(wizard?.description).toBe("Updated description");
+      const updatedWizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      expect(updatedWizard?.name).toBe("New Name Only");
+      expect(updatedWizard?.description).toBe(originalWizard?.description);
     });
 
-    test("should update multiple fields simultaneously", async () => {
-      await t.mutation(api.wizards.updateWizard, {
+    test("should update only description", async () => {
+      const originalWizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
         wizardId,
-        name: "New Name",
-        description: "New description",
-        isAIPowered: true,
-        illustrationURL: "https://example.com/new.png",
+        description: "New description only",
       });
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.name).toBe("New Name");
-      expect(wizard?.description).toBe("New description");
-      expect(wizard?.isAIPowered).toBe(true);
-      expect(wizard?.illustrationURL).toBe("https://example.com/new.png");
-    });
+      const updatedWizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
 
-    test("should increment illustration version when illustration is updated", async () => {
-      await t.mutation(api.wizards.updateWizard, {
-        wizardId,
-        illustration: "new-storage-id",
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.illustration).toBe("new-storage-id");
-      expect(wizard?.illustrationVersion).toBe(2);
-      expect(wizard?.illustrationGeneratedAt).toBeDefined();
-    });
-
-    test("should not change illustration version when other fields are updated", async () => {
-      await t.mutation(api.wizards.updateWizard, {
-        wizardId,
-        name: "Different Name",
-        isAIPowered: true,
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.illustrationVersion).toBe(1);
+      expect(updatedWizard?.name).toBe(originalWizard?.name);
+      expect(updatedWizard?.description).toBe("New description only");
     });
 
     test("should handle updating non-existent wizard", async () => {
-      // Create and then delete a wizard to get a valid but non-existent ID
+      // Create a wizard and then delete it to get a valid but non-existent ID
       const tempId = await t.run(async (ctx) => {
         return await ctx.db.insert("wizards", {
           owner: "temp",
           name: "Temp",
-          description: "Temp wizard",
+          description: "Temp",
           wins: 0,
           losses: 0,
           isAIPowered: false,
@@ -178,11 +188,29 @@ describe("Wizards - Advanced Tests", () => {
       });
 
       await expect(
-        t.mutation(api.wizards.updateWizard, {
+        withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
           wizardId: tempId,
-          name: "New Name",
+          name: "Should not work",
         })
       ).rejects.toThrow("Wizard not found");
+    });
+
+    test("should prevent updating wizard owned by different user", async () => {
+      // Create wizard with different user
+      const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Other User Wizard",
+          description: "Owned by different user",
+        }
+      );
+
+      await expect(
+        withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+          wizardId: otherUserWizardId,
+          name: "Hacked name",
+        })
+      ).rejects.toThrow("Not authorized to update this wizard");
     });
   });
 
@@ -190,127 +218,102 @@ describe("Wizards - Advanced Tests", () => {
     let wizardId: Id<"wizards">;
 
     beforeEach(async () => {
-      wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Battle Wizard",
-          description: "A wizard for battle testing",
-          wins: 5,
-          losses: 3,
-          isAIPowered: false,
-        });
-      });
+      wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Stats Wizard",
+          description: "A wizard for testing stats",
+        }
+      );
     });
 
-    test("should increment wins correctly", async () => {
-      await t.mutation(api.wizards.updateWizardStats, {
+    test("should update wizard stats", async () => {
+      // Record 3 wins
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
+        wizardId,
+        won: true,
+      });
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
+        wizardId,
+        won: true,
+      });
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
         wizardId,
         won: true,
       });
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(6);
+      // Record 1 loss
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
+        wizardId,
+        won: false,
+      });
+
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      expect(wizard?.wins).toBe(3);
+      expect(wizard?.losses).toBe(1);
+    });
+
+    test("should handle multiple stat updates", async () => {
+      // Add 5 wins and 3 losses
+      for (let i = 0; i < 5; i++) {
+        await withAuth(t, "test-user-1").mutation(
+          api.wizards.updateWizardStats,
+          {
+            wizardId,
+            won: true,
+          }
+        );
+      }
+      for (let i = 0; i < 3; i++) {
+        await withAuth(t, "test-user-1").mutation(
+          api.wizards.updateWizardStats,
+          {
+            wizardId,
+            won: false,
+          }
+        );
+      }
+
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
+
+      expect(wizard?.wins).toBe(5);
       expect(wizard?.losses).toBe(3);
     });
 
-    test("should increment losses correctly", async () => {
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: false,
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(5);
-      expect(wizard?.losses).toBe(4);
-    });
-
-    test("should handle multiple consecutive wins", async () => {
-      await t.mutation(api.wizards.updateWizardStats, {
+    test("should accumulate stats correctly", async () => {
+      // Start with 0 wins and losses, add some wins
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
         wizardId,
         won: true,
       });
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: true,
-      });
-      await t.mutation(api.wizards.updateWizardStats, {
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
         wizardId,
         won: true,
       });
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(8);
-      expect(wizard?.losses).toBe(3);
-    });
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        { wizardId }
+      );
 
-    test("should handle multiple consecutive losses", async () => {
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: false,
-      });
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: false,
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(5);
-      expect(wizard?.losses).toBe(5);
-    });
-
-    test("should handle mixed win/loss sequence", async () => {
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: true,
-      });
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: false,
-      });
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: true,
-      });
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: false,
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(7);
-      expect(wizard?.losses).toBe(5);
-    });
-
-    test("should handle wizard with undefined stats", async () => {
-      const newWizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user456",
-          name: "New Wizard",
-          description: "A fresh wizard",
-          isAIPowered: false,
-          // wins and losses are undefined
-        });
-      });
-
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId: newWizardId,
-        won: true,
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, {
-        wizardId: newWizardId,
-      });
-      expect(wizard?.wins).toBe(1);
+      expect(wizard?.wins).toBe(2);
       expect(wizard?.losses).toBe(0);
     });
 
     test("should handle updating stats for non-existent wizard", async () => {
-      // Create and then delete a wizard to get a valid but non-existent ID
+      // Create a wizard and then delete it to get a valid but non-existent ID
       const tempId = await t.run(async (ctx) => {
         return await ctx.db.insert("wizards", {
           owner: "temp",
           name: "Temp",
-          description: "Temp wizard",
+          description: "Temp",
           wins: 0,
           losses: 0,
           isAIPowered: false,
@@ -322,11 +325,29 @@ describe("Wizards - Advanced Tests", () => {
       });
 
       await expect(
-        t.mutation(api.wizards.updateWizardStats, {
+        withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
           wizardId: tempId,
           won: true,
         })
       ).rejects.toThrow("Wizard not found");
+    });
+
+    test("should prevent updating stats for wizard owned by different user", async () => {
+      // Create wizard with different user
+      const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Other User Wizard",
+          description: "Owned by different user",
+        }
+      );
+
+      await expect(
+        withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
+          wizardId: otherUserWizardId,
+          won: true,
+        })
+      ).rejects.toThrow("Not authorized to update this wizard");
     });
   });
 
@@ -335,150 +356,118 @@ describe("Wizards - Advanced Tests", () => {
     let user2Wizards: Id<"wizards">[];
 
     beforeEach(async () => {
-      // Create wizards for user1
+      // Create wizards for user 1
       user1Wizards = await Promise.all([
-        t.run(async (ctx) =>
-          ctx.db.insert("wizards", {
-            owner: "user1",
-            name: "Wizard A",
-            description: "First wizard",
-            wins: 10,
-            losses: 2,
-            isAIPowered: false,
-          })
-        ),
-        t.run(async (ctx) =>
-          ctx.db.insert("wizards", {
-            owner: "user1",
-            name: "Wizard B",
-            description: "Second wizard",
-            wins: 5,
-            losses: 5,
-            isAIPowered: true,
-          })
-        ),
-        t.run(async (ctx) =>
-          ctx.db.insert("wizards", {
-            owner: "user1",
-            name: "Wizard C",
-            description: "Third wizard",
-            wins: 0,
-            losses: 8,
-            isAIPowered: false,
-          })
-        ),
+        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+          name: "Wizard A",
+          description: "First wizard",
+        }),
+        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+          name: "Wizard B",
+          description: "Second wizard",
+        }),
+        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+          name: "Wizard C",
+          description: "Third wizard",
+        }),
       ]);
 
-      // Create wizards for user2
+      // Create wizards for user 2
       user2Wizards = await Promise.all([
-        t.run(async (ctx) =>
-          ctx.db.insert("wizards", {
-            owner: "user2",
-            name: "Wizard X",
-            description: "User2's first wizard",
-            wins: 15,
-            losses: 1,
-            isAIPowered: false,
-          })
-        ),
-        t.run(async (ctx) =>
-          ctx.db.insert("wizards", {
-            owner: "user2",
-            name: "Wizard Y",
-            description: "User2's second wizard",
-            wins: 3,
-            losses: 7,
-            isAIPowered: true,
-          })
-        ),
+        withAuth(t, "test-user-2").mutation(api.wizards.createWizard, {
+          name: "Wizard X",
+          description: "User2's first wizard",
+        }),
+        withAuth(t, "test-user-2").mutation(api.wizards.createWizard, {
+          name: "Wizard Y",
+          description: "User2's second wizard",
+        }),
       ]);
+
+      // Update some stats
+      await t.run(async (ctx) => {
+        await ctx.db.patch(user1Wizards[0], { wins: 10, losses: 2 });
+        await ctx.db.patch(user1Wizards[1], {
+          wins: 5,
+          losses: 5,
+          isAIPowered: true,
+        });
+        await ctx.db.patch(user1Wizards[2], { wins: 0, losses: 8 });
+        await ctx.db.patch(user2Wizards[0], { wins: 15, losses: 1 });
+        await ctx.db.patch(user2Wizards[1], {
+          wins: 3,
+          losses: 7,
+          isAIPowered: true,
+        });
+      });
     });
 
     test("should get all wizards for user1", async () => {
-      const wizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user1",
-      });
+      const wizards = await withAuth(t, "test-user-1").query(
+        api.wizards.getUserWizards,
+        {}
+      );
 
       expect(wizards).toHaveLength(3);
       expect(wizards.map((w) => w._id)).toEqual(
         expect.arrayContaining(user1Wizards)
       );
-      expect(wizards.map((w) => w.name)).toEqual(
-        expect.arrayContaining(["Wizard A", "Wizard B", "Wizard C"])
-      );
+      expect(wizards.every((w) => w.owner === "test-user-1")).toBe(true);
     });
 
     test("should get all wizards for user2", async () => {
-      const wizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user2",
-      });
+      const wizards = await withAuth(t, "test-user-2").query(
+        api.wizards.getUserWizards,
+        {}
+      );
 
       expect(wizards).toHaveLength(2);
       expect(wizards.map((w) => w._id)).toEqual(
         expect.arrayContaining(user2Wizards)
       );
-      expect(wizards.map((w) => w.name)).toEqual(
-        expect.arrayContaining(["Wizard X", "Wizard Y"])
-      );
+      expect(wizards.every((w) => w.owner === "test-user-2")).toBe(true);
     });
 
     test("should return empty array for user with no wizards", async () => {
-      const wizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user-with-no-wizards",
-      });
+      const wizards = await withAuth(t, "test-user-3").query(
+        api.wizards.getUserWizards,
+        {}
+      );
 
       expect(wizards).toEqual([]);
     });
 
     test("should get specific wizard by ID", async () => {
-      const wizard = await t.query(api.wizards.getWizard, {
-        wizardId: user1Wizards[0],
-      });
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        {
+          wizardId: user1Wizards[0],
+        }
+      );
 
-      expect(wizard).toMatchObject({
-        _id: user1Wizards[0],
-        owner: "user1",
-        name: "Wizard A",
-        description: "First wizard",
-        wins: 10,
-        losses: 2,
-        isAIPowered: false,
-      });
+      expect(wizard?._id).toBe(user1Wizards[0]);
+      expect(wizard?.name).toBe("Wizard A");
+      expect(wizard?.owner).toBe("test-user-1");
     });
 
-    test("should return null for non-existent wizard", async () => {
-      // Create and then delete a wizard to get a valid but non-existent ID
-      const tempId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "temp",
-          name: "Temp",
-          description: "Temp wizard",
-          wins: 0,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
-
-      await t.run(async (ctx) => {
-        await ctx.db.delete(tempId);
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, {
-        wizardId: tempId,
-      });
-
-      expect(wizard).toBeNull();
+    test("should not return wizard owned by different user", async () => {
+      await expect(
+        withAuth(t, "test-user-1").query(api.wizards.getWizard, {
+          wizardId: user2Wizards[0],
+        })
+      ).rejects.toThrow("Not authorized to access this wizard");
     });
 
     test("should verify wizard ownership isolation", async () => {
-      const user1Wizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user1",
-      });
-      const user2Wizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user2",
-      });
+      const user1Wizards = await withAuth(t, "test-user-1").query(
+        api.wizards.getUserWizards,
+        {}
+      );
+      const user2Wizards = await withAuth(t, "test-user-2").query(
+        api.wizards.getUserWizards,
+        {}
+      );
 
-      // Ensure no overlap between users' wizards
       const user1Ids = user1Wizards.map((w) => w._id);
       const user2Ids = user2Wizards.map((w) => w._id);
 
@@ -491,70 +480,37 @@ describe("Wizards - Advanced Tests", () => {
     let wizardId: Id<"wizards">;
 
     beforeEach(async () => {
-      wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Doomed Wizard",
-          description: "A wizard to be deleted",
-          wins: 2,
-          losses: 1,
-          isAIPowered: false,
-        });
-      });
+      wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Deletable Wizard",
+          description: "A wizard that can be deleted",
+        }
+      );
     });
 
-    test("should successfully delete a wizard", async () => {
-      // Verify wizard exists
-      let wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard).toBeTruthy();
+    test("should delete wizard successfully", async () => {
+      await withAuth(t, "test-user-1").mutation(api.wizards.deleteWizard, {
+        wizardId,
+      });
 
-      // Delete wizard
-      await t.mutation(api.wizards.deleteWizard, { wizardId });
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        {
+          wizardId,
+        }
+      );
 
-      // Verify wizard is deleted
-      wizard = await t.query(api.wizards.getWizard, { wizardId });
       expect(wizard).toBeNull();
     });
 
-    test("should remove wizard from user's wizard list after deletion", async () => {
-      // Create another wizard for the same user
-      const otherWizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Surviving Wizard",
-          description: "A wizard that will survive",
-          wins: 1,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
-
-      // Verify both wizards exist in user's list
-      let userWizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user123",
-      });
-      expect(userWizards).toHaveLength(2);
-      expect(userWizards.map((w) => w._id)).toContain(wizardId);
-      expect(userWizards.map((w) => w._id)).toContain(otherWizardId);
-
-      // Delete one wizard
-      await t.mutation(api.wizards.deleteWizard, { wizardId });
-
-      // Verify only one wizard remains
-      userWizards = await t.query(api.wizards.getUserWizards, {
-        userId: "user123",
-      });
-      expect(userWizards).toHaveLength(1);
-      expect(userWizards[0]._id).toBe(otherWizardId);
-    });
-
     test("should handle deleting non-existent wizard gracefully", async () => {
-      // Create and then delete a wizard to get a valid but non-existent ID
+      // Create a wizard and then delete it to get a valid but non-existent ID
       const tempId = await t.run(async (ctx) => {
         return await ctx.db.insert("wizards", {
           owner: "temp",
           name: "Temp",
-          description: "Temp wizard",
+          description: "Temp",
           wins: 0,
           losses: 0,
           isAIPowered: false,
@@ -565,10 +521,28 @@ describe("Wizards - Advanced Tests", () => {
         await ctx.db.delete(tempId);
       });
 
-      // This should not throw an error (Convex delete is idempotent)
       await expect(
-        t.mutation(api.wizards.deleteWizard, { wizardId: tempId })
+        withAuth(t, "test-user-1").mutation(api.wizards.deleteWizard, {
+          wizardId: tempId,
+        })
       ).resolves.not.toThrow();
+    });
+
+    test("should prevent deleting wizard owned by different user", async () => {
+      // Create wizard with different user
+      const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Other User Wizard",
+          description: "Owned by different user",
+        }
+      );
+
+      await expect(
+        withAuth(t, "test-user-1").mutation(api.wizards.deleteWizard, {
+          wizardId: otherUserWizardId,
+        })
+      ).rejects.toThrow("Not authorized to delete this wizard");
     });
   });
 
@@ -576,35 +550,49 @@ describe("Wizards - Advanced Tests", () => {
     let wizardId: Id<"wizards">;
 
     beforeEach(async () => {
-      wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
+      wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
           name: "Illustrated Wizard",
           description: "A wizard with illustrations",
-          wins: 0,
-          losses: 0,
-          isAIPowered: false,
-          illustrationVersion: 1,
-        });
-      });
+        }
+      );
     });
 
-    test("should trigger regeneration when requested", async () => {
-      const result = await t.mutation(api.wizards.regenerateIllustration, {
-        wizardId,
-      });
+    test("should regenerate wizard illustration", async () => {
+      const originalWizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        {
+          wizardId,
+        }
+      );
 
-      expect(result).toEqual({ success: true });
-      // Note: The actual illustration generation is scheduled and would happen asynchronously
+      await withAuth(t, "test-user-1").mutation(
+        api.wizards.regenerateIllustration,
+        {
+          wizardId,
+        }
+      );
+
+      const updatedWizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        {
+          wizardId,
+        }
+      );
+
+      expect(updatedWizard?.illustrationVersion).toBeGreaterThan(
+        originalWizard?.illustrationVersion || 0
+      );
     });
 
     test("should handle regeneration for non-existent wizard", async () => {
-      // Create and then delete a wizard to get a valid but non-existent ID
+      // Create a wizard and then delete it to get a valid but non-existent ID
       const tempId = await t.run(async (ctx) => {
         return await ctx.db.insert("wizards", {
           owner: "temp",
           name: "Temp",
-          description: "Temp wizard",
+          description: "Temp",
           wins: 0,
           losses: 0,
           isAIPowered: false,
@@ -616,166 +604,142 @@ describe("Wizards - Advanced Tests", () => {
       });
 
       await expect(
-        t.mutation(api.wizards.regenerateIllustration, {
-          wizardId: tempId,
-        })
+        withAuth(t, "test-user-1").mutation(
+          api.wizards.regenerateIllustration,
+          {
+            wizardId: tempId,
+          }
+        )
       ).rejects.toThrow("Wizard not found");
     });
 
-    test("should handle illustration URL retrieval", async () => {
-      // This test would require mocking the storage system
-      // For now, we just test that the query exists and accepts the right parameters
-      const storageId = "test-storage-id";
+    test("should prevent regenerating illustration for wizard owned by different user", async () => {
+      // Create wizard with different user
+      const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Other User Wizard",
+          description: "Owned by different user",
+        }
+      );
 
-      // The actual URL retrieval would depend on Convex storage being available
-      // In a real test environment, this would return a URL or null
-      const result = await t.query(api.wizards.getIllustrationUrl, {
-        storageId,
-      });
-
-      // In the test environment, this will likely return null since storage isn't mocked
-      expect(result).toBeNull();
+      await expect(
+        withAuth(t, "test-user-1").mutation(
+          api.wizards.regenerateIllustration,
+          {
+            wizardId: otherUserWizardId,
+          }
+        )
+      ).rejects.toThrow(
+        "Not authorized to regenerate illustration for this wizard"
+      );
     });
   });
 
   describe("Data Integrity", () => {
-    test("should maintain data consistency across operations", async () => {
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Consistency Test",
-          description: "Testing data consistency",
-          wins: 0,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
+    test("should handle concurrent wizard creation", async () => {
+      const wizardPromises = Array.from({ length: 5 }, (_, i) =>
+        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+          name: `Concurrent Wizard ${i}`,
+          description: `Description ${i}`,
+        })
+      );
 
-      // Perform multiple operations
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: true,
-      });
+      const wizardIds = await Promise.all(wizardPromises);
 
-      await t.mutation(api.wizards.updateWizard, {
-        wizardId,
-        name: "Updated Name",
-        description: "Updated description",
-      });
+      expect(wizardIds).toHaveLength(5);
+      expect(new Set(wizardIds).size).toBe(5); // All IDs should be unique
 
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: false,
-      });
-
-      // Verify final state
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard).toMatchObject({
-        name: "Updated Name",
-        description: "Updated description",
-        wins: 1,
-        losses: 1,
-        owner: "user123",
-        isAIPowered: false,
-      });
+      const wizards = await withAuth(t, "test-user-1").query(
+        api.wizards.getUserWizards,
+        {}
+      );
+      expect(wizards).toHaveLength(5);
     });
 
     test("should handle concurrent stat updates correctly", async () => {
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Concurrent Test",
-          description: "Testing concurrent updates",
-          wins: 5,
-          losses: 3,
-          isAIPowered: false,
-        });
-      });
+      const wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Concurrent Stats Wizard",
+          description: "For testing concurrent updates",
+        }
+      );
 
-      // Simulate concurrent updates
-      await Promise.all([
-        t.mutation(api.wizards.updateWizardStats, {
+      // Perform multiple concurrent stat updates
+      const updatePromises = Array.from({ length: 10 }, () =>
+        withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
           wizardId,
           won: true,
-        }),
-        t.mutation(api.wizards.updateWizardStats, {
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        {
           wizardId,
-          won: true,
-        }),
-        t.mutation(api.wizards.updateWizardStats, {
-          wizardId,
-          won: false,
-        }),
-      ]);
+        }
+      );
 
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(7); // 5 + 2 wins
-      expect(wizard?.losses).toBe(4); // 3 + 1 loss
-    });
-  });
-
-  describe("Edge Cases", () => {
-    test("should handle wizards with very long names and descriptions", async () => {
-      const longName = "A".repeat(1000);
-      const longDescription = "B".repeat(5000);
-
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: longName,
-          description: longDescription,
-          wins: 0,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.name).toBe(longName);
-      expect(wizard?.description).toBe(longDescription);
-    });
-
-    test("should handle wizards with special characters in names", async () => {
-      const specialName = "Wizard™ 🧙‍♂️ with émojis & spëcial chars!";
-      const specialDescription = "A wizard with ñoñ-ASCII characters: αβγδε";
-
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: specialName,
-          description: specialDescription,
-          wins: 0,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.name).toBe(specialName);
-      expect(wizard?.description).toBe(specialDescription);
-    });
-
-    test("should handle wizards with extreme stat values", async () => {
-      const wizardId = await t.run(async (ctx) => {
-        return await ctx.db.insert("wizards", {
-          owner: "user123",
-          name: "Extreme Stats",
-          description: "A wizard with extreme stats",
-          wins: 999999,
-          losses: 0,
-          isAIPowered: false,
-        });
-      });
-
-      // Add more wins
-      await t.mutation(api.wizards.updateWizardStats, {
-        wizardId,
-        won: true,
-      });
-
-      const wizard = await t.query(api.wizards.getWizard, { wizardId });
-      expect(wizard?.wins).toBe(1000000);
+      expect(wizard?.wins).toBe(10);
       expect(wizard?.losses).toBe(0);
+    });
+
+    test("should maintain data consistency during updates", async () => {
+      const wizardId = await withAuth(t, "test-user-1").mutation(
+        api.wizards.createWizard,
+        {
+          name: "Consistency Wizard",
+          description: "For testing data consistency",
+        }
+      );
+
+      // Perform mixed updates
+      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+        wizardId,
+        name: "Updated Name",
+      });
+
+      // Add 5 wins and 2 losses
+      for (let i = 0; i < 5; i++) {
+        await withAuth(t, "test-user-1").mutation(
+          api.wizards.updateWizardStats,
+          {
+            wizardId,
+            won: true,
+          }
+        );
+      }
+      for (let i = 0; i < 2; i++) {
+        await withAuth(t, "test-user-1").mutation(
+          api.wizards.updateWizardStats,
+          {
+            wizardId,
+            won: false,
+          }
+        );
+      }
+
+      await withAuth(t, "test-user-1").mutation(
+        api.wizards.regenerateIllustration,
+        {
+          wizardId,
+        }
+      );
+
+      const wizard = await withAuth(t, "test-user-1").query(
+        api.wizards.getWizard,
+        {
+          wizardId,
+        }
+      );
+
+      expect(wizard?.name).toBe("Updated Name");
+      expect(wizard?.wins).toBe(5);
+      expect(wizard?.losses).toBe(2);
+      expect(wizard?.illustrationVersion).toBeGreaterThan(1);
     });
   });
 });

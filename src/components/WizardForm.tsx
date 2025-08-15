@@ -46,14 +46,14 @@ export function WizardForm({
   const createWizard = useMutation(api.wizards.createWizard);
   const updateWizard = useMutation(api.wizards.updateWizard);
   const regenerateIllustration = useMutation(
-    api.wizards.regenerateIllustration,
+    api.wizards.regenerateIllustration
   );
 
   const [formData, setFormData] = useState<WizardFormData>(
     initialData || {
       name: "",
       description: "",
-    },
+    }
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,13 +61,13 @@ export function WizardForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id || !formData.name.trim() || !formData.description.trim()) return;
+    if (!user?.id || !formData.name.trim() || !formData.description.trim())
+      return;
 
     setIsSubmitting(true);
     try {
       if (mode === "create") {
         await createWizard({
-          owner: user.id,
           name: formData.name.trim(),
           description: formData.description.trim(),
         });
@@ -86,11 +86,11 @@ export function WizardForm({
     } catch (error) {
       console.error(
         `Error ${mode === "create" ? "creating" : "updating"} wizard:`,
-        error,
+        error
       );
       // You might want to show a toast notification here
       alert(
-        `Error ${mode === "create" ? "creating" : "updating"} wizard. Please try again.`,
+        `Error ${mode === "create" ? "creating" : "updating"} wizard. Please try again.`
       );
     } finally {
       setIsSubmitting(false);

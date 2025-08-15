@@ -19,10 +19,7 @@ import { useState } from "react";
 import { Swords, Users, Wand2, BarChart3, Trophy, Loader2 } from "lucide-react";
 
 function ActiveDuelsCard({ userId }: { userId?: string }) {
-  const playerDuels = useQuery(
-    api.duels.getPlayerDuels,
-    userId ? { userId } : "skip"
-  );
+  const playerDuels = useQuery(api.duels.getPlayerDuels, userId ? {} : "skip");
 
   const activeDuels =
     playerDuels?.filter(
@@ -140,10 +137,7 @@ export default function Dashboard() {
   const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const wizards = useQuery(
-    api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip"
-  );
+  const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   const totalWins =
     wizards?.reduce((sum, wizard) => sum + (wizard.wins || 0), 0) || 0;

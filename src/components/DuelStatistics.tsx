@@ -36,7 +36,7 @@ export function DuelStatistics({
   // Player-specific stats
   const playerStats = useQuery(
     api.duels.getPlayerDuelStats,
-    userId ? { userId } : "skip"
+    userId ? {} : "skip"
   );
 
   // Global analytics
@@ -46,10 +46,7 @@ export function DuelStatistics({
   );
 
   // Player duels for detailed analysis
-  const playerDuels = useQuery(
-    api.duels.getPlayerDuels,
-    userId ? { userId } : "skip"
-  );
+  const playerDuels = useQuery(api.duels.getPlayerDuels, userId ? {} : "skip");
 
   if (userId && !playerStats) {
     return (

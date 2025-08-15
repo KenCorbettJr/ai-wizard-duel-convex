@@ -55,10 +55,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     shortcode: shortcode.toUpperCase(),
   });
 
-  const wizards = useQuery(
-    api.wizards.getUserWizards,
-    user?.id ? { userId: user.id } : "skip"
-  );
+  const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
@@ -98,7 +95,6 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     try {
       await joinDuel({
         duelId: duel._id,
-        userId: user.id,
         wizards: [selectedWizard],
       });
       router.push(`/duels/${duel._id}`);

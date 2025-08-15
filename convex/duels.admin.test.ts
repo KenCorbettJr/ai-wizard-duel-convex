@@ -2,36 +2,45 @@ import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
+import { withAuth } from "./test_utils";
 
 describe("Duel Admin Functions", () => {
   test("searchDuels should filter duels by status", async () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Test Wizard 1",
-      description: "A test wizard",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Test Wizard 1",
+        description: "A test wizard",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Test Wizard 2",
-      description: "Another test wizard",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Test Wizard 2",
+        description: "Another test wizard",
+      }
+    );
 
     // Create test duels with different statuses
-    const duel1Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel1Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
-    const duel2Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 5,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel2Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 5,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     // Cancel one duel
     await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
@@ -50,7 +59,7 @@ describe("Duel Admin Functions", () => {
 
     // Test filtering by player
     const user1Duels = await t.query(api.duels.searchDuels, {
-      playerUserId: "user1",
+      playerUserId: "test-user-1",
     });
     expect(user1Duels.duels).toHaveLength(2);
 
@@ -66,36 +75,46 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Analytics Wizard 1",
-      description: "A test wizard for analytics",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Analytics Wizard 1",
+        description: "A test wizard for analytics",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Analytics Wizard 2",
-      description: "Another test wizard for analytics",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Analytics Wizard 2",
+        description: "Another test wizard for analytics",
+      }
+    );
 
     // Create multiple duels with different statuses
-    const duel1Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel1Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
-    const duel2Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: "TO_THE_DEATH",
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel2Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: "TO_THE_DEATH",
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
-    const duel3Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 5,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel3Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 5,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     // Cancel one duel
     await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
@@ -121,37 +140,47 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Monitor Wizard 1",
-      description: "A test wizard for monitoring",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Monitor Wizard 1",
+        description: "A test wizard for monitoring",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Monitor Wizard 2",
-      description: "Another test wizard for monitoring",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Monitor Wizard 2",
+        description: "Another test wizard for monitoring",
+      }
+    );
 
     // Create active duels
-    const waitingDuelId = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const waitingDuelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
-    const inProgressDuelId = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 5,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const inProgressDuelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 5,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     // Create a completed duel (should not appear in monitoring)
-    const completedDuelId = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const completedDuelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
     await t.mutation(api.duels.cancelDuel, { duelId: completedDuelId });
 
     // Get monitoring data
@@ -182,27 +211,36 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Cancel Wizard 1",
-      description: "A test wizard for cancellation",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Cancel Wizard 1",
+        description: "A test wizard for cancellation",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Cancel Wizard 2",
-      description: "Another test wizard for cancellation",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Cancel Wizard 2",
+        description: "Another test wizard for cancellation",
+      }
+    );
 
     // Create and start a duel
-    const duelId = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     // Verify duel is waiting for players
-    const duelBefore = await t.query(api.duels.getDuel, { duelId });
+    const duelBefore = await withAuth(t, "test-user-1").query(
+      api.duels.getDuel,
+      { duelId }
+    );
     expect(duelBefore?.status).toBe("WAITING_FOR_PLAYERS");
 
     // Force cancel the duel
@@ -212,7 +250,10 @@ describe("Duel Admin Functions", () => {
     });
 
     // Verify duel is cancelled
-    const duelAfter = await t.query(api.duels.getDuel, { duelId });
+    const duelAfter = await withAuth(t, "test-user-1").query(
+      api.duels.getDuel,
+      { duelId }
+    );
     expect(duelAfter?.status).toBe("CANCELLED");
   });
 
@@ -220,24 +261,30 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Complete Wizard 1",
-      description: "A test wizard",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Complete Wizard 1",
+        description: "A test wizard",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Complete Wizard 2",
-      description: "Another test wizard",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Complete Wizard 2",
+        description: "Another test wizard",
+      }
+    );
 
     // Create a duel and manually set it to completed
-    const duelId = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 1,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 1,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     // Start the duel
     await t.mutation(api.duels.startDuel, { duelId });
@@ -254,13 +301,13 @@ describe("Duel Admin Functions", () => {
     await t.mutation(api.duels.startDuelAfterIntroduction, { duelId });
 
     // Cast spells for both wizards
-    await t.mutation(api.duels.castSpell, {
+    await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
       duelId,
       wizardId: wizard1Id,
       spellDescription: "Test spell 1",
     });
 
-    await t.mutation(api.duels.castSpell, {
+    await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
       duelId,
       wizardId: wizard2Id,
       spellDescription: "Test spell 2",
@@ -288,7 +335,10 @@ describe("Duel Admin Functions", () => {
     }
 
     // Verify duel is completed
-    const completedDuel = await t.query(api.duels.getDuel, { duelId });
+    const completedDuel = await withAuth(t, "test-user-1").query(
+      api.duels.getDuel,
+      { duelId }
+    );
     expect(completedDuel?.status).toBe("COMPLETED");
 
     // Try to force cancel - should throw error
@@ -304,26 +354,32 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Page Wizard 1",
-      description: "A test wizard for pagination",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Page Wizard 1",
+        description: "A test wizard for pagination",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Page Wizard 2",
-      description: "Another test wizard for pagination",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Page Wizard 2",
+        description: "Another test wizard for pagination",
+      }
+    );
 
     // Create multiple duels
     const duelIds = [];
     for (let i = 0; i < 5; i++) {
-      const duelId = await t.mutation(api.duels.createDuel, {
-        numberOfRounds: 3,
-        wizards: [wizard1Id, wizard2Id],
-        players: ["user1", "user2"],
-      });
+      const duelId = await withAuth(t, "test-user-1").mutation(
+        api.duels.createDuel,
+        {
+          numberOfRounds: 3,
+          wizards: [wizard1Id, wizard2Id],
+        }
+      );
       duelIds.push(duelId);
     }
 
@@ -357,24 +413,30 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Date Wizard 1",
-      description: "A test wizard for date filtering",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Date Wizard 1",
+        description: "A test wizard for date filtering",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Date Wizard 2",
-      description: "Another test wizard for date filtering",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Date Wizard 2",
+        description: "Another test wizard for date filtering",
+      }
+    );
 
     // Create a duel
-    const duelId = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
@@ -401,36 +463,46 @@ describe("Duel Admin Functions", () => {
     const t = convexTest(schema);
 
     // Create test wizards
-    const wizard1Id = await t.mutation(api.wizards.createWizard, {
-      name: "Stats Wizard 1",
-      description: "A test wizard for stats",
-      owner: "user1",
-    });
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Stats Wizard 1",
+        description: "A test wizard for stats",
+      }
+    );
 
-    const wizard2Id = await t.mutation(api.wizards.createWizard, {
-      name: "Stats Wizard 2",
-      description: "Another test wizard for stats",
-      owner: "user2",
-    });
+    const wizard2Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Stats Wizard 2",
+        description: "Another test wizard for stats",
+      }
+    );
 
     // Create duels with different outcomes
-    const duel1Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel1Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
-    const duel2Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 5,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel2Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 5,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
-    const duel3Id = await t.mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard1Id, wizard2Id],
-      players: ["user1", "user2"],
-    });
+    const duel3Id = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      }
+    );
 
     // Start one duel (in progress)
     await t.mutation(api.duels.startDuel, { duelId: duel1Id });
@@ -441,9 +513,10 @@ describe("Duel Admin Functions", () => {
     // Leave one waiting
 
     // Get player stats
-    const user1Stats = await t.query(api.duels.getPlayerDuelStats, {
-      userId: "user1",
-    });
+    const user1Stats = await withAuth(t, "test-user-1").query(
+      api.duels.getPlayerDuelStats,
+      {}
+    );
 
     expect(user1Stats).toBeDefined();
     expect(user1Stats.totalDuels).toBe(3);

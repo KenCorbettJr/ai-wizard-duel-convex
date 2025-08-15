@@ -30,17 +30,14 @@ export function CreateDuelForm({
 }: CreateDuelFormProps) {
   const { user } = useUser();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    preSelectedWizardId || null,
+    preSelectedWizardId || null
   );
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(
-    3,
+    3
   );
   const [isCreating, setIsCreating] = useState(false);
 
-  const wizards = useQuery(
-    api.wizards.getUserWizards,
-    { userId: user?.id }
-  );
+  const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   const createDuel = useMutation(api.duels.createDuel);
 
@@ -57,7 +54,6 @@ export function CreateDuelForm({
       const duelId = await createDuel({
         numberOfRounds,
         wizards: [selectedWizard],
-        players: [user.id], // Creator is the first player
       });
       onSuccess(duelId);
     } catch (error) {

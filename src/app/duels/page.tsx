@@ -21,7 +21,7 @@ export default function DuelsPage() {
   const activeDuels = useQuery(api.duels.getActiveDuels);
   const playerDuels = useQuery(
     api.duels.getPlayerDuels,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? {} : "skip"
   );
 
   // Check if user has admin privileges (in development or with admin role)

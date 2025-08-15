@@ -1,4 +1,5 @@
 import { Id, TableNames } from "./_generated/dataModel";
+import { ConvexTestingHelper } from "convex-test";
 
 // Generate a proper Convex ID for testing
 // Convex IDs follow the pattern: k{table_number}{random_string}
@@ -21,4 +22,26 @@ export function generateTestIds<T extends TableNames>(
   count: number
 ): Id<T>[] {
   return Array.from({ length: count }, () => generateTestId(table));
+}
+
+// Mock user identity for testing
+export function createMockUserIdentity(userId: string = "test-user-1") {
+  return {
+    subject: userId,
+    issuer: "https://test.clerk.accounts.dev",
+    aud: "convex",
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    email: `${userId}@test.com`,
+    name: `Test User ${userId}`,
+  };
+}
+
+// Set up authenticated context for tests
+export function withAuth(
+  t: ConvexTestingHelper,
+  userId: string = "test-user-1"
+) {
+  const identity = createMockUserIdentity(userId);
+  return t.withIdentity(identity);
 }
