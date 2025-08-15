@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@/providers/ClerkProvider";
-import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
+import "@radix-ui/themes/styles.css";
+import "@workos-inc/widgets/styles.css";
+import { WorkOSProvider } from "@/providers/WorkOSProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
 
@@ -41,11 +42,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ClerkProvider>
-            <ConvexClientProvider>
-              <AppLayout>{children}</AppLayout>
-            </ConvexClientProvider>
-          </ClerkProvider>
+          <WorkOSProvider>
+            <AppLayout>{children}</AppLayout>
+          </WorkOSProvider>
         </ThemeProvider>
       </body>
     </html>

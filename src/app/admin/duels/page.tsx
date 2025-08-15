@@ -1,12 +1,12 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { DuelAdminDashboard } from "@/components/DuelAdminDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, AlertTriangle } from "lucide-react";
 
 export default function DuelAdminPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   // In a real application, you would check if the user has admin privileges
   // For now, we'll show a warning about admin access

@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { Id } from "../../convex/_generated/dataModel";
 import { WizardForm } from "./WizardForm";
 
@@ -21,7 +21,7 @@ export function EditWizardForm({
   onClose,
   onSuccess,
 }: EditWizardFormProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   // Check if current user is the owner
   if (!user || user.id !== wizard.owner) {

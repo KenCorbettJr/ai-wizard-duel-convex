@@ -24,7 +24,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 
 interface WizardPageProps {
   params: Promise<{
@@ -34,7 +34,7 @@ interface WizardPageProps {
 
 export default function WizardPage({ params }: WizardPageProps) {
   const router = useRouter();
-  const { user } = useUser();
+  const { user } = useAuth();
   const { id } = use(params);
 
   const [isEditing, setIsEditing] = useState(false);

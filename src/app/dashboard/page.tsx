@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Card,
   CardContent,
@@ -137,7 +137,7 @@ function CompletedDuelsCard({ userId }: { userId?: string }) {
 }
 
 export default function Dashboard() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const wizards = useQuery(

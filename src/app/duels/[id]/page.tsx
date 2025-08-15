@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
@@ -31,7 +31,7 @@ interface DuelPageProps {
 }
 
 export default function DuelPage({ params }: DuelPageProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const router = useRouter();
   const [spellDescription, setSpellDescription] = useState("");
   const [isCasting, setIsCasting] = useState(false);

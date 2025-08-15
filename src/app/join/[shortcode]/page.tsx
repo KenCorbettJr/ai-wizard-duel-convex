@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
@@ -42,7 +42,7 @@ interface JoinShortcodePageProps {
 }
 
 export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
     null

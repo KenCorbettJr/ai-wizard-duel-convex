@@ -1,4 +1,6 @@
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+"use client";
+
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
@@ -16,15 +18,9 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Home",
-  description:
-    "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
-};
 
 export default function Home() {
+  const { isSignedIn } = useAuth();
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -43,8 +39,8 @@ export default function Home() {
             <p className="text-2xl text-white mb-6">
               Where Wizards Clash and Legends Rise!
             </p>
-            <SignedOut>
-              <SignInButton>
+            {!isSignedIn ? (
+              <Link href="/sign-in">
                 <Button
                   size="lg"
                   className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
@@ -52,9 +48,8 @@ export default function Home() {
                   <Zap className="w-5 h-5 mr-2" />
                   Start Dueling
                 </Button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
+              </Link>
+            ) : (
               <Link href="/dashboard">
                 <Button
                   size="lg"
@@ -64,7 +59,7 @@ export default function Home() {
                   Start Dueling
                 </Button>
               </Link>
-            </SignedIn>
+            )}
           </div>
         </div>
       </section>
@@ -260,8 +255,8 @@ export default function Home() {
                 Watch Duels
               </Button>
             </Link>
-            <SignedOut>
-              <SignInButton>
+            {!isSignedIn ? (
+              <Link href="/sign-in">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
@@ -269,9 +264,8 @@ export default function Home() {
                   <Zap className="w-5 h-5 mr-2" />
                   Start Dueling
                 </Button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
+              </Link>
+            ) : (
               <Link href="/dashboard">
                 <Button
                   size="lg"
@@ -281,7 +275,7 @@ export default function Home() {
                   Start Dueling
                 </Button>
               </Link>
-            </SignedIn>
+            )}
           </div>
         </div>
       </section>

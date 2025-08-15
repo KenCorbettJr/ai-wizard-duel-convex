@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -28,19 +28,16 @@ export function CreateDuelForm({
   onSuccess,
   preSelectedWizardId,
 }: CreateDuelFormProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    preSelectedWizardId || null,
+    preSelectedWizardId || null
   );
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(
-    3,
+    3
   );
   const [isCreating, setIsCreating] = useState(false);
 
-  const wizards = useQuery(
-    api.wizards.getUserWizards,
-    { userId: user?.id }
-  );
+  const wizards = useQuery(api.wizards.getUserWizards, { userId: user?.id });
 
   const createDuel = useMutation(api.duels.createDuel);
 

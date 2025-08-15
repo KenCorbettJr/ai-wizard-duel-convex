@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -16,7 +16,7 @@ import { DuelListItem } from "@/components/DuelListItem";
 import { Swords, Users, Search, Shield } from "lucide-react";
 
 export default function DuelsPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   const activeDuels = useQuery(api.duels.getActiveDuels);
   const playerDuels = useQuery(

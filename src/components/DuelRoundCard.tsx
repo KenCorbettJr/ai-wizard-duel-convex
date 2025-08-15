@@ -17,7 +17,7 @@ interface DuelRoundCardProps {
 }
 
 export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(

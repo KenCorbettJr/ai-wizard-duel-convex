@@ -19,7 +19,7 @@ import {
   Copy,
 } from "lucide-react";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
 interface DuelListItemProps {
@@ -49,7 +49,7 @@ export function DuelListItem({
   showActions = true,
   onCopyShortcode,
 }: DuelListItemProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [copySuccess, setCopySuccess] = useState(false);
 
   // Fetch wizard details for all wizards in the duel

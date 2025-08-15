@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserProfile, WorkOsWidgets } from "@workos-inc/widgets";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -76,6 +77,7 @@ interface LeftSidebarProps {
 export function LeftSidebar({ className }: LeftSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { isSignedIn, accessToken } = useAuth();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -106,25 +108,27 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
             const isActive = pathname === item.href;
             const Icon = item.icon;
 
+            if (item.requiresAuth && !isSignedIn) {
+              return null;
+            }
+
             if (item.requiresAuth) {
               return (
-                <SignedIn key={item.href}>
-                  <li>
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  </li>
-                </SignedIn>
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </li>
               );
             }
 
@@ -149,18 +153,24 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
         </ul>
       </nav>
 
-      {/* Bottom section with theme toggle and user controls */}
+      {/* Bottom section with theme toggle and user profile */}
       <div className="p-4 border-t border-border">
-        <div className="flex items-center justify-between">
-          <ThemeToggle />
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton>
-              <Button size="sm">Sign In</Button>
-            </SignInButton>
-          </SignedOut>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <ThemeToggle />
+            {!isSignedIn && (
+              <Link href="/sign-in">
+                <Button size="sm">Sign In</Button>
+              </Link>
+            )}
+          </div>
+
+          {/* WorkOS UserProfile Widget */}
+          {isSignedIn && accessToken && (
+            <WorkOsWidgets>
+              <UserProfile authToken={accessToken} />
+            </WorkOsWidgets>
+          )}
         </div>
       </div>
     </div>

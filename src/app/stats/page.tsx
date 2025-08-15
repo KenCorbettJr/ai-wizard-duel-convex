@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { DuelStatistics } from "@/components/DuelStatistics";
 import {
   Card,
@@ -22,7 +22,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function StatsPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [viewMode, setViewMode] = useState<"personal" | "global">("personal");
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d" | "all">(
     "30d"

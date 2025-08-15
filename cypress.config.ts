@@ -16,8 +16,7 @@ export default defineConfig({
     env: {
       // Environment-specific configuration
       CONVEX_URL: "http://localhost:3210",
-      CLERK_PUBLISHABLE_KEY:
-        "pk_test_Z2VudWluZS1wb2xsaXdvZy04OS5jbGVyay5hY2NvdW50cy5kZXYk",
+      WORKOS_CLIENT_ID: "your_workos_client_id_here",
     },
     specPattern: "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/e2e.ts",

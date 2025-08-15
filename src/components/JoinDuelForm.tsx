@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -33,7 +33,7 @@ interface JoinDuelFormProps {
 }
 
 export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [selectedDuel, setSelectedDuel] = useState<Id<"duels"> | null>(null);
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
     null
