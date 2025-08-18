@@ -25,7 +25,10 @@ export function generateTestIds<T extends TableNames>(
 }
 
 // Mock user identity for testing
-export function createMockUserIdentity(userId: string = "test-user-1") {
+export function createMockUserIdentity(
+  userId: string = "test-user-1",
+  role: string = "user"
+) {
   return {
     subject: userId,
     issuer: "https://test.clerk.accounts.dev",
@@ -34,6 +37,9 @@ export function createMockUserIdentity(userId: string = "test-user-1") {
     exp: Math.floor(Date.now() / 1000) + 3600,
     email: `${userId}@test.com`,
     name: `Test User ${userId}`,
+    publicMetadata: {
+      role: role,
+    },
   };
 }
 
@@ -43,5 +49,14 @@ export function withAuth(
   userId: string = "test-user-1"
 ) {
   const identity = createMockUserIdentity(userId);
+  return t.withIdentity(identity);
+}
+
+// Set up super admin authenticated context for tests
+export function withSuperAdminAuth(
+  t: ConvexTestingHelper,
+  userId: string = "super-admin-user"
+) {
+  const identity = createMockUserIdentity(userId, "super_admin");
   return t.withIdentity(identity);
 }

@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { Wizard } from "@/types/wizard";
 
 // Get all wizards for the authenticated user
 export const getUserWizards = query({
@@ -22,19 +23,9 @@ export const getUserWizards = query({
 export const getWizard = query({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       return null;
-    }
-
-    // Only return wizard if user owns it
-    if (wizard.owner !== identity.subject) {
-      throw new Error("Not authorized to access this wizard");
     }
 
     return wizard;
@@ -302,14 +293,14 @@ export const getDefeatedWizards = query({
     // Create a map to track the most recent defeat date for each wizard
     const defeatedWizardData = new Map<
       string,
-      { wizard: any; defeatedAt: number }
+      { wizard: Wizard; defeatedAt: number }
     >();
 
     // Process each duel to get defeated wizards and their defeat dates
     for (const duel of completedDuels) {
       if (duel.losers) {
         for (const loserId of duel.losers) {
-          const wizard = await ctx.db.get(loserId as unknown);
+          const wizard = await ctx.db.get(loserId);
           if (wizard) {
             // Use the most recent defeat date if wizard was defeated multiple times
             const existingData = defeatedWizardData.get(loserId);

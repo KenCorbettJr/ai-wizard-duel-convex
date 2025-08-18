@@ -88,7 +88,7 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
 function CompletedDuelsCard({ userId }: { userId?: string }) {
   const completedDuels = useQuery(
     api.duels.getPlayerCompletedDuels,
-    userId ? { userId } : "skip"
+    userId ? {} : "skip"
   );
 
   return (

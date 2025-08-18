@@ -4,15 +4,13 @@ import { useUser } from "@clerk/nextjs";
 import { DuelAdminDashboard } from "@/components/DuelAdminDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, AlertTriangle } from "lucide-react";
+import { isSuperAdmin } from "@/lib/auth";
 
 export default function DuelAdminPage() {
   const { user } = useUser();
 
-  // In a real application, you would check if the user has admin privileges
-  // For now, we'll show a warning about admin access
-  const isAdmin =
-    user?.publicMetadata?.role === "admin" ||
-    process.env.NODE_ENV === "development";
+  // Check if user has super admin privileges
+  const hasSuperAdminAccess = isSuperAdmin(user);
 
   if (!user) {
     return (
@@ -34,7 +32,7 @@ export default function DuelAdminPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!hasSuperAdminAccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
         <div className="container mx-auto px-6 py-12">
@@ -44,6 +42,7 @@ export default function DuelAdminPage() {
               <h3 className="text-xl font-semibold mb-2">Access Denied</h3>
               <p className="text-muted-foreground">
                 You don&apos;t have permission to access the admin dashboard.
+                Super admin privileges are required.
               </p>
             </CardContent>
           </Card>
@@ -74,7 +73,7 @@ export default function DuelAdminPage() {
             </CardHeader>
             <CardContent>
               <p className="text-orange-700 dark:text-orange-300 text-sm">
-                You are accessing the administrative dashboard. Please use these
+                You are accessing the super admin dashboard. Please use these
                 tools responsibly. All actions are logged and monitored.
               </p>
             </CardContent>

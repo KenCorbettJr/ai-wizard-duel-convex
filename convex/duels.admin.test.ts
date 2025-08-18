@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
-import { withAuth } from "./test_utils";
+import { withAuth, withSuperAdminAuth } from "./test_utils";
 
 describe("Duel Admin Functions", () => {
   test("searchDuels should filter duels by status", async () => {
@@ -46,27 +46,39 @@ describe("Duel Admin Functions", () => {
     await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
 
     // Test filtering by status
-    const waitingDuels = await t.query(api.duels.searchDuels, {
-      status: "WAITING_FOR_PLAYERS",
-    });
+    const waitingDuels = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        status: "WAITING_FOR_PLAYERS",
+      }
+    );
     expect(waitingDuels.duels).toHaveLength(1);
 
-    const cancelledDuels = await t.query(api.duels.searchDuels, {
-      status: "CANCELLED",
-    });
+    const cancelledDuels = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        status: "CANCELLED",
+      }
+    );
     expect(cancelledDuels.duels).toHaveLength(1);
     expect(cancelledDuels.duels[0]._id).toBe(duel2Id);
 
     // Test filtering by player
-    const user1Duels = await t.query(api.duels.searchDuels, {
-      playerUserId: "test-user-1",
-    });
+    const user1Duels = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        playerUserId: "test-user-1",
+      }
+    );
     expect(user1Duels.duels).toHaveLength(2);
 
     // Test filtering by round type
-    const threeRoundDuels = await t.query(api.duels.searchDuels, {
-      numberOfRounds: 3,
-    });
+    const threeRoundDuels = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        numberOfRounds: 3,
+      }
+    );
     expect(threeRoundDuels.duels).toHaveLength(1);
     expect(threeRoundDuels.duels[0]._id).toBe(duel1Id);
   });
@@ -120,9 +132,12 @@ describe("Duel Admin Functions", () => {
     await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
 
     // Get analytics
-    const analytics = await t.query(api.duels.getDuelAnalytics, {
-      timeRange: "all",
-    });
+    const analytics = await withSuperAdminAuth(t).query(
+      api.duels.getDuelAnalytics,
+      {
+        timeRange: "all",
+      }
+    );
 
     expect(analytics).toBeDefined();
     expect(analytics.totalDuels).toBe(3);
@@ -184,7 +199,9 @@ describe("Duel Admin Functions", () => {
     await t.mutation(api.duels.cancelDuel, { duelId: completedDuelId });
 
     // Get monitoring data
-    const monitoring = await t.query(api.duels.getActiveDuelMonitoring);
+    const monitoring = await withSuperAdminAuth(t).query(
+      api.duels.getActiveDuelMonitoring
+    );
 
     expect(monitoring).toBeDefined();
     expect(monitoring).toHaveLength(2); // Only active duels
@@ -244,7 +261,7 @@ describe("Duel Admin Functions", () => {
     expect(duelBefore?.status).toBe("WAITING_FOR_PLAYERS");
 
     // Force cancel the duel
-    await t.mutation(api.duels.forceCancelDuel, {
+    await withSuperAdminAuth(t).mutation(api.duels.forceCancelDuel, {
       duelId,
       reason: "Admin intervention - inappropriate content",
     });
@@ -343,7 +360,7 @@ describe("Duel Admin Functions", () => {
 
     // Try to force cancel - should throw error
     await expect(
-      t.mutation(api.duels.forceCancelDuel, {
+      withSuperAdminAuth(t).mutation(api.duels.forceCancelDuel, {
         duelId,
         reason: "Should not work",
       })
@@ -384,7 +401,7 @@ describe("Duel Admin Functions", () => {
     }
 
     // Test pagination
-    const page1 = await t.query(api.duels.searchDuels, {
+    const page1 = await withSuperAdminAuth(t).query(api.duels.searchDuels, {
       limit: 2,
       offset: 0,
     });
@@ -392,7 +409,7 @@ describe("Duel Admin Functions", () => {
     expect(page1.total).toBe(5);
     expect(page1.hasMore).toBe(true);
 
-    const page2 = await t.query(api.duels.searchDuels, {
+    const page2 = await withSuperAdminAuth(t).query(api.duels.searchDuels, {
       limit: 2,
       offset: 2,
     });
@@ -400,7 +417,7 @@ describe("Duel Admin Functions", () => {
     expect(page2.total).toBe(5);
     expect(page2.hasMore).toBe(true);
 
-    const page3 = await t.query(api.duels.searchDuels, {
+    const page3 = await withSuperAdminAuth(t).query(api.duels.searchDuels, {
       limit: 2,
       offset: 4,
     });
@@ -443,19 +460,28 @@ describe("Duel Admin Functions", () => {
     const oneHourFromNow = now + 60 * 60 * 1000;
 
     // Test date filtering
-    const duelsAfter = await t.query(api.duels.searchDuels, {
-      createdAfter: oneHourAgo,
-    });
+    const duelsAfter = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        createdAfter: oneHourAgo,
+      }
+    );
     expect(duelsAfter.duels).toHaveLength(1);
 
-    const duelsBefore = await t.query(api.duels.searchDuels, {
-      createdBefore: oneHourFromNow,
-    });
+    const duelsBefore = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        createdBefore: oneHourFromNow,
+      }
+    );
     expect(duelsBefore.duels).toHaveLength(1);
 
-    const duelsInFuture = await t.query(api.duels.searchDuels, {
-      createdAfter: oneHourFromNow,
-    });
+    const duelsInFuture = await withSuperAdminAuth(t).query(
+      api.duels.searchDuels,
+      {
+        createdAfter: oneHourFromNow,
+      }
+    );
     expect(duelsInFuture.duels).toHaveLength(0);
   });
 
@@ -524,5 +550,46 @@ describe("Duel Admin Functions", () => {
     expect(user1Stats.cancelled).toBe(1);
     expect(user1Stats.wins).toBe(0);
     expect(user1Stats.losses).toBe(0);
+  });
+
+  test("admin functions should reject non-super-admin users", async () => {
+    const t = convexTest(schema);
+
+    // Test that regular users can't access admin functions
+    await expect(
+      withAuth(t, "regular-user").query(api.duels.searchDuels, {})
+    ).rejects.toThrow("Access denied: Super admin privileges required");
+
+    await expect(
+      withAuth(t, "regular-user").query(api.duels.getDuelAnalytics, {})
+    ).rejects.toThrow("Access denied: Super admin privileges required");
+
+    await expect(
+      withAuth(t, "regular-user").query(api.duels.getActiveDuelMonitoring, {})
+    ).rejects.toThrow("Access denied: Super admin privileges required");
+
+    // Create a test duel first
+    const wizard1Id = await withAuth(t, "test-user-1").mutation(
+      api.wizards.createWizard,
+      {
+        name: "Test Wizard",
+        description: "A test wizard",
+      }
+    );
+
+    const duelId = await withAuth(t, "test-user-1").mutation(
+      api.duels.createDuel,
+      {
+        wizards: [wizard1Id],
+        numberOfRounds: 3,
+      }
+    );
+
+    await expect(
+      withAuth(t, "regular-user").mutation(api.duels.forceCancelDuel, {
+        duelId,
+        reason: "Should not work",
+      })
+    ).rejects.toThrow("Access denied: Super admin privileges required");
   });
 });

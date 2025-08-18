@@ -23,6 +23,7 @@ import type * as generateWizardIllustration from "../generateWizardIllustration.
 import type * as mocks_mockServices from "../mocks/mockServices.js";
 import type * as processDuelRound from "../processDuelRound.js";
 import type * as test_utils from "../test_utils.js";
+import type * as users from "../users.js";
 import type * as wizards from "../wizards.js";
 
 /**
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   "mocks/mockServices": typeof mocks_mockServices;
   processDuelRound: typeof processDuelRound;
   test_utils: typeof test_utils;
+  users: typeof users;
   wizards: typeof wizards;
 }>;
 export declare const api: FilterApi<

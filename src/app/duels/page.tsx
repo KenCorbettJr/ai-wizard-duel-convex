@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
+import { isSuperAdmin } from "@/lib/auth";
 import { Swords, Users, Search, Shield } from "lucide-react";
 
 export default function DuelsPage() {
@@ -24,10 +25,8 @@ export default function DuelsPage() {
     user?.id ? {} : "skip"
   );
 
-  // Check if user has admin privileges (in development or with admin role)
-  const isAdmin =
-    user?.publicMetadata?.role === "admin" ||
-    process.env.NODE_ENV === "development";
+  // Check if user has super admin privileges
+  const hasSuperAdminAccess = isSuperAdmin(user);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
@@ -79,21 +78,22 @@ export default function DuelsPage() {
             </CardContent>
           </Card>
 
-          {isAdmin && (
+          {hasSuperAdminAccess && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Admin Dashboard
+                  Super Admin Dashboard
                 </CardTitle>
                 <CardDescription>
-                  Monitor and manage duels across the platform
+                  Monitor and manage duels across the platform (Super Admin
+                  Only)
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Link href="/admin/duels">
                   <Button variant="outline" className="w-full">
-                    Admin Panel
+                    Super Admin Panel
                   </Button>
                 </Link>
               </CardContent>

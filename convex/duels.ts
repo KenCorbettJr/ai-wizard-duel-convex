@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
 import { api } from "./_generated/api";
+import { verifySuperAdmin, debugUserMetadata } from "./auth.utils";
 
 // Types for better type safety
 export type DuelStatus =
@@ -858,7 +859,7 @@ export const triggerRoundProcessing = mutation({
   },
 });
 
-// Search and filter duels with advanced criteria
+// Search and filter duels with advanced criteria (super admin only)
 export const searchDuels = query({
   args: {
     status: v.optional(
@@ -890,6 +891,8 @@ export const searchDuels = query({
       offset = 0,
     }
   ) => {
+    // Verify super admin access
+    await verifySuperAdmin(ctx);
     let duels;
 
     // Apply status filter if provided
@@ -939,7 +942,7 @@ export const searchDuels = query({
   },
 });
 
-// Get comprehensive duel analytics
+// Get comprehensive duel analytics (super admin only)
 export const getDuelAnalytics = query({
   args: {
     timeRange: v.optional(
@@ -952,6 +955,8 @@ export const getDuelAnalytics = query({
     ),
   },
   handler: async (ctx, { timeRange = "30d" }) => {
+    // Verify super admin access
+    await verifySuperAdmin(ctx);
     const now = Date.now();
     let startTime = 0;
 
@@ -1047,10 +1052,12 @@ export const getDuelAnalytics = query({
   },
 });
 
-// Get active duel monitoring data
+// Get active duel monitoring data (super admin only)
 export const getActiveDuelMonitoring = query({
   args: {},
   handler: async (ctx) => {
+    // Verify super admin access
+    await verifySuperAdmin(ctx);
     const activeDuels = await ctx.db
       .query("duels")
       .filter((q) =>
@@ -1105,13 +1112,15 @@ export const getActiveDuelMonitoring = query({
   },
 });
 
-// Force cancel a duel (admin function)
+// Force cancel a duel (super admin only)
 export const forceCancelDuel = mutation({
   args: {
     duelId: v.id("duels"),
     reason: v.optional(v.string()),
   },
   handler: async (ctx, { duelId, reason }) => {
+    // Verify super admin access
+    await verifySuperAdmin(ctx);
     const duel = await ctx.db.get(duelId);
     if (!duel) {
       throw new Error("Duel not found");
@@ -1246,5 +1255,12 @@ export const createConclusionRound = mutation({
     });
 
     return roundId;
+  },
+});
+// Debug query to check user metadata
+export const debugUser = query({
+  args: {},
+  handler: async (ctx) => {
+    return await debugUserMetadata(ctx);
   },
 });
