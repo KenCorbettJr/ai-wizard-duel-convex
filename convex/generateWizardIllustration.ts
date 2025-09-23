@@ -3,6 +3,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { generateText } from "./aiTextGeneration";
 
 export const generateWizardIllustration = action({
   args: {
@@ -16,12 +17,15 @@ export const generateWizardIllustration = action({
     );
 
     try {
-      // Create a detailed illustration prompt
-      const enhancedPrompt = `Low poly illustration of a wizard named ${name}: ${description}. Dynamic lighting, magical particles, spell effects, action pose, magical implement, thematic background.`;
+      // Use AI to create a detailed illustration prompt
+      const illustrationPrompt = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" in an action pose that would fit this type of wizard. The wizard has this description: ${description}. Use Dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them. If it makes sense, have them holding a magical implement or familiar. Match the background to the wizard's theme. Only give me the image prompt, no other text.`;
 
-      console.log("Generating illustration with prompt:", enhancedPrompt);
+      console.log("Generating enhanced prompt with AI...");
+      const enhancedPrompt = await generateText(illustrationPrompt);
 
-      // Generate the image using Fal
+      console.log("Generated illustration text:", enhancedPrompt);
+
+      // Generate the image using Fal with the AI-enhanced prompt
       const imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
         prompt: enhancedPrompt,
       });

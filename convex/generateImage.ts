@@ -7,11 +7,11 @@ import { isEmulatorMode, generateMockImage } from "./mocks/mockServices";
 
 export const generateImage = action({
   args: { prompt: v.string() },
-  handler: async (ctx, { prompt }): Promise<ArrayBuffer> => {
+  handler: async (_ctx, { prompt }): Promise<ArrayBuffer> => {
     try {
-      // Use mock service in emulator mode
-      if (isEmulatorMode()) {
-        console.log("🎭 Using mock image generation (emulator mode)");
+      // Use mock service in emulator mode or test mode
+      if (isEmulatorMode() || process.env.NODE_ENV === "test") {
+        console.log("Using mock image generation (test/emulator mode)");
         return await generateMockImage(prompt);
       }
 
