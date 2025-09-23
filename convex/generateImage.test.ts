@@ -109,6 +109,7 @@ describe("Generate Image", () => {
       });
 
       expect(result).toEqual(mockImageData.buffer);
+      console.log({ mockSubscribe });
       expect(mockSubscribe).toHaveBeenCalledWith("fal-ai/flux/schnell", {
         input: {
           prompt: longPrompt,

@@ -17,6 +17,7 @@ import {
   Wand2,
   Menu,
   X,
+  Plus,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -44,6 +45,12 @@ const sidebarItems: SidebarItem[] = [
     requiresAuth: true,
   },
   {
+    href: "/wizards",
+    label: "My Wizards",
+    icon: Wand2,
+    requiresAuth: true,
+  },
+  {
     href: "/duels",
     label: "My Duels",
     icon: Swords,
@@ -52,7 +59,7 @@ const sidebarItems: SidebarItem[] = [
   {
     href: "/duels/create",
     label: "Create Duel",
-    icon: Wand2,
+    icon: Plus,
     requiresAuth: true,
   },
   {

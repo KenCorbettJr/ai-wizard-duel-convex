@@ -59,4 +59,4 @@ Cypress.Commands.add(
   }
 );
 
-Cypress.Commands.add("mount", mount);
+// Cypress.Commands.add("mount", mount);

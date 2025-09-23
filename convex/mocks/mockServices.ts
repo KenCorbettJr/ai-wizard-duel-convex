@@ -1,8 +1,8 @@
 "use node";
 
-import type { ZodTypeAny } from "zod";
+import type { z } from "genkit/beta";
 
-function generateMockFromSchema<T extends ZodTypeAny>(schema: T): any {
+function generateMockFromSchema<T extends z.ZodTypeAny>(schema: T): z.infer<T> {
   const def = schema._def;
 
   switch (def.typeName) {
@@ -21,7 +21,7 @@ function generateMockFromSchema<T extends ZodTypeAny>(schema: T): any {
       return [generateMockFromSchema(def.type)];
     case "ZodObject":
       const shape = def.shape();
-      const obj: Record<string, any> = {};
+      const obj: Record<string, unknown> = {};
       for (const key in shape) {
         obj[key] = generateMockFromSchema(shape[key]);
       }
@@ -36,7 +36,7 @@ function generateMockFromSchema<T extends ZodTypeAny>(schema: T): any {
  * Returns fake responses when ENV=emulate to avoid using real external services
  */
 
-export function generateMockObject<T extends ZodTypeAny>(
+export function generateMockObject<T extends z.ZodTypeAny>(
   schema: T
 ): ReturnType<typeof generateMockFromSchema> {
   return generateMockFromSchema(schema);

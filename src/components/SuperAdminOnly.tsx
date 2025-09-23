@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +11,6 @@ interface SuperAdminOnlyProps {
 }
 
 export function SuperAdminOnly({ children, fallback }: SuperAdminOnlyProps) {
-  const { user } = useUser();
-
   // Check admin access using Convex query (more reliable than Clerk metadata)
   const adminAccess = useQuery(api.duels.checkAdminAccess);
 

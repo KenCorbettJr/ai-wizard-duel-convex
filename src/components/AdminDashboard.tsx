@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Id, Doc } from "../../convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -48,6 +48,12 @@ interface DuelFilters {
   status?: "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   playerUserId?: string;
   numberOfRounds?: number | "TO_THE_DEATH";
+}
+
+interface SearchResults {
+  duels: Doc<"duels">[];
+  total: number;
+  hasMore: boolean;
   createdAfter?: number;
   createdBefore?: number;
 }
@@ -61,11 +67,14 @@ export function AdminDashboard() {
   const [duelToCancel, setDuelToCancel] = useState<Id<"duels"> | null>(null);
 
   // Admin queries
-  const searchResults = useQuery(api.duels.searchDuels, {
-    ...filters,
-    limit: 20,
-    offset: 0,
-  });
+  const searchResults: SearchResults | undefined = useQuery(
+    api.duels.searchDuels,
+    {
+      ...filters,
+      limit: 20,
+      offset: 0,
+    }
+  );
 
   const analytics = useQuery(api.duels.getDuelAnalytics, {
     timeRange: selectedTimeRange,
@@ -243,7 +252,7 @@ export function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {activeMonitoring.map((item: any) => (
+              {activeMonitoring.map((item) => (
                 <div key={item.duel._id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -274,7 +283,7 @@ export function AdminDashboard() {
                     <div>
                       <span className="text-muted-foreground">Wizards:</span>
                       <div className="mt-1">
-                        {item.wizards.map((wizard: any) => (
+                        {item.wizards.map((wizard) => (
                           <div key={wizard?.id} className="text-xs">
                             {wizard?.name} ({wizard?.owner})
                           </div>
@@ -437,7 +446,7 @@ export function AdminDashboard() {
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {searchResults.duels.map((duel: any) => (
+                  {searchResults.duels.map((duel: Doc<"duels">) => (
                     <div key={duel._id} className="relative">
                       <DuelListItem
                         duel={duel}

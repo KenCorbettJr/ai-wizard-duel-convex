@@ -1,7 +1,7 @@
 "use node";
 
-import type { ZodTypeAny } from "zod";
 // AI Text Generation Service using Gemini Flash
+import { z } from "genkit/beta";
 import { getGemni20FlashAI } from "./ai/getAI";
 import {
   isEmulatorMode,
@@ -46,7 +46,7 @@ export async function generateText(
   }
 }
 
-export async function generateObject<T extends ZodTypeAny>(
+export async function generateObject<T extends z.ZodTypeAny>(
   prompt: string,
   schema: T,
   systemPrompt?: string,
