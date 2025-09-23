@@ -3,10 +3,27 @@ import { expect, test, describe } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { withAuth, withSuperAdminAuth } from "./test_utils";
+import { api } from "./_generated/api";
 
 describe("Duel Admin Functions", () => {
   test("searchDuels should filter duels by status", async () => {
     const t = convexTest(schema);
+
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(

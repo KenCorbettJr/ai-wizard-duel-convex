@@ -85,6 +85,44 @@ export async function verifySuperAdmin(
   return identity;
 }
 
+// Check if current user has super admin access (non-throwing version)
+export async function checkSuperAdminAccess(
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
+) {
+  try {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { hasAccess: false, reason: "Not authenticated" };
+    }
+
+    // Allow super admin access in development mode
+    if (process.env.NODE_ENV === "development") {
+      return { hasAccess: true, reason: "Development mode" };
+    }
+
+    // Check user role from our users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return { hasAccess: false, reason: "User not found in database" };
+    }
+
+    if (user.role !== "super_admin") {
+      return {
+        hasAccess: false,
+        reason: `Insufficient privileges. Current role: ${user.role}`,
+      };
+    }
+
+    return { hasAccess: true, reason: "Super admin access granted" };
+  } catch (error) {
+    return { hasAccess: false, reason: `Error checking permissions: ${error}` };
+  }
+}
+
 // Debug function to check current user's metadata
 export async function debugUserMetadata(
   ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>

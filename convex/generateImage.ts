@@ -17,6 +17,7 @@ export const generateImage = action({
 
       // Get FAL API key from environment
       const falKey = process.env.FAL_KEY;
+      console.log("env", process.env);
       if (!falKey) {
         console.error("FAL_KEY environment variable is not set");
         throw new Error(
@@ -66,6 +67,7 @@ export const generateImage = action({
 
       return imageBuffer;
     } catch (error) {
+      console.error(error);
       throw new Error(
         `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
       );

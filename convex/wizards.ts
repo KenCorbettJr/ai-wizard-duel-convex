@@ -126,6 +126,63 @@ export const updateWizardStatsInternal = mutation({
   },
 });
 
+// Internal function to update wizard details (used by system functions like image generation)
+export const updateWizardInternal = mutation({
+  args: {
+    wizardId: v.id("wizards"),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    illustrationURL: v.optional(v.string()),
+    illustration: v.optional(v.string()),
+    isAIPowered: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { wizardId, ...updates }) => {
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      throw new Error("Wizard not found");
+    }
+
+    await ctx.db.patch(wizardId, {
+      ...updates,
+      illustrationVersion: updates.illustration
+        ? (wizard.illustrationVersion || 0) + 1
+        : wizard.illustrationVersion,
+      illustrationGeneratedAt: updates.illustration
+        ? Date.now()
+        : wizard.illustrationGeneratedAt,
+    });
+  },
+});
+
+// Internal function to schedule wizard illustration generation
+export const scheduleWizardIllustrationInternal = mutation({
+  args: {
+    wizardId: v.id("wizards"),
+    name: v.string(),
+    description: v.string(),
+  },
+  handler: async (ctx, { wizardId, name, description }) => {
+    // Verify wizard exists
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      throw new Error("Wizard not found");
+    }
+
+    // Schedule illustration generation only if not in test environment
+    if (process.env.NODE_ENV !== "test") {
+      await ctx.scheduler.runAfter(
+        0,
+        api.generateWizardIllustration.generateWizardIllustration,
+        {
+          wizardId,
+          name,
+          description,
+        }
+      );
+    }
+  },
+});
+
 // Update wizard details (only for owned wizards)
 export const updateWizard = mutation({
   args: {

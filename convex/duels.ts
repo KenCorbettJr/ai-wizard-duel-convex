@@ -3,7 +3,11 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
 import { api } from "./_generated/api";
-import { verifySuperAdmin, debugUserMetadata } from "./auth.utils";
+import {
+  verifySuperAdmin,
+  debugUserMetadata,
+  checkSuperAdminAccess,
+} from "./auth.utils";
 
 // Types for better type safety
 export type DuelStatus =
@@ -1262,5 +1266,13 @@ export const debugUser = query({
   args: {},
   handler: async (ctx) => {
     return await debugUserMetadata(ctx);
+  },
+});
+
+// Check if current user has admin access (non-throwing)
+export const checkAdminAccess = query({
+  args: {},
+  handler: async (ctx) => {
+    return await checkSuperAdminAccess(ctx);
   },
 });

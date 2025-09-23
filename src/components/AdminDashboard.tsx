@@ -52,16 +52,15 @@ interface DuelFilters {
   createdBefore?: number;
 }
 
-export function DuelAdminDashboard() {
+export function AdminDashboard() {
   const [filters, setFilters] = useState<DuelFilters>({});
-
   const [selectedTimeRange, setSelectedTimeRange] = useState<
     "24h" | "7d" | "30d" | "all"
   >("30d");
   const [cancelReason, setCancelReason] = useState("");
   const [duelToCancel, setDuelToCancel] = useState<Id<"duels"> | null>(null);
 
-  // Queries
+  // Admin queries
   const searchResults = useQuery(api.duels.searchDuels, {
     ...filters,
     limit: 20,
@@ -244,7 +243,7 @@ export function DuelAdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {activeMonitoring.map((item) => (
+              {activeMonitoring.map((item: any) => (
                 <div key={item.duel._id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -275,7 +274,7 @@ export function DuelAdminDashboard() {
                     <div>
                       <span className="text-muted-foreground">Wizards:</span>
                       <div className="mt-1">
-                        {item.wizards.map((wizard) => (
+                        {item.wizards.map((wizard: any) => (
                           <div key={wizard?.id} className="text-xs">
                             {wizard?.name} ({wizard?.owner})
                           </div>
@@ -438,7 +437,7 @@ export function DuelAdminDashboard() {
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {searchResults.duels.map((duel) => (
+                  {searchResults.duels.map((duel: any) => (
                     <div key={duel._id} className="relative">
                       <DuelListItem
                         duel={duel}

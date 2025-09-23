@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+// import { vi } from "vitest";
 
 // Global test setup for Convex tests
 // This file suppresses console output during tests for cleaner test results

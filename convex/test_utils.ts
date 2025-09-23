@@ -1,5 +1,7 @@
+import type { TestConvex } from "convex-test";
 import { Id, TableNames } from "./_generated/dataModel";
-import { ConvexTestingHelper } from "convex-test";
+import { api } from "./_generated/api";
+import schema from "./schema";
 
 // Generate a proper Convex ID for testing
 // Convex IDs follow the pattern: k{table_number}{random_string}
@@ -45,7 +47,7 @@ export function createMockUserIdentity(
 
 // Set up authenticated context for tests
 export function withAuth(
-  t: ConvexTestingHelper,
+  t: TestConvex<typeof schema>,
   userId: string = "test-user-1"
 ) {
   const identity = createMockUserIdentity(userId);
@@ -54,9 +56,38 @@ export function withAuth(
 
 // Set up super admin authenticated context for tests
 export function withSuperAdminAuth(
-  t: ConvexTestingHelper,
+  t: TestConvex<typeof schema>,
   userId: string = "super-admin-user"
 ) {
   const identity = createMockUserIdentity(userId, "super_admin");
   return t.withIdentity(identity);
+}
+
+// Create a database user for testing
+export async function createTestUser(
+  t: TestConvex<typeof schema>,
+  clerkId: string,
+  role: "user" | "admin" | "super_admin" = "user"
+) {
+  return await t
+    .mutation(api.users.getOrCreateUser, {
+      clerkId,
+      email: `${clerkId}@test.com`,
+      name: `Test User ${clerkId}`,
+    })
+    .then(async (userId: string) => {
+      // Update role if not default
+      if (role !== "user") {
+        await t.run(async (ctx) => {
+          const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+            .first();
+          if (user) {
+            await ctx.db.patch(user._id, { role });
+          }
+        });
+      }
+      return userId;
+    });
 }

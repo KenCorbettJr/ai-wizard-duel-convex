@@ -8,6 +8,7 @@ import { Id } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
+import { Wizard } from "@/types/wizard";
 
 // Zod schema for structured AI output
 const BattleRoundResponseSchema = z.object({
@@ -103,52 +104,55 @@ function validateBattleResponse(response: unknown): BattleRoundResponse | null {
       return null;
     }
 
+    // Cast to any for property access, then validate
+    const responseObj = response as BattleRoundResponse;
+
     // Validate required fields exist
     if (
-      !response.narration ||
-      !response.result ||
-      !response.illustrationPrompt
+      !responseObj.narration ||
+      !responseObj.result ||
+      !responseObj.illustrationPrompt
     ) {
       return null;
     }
 
     // Validate wizard data exists and has required fields
-    if (!response.wizard1 || !response.wizard2) {
+    if (!responseObj.wizard1 || !responseObj.wizard2) {
       return null;
     }
 
     if (
-      typeof response.wizard1.pointsEarned !== "number" ||
-      typeof response.wizard1.healthChange !== "number" ||
-      typeof response.wizard2.pointsEarned !== "number" ||
-      typeof response.wizard2.healthChange !== "number"
+      typeof responseObj.wizard1.pointsEarned !== "number" ||
+      typeof responseObj.wizard1.healthChange !== "number" ||
+      typeof responseObj.wizard2.pointsEarned !== "number" ||
+      typeof responseObj.wizard2.healthChange !== "number"
     ) {
       return null;
     }
 
     // Sanitize and bound the values
     const sanitizedResponse: BattleRoundResponse = {
-      narration: String(response.narration),
-      result: String(response.result),
-      illustrationPrompt: String(response.illustrationPrompt),
+      narration: String(responseObj.narration),
+      result: String(responseObj.result),
+      illustrationPrompt: String(responseObj.illustrationPrompt),
       wizard1: {
         pointsEarned: Math.max(
           0,
-          Math.min(10, Math.floor(response.wizard1.pointsEarned))
+          Math.min(10, Math.floor(responseObj.wizard1.pointsEarned))
         ),
         healthChange: Math.max(
           -100,
-          Math.min(100, Math.floor(response.wizard1.healthChange))
+          Math.min(100, Math.floor(responseObj.wizard1.healthChange))
         ),
       },
       wizard2: {
         pointsEarned: Math.max(
           0,
-          Math.min(10, Math.floor(response.wizard2.pointsEarned))
+          Math.min(10, Math.floor(responseObj.wizard2.pointsEarned))
         ),
         healthChange: Math.max(
           -100,
-          Math.min(100, Math.floor(response.wizard2.healthChange))
+          Math.min(100, Math.floor(responseObj.wizard2.healthChange))
         ),
       },
     };
@@ -182,9 +186,10 @@ export const processDuelRound = action({
       }
 
       // Get wizard data
-      const wizards = await Promise.all(
-        duel.wizards.map((wizardId: Id<"wizards">) =>
-          ctx.runQuery(api.wizards.getWizard, { wizardId })
+      const wizards: Array<Wizard> = await Promise.all(
+        duel.wizards.map(
+          (wizardId: Id<"wizards">) =>
+            ctx.runQuery(api.wizards.getWizard, { wizardId }) as Promise<Wizard>
         )
       );
 

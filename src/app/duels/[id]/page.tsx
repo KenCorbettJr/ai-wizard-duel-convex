@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Swords, Clock, Sparkles, ScrollText, Star } from "lucide-react";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
@@ -32,7 +32,6 @@ interface DuelPageProps {
 
 export default function DuelPage({ params }: DuelPageProps) {
   const { user } = useUser();
-  const router = useRouter();
   const [spellDescription, setSpellDescription] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(

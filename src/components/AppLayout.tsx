@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { LeftSidebar } from "./LeftSidebar";
 import { Navbar } from "./Navbar";
-import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
   children: React.ReactNode;

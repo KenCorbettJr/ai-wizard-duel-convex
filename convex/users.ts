@@ -1,6 +1,5 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
 
 // Get or create user record
 export const getOrCreateUser = mutation({
@@ -121,57 +120,5 @@ export const listUsers = query({
     }
 
     return await ctx.db.query("users").collect();
-  },
-});
-
-// Initialize current user (called when user first signs in)
-export const initializeCurrentUser = mutation({
-  args: {
-    email: v.optional(v.string()),
-    name: v.optional(v.string()),
-  },
-  handler: async (ctx, { email, name }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    return await ctx.runMutation(api.users.getOrCreateUser, {
-      clerkId: identity.subject,
-      email,
-      name,
-    });
-  },
-});
-
-// Manually set a user as super admin (for initial setup)
-export const setSuperAdmin = mutation({
-  args: {
-    clerkId: v.string(),
-  },
-  handler: async (ctx, { clerkId }) => {
-    // This is a one-time setup function - in production you'd want to restrict this
-    // For now, we'll allow it to set the first super admin
-
-    const existingUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
-      .first();
-
-    if (existingUser) {
-      await ctx.db.patch(existingUser._id, {
-        role: "super_admin",
-        updatedAt: Date.now(),
-      });
-      return existingUser._id;
-    } else {
-      // Create new super admin user
-      return await ctx.db.insert("users", {
-        clerkId,
-        role: "super_admin",
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-    }
   },
 });

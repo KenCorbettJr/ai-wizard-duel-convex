@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
-import { isSuperAdmin } from "@/lib/auth";
+import { SuperAdminOnly } from "@/components/SuperAdminOnly";
 import { Swords, Users, Search, Shield } from "lucide-react";
 
 export default function DuelsPage() {
@@ -24,9 +24,6 @@ export default function DuelsPage() {
     api.duels.getPlayerDuels,
     user?.id ? {} : "skip"
   );
-
-  // Check if user has super admin privileges
-  const hasSuperAdminAccess = isSuperAdmin(user);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
@@ -78,7 +75,7 @@ export default function DuelsPage() {
             </CardContent>
           </Card>
 
-          {hasSuperAdminAccess && (
+          <SuperAdminOnly fallback={null}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -98,7 +95,7 @@ export default function DuelsPage() {
                 </Link>
               </CardContent>
             </Card>
-          )}
+          </SuperAdminOnly>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">

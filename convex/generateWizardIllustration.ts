@@ -31,8 +31,8 @@ export const generateWizardIllustration = action({
         new Blob([imageBuffer], { type: "image/png" })
       );
 
-      // Update the wizard with the new illustration
-      await ctx.runMutation(api.wizards.updateWizard, {
+      // Update the wizard with the new illustration using internal mutation
+      await ctx.runMutation(api.wizards.updateWizardInternal, {
         wizardId,
         illustration: storageId,
       });

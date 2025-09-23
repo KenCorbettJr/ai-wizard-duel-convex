@@ -3,13 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, TrendingUp, Target, Swords } from "lucide-react";
 
@@ -18,10 +12,7 @@ interface WizardStatisticsProps {
   showDetailedHistory?: boolean;
 }
 
-export function WizardStatistics({
-  wizardId,
-  showDetailedHistory = true,
-}: WizardStatisticsProps) {
+export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
   // Get wizard data
   const wizard = useQuery(api.wizards.getWizard, { wizardId });
 

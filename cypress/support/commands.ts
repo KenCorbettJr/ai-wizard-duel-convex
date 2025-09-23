@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+import { mount } from "cypress/react";
 
 // Custom command to wait for Convex to be ready
 Cypress.Commands.add("waitForConvex", () => {
@@ -57,3 +58,5 @@ Cypress.Commands.add(
     cy.contains(name).should("be.visible");
   }
 );
+
+Cypress.Commands.add("mount", mount);
