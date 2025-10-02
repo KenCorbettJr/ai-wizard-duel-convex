@@ -109,7 +109,7 @@ describe("Generate Image", () => {
       });
 
       expect(result).toEqual(mockImageData.buffer);
-      console.log({ mockSubscribe });
+
       expect(mockSubscribe).toHaveBeenCalledWith("fal-ai/flux/schnell", {
         input: {
           prompt: longPrompt,
@@ -403,26 +403,26 @@ describe("Generate Image", () => {
     });
 
     // This test is erroring and I don't know why but it takes a while to run.
-    // test("should handle arrayBuffer conversion error", async () => {
-    //   const mockImageUrl = "https://example.com/image.png";
+    test("should handle arrayBuffer conversion error", async () => {
+      const mockImageUrl = "https://example.com/image.png";
 
-    //   mockSubscribe.mockResolvedValue({
-    //     images: [{ url: mockImageUrl }],
-    //   });
+      mockSubscribe.mockResolvedValue({
+        images: [{ url: mockImageUrl }],
+      });
 
-    //   global.fetch = vi.fn().mockResolvedValue({
-    //     ok: true,
-    //     arrayBuffer: () =>
-    //       Promise.reject(new Error("ArrayBuffer conversion failed")),
-    //   });
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: () =>
+          Promise.reject(new Error("ArrayBuffer conversion failed")),
+      });
 
-    //   await expect(
-    //     t.action(api.generateImage.generateImage, {
-    //       prompt: "ArrayBuffer error",
-    //     })
-    //   ).rejects.toThrow(
-    //     "Image generation failed: ArrayBuffer conversion failed"
-    //   );
-    // });
+      await expect(
+        t.action(api.generateImage.generateImage, {
+          prompt: "ArrayBuffer error",
+        })
+      ).rejects.toThrow(
+        "Image generation failed: ArrayBuffer conversion failed"
+      );
+    });
   });
 });

@@ -9,15 +9,8 @@ export const generateImage = action({
   args: { prompt: v.string() },
   handler: async (_ctx, { prompt }): Promise<ArrayBuffer> => {
     try {
-      // Use mock service in emulator mode or test mode
-      if (isEmulatorMode() || process.env.NODE_ENV === "test") {
-        console.log("Using mock image generation (test/emulator mode)");
-        return await generateMockImage(prompt);
-      }
-
       // Get FAL API key from environment
       const falKey = process.env.FAL_KEY;
-      console.log("env", process.env);
       if (!falKey) {
         console.error("FAL_KEY environment variable is not set");
         throw new Error(

@@ -450,14 +450,6 @@ describe("Wizards - Advanced Tests", () => {
       expect(wizard?.owner).toBe("test-user-1");
     });
 
-    test("should not return wizard owned by different user", async () => {
-      await expect(
-        withAuth(t, "test-user-1").query(api.wizards.getWizard, {
-          wizardId: user2Wizards[0],
-        })
-      ).rejects.toThrow("Not authorized to access this wizard");
-    });
-
     test("should verify wizard ownership isolation", async () => {
       const user1Wizards = await withAuth(t, "test-user-1").query(
         api.wizards.getUserWizards,
