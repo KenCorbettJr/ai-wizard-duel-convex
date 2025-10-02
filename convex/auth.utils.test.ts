@@ -8,6 +8,16 @@ describe("Auth Utils", () => {
   test("verifySuperAdmin should allow super admin users", async () => {
     const t = convexTest(schema);
 
+    // Create super admin user in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
     // This should not throw
     await expect(
       withSuperAdminAuth(t).run(async (ctx) => {
@@ -18,6 +28,16 @@ describe("Auth Utils", () => {
 
   test("verifySuperAdmin should reject regular users", async () => {
     const t = convexTest(schema);
+
+    // Create regular user in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "regular-user",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
 
     // This should throw
     await expect(

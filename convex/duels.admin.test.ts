@@ -103,6 +103,22 @@ describe("Duel Admin Functions", () => {
   test("getDuelAnalytics should return comprehensive statistics", async () => {
     const t = convexTest(schema);
 
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
       api.wizards.createWizard,
@@ -170,6 +186,22 @@ describe("Duel Admin Functions", () => {
 
   test("getActiveDuelMonitoring should return active duels with monitoring data", async () => {
     const t = convexTest(schema);
+
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
@@ -244,6 +276,22 @@ describe("Duel Admin Functions", () => {
   test("forceCancelDuel should cancel any duel with reason", async () => {
     const t = convexTest(schema);
 
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
       api.wizards.createWizard,
@@ -293,6 +341,22 @@ describe("Duel Admin Functions", () => {
 
   test("forceCancelDuel should not cancel completed duels", async () => {
     const t = convexTest(schema);
+
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
@@ -387,6 +451,22 @@ describe("Duel Admin Functions", () => {
   test("searchDuels should support pagination", async () => {
     const t = convexTest(schema);
 
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
       api.wizards.createWizard,
@@ -445,6 +525,22 @@ describe("Duel Admin Functions", () => {
 
   test("searchDuels should filter by date range", async () => {
     const t = convexTest(schema);
+
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "super-admin-user",
+        role: "super_admin",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
@@ -571,6 +667,22 @@ describe("Duel Admin Functions", () => {
 
   test("admin functions should reject non-super-admin users", async () => {
     const t = convexTest(schema);
+
+    // Create test users in database
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        clerkId: "test-user-1",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("users", {
+        clerkId: "regular-user",
+        role: "user",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
 
     // Test that regular users can't access admin functions
     await expect(
