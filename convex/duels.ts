@@ -91,22 +91,7 @@ export const getDuel = query({
     const duel = await ctx.db.get(duelId);
     if (!duel) return null;
 
-    // Allow public viewing of completed duels, but restrict access to private duels
-    const identity = await ctx.auth.getUserIdentity();
-
-    // If user is not authenticated, only show completed duels
-    if (!identity && duel.status !== "COMPLETED") {
-      return null;
-    }
-
-    // If user is authenticated but not a participant, only show completed duels
-    if (
-      identity &&
-      !duel.players.includes(identity.subject) &&
-      duel.status !== "COMPLETED"
-    ) {
-      return null;
-    }
+    // Allow public viewing of all duels - no authentication required for spectating
 
     // Get all rounds for this duel
     const rounds = await ctx.db

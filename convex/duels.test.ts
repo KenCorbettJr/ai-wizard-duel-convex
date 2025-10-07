@@ -286,3 +286,61 @@ test("should get completed duels for a player", async () => {
 
   expect(user3CompletedDuels).toHaveLength(0);
 });
+
+test("should allow unauthenticated users to view duels", async () => {
+  const t = convexTest(schema);
+
+  // Create a wizard
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create a duel as an authenticated user
+  const duelId = await withAuth(t, "test-user-1").mutation(
+    api.duels.createDuel,
+    {
+      numberOfRounds: 3,
+      wizards: [wizard1Id],
+    }
+  );
+
+  // Test that unauthenticated users can view the duel
+  const duelAsUnauthenticated = await t.query(api.duels.getDuel, {
+    duelId,
+  });
+
+  expect(duelAsUnauthenticated).not.toBeNull();
+  expect(duelAsUnauthenticated?._id).toBe(duelId);
+  expect(duelAsUnauthenticated?.wizards).toContain(wizard1Id);
+
+  // Test with different duel statuses
+  await t.run(async (ctx) => {
+    await ctx.db.patch(duelId, { status: "IN_PROGRESS" });
+  });
+
+  const inProgressDuelAsUnauthenticated = await t.query(api.duels.getDuel, {
+    duelId,
+  });
+
+  expect(inProgressDuelAsUnauthenticated).not.toBeNull();
+  expect(inProgressDuelAsUnauthenticated?.status).toBe("IN_PROGRESS");
+
+  // Test with completed status
+  await t.run(async (ctx) => {
+    await ctx.db.patch(duelId, { status: "COMPLETED" });
+  });
+
+  const completedDuelAsUnauthenticated = await t.query(api.duels.getDuel, {
+    duelId,
+  });
+
+  expect(completedDuelAsUnauthenticated).not.toBeNull();
+  expect(completedDuelAsUnauthenticated?.status).toBe("COMPLETED");
+});
