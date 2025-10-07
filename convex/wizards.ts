@@ -58,7 +58,7 @@ export const createWizard = mutation({
     // Skip scheduling in test environment to avoid transaction escape errors
     if (process.env.NODE_ENV !== "test") {
       await ctx.scheduler.runAfter(
-        0,
+        100, // Add small delay to ensure database transaction is committed
         api.generateWizardIllustration.generateWizardIllustration,
         {
           wizardId,
@@ -171,7 +171,7 @@ export const scheduleWizardIllustrationInternal = mutation({
     // Schedule illustration generation only if not in test environment
     if (process.env.NODE_ENV !== "test") {
       await ctx.scheduler.runAfter(
-        0,
+        100, // Add small delay to ensure database transaction is committed
         api.generateWizardIllustration.generateWizardIllustration,
         {
           wizardId,
@@ -230,7 +230,7 @@ export const updateWizard = mutation({
     // Regenerate illustration if name or description changed
     if (shouldRegenerateIllustration && process.env.NODE_ENV !== "test") {
       await ctx.scheduler.runAfter(
-        0,
+        100, // Add small delay to ensure database transaction is committed
         api.generateWizardIllustration.generateWizardIllustration,
         {
           wizardId,
@@ -281,7 +281,7 @@ export const regenerateIllustration = mutation({
     // Skip scheduling in test environment to avoid transaction escape errors
     if (process.env.NODE_ENV !== "test") {
       await ctx.scheduler.runAfter(
-        0,
+        100, // Add small delay to ensure database transaction is committed
         api.generateWizardIllustration.generateWizardIllustration,
         {
           wizardId,
@@ -318,24 +318,16 @@ export const deleteWizard = mutation({
   },
 });
 
-// Get wizards defeated by a specific wizard (trophy hall) - only for owned wizards
+// Get wizards defeated by a specific wizard (trophy hall) - public information
 export const getDefeatedWizards = query({
   args: { wizardId: v.id("wizards") },
   handler: async (ctx, { wizardId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       throw new Error("Wizard not found");
     }
 
-    // Only allow viewing trophy hall for owned wizards
-    if (wizard.owner !== identity.subject) {
-      throw new Error("Not authorized to view this wizard's trophy hall");
-    }
+    // Allow anyone to view trophy hall (public information)
 
     // Get all completed duels where this wizard participated
     const duels = await ctx.db.query("duels").collect();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 
 interface CreateDuelFormProps {
@@ -36,10 +37,23 @@ export function CreateDuelForm({
     3
   );
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   const createDuel = useMutation(api.duels.createDuel);
+
+  // Auto-select first wizard if only one exists and none is pre-selected
+  useEffect(() => {
+    if (
+      wizards &&
+      wizards.length === 1 &&
+      !selectedWizard &&
+      !preSelectedWizardId
+    ) {
+      setSelectedWizard(wizards[0]._id);
+    }
+  }, [wizards, selectedWizard, preSelectedWizardId]);
 
   const handleWizardSelect = (wizardId: Id<"wizards">) => {
     setSelectedWizard(wizardId);
@@ -50,6 +64,7 @@ export function CreateDuelForm({
     if (!user?.id || !selectedWizard) return;
 
     setIsCreating(true);
+    setError(null);
     try {
       const duelId = await createDuel({
         numberOfRounds,
@@ -58,6 +73,7 @@ export function CreateDuelForm({
       onSuccess(duelId);
     } catch (error) {
       console.error("Failed to create duel:", error);
+      setError("Failed to create duel. Please try again.");
     } finally {
       setIsCreating(false);
     }
@@ -87,7 +103,7 @@ export function CreateDuelForm({
   }
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader>
         <CardTitle>⚔️ Create New Duel</CardTitle>
         <CardDescription>
@@ -96,6 +112,14 @@ export function CreateDuelForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {isCreating && (
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Creating your duel...</span>
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Select Your Wizard
@@ -218,13 +242,26 @@ export function CreateDuelForm({
             </div>
           </div>
 
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <Button
               type="submit"
               disabled={!selectedWizard || isCreating}
               className="flex-1"
             >
-              {isCreating ? "Creating..." : "Create Duel"}
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Duel...
+                </>
+              ) : (
+                "Create Duel"
+              )}
             </Button>
             <Button
               type="button"

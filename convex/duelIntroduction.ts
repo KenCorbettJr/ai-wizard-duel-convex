@@ -8,7 +8,7 @@ import { api } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
-import { generateObject, generateText } from "./aiTextGeneration";
+import { generateObject } from "./aiTextGeneration";
 
 // Zod schema for structured AI output
 const IntroductionResponseSchema = z.object({
@@ -42,8 +42,8 @@ export const generateDuelIntroduction = action({
     { duelId }
   ): Promise<{ success: boolean; introRoundId: Id<"duelRounds"> }> => {
     try {
-      // Get the duel data
-      const duel = await ctx.runQuery(api.duels.getDuel, { duelId });
+      // Get the duel data (using internal query to bypass access control for scheduled actions)
+      const duel = await ctx.runQuery(api.duels.getDuelInternal, { duelId });
       if (!duel) {
         throw new Error("Duel not found");
       }
@@ -92,7 +92,7 @@ export const generateDuelIntroduction = action({
         // Skip introduction illustration scheduling to avoid transaction escape errors in tests
         if (process.env.NODE_ENV !== "test") {
           await ctx.scheduler.runAfter(
-            0,
+            100, // Add small delay to ensure database transaction is committed
             api.generateRoundIllustration.generateRoundIllustration,
             {
               illustrationPrompt: introduction.illustrationPrompt,

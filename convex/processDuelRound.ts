@@ -172,8 +172,8 @@ export const processDuelRound = action({
   },
   handler: async (ctx, { duelId, roundId }) => {
     try {
-      // Get the duel data
-      const duel = await ctx.runQuery(api.duels.getDuel, { duelId });
+      // Get the duel data (using internal query to bypass access control for scheduled actions)
+      const duel = await ctx.runQuery(api.duels.getDuelInternal, { duelId });
       if (!duel) {
         throw new Error("Duel not found");
       }
@@ -257,7 +257,9 @@ export const processDuelRound = action({
       }
 
       // Check if we need to generate a conclusion
-      const updatedDuel = await ctx.runQuery(api.duels.getDuel, { duelId });
+      const updatedDuel = await ctx.runQuery(api.duels.getDuelInternal, {
+        duelId,
+      });
       if (updatedDuel && updatedDuel.status === "COMPLETED") {
         await generateDuelConclusion(
           ctx,

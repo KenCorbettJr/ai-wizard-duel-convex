@@ -16,8 +16,8 @@ function CreateDuelContent() {
   ) as Id<"wizards"> | null;
 
   const handleSuccess = (duelId: Id<"duels">) => {
-    // Instead of showing success page, redirect directly to join page
-    router.push(`/duels/${duelId}`);
+    // Redirect to the share page to show the beautiful challenge view
+    router.push(`/duels/${duelId}/share`);
   };
 
   const handleClose = () => {

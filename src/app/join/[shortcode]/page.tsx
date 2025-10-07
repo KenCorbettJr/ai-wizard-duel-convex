@@ -77,12 +77,12 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     }
   }, [isLoaded, user, router]);
 
-  // Redirect to duel page when duel is found
+  // Redirect to duel page when user is already in the duel
   useEffect(() => {
-    if (duel?._id) {
+    if (duel?._id && isAlreadyInDuel) {
       router.push(`/duels/${duel._id}`);
     }
-  }, [duel?._id, router]);
+  }, [duel?._id, isAlreadyInDuel, router]);
 
   const handleWizardSelect = (wizardId: Id<"wizards">) => {
     setSelectedWizard(wizardId);

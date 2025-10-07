@@ -98,6 +98,27 @@ export const getDuel = query({
   },
 });
 
+// Internal query to get duel data without access control (for system operations)
+export const getDuelInternal = query({
+  args: { duelId: v.id("duels") },
+  handler: async (ctx, { duelId }) => {
+    const duel = await ctx.db.get(duelId);
+    if (!duel) return null;
+
+    // Get all rounds for this duel
+    const rounds = await ctx.db
+      .query("duelRounds")
+      .withIndex("by_duel", (q) => q.eq("duelId", duelId))
+      .order("asc")
+      .collect();
+
+    return {
+      ...duel,
+      rounds,
+    };
+  },
+});
+
 // Get a duel by shortcode
 export const getDuelByShortcode = query({
   args: { shortcode: v.string() },
@@ -281,7 +302,7 @@ export const joinDuel = mutation({
       // Skip scheduling in test environment to avoid transaction escape errors
       if (process.env.NODE_ENV !== "test") {
         await ctx.scheduler.runAfter(
-          0,
+          100, // Add small delay to ensure database transaction is committed
           api.duelIntroduction.generateDuelIntroduction,
           {
             duelId,
@@ -397,10 +418,14 @@ export const castSpell = mutation({
 
       // Schedule round processing
       if (process.env.NODE_ENV !== "test") {
-        await ctx.scheduler.runAfter(0, api.processDuelRound.processDuelRound, {
-          duelId,
-          roundId: currentRound._id,
-        });
+        await ctx.scheduler.runAfter(
+          100,
+          api.processDuelRound.processDuelRound,
+          {
+            duelId,
+            roundId: currentRound._id,
+          }
+        );
       }
     }
 
@@ -795,7 +820,7 @@ export const scheduleRoundIllustration = mutation({
     // Skip scheduling in test environment to avoid transaction escape errors
     if (process.env.NODE_ENV !== "test") {
       await ctx.scheduler.runAfter(
-        0,
+        100, // Add small delay to ensure database transaction is committed
         api.generateRoundIllustration.generateRoundIllustration,
         {
           illustrationPrompt,
@@ -853,7 +878,7 @@ export const triggerRoundProcessing = mutation({
 
     // Schedule round processing
     if (process.env.NODE_ENV !== "test") {
-      await ctx.scheduler.runAfter(0, api.processDuelRound.processDuelRound, {
+      await ctx.scheduler.runAfter(100, api.processDuelRound.processDuelRound, {
         duelId,
         roundId,
       });

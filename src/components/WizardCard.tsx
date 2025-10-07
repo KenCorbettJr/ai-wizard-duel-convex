@@ -44,13 +44,13 @@ export function WizardCard({
       >
         <div className="relative">
           {wizard.illustration && (
-            <div className="h-60 w-full overflow-hidden">
+            <div className="h-96 w-full overflow-hidden">
               <ConvexImage
                 storageId={wizard.illustration}
                 alt={wizard.name}
                 width={400}
-                height={192}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                height={250}
+                className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
               />
             </div>
           )}

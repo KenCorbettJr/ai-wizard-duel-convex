@@ -16,7 +16,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Swords, Clock, Sparkles, ScrollText, Star } from "lucide-react";
+import {
+  Swords,
+  Clock,
+  Sparkles,
+  ScrollText,
+  Star,
+  Share2,
+} from "lucide-react";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
@@ -37,6 +44,7 @@ export default function DuelPage({ params }: DuelPageProps) {
     null
   );
   const [isJoining, setIsJoining] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const { id } = use(params);
 
   const duel = useQuery(api.duels.getDuel, {
@@ -113,6 +121,19 @@ export default function DuelPage({ params }: DuelPageProps) {
       console.error("Failed to join duel:", error);
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!duel?.shortcode) return;
+
+    const url = `${window.location.origin}/join/${duel.shortcode}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -258,7 +279,7 @@ export default function DuelPage({ params }: DuelPageProps) {
         <div className="max-w-4xl mx-auto pb-48">
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl font-bold text-foreground dark:text-foreground/95 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
                 {typeof duel.numberOfRounds === "number"
                   ? `${duel.numberOfRounds} Round Duel`
                   : "Duel to the Death"}
@@ -270,27 +291,20 @@ export default function DuelPage({ params }: DuelPageProps) {
                 Round {duel.currentRound} • Created{" "}
                 {new Date(duel.createdAt).toLocaleDateString()}
               </p>
-              {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground dark:text-muted-foreground/80">
-                    Share:
-                  </span>
-                  <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30">
-                    {duel.shortcode}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-purple-200 dark:border-purple-700/50 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-300"
-                    onClick={() => {
-                      const url = `${window.location.origin}/join/${duel.shortcode}`;
-                      navigator.clipboard.writeText(url);
-                    }}
-                  >
-                    Copy Link
-                  </Button>
-                </div>
-              )}
+              {duel.status === "WAITING_FOR_PLAYERS" &&
+                userWizard &&
+                userWizard._id === duel.wizards[0] && (
+                  <Link href={`/duels/${duel._id}/share`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-green-200 dark:border-green-700/50 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Challenge
+                    </Button>
+                  </Link>
+                )}
             </div>
           </div>
 
@@ -338,7 +352,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                 </CardTitle>
                 <CardDescription className="dark:text-muted-foreground/80">
                   {duel.players.length < 2
-                    ? "Waiting for more players to join..."
+                    ? "This duel needs one more player to begin"
                     : "Generating magical introduction and preparing the arena..."}
                 </CardDescription>
               </CardHeader>
@@ -407,22 +421,23 @@ export default function DuelPage({ params }: DuelPageProps) {
                     </p>
                     {duel.shortcode && (
                       <div className="bg-background/50 dark:bg-background/30 rounded-lg p-4 border border-border/30">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Share this duel:
+                        <p className="text-sm font-medium text-foreground mb-1">
+                          Invite another wizard to duel
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Share this link with someone you want to challenge:
                         </p>
                         <div className="flex items-center gap-2">
-                          <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30">
-                            {duel.shortcode}
+                          <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30 flex-1 truncate">
+                            {`${window.location.origin}/join/${duel.shortcode}`}
                           </code>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              const url = `${window.location.origin}/join/${duel.shortcode}`;
-                              navigator.clipboard.writeText(url);
-                            }}
+                            onClick={handleCopyLink}
+                            className="border-purple-200 dark:border-purple-700/50 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-300"
                           >
-                            Copy Link
+                            {copySuccess ? "✓ Copied!" : "Copy Link"}
                           </Button>
                         </div>
                       </div>
