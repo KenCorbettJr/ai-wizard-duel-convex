@@ -24,6 +24,7 @@ import {
   Star,
   Share2,
 } from "lucide-react";
+import { Crown } from "@/components/ui/crown-icon";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
@@ -329,6 +330,7 @@ export default function DuelPage({ params }: DuelPageProps) {
                     points={duel.points[duel.wizards[0]] || 0}
                     hitPoints={duel.hitPoints[duel.wizards[0]] || 100}
                     isUserWizard={wizard1.owner === user?.id}
+                    isWinner={duel.winners?.includes(duel.wizards[0]) || false}
                   />
                 )}
 
@@ -345,11 +347,39 @@ export default function DuelPage({ params }: DuelPageProps) {
                     points={duel.points[duel.wizards[1]] || 0}
                     hitPoints={duel.hitPoints[duel.wizards[1]] || 100}
                     isUserWizard={wizard2.owner === user?.id}
+                    isWinner={duel.winners?.includes(duel.wizards[1]) || false}
                   />
                 )}
               </div>
             </div>
           )}
+
+          {/* Winner Announcement for Completed Duels */}
+          {duel.status === "COMPLETED" &&
+            duel.winners &&
+            duel.winners.length > 0 && (
+              <Card className="mb-8 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-2 border-yellow-300 dark:border-yellow-600/50 shadow-lg dark:shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-center gap-3 text-2xl text-yellow-800 dark:text-yellow-200">
+                    <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                    {duel.winners.length === 1 ? "Victory!" : "Draw!"}
+                    <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                  </CardTitle>
+                  <CardDescription className="text-center text-yellow-700 dark:text-yellow-300 text-lg font-medium">
+                    {duel.winners.length === 1 ? (
+                      <>
+                        {duel.wizards[0] === duel.winners[0]
+                          ? wizard1?.name
+                          : wizard2?.name}{" "}
+                        emerges victorious!
+                      </>
+                    ) : (
+                      "The duel ends in an honorable draw!"
+                    )}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            )}
 
           {duel.status === "WAITING_FOR_PLAYERS" && (
             <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">

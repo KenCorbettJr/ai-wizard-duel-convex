@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConvexImage } from "@/components/ConvexImage";
 import { TimeAgo } from "@/components/TimeAgo";
+import { Crown } from "@/components/ui/crown-icon";
 import { Clock, Sparkles } from "lucide-react";
-import { Doc } from "../../convex/_generated/dataModel";
+import { Doc, Id } from "../../convex/_generated/dataModel";
 import { memo } from "react";
 
 interface DuelRoundCardProps {
@@ -134,6 +135,10 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     return `Round ${round.roundNumber}`;
   };
 
+  const isWinner = (wizardId: string) => {
+    return duel.winners?.includes(wizardId as Id<"wizards">) || false;
+  };
+
   const DeltaValue = ({ value }: { value: number }) => {
     if (value === 0) return <span>0</span>;
     if (value > 0)
@@ -143,8 +148,15 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
   const WizardName = ({ wizardId }: { wizardId: string }) => {
     const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
+    const winner = isWinner(wizardId);
     return (
-      <span className="font-semibold">{wizard?.name || "Loading..."}</span>
+      <span
+        className={`font-semibold flex items-center gap-1 ${winner ? "text-yellow-600 dark:text-yellow-400" : ""}`}
+      >
+        {winner && <Crown className="h-4 w-4" />}
+        {wizard?.name || "Loading..."}
+        {winner && <Crown className="h-4 w-4" />}
+      </span>
     );
   };
 
@@ -224,6 +236,34 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
         {round.status === "COMPLETED" && (
           <div className="space-y-6">
+            {/* Winner Announcement for Conclusion Rounds */}
+            {round.type === "CONCLUSION" &&
+              duel.winners &&
+              duel.winners.length > 0 && (
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-2 border-yellow-300 dark:border-yellow-600/50 rounded-lg p-6 text-center">
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                    <h3 className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">
+                      {duel.winners.length === 1
+                        ? "Victory Declared!"
+                        : "Honorable Draw!"}
+                    </h3>
+                    <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <p className="text-lg text-yellow-700 dark:text-yellow-300 font-medium">
+                    {duel.winners.length === 1 ? (
+                      <>
+                        {duel.wizards[0] === duel.winners[0]
+                          ? wizard1?.name
+                          : wizard2?.name}{" "}
+                        emerges as the champion!
+                      </>
+                    ) : (
+                      "Both wizards have proven their worth in this epic duel!"
+                    )}
+                  </p>
+                </div>
+              )}
             {/* Spell Actions Display */}
             {round.spells && duel.wizards.length >= 2 && (
               <div className="flex items-center gap-4 mb-4 flex-wrap">
@@ -291,10 +331,22 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                     <thead>
                       <tr className="bg-muted/50">
                         <th className="border border-border/50 p-2 text-left"></th>
-                        <th className="border border-border/50 p-2 text-center">
+                        <th
+                          className={`border border-border/50 p-2 text-center ${
+                            isWinner(duel.wizards[0])
+                              ? "bg-yellow-100 dark:bg-yellow-900/30"
+                              : ""
+                          }`}
+                        >
                           <WizardName wizardId={duel.wizards[0]} />
                         </th>
-                        <th className="border border-border/50 p-2 text-center">
+                        <th
+                          className={`border border-border/50 p-2 text-center ${
+                            isWinner(duel.wizards[1])
+                              ? "bg-yellow-100 dark:bg-yellow-900/30"
+                              : ""
+                          }`}
+                        >
                           <WizardName wizardId={duel.wizards[1]} />
                         </th>
                       </tr>
@@ -305,7 +357,13 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                           <td className="border border-border/50 p-2 font-medium">
                             Points Awarded
                           </td>
-                          <td className="border border-border/50 p-2 text-center">
+                          <td
+                            className={`border border-border/50 p-2 text-center ${
+                              isWinner(duel.wizards[0])
+                                ? "bg-yellow-100 dark:bg-yellow-900/30"
+                                : ""
+                            }`}
+                          >
                             <span className="p-2 bg-background rounded min-w-14 inline-block">
                               <DeltaValue
                                 value={
@@ -316,7 +374,13 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                               />
                             </span>
                           </td>
-                          <td className="border border-border/50 p-2 text-center">
+                          <td
+                            className={`border border-border/50 p-2 text-center ${
+                              isWinner(duel.wizards[1])
+                                ? "bg-yellow-100 dark:bg-yellow-900/30"
+                                : ""
+                            }`}
+                          >
                             <span className="p-2 bg-background rounded min-w-14 inline-block">
                               <DeltaValue
                                 value={
@@ -334,7 +398,13 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                           <td className="border border-border/50 p-2 font-medium">
                             Hit Points Change
                           </td>
-                          <td className="border border-border/50 p-2 text-center">
+                          <td
+                            className={`border border-border/50 p-2 text-center ${
+                              isWinner(duel.wizards[0])
+                                ? "bg-yellow-100 dark:bg-yellow-900/30"
+                                : ""
+                            }`}
+                          >
                             <span className="p-2 bg-background rounded min-w-14 inline-block">
                               <DeltaValue
                                 value={
@@ -344,7 +414,13 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                               />
                             </span>
                           </td>
-                          <td className="border border-border/50 p-2 text-center">
+                          <td
+                            className={`border border-border/50 p-2 text-center ${
+                              isWinner(duel.wizards[1])
+                                ? "bg-yellow-100 dark:bg-yellow-900/30"
+                                : ""
+                            }`}
+                          >
                             <span className="p-2 bg-background rounded min-w-14 inline-block">
                               <DeltaValue
                                 value={

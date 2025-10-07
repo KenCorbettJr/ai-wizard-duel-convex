@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Star, Heart } from "lucide-react";
+import { Crown } from "@/components/ui/crown-icon";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Id } from "../../convex/_generated/dataModel";
 import { memo } from "react";
@@ -21,6 +22,7 @@ interface WizardCardProps {
   maxHitPoints?: number;
   className?: string;
   isUserWizard?: boolean;
+  isWinner?: boolean;
 }
 
 export const WizardCard = memo(function WizardCard({
@@ -30,18 +32,25 @@ export const WizardCard = memo(function WizardCard({
   maxHitPoints = 100,
   className = "",
   isUserWizard = false,
+  isWinner = false,
 }: WizardCardProps) {
+  const getBorderClasses = () => {
+    if (isWinner) {
+      return "border-4 border-yellow-400 dark:border-yellow-300 ring-4 ring-yellow-400/30 dark:ring-yellow-300/30 shadow-yellow-400/20 dark:shadow-yellow-300/20";
+    }
+    if (isUserWizard) {
+      return "border-2 border-blue-500/70 dark:border-blue-400/70 ring-2 ring-blue-500/20 dark:ring-blue-400/20";
+    }
+    return "border-border/50 dark:border-border/30";
+  };
+
   return (
     <Link
       href={`/wizards/${wizard._id}`}
       className={`flex flex-1 flex-col ${className}`}
     >
       <Card
-        className={`overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex ${
-          isUserWizard
-            ? "border-2 border-blue-500/70 dark:border-blue-400/70 ring-2 ring-blue-500/20 dark:ring-blue-400/20"
-            : "border-border/50 dark:border-border/30"
-        }`}
+        className={`overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex ${getBorderClasses()}`}
       >
         <div className="relative">
           {wizard.illustration && (
@@ -56,7 +65,16 @@ export const WizardCard = memo(function WizardCard({
             </div>
           )}
           <div className="absolute top-4 right-4 flex gap-2">
-            {isUserWizard && (
+            {isWinner && (
+              <Badge
+                variant="default"
+                className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm font-bold"
+              >
+                <Crown className="h-3 w-3" />
+                Winner
+              </Badge>
+            )}
+            {isUserWizard && !isWinner && (
               <Badge
                 variant="default"
                 className="flex items-center gap-1 bg-blue-100/90 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30 backdrop-blur-sm font-semibold"
@@ -68,9 +86,14 @@ export const WizardCard = memo(function WizardCard({
         </div>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
-            <CardTitle className="text-xl text-foreground dark:text-foreground/95">
-              {wizard.name}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-xl text-foreground dark:text-foreground/95">
+                {wizard.name}
+              </CardTitle>
+              {isWinner && (
+                <Crown className="h-6 w-6 text-yellow-500 dark:text-yellow-400" />
+              )}
+            </div>
             {points !== undefined && (
               <div className="flex flex-col items-center gap-0.5">
                 <div className="flex items-center gap-0.5">

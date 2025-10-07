@@ -3,7 +3,7 @@
 import type { Doc } from "../convex/_generated/dataModel";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 import { Id } from "./_generated/dataModel";
 import { z } from "genkit/beta";
@@ -43,7 +43,9 @@ export const generateDuelIntroduction = action({
   ): Promise<{ success: boolean; introRoundId: Id<"duelRounds"> }> => {
     try {
       // Get the duel data (using internal query to bypass access control for scheduled actions)
-      const duel = await ctx.runQuery(api.duels.getDuelInternal, { duelId });
+      const duel = await ctx.runQuery(internal.duels.getDuelInternal, {
+        duelId,
+      });
       if (!duel) {
         throw new Error("Duel not found");
       }
