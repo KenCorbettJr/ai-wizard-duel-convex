@@ -3,10 +3,10 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import * as fal from "@fal-ai/serverless-client";
-import { isEmulatorMode, generateMockImage } from "./mocks/mockServices";
 
 export const generateImage = action({
   args: { prompt: v.string() },
+  returns: v.bytes(),
   handler: async (_ctx, { prompt }): Promise<ArrayBuffer> => {
     try {
       // Get FAL API key from environment

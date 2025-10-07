@@ -1,8 +1,10 @@
 "use node";
 
+"use node";
+
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
 
 export const generateWizardIllustration = action({
@@ -11,6 +13,10 @@ export const generateWizardIllustration = action({
     name: v.string(),
     description: v.string(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    storageId: v.string(),
+  }),
   handler: async (ctx, { wizardId, name, description }) => {
     console.log(
       `Starting illustration generation for wizard ${wizardId} (${name})`
@@ -36,7 +42,7 @@ export const generateWizardIllustration = action({
       );
 
       // Update the wizard with the new illustration using internal mutation
-      await ctx.runMutation(api.wizards.updateWizardInternal, {
+      await ctx.runMutation(internal.wizards.updateWizardInternal, {
         wizardId,
         illustration: storageId,
       });

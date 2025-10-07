@@ -8,6 +8,7 @@ export const getOrCreateUser = mutation({
     email: v.optional(v.string()),
     name: v.optional(v.string()),
   },
+  returns: v.id("users"),
   handler: async (ctx, { clerkId, email, name }) => {
     // Check if user already exists
     const existingUser = await ctx.db
@@ -44,6 +45,23 @@ export const getOrCreateUser = mutation({
 // Get user by Clerk ID
 export const getUserByClerkId = query({
   args: { clerkId: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      clerkId: v.string(),
+      role: v.union(
+        v.literal("user"),
+        v.literal("admin"),
+        v.literal("super_admin")
+      ),
+      email: v.optional(v.string()),
+      name: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
   handler: async (ctx, { clerkId }) => {
     return await ctx.db
       .query("users")
@@ -62,6 +80,7 @@ export const updateUserRole = mutation({
       v.literal("super_admin")
     ),
   },
+  returns: v.id("users"),
   handler: async (ctx, { clerkId, role }) => {
     // Get current user identity
     const identity = await ctx.auth.getUserIdentity();
@@ -102,6 +121,22 @@ export const updateUserRole = mutation({
 // List all users (super admin only)
 export const listUsers = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      clerkId: v.string(),
+      role: v.union(
+        v.literal("user"),
+        v.literal("admin"),
+        v.literal("super_admin")
+      ),
+      email: v.optional(v.string()),
+      name: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
   handler: async (ctx) => {
     // Get current user identity
     const identity = await ctx.auth.getUserIdentity();

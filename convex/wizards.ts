@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { Wizard } from "@/types/wizard";
@@ -6,6 +6,23 @@ import { Wizard } from "@/types/wizard";
 // Get all wizards for the authenticated user
 export const getUserWizards = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+    })
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -105,11 +122,12 @@ export const updateWizardStats = mutation({
 });
 
 // Internal function to update wizard stats (used by system functions like duel completion)
-export const updateWizardStatsInternal = mutation({
+export const updateWizardStatsInternal = internalMutation({
   args: {
     wizardId: v.id("wizards"),
     won: v.boolean(),
   },
+  returns: v.null(),
   handler: async (ctx, { wizardId, won }) => {
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
@@ -127,7 +145,7 @@ export const updateWizardStatsInternal = mutation({
 });
 
 // Internal function to update wizard details (used by system functions like image generation)
-export const updateWizardInternal = mutation({
+export const updateWizardInternal = internalMutation({
   args: {
     wizardId: v.id("wizards"),
     name: v.optional(v.string()),
@@ -136,6 +154,7 @@ export const updateWizardInternal = mutation({
     illustration: v.optional(v.string()),
     isAIPowered: v.optional(v.boolean()),
   },
+  returns: v.null(),
   handler: async (ctx, { wizardId, ...updates }) => {
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
@@ -155,12 +174,13 @@ export const updateWizardInternal = mutation({
 });
 
 // Internal function to schedule wizard illustration generation
-export const scheduleWizardIllustrationInternal = mutation({
+export const scheduleWizardIllustrationInternal = internalMutation({
   args: {
     wizardId: v.id("wizards"),
     name: v.string(),
     description: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { wizardId, name, description }) => {
     // Verify wizard exists
     const wizard = await ctx.db.get(wizardId);

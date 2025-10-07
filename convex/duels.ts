@@ -1,8 +1,8 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import {
   verifySuperAdmin,
   debugUserMetadata,
@@ -26,6 +26,30 @@ export type DuelLengthOption = "TO_THE_DEATH";
 // Get all duels for the authenticated player
 export const getPlayerDuels = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("duels"),
+      _creationTime: v.number(),
+      numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+      wizards: v.array(v.id("wizards")),
+      players: v.array(v.string()),
+      status: v.union(
+        v.literal("WAITING_FOR_PLAYERS"),
+        v.literal("IN_PROGRESS"),
+        v.literal("COMPLETED"),
+        v.literal("CANCELLED")
+      ),
+      currentRound: v.number(),
+      createdAt: v.number(),
+      points: v.record(v.string(), v.number()),
+      hitPoints: v.record(v.string(), v.number()),
+      needActionsFrom: v.array(v.id("wizards")),
+      featuredIllustration: v.optional(v.string()),
+      winners: v.optional(v.array(v.id("wizards"))),
+      losers: v.optional(v.array(v.id("wizards"))),
+      shortcode: v.optional(v.string()),
+    })
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -99,8 +123,72 @@ export const getDuel = query({
 });
 
 // Internal query to get duel data without access control (for system operations)
-export const getDuelInternal = query({
+export const getDuelInternal = internalQuery({
   args: { duelId: v.id("duels") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("duels"),
+      _creationTime: v.number(),
+      numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+      wizards: v.array(v.id("wizards")),
+      players: v.array(v.string()),
+      status: v.union(
+        v.literal("WAITING_FOR_PLAYERS"),
+        v.literal("IN_PROGRESS"),
+        v.literal("COMPLETED"),
+        v.literal("CANCELLED")
+      ),
+      currentRound: v.number(),
+      createdAt: v.number(),
+      points: v.record(v.string(), v.number()),
+      hitPoints: v.record(v.string(), v.number()),
+      needActionsFrom: v.array(v.id("wizards")),
+      featuredIllustration: v.optional(v.string()),
+      winners: v.optional(v.array(v.id("wizards"))),
+      losers: v.optional(v.array(v.id("wizards"))),
+      shortcode: v.optional(v.string()),
+      rounds: v.array(
+        v.object({
+          _id: v.id("duelRounds"),
+          _creationTime: v.number(),
+          duelId: v.id("duels"),
+          roundNumber: v.number(),
+          type: v.union(
+            v.literal("SPELL_CASTING"),
+            v.literal("COUNTER_SPELL"),
+            v.literal("FINAL_ROUND"),
+            v.literal("CONCLUSION")
+          ),
+          spells: v.optional(
+            v.record(
+              v.string(),
+              v.object({
+                description: v.string(),
+                castBy: v.id("wizards"),
+                timestamp: v.number(),
+              })
+            )
+          ),
+          outcome: v.optional(
+            v.object({
+              narrative: v.string(),
+              result: v.optional(v.string()),
+              illustration: v.optional(v.string()),
+              illustrationPrompt: v.optional(v.string()),
+              pointsAwarded: v.optional(v.record(v.string(), v.number())),
+              healthChange: v.optional(v.record(v.string(), v.number())),
+            })
+          ),
+          status: v.union(
+            v.literal("WAITING_FOR_SPELLS"),
+            v.literal("PROCESSING"),
+            v.literal("COMPLETED")
+          ),
+        })
+      ),
+    })
+  ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
     if (!duel) return null;
@@ -502,13 +590,13 @@ export const completeRound = mutation({
       // Update wizard stats
       if (shouldEndDuel.winners && shouldEndDuel.losers) {
         for (const winnerId of shouldEndDuel.winners) {
-          await ctx.runMutation(api.wizards.updateWizardStatsInternal, {
+          await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
             wizardId: winnerId,
             won: true,
           });
         }
         for (const loserId of shouldEndDuel.losers) {
-          await ctx.runMutation(api.wizards.updateWizardStatsInternal, {
+          await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
             wizardId: loserId,
             won: false,
           });
