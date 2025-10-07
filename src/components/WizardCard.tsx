@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Heart } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Id } from "../../convex/_generated/dataModel";
+import { memo } from "react";
 
 interface WizardCardProps {
   wizard: {
@@ -22,7 +23,7 @@ interface WizardCardProps {
   isUserWizard?: boolean;
 }
 
-export function WizardCard({
+export const WizardCard = memo(function WizardCard({
   wizard,
   points,
   hitPoints,
@@ -111,4 +112,4 @@ export function WizardCard({
       </Card>
     </Link>
   );
-}
+});

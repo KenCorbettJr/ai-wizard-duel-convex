@@ -4,12 +4,15 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
+import { memo } from "react";
 
 interface DuelIntroductionProps {
   duelId: Id<"duels">;
 }
 
-export function DuelIntroduction({ duelId }: DuelIntroductionProps) {
+export const DuelIntroduction = memo(function DuelIntroduction({
+  duelId,
+}: DuelIntroductionProps) {
   const introRound = useQuery(api.duels.getIntroductionRound, { duelId });
 
   if (!introRound) {
@@ -71,4 +74,4 @@ export function DuelIntroduction({ duelId }: DuelIntroductionProps) {
       </div>
     </div>
   );
-}
+});

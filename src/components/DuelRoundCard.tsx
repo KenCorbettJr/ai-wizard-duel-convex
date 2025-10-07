@@ -10,13 +10,17 @@ import { ConvexImage } from "@/components/ConvexImage";
 import { TimeAgo } from "@/components/TimeAgo";
 import { Clock, Sparkles } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
+import { memo } from "react";
 
 interface DuelRoundCardProps {
   round: Doc<"duelRounds">;
   duel: Doc<"duels">;
 }
 
-export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
+export const DuelRoundCard = memo(function DuelRoundCard({
+  round,
+  duel,
+}: DuelRoundCardProps) {
   const { user } = useUser();
 
   // Fetch wizard data for each wizard in the duel
@@ -362,4 +366,4 @@ export function DuelRoundCard({ round, duel }: DuelRoundCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

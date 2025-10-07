@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Image from "next/image";
+import { memo } from "react";
 
 interface ConvexImageProps {
   storageId: string;
@@ -12,7 +13,7 @@ interface ConvexImageProps {
   className?: string;
 }
 
-export function ConvexImage({
+export const ConvexImage = memo(function ConvexImage({
   storageId,
   alt,
   width = 400,
@@ -24,7 +25,7 @@ export function ConvexImage({
   if (!imageUrl) {
     return (
       <div
-        className={`bg-gray-200 animate-pulse rounded-lg ${className}`}
+        className={`bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg ${className}`}
         style={{ width, height }}
       />
     );
@@ -37,6 +38,8 @@ export function ConvexImage({
       width={width}
       height={height}
       className={className}
+      priority={false}
+      loading="lazy"
     />
   );
-}
+});

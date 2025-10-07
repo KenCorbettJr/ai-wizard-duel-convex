@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Swords,
   Clock,
@@ -68,22 +68,32 @@ export default function DuelPage({ params }: DuelPageProps) {
   // Get user's wizards for joining
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
-  // Find the user's wizard in this duel
-  const userWizard = [wizard1, wizard2].find(
-    (wizard) => wizard?.owner === user?.id
+  // Memoize expensive calculations
+  const userWizard = useMemo(
+    () => [wizard1, wizard2].find((wizard) => wizard?.owner === user?.id),
+    [wizard1, wizard2, user?.id]
   );
+
   const userWizardId = userWizard?._id;
 
-  // Get the current round to check if user has already cast a spell
-  const currentRound = duel?.rounds?.find(
-    (round) => round.roundNumber === duel.currentRound
+  const currentRound = useMemo(
+    () =>
+      duel?.rounds?.find((round) => round.roundNumber === duel.currentRound),
+    [duel?.rounds, duel?.currentRound]
   );
-  const hasUserCastSpell =
-    currentRound?.spells && userWizardId
-      ? currentRound.spells[userWizardId] !== undefined
-      : false;
 
-  const isPlayerInDuel = duel?.players.includes(user?.id || "");
+  const hasUserCastSpell = useMemo(
+    () =>
+      currentRound?.spells && userWizardId
+        ? currentRound.spells[userWizardId] !== undefined
+        : false,
+    [currentRound?.spells, userWizardId]
+  );
+
+  const isPlayerInDuel = useMemo(
+    () => duel?.players.includes(user?.id || ""),
+    [duel?.players, user?.id]
+  );
 
   // Check for loading and error states
   const isDuelLoading = duel === undefined;
@@ -525,7 +535,11 @@ export default function DuelPage({ params }: DuelPageProps) {
               {duel.rounds
                 .filter((round) => round.roundNumber > 0) // Exclude introduction round
                 .map((round) => (
-                  <DuelRoundCard key={round._id} round={round} duel={duel} />
+                  <DuelRoundCard
+                    key={`${round._id}-${round.status}-${round.roundNumber}`}
+                    round={round}
+                    duel={duel}
+                  />
                 ))}
             </div>
           )}
