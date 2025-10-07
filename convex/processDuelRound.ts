@@ -5,7 +5,7 @@ import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { generateObject } from "./aiTextGeneration";
 import { Id } from "./_generated/dataModel";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
 import { Wizard } from "@/types/wizard";
@@ -173,7 +173,9 @@ export const processDuelRound = action({
   handler: async (ctx, { duelId, roundId }) => {
     try {
       // Get the duel data (using internal query to bypass access control for scheduled actions)
-      const duel = await ctx.runQuery(api.duels.getDuelInternal, { duelId });
+      const duel = await ctx.runQuery(internal.duels.getDuelInternal, {
+        duelId,
+      });
       if (!duel) {
         throw new Error("Duel not found");
       }
@@ -249,15 +251,19 @@ export const processDuelRound = action({
 
       // Schedule round illustration generation
       if (process.env.NODE_ENV !== "test" && battleResult.illustrationPrompt) {
+        // Check if we should use Gemini Nano Banana
+        const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+
         await ctx.runMutation(api.duels.scheduleRoundIllustration, {
           illustrationPrompt: battleResult.illustrationPrompt,
           duelId,
           roundNumber: round.roundNumber.toString(),
+          useGemini,
         });
       }
 
       // Check if we need to generate a conclusion
-      const updatedDuel = await ctx.runQuery(api.duels.getDuelInternal, {
+      const updatedDuel = await ctx.runQuery(internal.duels.getDuelInternal, {
         duelId,
       });
       if (updatedDuel && updatedDuel.status === "COMPLETED") {

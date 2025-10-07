@@ -91,6 +91,9 @@ export const generateDuelIntroduction = action({
       if (introduction.illustrationPrompt) {
         // Skip introduction illustration scheduling to avoid transaction escape errors in tests
         if (process.env.NODE_ENV !== "test") {
+          // Check if we should use Gemini Nano Banana
+          const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+
           await ctx.scheduler.runAfter(
             100, // Add small delay to ensure database transaction is committed
             api.generateRoundIllustration.generateRoundIllustration,
@@ -98,6 +101,7 @@ export const generateDuelIntroduction = action({
               illustrationPrompt: introduction.illustrationPrompt,
               duelId,
               roundNumber: "0", // Introduction round
+              useGemini,
             }
           );
         }

@@ -1,25 +1,84 @@
 "use node";
 
-import { action } from "./_generated/server";
+import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
 export const generateRoundIllustration = action({
   args: {
     illustrationPrompt: v.string(),
     duelId: v.id("duels"),
     roundNumber: v.string(), // Can be "0" for introduction or actual round number
+    useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
   },
-  handler: async (ctx, { illustrationPrompt, duelId, roundNumber }) => {
+  handler: async (
+    ctx,
+    { illustrationPrompt, duelId, roundNumber, useGemini = false }
+  ) => {
     console.log(
-      `Starting illustration generation for duel ${duelId}, round ${roundNumber}`
+      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"}`
     );
 
     try {
-      // Generate the image using Fal
-      const imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
-        prompt: illustrationPrompt,
-      });
+      let imageBuffer: ArrayBuffer;
+      let previousImage: string | undefined;
+
+      // Get duel and wizard information
+      const duel = await ctx.runQuery(api.duels.getDuel, { duelId });
+      if (!duel) {
+        throw new Error("Duel not found");
+      }
+
+      if (useGemini) {
+        // For Gemini Nano Banana, we need to handle different scenarios
+        if (roundNumber === "0") {
+          // Introduction round only: get both wizard illustrations
+          const wizardImages = await getAllWizardIllustrations(
+            ctx,
+            duel.wizards
+          );
+
+          // Generate with Gemini Nano Banana using wizard images
+          imageBuffer = await ctx.runAction(
+            api.generateImageWithGemini.generateImageWithGemini,
+            {
+              prompt: illustrationPrompt,
+              wizardImages,
+              useGemini: true,
+            }
+          );
+        } else {
+          // All subsequent rounds: use previous round's illustration + wizard context
+          previousImage = await getPreviousRoundIllustration(
+            ctx,
+            duelId,
+            parseInt(roundNumber)
+          );
+
+          // Get wizard descriptions for context
+          const wizardDescriptions = await getWizardDescriptions(
+            ctx,
+            duel.wizards
+          );
+
+          // Generate with Gemini Nano Banana using previous image and wizard context
+          imageBuffer = await ctx.runAction(
+            api.generateImageWithGemini.generateImageWithGemini,
+            {
+              prompt: illustrationPrompt,
+              previousImage,
+              wizardDescriptions,
+              useGemini: true,
+            }
+          );
+        }
+      } else {
+        // Use FAL (original approach)
+        imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
+          prompt: illustrationPrompt,
+        });
+      }
 
       // Store the image in Convex File Storage
       const storageId = await ctx.storage.store(
@@ -64,3 +123,122 @@ export const generateRoundIllustration = action({
     }
   },
 });
+
+// Helper function to get all wizard illustrations for the first round
+async function getAllWizardIllustrations(
+  ctx: ActionCtx,
+  wizardIds: Id<"wizards">[]
+): Promise<string[]> {
+  try {
+    // Get wizard data
+    const wizards = await Promise.all(
+      wizardIds.map((wizardId) =>
+        ctx.runQuery(api.wizards.getWizard, { wizardId })
+      )
+    );
+
+    // Extract all available wizard illustrations
+    const illustrations: string[] = [];
+
+    for (const wizard of wizards) {
+      if (
+        wizard &&
+        typeof wizard === "object" &&
+        "illustration" in wizard &&
+        wizard.illustration
+      ) {
+        const w = wizard as { illustration: string };
+        illustrations.push(w.illustration);
+      }
+    }
+
+    return illustrations;
+  } catch (error) {
+    console.warn("Could not get wizard illustrations:", error);
+    return [];
+  }
+}
+
+// Helper function to get wizard descriptions for context in subsequent rounds
+async function getWizardDescriptions(
+  ctx: ActionCtx,
+  wizardIds: Id<"wizards">[]
+): Promise<Array<{ name: string; description: string }>> {
+  try {
+    // Get wizard data
+    const wizards = await Promise.all(
+      wizardIds.map((wizardId) =>
+        ctx.runQuery(api.wizards.getWizard, { wizardId })
+      )
+    );
+
+    // Extract wizard names and descriptions
+    const descriptions: Array<{ name: string; description: string }> = [];
+
+    for (const wizard of wizards) {
+      if (
+        wizard &&
+        typeof wizard === "object" &&
+        "name" in wizard &&
+        "description" in wizard
+      ) {
+        const w = wizard as { name: string; description: string };
+        descriptions.push({
+          name: w.name,
+          description: w.description,
+        });
+      }
+    }
+
+    return descriptions;
+  } catch (error) {
+    console.warn("Could not get wizard descriptions:", error);
+    return [];
+  }
+}
+
+// Helper function to get the previous round's illustration
+async function getPreviousRoundIllustration(
+  ctx: ActionCtx,
+  duelId: Id<"duels">,
+  currentRoundNumber: number
+): Promise<string | undefined> {
+  try {
+    const rounds = (await ctx.runQuery(api.duels.getDuelRounds, {
+      duelId,
+    })) as unknown[];
+
+    // Find the most recent completed round before the current one
+    const previousRounds = rounds
+      .filter((round: unknown) => {
+        if (!round || typeof round !== "object") return false;
+        const r = round as {
+          roundNumber: number;
+          status: string;
+          outcome?: { illustration?: string };
+        };
+        return (
+          r.roundNumber < currentRoundNumber &&
+          r.status === "COMPLETED" &&
+          r.outcome?.illustration
+        );
+      })
+      .sort((a: unknown, b: unknown) => {
+        const roundA = a as { roundNumber: number };
+        const roundB = b as { roundNumber: number };
+        return roundB.roundNumber - roundA.roundNumber;
+      });
+
+    if (previousRounds.length > 0) {
+      const firstRound = previousRounds[0] as {
+        outcome?: { illustration?: string };
+      };
+      return firstRound.outcome?.illustration;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.warn("Could not get previous round illustration:", error);
+    return undefined;
+  }
+}

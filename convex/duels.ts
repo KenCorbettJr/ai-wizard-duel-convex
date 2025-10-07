@@ -887,8 +887,12 @@ export const scheduleRoundIllustration = mutation({
     illustrationPrompt: v.string(),
     duelId: v.id("duels"),
     roundNumber: v.string(),
+    useGemini: v.optional(v.boolean()),
   },
-  handler: async (ctx, { illustrationPrompt, duelId, roundNumber }) => {
+  handler: async (
+    ctx,
+    { illustrationPrompt, duelId, roundNumber, useGemini = false }
+  ) => {
     // Schedule the illustration generation
     // Skip scheduling in test environment to avoid transaction escape errors
     if (process.env.NODE_ENV !== "test") {
@@ -899,6 +903,7 @@ export const scheduleRoundIllustration = mutation({
           illustrationPrompt,
           duelId,
           roundNumber,
+          useGemini,
         }
       );
     }
