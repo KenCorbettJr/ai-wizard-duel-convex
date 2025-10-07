@@ -11,7 +11,6 @@ import {
   Home,
   Swords,
   Eye,
-  BarChart3,
   Trophy,
   Users,
   Wand2,
@@ -38,12 +37,7 @@ const sidebarItems: SidebarItem[] = [
     label: "Watch Duels",
     icon: Eye,
   },
-  {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: BarChart3,
-    requiresAuth: true,
-  },
+
   {
     href: "/wizards",
     label: "My Wizards",

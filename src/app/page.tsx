@@ -17,14 +17,28 @@ import {
   Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
+import DashboardContent from "@/components/DashboardContent";
 
 export const metadata: Metadata = {
-  title: "Home",
+  title: "AI Wizard Duel",
   description:
     "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
 };
 
 export default function Home() {
+  return (
+    <>
+      <SignedOut>
+        <LandingPage />
+      </SignedOut>
+      <SignedIn>
+        <DashboardContent />
+      </SignedIn>
+    </>
+  );
+}
+
+function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
