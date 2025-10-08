@@ -431,7 +431,12 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                             }`}
                           >
                             <div className="flex justify-center">
-                              <D20Die value={20} size="sm" />
+                              <D20Die
+                                value={
+                                  round.outcome.luckRolls[duel.wizards[0]] || 1
+                                }
+                                size="sm"
+                              />
                             </div>
                           </td>
                           <td

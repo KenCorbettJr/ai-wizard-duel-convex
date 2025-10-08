@@ -36,8 +36,8 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
   const getColorStyle = (roll: number) => {
     if (roll >= 19) {
       return {
-        "--face-color": "rgba(183 36 251)",
-        "--text-color": "#5b2474",
+        "--face-color": "rgba(186 36 255 / 0.85)",
+        "--text-color": "#3c2447",
       };
     }
     if (roll >= 16) {
@@ -48,7 +48,7 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
     }
     if (roll >= 11) {
       return {
-        "--face-color": "rgba(59, 130, 246, 0.85)",
+        "--face-color": "rgba(59 134 255 / 0.85)",
         "--text-color": "#1e3a8a",
       };
     }
@@ -85,6 +85,10 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
         {/* Generate all 20 faces */}
         {Array.from({ length: 20 }, (_, i) => {
           const faceNumber = i + 1;
+          const isTargetFace = faceNumber === value;
+          const faceOpacity = isTargetFace ? 1 : 0.8; // Darken non-target faces
+          const textOpacity = isTargetFace ? 1 : 0.4; // Slightly darken text on non-target faces
+
           return (
             <div
               key={faceNumber}
@@ -100,6 +104,7 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
                 borderBottom: `${config.faceHeight}px solid var(--face-color)`,
                 transformStyle: "preserve-3d",
                 backfaceVisibility: "hidden",
+                opacity: faceOpacity,
                 ...getFaceTransform(faceNumber, config),
               }}
             >
@@ -113,6 +118,7 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
                   color: "var(--text-color)",
                   fontSize: config.fontSize,
                   lineHeight: `${config.faceHeight * 0.9}px`,
+                  opacity: textOpacity,
                 }}
               >
                 {faceNumber}
@@ -138,19 +144,18 @@ function getDieRotation(face: number): string {
     5: "rotateX(-60deg) rotateY(288deg)",
 
     // Upper ring (6-10) - need to flip and rotate to bring to front
-    6: "rotateX(11deg) rotateZ(180deg) rotateY(0deg)",
-    7: "rotateX(11deg) rotateZ(180deg) rotateY(72deg)",
-    8: "rotateX(11deg) rotateZ(180deg) rotateY(144deg)",
-    9: "rotateX(11deg) rotateZ(180deg) rotateY(216deg)",
-    10: "rotateX(11deg) rotateZ(180deg) rotateY(288deg)",
+    6: "rotateX(5deg) rotateZ(180deg) rotateY(0deg)",
+    7: "rotateX(5deg) rotateZ(180deg) rotateY(72deg)",
+    8: "rotateX(5deg) rotateZ(180deg) rotateY(144deg)",
+    9: "rotateX(5deg) rotateZ(180deg) rotateY(216deg)",
+    10: "rotateX(5deg) rotateZ(180deg) rotateY(288deg)",
 
     // Lower ring (11-15) - rotate to bring to front
-    11: "rotateX(0deg) rotateY(-36deg)",
-    12: "rotateX(0deg) rotateY(-108deg)",
-    13: "rotateX(0deg) rotateY(-180deg)",
-    14: "rotateX(0deg) rotateY(-252deg)",
-    15: "rotateX(0deg) rotateY(-324deg)",
-    15: "rotateX(0deg) rotateY(-324deg)",
+    11: "rotateX(5deg) rotateY(-36deg)",
+    12: "rotateX(5deg) rotateY(-108deg)",
+    13: "rotateX(5deg) rotateY(-180deg)",
+    14: "rotateX(5deg) rotateY(-252deg)",
+    15: "rotateX(5deg) rotateY(-324deg)",
 
     // Bottom faces (16-20) - flip upside down and rotate
     16: "rotateX(-60deg) rotateZ(180deg) rotateY(324deg)",
