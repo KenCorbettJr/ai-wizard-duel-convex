@@ -52,7 +52,7 @@ export default function JoinDuelPage() {
   };
 
   const handleClose = () => {
-    router.push("/dashboard");
+    router.push("/");
   };
 
   return (

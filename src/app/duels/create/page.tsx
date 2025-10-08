@@ -5,15 +5,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CreateDuelForm } from "@/components/CreateDuelForm";
 import { DuelCreatedSuccess } from "@/components/DuelCreatedSuccess";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { safeConvexId } from "../../../lib/utils";
 
 function CreateDuelContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [createdDuelId, setCreatedDuelId] = useState<Id<"duels"> | null>(null);
 
-  const preSelectedWizardId = searchParams.get(
-    "wizardId"
-  ) as Id<"wizards"> | null;
+  const wizardIdParam = searchParams.get("wizardId");
+  const preSelectedWizardId = wizardIdParam
+    ? safeConvexId(wizardIdParam, "wizards")
+    : null;
 
   const handleSuccess = (duelId: Id<"duels">) => {
     // Redirect to the share page to show the beautiful challenge view
@@ -21,7 +23,7 @@ function CreateDuelContent() {
   };
 
   const handleClose = () => {
-    router.push("/dashboard");
+    router.push("/");
   };
 
   const handleViewDuel = () => {

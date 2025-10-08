@@ -30,6 +30,7 @@ import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
 import { DuelRoundCard } from "@/components/DuelRoundCard";
 import { CastSpellModal } from "@/components/CastSpellModal";
+import { safeConvexId } from "../../../lib/utils";
 
 interface DuelPageProps {
   params: Promise<{
@@ -48,9 +49,10 @@ export default function DuelPage({ params }: DuelPageProps) {
   const [copySuccess, setCopySuccess] = useState(false);
   const { id } = use(params);
 
-  const duel = useQuery(api.duels.getDuel, {
-    duelId: id as Id<"duels">,
-  });
+  // Validate the ID format first
+  const duelId = safeConvexId(id, "duels");
+
+  const duel = useQuery(api.duels.getDuel, duelId ? { duelId } : "skip");
 
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
@@ -97,8 +99,8 @@ export default function DuelPage({ params }: DuelPageProps) {
   );
 
   // Check for loading and error states
-  const isDuelLoading = duel === undefined;
-  const isDuelError = duel === null;
+  const isDuelLoading = duel === undefined && duelId !== null;
+  const isDuelError = duel === null || duelId === null;
 
   const handleCastSpell = async () => {
     if (!duel || !spellDescription.trim() || !userWizardId) return;
@@ -183,6 +185,8 @@ export default function DuelPage({ params }: DuelPageProps) {
 
   // Show error state
   if (isDuelError) {
+    const isInvalidId = duelId === null;
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
         <div className="container mx-auto px-6 py-12">
@@ -191,10 +195,12 @@ export default function DuelPage({ params }: DuelPageProps) {
               <CardHeader>
                 <CardTitle className="text-destructive dark:text-red-400 flex items-center gap-2">
                   <Swords className="h-5 w-5" />
-                  Error Loading Duel
+                  {isInvalidId ? "Invalid Duel ID" : "Duel Not Found"}
                 </CardTitle>
                 <CardDescription className="dark:text-muted-foreground/80">
-                  We couldn&apos;t load the duel you&apos;re looking for.
+                  {isInvalidId
+                    ? "The duel ID in the URL is not valid."
+                    : "We couldn't load the duel you're looking for."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -202,9 +208,19 @@ export default function DuelPage({ params }: DuelPageProps) {
                   This could happen if:
                 </p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-1 ml-4">
-                  <li>The duel doesn&apos;t exist or has been deleted</li>
-                  <li>You don&apos;t have permission to view this duel</li>
-                  <li>There&apos;s a temporary connection issue</li>
+                  {isInvalidId ? (
+                    <>
+                      <li>The URL was typed incorrectly</li>
+                      <li>The link you followed is broken or incomplete</li>
+                      <li>The duel ID format is invalid</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>The duel doesn't exist or has been deleted</li>
+                      <li>You don't have permission to view this duel</li>
+                      <li>There&apos;s a temporary connection issue</li>
+                    </>
+                  )}
                 </ul>
                 <div className="flex gap-3 pt-4">
                   <Button
@@ -214,13 +230,15 @@ export default function DuelPage({ params }: DuelPageProps) {
                   >
                     <Link href="/duels">Browse Duels</Link>
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
-                    onClick={() => window.location.reload()}
-                  >
-                    Try Again
-                  </Button>
+                  {!isInvalidId && (
+                    <Button
+                      variant="outline"
+                      className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
+                      onClick={() => window.location.reload()}
+                    >
+                      Try Again
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -291,9 +309,11 @@ export default function DuelPage({ params }: DuelPageProps) {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                {typeof duel.numberOfRounds === "number"
-                  ? `${duel.numberOfRounds} Round Duel`
-                  : "Duel to the Death"}
+                {wizard1 && wizard2
+                  ? `${wizard1.name} vs ${wizard2.name}`
+                  : typeof duel.numberOfRounds === "number"
+                    ? `${duel.numberOfRounds} Round Duel`
+                    : "Duel to the Death"}
               </h2>
               {getStatusBadge(duel.status)}
             </div>

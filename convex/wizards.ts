@@ -393,3 +393,71 @@ export const getDefeatedWizards = query({
       }));
   },
 });
+
+// Get leaderboard of wizards ordered by win rate - public information
+export const getWizardLeaderboard = query({
+  args: {
+    limit: v.optional(v.number()),
+    minDuels: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      winRate: v.number(),
+      totalDuels: v.number(),
+      rank: v.number(),
+    })
+  ),
+  handler: async (ctx, { limit = 50, minDuels = 1 }) => {
+    // Get all wizards
+    const wizards = await ctx.db.query("wizards").collect();
+
+    // Calculate win rates and filter by minimum duels
+    const wizardStats = wizards
+      .map((wizard) => {
+        const wins = wizard.wins || 0;
+        const losses = wizard.losses || 0;
+        const totalDuels = wins + losses;
+        const winRate = totalDuels > 0 ? wins / totalDuels : 0;
+
+        return {
+          ...wizard,
+          winRate,
+          totalDuels,
+          rank: 0, // Will be set after sorting
+        };
+      })
+      .filter((wizard) => wizard.totalDuels >= minDuels);
+
+    // Sort by win rate (descending), then by total wins (descending), then by total duels (descending)
+    wizardStats.sort((a, b) => {
+      if (a.winRate !== b.winRate) {
+        return b.winRate - a.winRate;
+      }
+      if ((a.wins || 0) !== (b.wins || 0)) {
+        return (b.wins || 0) - (a.wins || 0);
+      }
+      return b.totalDuels - a.totalDuels;
+    });
+
+    // Assign ranks
+    wizardStats.forEach((wizard, index) => {
+      wizard.rank = index + 1;
+    });
+
+    // Apply limit
+    return wizardStats.slice(0, limit);
+  },
+});

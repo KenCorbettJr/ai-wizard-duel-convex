@@ -17,6 +17,8 @@ import {
   Menu,
   X,
   Plus,
+  Crown,
+  BarChart3,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -37,7 +39,11 @@ const sidebarItems: SidebarItem[] = [
     label: "Watch Duels",
     icon: Eye,
   },
-
+  {
+    href: "/leaderboard",
+    label: "Leaderboard",
+    icon: Crown,
+  },
   {
     href: "/wizards",
     label: "My Wizards",
@@ -65,7 +71,7 @@ const sidebarItems: SidebarItem[] = [
   {
     href: "/stats",
     label: "Stats",
-    icon: Trophy,
+    icon: BarChart3,
     requiresAuth: true,
   },
 ];

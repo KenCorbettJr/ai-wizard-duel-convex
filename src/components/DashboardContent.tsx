@@ -38,27 +38,42 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <Link href="/duels" className="group">
           <CardTitle className="flex items-center gap-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors cursor-pointer">
-            <Swords className="h-5 w-5" />
+            <Swords className="h-5 w-5 text-orange-500" />
             Active Duels
+            {activeDuels.length > 0 && (
+              <span className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs px-2 py-1 rounded-full">
+                {activeDuels.length}
+              </span>
+            )}
           </CardTitle>
         </Link>
         <CardDescription>Your ongoing magical duels</CardDescription>
       </CardHeader>
       <CardContent>
         {activeDuels.length === 0 ? (
-          <div className="text-center py-4">
+          <div className="text-center py-8">
+            <div className="mb-4">
+              <Swords className="h-12 w-12 mx-auto text-muted-foreground/50" />
+            </div>
             <p className="text-muted-foreground mb-4">
-              No active duels. Create one to get started!
+              No active duels. Ready for battle?
             </p>
-            <Link href="/duels/create">
-              <Button variant="outline" size="sm">
-                Create Duel
-              </Button>
-            </Link>
+            <div className="space-y-2">
+              <Link href="/duels/create" className="block">
+                <Button size="sm" className="w-full">
+                  Create Duel
+                </Button>
+              </Link>
+              <Link href="/duels/join" className="block">
+                <Button variant="outline" size="sm" className="w-full">
+                  Join Existing
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -71,9 +86,9 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
               />
             ))}
             {activeDuels.length > 3 && (
-              <div className="text-center pt-2">
+              <div className="text-center pt-2 border-t">
                 <Link href="/duels">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="mt-2">
                     View All ({activeDuels.length})
                   </Button>
                 </Link>
@@ -93,24 +108,34 @@ function CompletedDuelsCard({ userId }: { userId?: string }) {
   );
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <Link href="/duels" className="group">
           <CardTitle className="flex items-center gap-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors cursor-pointer">
-            <Trophy className="h-5 w-5" />
-            Completed Duels
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            Recent Battles
+            {completedDuels && completedDuels.length > 0 && (
+              <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs px-2 py-1 rounded-full">
+                {completedDuels.length}
+              </span>
+            )}
           </CardTitle>
         </Link>
-        <CardDescription>Your recent magical encounters</CardDescription>
+        <CardDescription>Your completed magical encounters</CardDescription>
       </CardHeader>
       <CardContent>
         {!completedDuels || completedDuels.length === 0 ? (
-          <div className="text-center py-4">
+          <div className="text-center py-8">
+            <div className="mb-4">
+              <Trophy className="h-12 w-12 mx-auto text-muted-foreground/50" />
+            </div>
             <p className="text-muted-foreground mb-4">
-              No duels yet. Create a wizard and start dueling!
+              No completed duels yet. Start your first battle!
             </p>
             <Link href="/duels">
-              <Button variant="outline">View All Duels</Button>
+              <Button variant="outline" size="sm">
+                Browse Duels
+              </Button>
             </Link>
           </div>
         ) : (
@@ -119,9 +144,9 @@ function CompletedDuelsCard({ userId }: { userId?: string }) {
               <DuelListItem key={duel._id} duel={duel} variant="dashboard" />
             ))}
             {completedDuels.length > 3 && (
-              <div className="text-center pt-2">
+              <div className="text-center pt-2 border-t">
                 <Link href="/duels">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="mt-2">
                     View All ({completedDuels.length})
                   </Button>
                 </Link>
@@ -155,72 +180,179 @@ export default function DashboardContent() {
       {/* Main content area with left margin for desktop sidebar */}
       <div className="md:ml-64">
         <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
-          <div className="container mx-auto px-6 py-12">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2">Wizard Dashboard</h2>
-              <p className="text-muted-foreground">
-                Manage your magical adventures and view your duel history
-              </p>
+          <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                    Wizard Dashboard
+                  </h2>
+                  <p className="text-muted-foreground text-sm sm:text-base">
+                    Manage your magical adventures and view your duel history
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Link href="/leaderboard">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Trophy className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Leaderboard</span>
+                        <span className="sm:hidden">Leaders</span>
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Link href="/duels/watch">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Swords className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Watch Duels</span>
+                        <span className="sm:hidden">Watch</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Swords className="h-5 w-5" />
-                    Create Duel
-                  </CardTitle>
-                  <CardDescription>
-                    Start a new magical duel and wait for opponents
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Link href="/duels/create">
-                    <Button className="w-full">Create New Duel</Button>
-                  </Link>
-                </CardContent>
-              </Card>
+            {/* Overall Stats Card */}
+            <Card className="mb-6 sm:mb-8">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <BarChart3 className="h-5 w-5" />
+                  Your Magical Stats
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Your overall magical prowess and achievements
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="text-center p-2 sm:p-0">
+                    <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {wizards?.length || 0}
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Wizards
+                    </div>
+                  </div>
+                  <div className="text-center p-2 sm:p-0">
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {totalDuels}
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Total Duels
+                    </div>
+                  </div>
+                  <div className="text-center p-2 sm:p-0">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+                      {totalWins}
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Victories
+                    </div>
+                  </div>
+                  <div className="text-center p-2 sm:p-0">
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      {winRate}%
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Win Rate
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Join Duel
-                  </CardTitle>
-                  <CardDescription>
-                    Find an open duel and join the fight
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Link href="/duels/join">
-                    <Button variant="outline" className="w-full">
-                      Join Existing Duel
+            {/* Wizards Section */}
+            <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:from-purple-950/20 dark:to-indigo-950/20 border-purple-200 dark:border-purple-800">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                      <Wand2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                      Your Wizards
+                    </h3>
+                    <p className="text-muted-foreground text-sm sm:text-base">
+                      Manage your magical champions
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Link href="/wizards" className="flex-1 sm:flex-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        View All
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowCreateModal(true)}
+                      className="flex-1 sm:flex-none w-full sm:w-auto"
+                    >
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Create Wizard
                     </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  </div>
+                </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Wand2 className="h-5 w-5" />
-                    Create Wizard
-                  </CardTitle>
-                  <CardDescription>
-                    Create a new wizard for dueling
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    Create New Wizard
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                {wizards === undefined ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
+                    <p className="text-muted-foreground mt-2">
+                      Loading wizards...
+                    </p>
+                  </div>
+                ) : wizards.length === 0 ? (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <div className="mb-4">
+                        <Wand2 className="h-16 w-16 mx-auto text-purple-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">
+                        No wizards yet!
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Create your first wizard to start your magical journey.
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => setShowCreateModal(true)}
+                      >
+                        Create Your First Wizard
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                      {wizards.slice(0, 6).map((wizard) => (
+                        <WizardCard key={wizard._id} wizard={wizard} />
+                      ))}
+                    </div>
+                    {wizards.length > 6 && (
+                      <div className="text-center mt-4 sm:mt-6">
+                        <Link href="/wizards">
+                          <Button variant="outline" size="sm">
+                            View All Wizards ({wizards.length})
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
             <CreateWizardModal
               open={showCreateModal}
@@ -230,84 +362,58 @@ export default function DashboardContent() {
               }}
             />
 
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Your Stats
-                  </CardTitle>
-                  <CardDescription>
-                    Your overall magical prowess
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Total Wizards:
-                      </span>
-                      <span className="font-bold">{wizards?.length || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Total Duels:
-                      </span>
-                      <span className="font-bold">{totalDuels}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Victories:</span>
-                      <span className="font-bold text-green-600 dark:text-green-400">
-                        {totalWins}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Win Rate:</span>
-                      <span className="font-bold">{winRate}%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <ActiveDuelsCard userId={user?.id} />
-
-              <CompletedDuelsCard userId={user?.id} />
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold mb-4">Your Wizards</h3>
-              {wizards === undefined ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
-                  <p className="text-muted-foreground mt-2">
-                    Loading wizards...
-                  </p>
-                </div>
-              ) : wizards.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <div className="mb-4">
-                      <Wand2 className="h-16 w-16 mx-auto text-purple-600" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      No wizards yet!
+            {/* Duels Section */}
+            <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-orange-50/50 to-red-50/50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200 dark:border-orange-800">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col gap-4 mb-6">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                      <Swords className="h-5 w-5 sm:h-6 sm:w-6" />
+                      Duels
                     </h3>
-                    <p className="text-muted-foreground mb-4">
-                      Create your first wizard to start your magical journey.
+                    <p className="text-muted-foreground text-sm sm:text-base">
+                      Your magical battles and encounters
                     </p>
-                    <Button onClick={() => setShowCreateModal(true)}>
-                      Create Your First Wizard
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {wizards.map((wizard) => (
-                    <WizardCard key={wizard._id} wizard={wizard} />
-                  ))}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Link href="/duels" className="flex-1 sm:flex-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Swords className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">View All</span>
+                        <span className="sm:hidden">All</span>
+                      </Button>
+                    </Link>
+                    <Link href="/duels/join" className="flex-1 sm:flex-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Join Duel</span>
+                        <span className="sm:hidden">Join</span>
+                      </Button>
+                    </Link>
+                    <Link href="/duels/create" className="flex-1 sm:flex-none">
+                      <Button size="sm" className="w-full sm:w-auto">
+                        <Swords className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Create Duel</span>
+                        <span className="sm:hidden">Create</span>
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <ActiveDuelsCard userId={user?.id} />
+                  <CompletedDuelsCard userId={user?.id} />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

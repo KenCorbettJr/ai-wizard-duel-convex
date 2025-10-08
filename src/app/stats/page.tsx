@@ -20,9 +20,11 @@ import {
 import { TrendingUp, User, Globe } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 
 export default function StatsPage() {
   const { user } = useUser();
+  const { isSuperAdmin } = useSuperAdmin();
   const [viewMode, setViewMode] = useState<"personal" | "global">("personal");
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d" | "all">(
     "30d"
@@ -52,32 +54,31 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <div className="container mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            Duel Statistics
-          </h2>
-          <p className="text-muted-foreground">
-            Track your magical prowess and platform-wide duel analytics
-          </p>
-        </div>
+        {/* Header with controls in upper right */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-foreground mb-2">
+              Duel Statistics
+            </h2>
+            <p className="text-muted-foreground">
+              Track your magical prowess
+              {isSuperAdmin ? " and platform-wide duel analytics" : ""}
+            </p>
+          </div>
 
-        {/* View Mode and Time Range Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <Card className="flex-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">View Mode</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "personal" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("personal")}
-                  className="flex items-center gap-2"
-                >
-                  <User className="h-4 w-4" />
-                  Personal
-                </Button>
+          {/* Compact controls in upper right */}
+          <div className="flex items-center gap-3">
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "personal" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("personal")}
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Personal
+              </Button>
+              {isSuperAdmin && (
                 <Button
                   variant={viewMode === "global" ? "default" : "outline"}
                   size="sm"
@@ -87,42 +88,37 @@ export default function StatsPage() {
                   <Globe className="h-4 w-4" />
                   Platform
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              )}
+            </div>
 
-          {viewMode === "global" && (
-            <Card className="flex-1">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Time Range</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={timeRange}
-                  onValueChange={(value: "24h" | "7d" | "30d" | "all") =>
-                    setTimeRange(value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="24h">Last 24 Hours</SelectItem>
-                    <SelectItem value="7d">Last 7 Days</SelectItem>
-                    <SelectItem value="30d">Last 30 Days</SelectItem>
-                    <SelectItem value="all">All Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-          )}
+            {viewMode === "global" && isSuperAdmin && (
+              <Select
+                value={timeRange}
+                onValueChange={(value: "24h" | "7d" | "30d" | "all") =>
+                  setTimeRange(value)
+                }
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="24h">Last 24 Hours</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         {/* Statistics Display */}
         {viewMode === "personal" ? (
           <DuelStatistics userId={user.id} />
-        ) : (
+        ) : isSuperAdmin ? (
           <DuelStatistics showGlobalStats={true} timeRange={timeRange} />
+        ) : (
+          <DuelStatistics userId={user.id} />
         )}
 
         {/* Quick Actions */}
@@ -147,7 +143,7 @@ export default function StatsPage() {
                     View All Duels
                   </Button>
                 </Link>
-                <Link href="/dashboard">
+                <Link href="/">
                   <Button variant="outline" className="w-full">
                     Dashboard
                   </Button>

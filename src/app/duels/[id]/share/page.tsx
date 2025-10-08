@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
-import { Id } from "../../../../../convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { ConvexImage } from "@/components/ConvexImage";
+import { safeConvexId } from "../../../../lib/utils";
 
 import {
   Swords,
@@ -46,9 +46,10 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
   const [copySuccess, setCopySuccess] = useState(false);
   const { id } = use(params);
 
-  const duel = useQuery(api.duels.getDuel, {
-    duelId: id as Id<"duels">,
-  });
+  // Validate the ID format first
+  const duelId = safeConvexId(id, "duels");
+
+  const duel = useQuery(api.duels.getDuel, duelId ? { duelId } : "skip");
 
   // Fetch wizard data for the creator's wizard (first wizard in the duel)
   const creatorWizard = useQuery(
@@ -135,8 +136,9 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
     );
   }
 
-  // Duel not found
-  if (duel === null) {
+  // Duel not found or invalid ID
+  if (duel === null || duelId === null) {
+    const isInvalidId = duelId === null;
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
         <div className="container mx-auto px-6 py-12">
@@ -145,16 +147,17 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
               <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2 text-destructive dark:text-red-400">
                   <AlertCircle className="h-5 w-5" />
-                  Duel Not Found
+                  {isInvalidId ? "Invalid Duel ID" : "Duel Not Found"}
                 </CardTitle>
                 <CardDescription className="dark:text-muted-foreground/80">
-                  The duel you&apos;re looking for doesn&apos;t exist or has
-                  been removed.
+                  {isInvalidId
+                    ? "The duel ID in the URL is not valid."
+                    : "The duel you're looking for doesn't exist or has been removed."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-3 justify-center">
-                  <Link href="/dashboard">
+                  <Link href="/">
                     <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
                       Go to Dashboard
                     </Button>

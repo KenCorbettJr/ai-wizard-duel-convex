@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
+import { safeConvexId } from "../../../lib/utils";
 
 interface WizardLayoutProps {
   params: Promise<{ id: string }>;
@@ -15,10 +16,19 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
 
+  // Validate the ID format first
+  const wizardId = safeConvexId(id, "wizards");
+  if (!wizardId) {
+    return {
+      title: "Invalid Wizard",
+      description: "The wizard you're looking for could not be found.",
+    };
+  }
+
   try {
     // Fetch wizard data using safe query
     const wizard = await fetchQuery(api.wizards.getWizard, {
-      wizardId: id as Id<"wizards">,
+      wizardId,
     });
 
     if (wizard) {

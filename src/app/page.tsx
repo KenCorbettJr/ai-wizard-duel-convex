@@ -69,7 +69,7 @@ function LandingPage() {
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <Link href="/dashboard">
+              <Link href="/">
                 <Button
                   size="lg"
                   className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
@@ -286,7 +286,7 @@ function LandingPage() {
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <Link href="/dashboard">
+              <Link href="/">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"

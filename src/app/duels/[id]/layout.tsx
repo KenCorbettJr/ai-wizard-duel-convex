@@ -2,25 +2,40 @@ import type { Metadata } from "next";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
+import { safeConvexId } from "../../../lib/utils";
 
 interface DuelLayoutProps {
   params: Promise<{ id: string }>;
   children: React.ReactNode;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
   const { id } = await params;
-  
+
+  // Validate the ID format first
+  const duelId = safeConvexId(id, "duels");
+  if (!duelId) {
+    return {
+      title: "Invalid Duel",
+      description: "The duel you're looking for could not be found.",
+    };
+  }
+
   try {
     // Fetch duel data
     const duel = await fetchQuery(api.duels.getDuel, {
-      duelId: id as Id<"duels">,
+      duelId,
     });
 
     if (!duel || duel.wizards.length < 2) {
       return {
         title: "Duel",
-        description: "View an epic magical duel between wizards in AI Wizard Duel.",
+        description:
+          "View an epic magical duel between wizards in AI Wizard Duel.",
       };
     }
 
@@ -31,10 +46,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     ]);
 
     const baseMetadata = {
-      title: wizard1 && wizard2 ? `${wizard1.name} vs ${wizard2.name}` : "Magical Duel",
-      description: wizard1 && wizard2 
-        ? `Watch the epic magical duel between ${wizard1.name} and ${wizard2.name} in AI Wizard Duel.`
-        : "View an epic magical duel between wizards in AI Wizard Duel.",
+      title:
+        wizard1 && wizard2
+          ? `${wizard1.name} vs ${wizard2.name}`
+          : "Magical Duel",
+      description:
+        wizard1 && wizard2
+          ? `Watch the epic magical duel between ${wizard1.name} and ${wizard2.name} in AI Wizard Duel.`
+          : "View an epic magical duel between wizards in AI Wizard Duel.",
     };
 
     // Add Open Graph image if duel has a featured illustration
@@ -42,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
       if (convexUrl) {
         const imageUrl = `${convexUrl}/api/storage/${duel.featuredIllustration}`;
-        
+
         return {
           ...baseMetadata,
           openGraph: {
@@ -53,12 +72,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
                 url: imageUrl,
                 width: 1024,
                 height: 1024,
-                alt: `Epic duel between ${wizard1?.name || 'wizard'} and ${wizard2?.name || 'wizard'}`,
+                alt: `Epic duel between ${wizard1?.name || "wizard"} and ${wizard2?.name || "wizard"}`,
               },
             ],
           },
           twitter: {
-            card: 'summary_large_image',
+            card: "summary_large_image",
             title: baseMetadata.title,
             description: baseMetadata.description,
             images: [imageUrl],
@@ -72,7 +91,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     console.error("Error generating metadata:", error);
     return {
       title: "Duel",
-      description: "View an epic magical duel between wizards in AI Wizard Duel.",
+      description:
+        "View an epic magical duel between wizards in AI Wizard Duel.",
     };
   }
 }

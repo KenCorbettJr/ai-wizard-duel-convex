@@ -3,7 +3,6 @@
 import { use, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
 import { EditWizardForm } from "@/components/EditWizardForm";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +24,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { safeConvexId } from "../../../lib/utils";
 
 interface WizardPageProps {
   params: Promise<{
@@ -39,15 +39,23 @@ export default function WizardPage({ params }: WizardPageProps) {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  // Use safe queries that handle invalid IDs gracefully
-  const wizard = useQuery(api.wizards.getWizard, {
-    wizardId: id as Id<"wizards">,
-  });
-  const wizardDuels = useQuery(api.duels.getWizardDuelsSafe, {
-    wizardId: id as Id<"wizards">,
-  });
+  // Validate the ID format first
+  const wizardId = safeConvexId(id, "wizards");
 
-  if (wizard === undefined || wizardDuels === undefined) {
+  // Use safe queries that handle invalid IDs gracefully
+  const wizard = useQuery(
+    api.wizards.getWizard,
+    wizardId ? { wizardId } : "skip"
+  );
+  const wizardDuels = useQuery(
+    api.duels.getWizardDuelsSafe,
+    wizardId ? { wizardId } : "skip"
+  );
+
+  if (
+    (wizard === undefined || wizardDuels === undefined) &&
+    wizardId !== null
+  ) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
@@ -59,29 +67,38 @@ export default function WizardPage({ params }: WizardPageProps) {
     );
   }
 
-  if (wizard === null) {
+  if (wizard === null || wizardId === null) {
+    const isInvalidId = wizardId === null;
+
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">
-            Wizard Not Found
+            {isInvalidId ? "Invalid Wizard ID" : "Wizard Not Found"}
           </h1>
           <p className="text-muted-foreground mb-6">
-            The wizard you&apos;re looking for doesn&apos;t exist.
+            {isInvalidId
+              ? "The wizard ID in the URL is not valid."
+              : "The wizard you're looking for doesn't exist."}
           </p>
-          <Button onClick={() => router.back()}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Go Back
-          </Button>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => router.back()}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Go Back
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/wizards">Browse Wizards</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   const winRate =
-    wizard.wins && wizard.losses
+    wizard && wizard.wins && wizard.losses
       ? Math.round((wizard.wins / (wizard.wins + wizard.losses)) * 100)
-      : wizard.wins && !wizard.losses
+      : wizard && wizard.wins && !wizard.losses
         ? 100
         : 0;
 
@@ -111,6 +128,11 @@ export default function WizardPage({ params }: WizardPageProps) {
         />
       </div>
     );
+  }
+
+  // This should not happen due to our earlier checks, but TypeScript needs this
+  if (!wizard) {
+    return null;
   }
 
   return (
@@ -238,7 +260,7 @@ export default function WizardPage({ params }: WizardPageProps) {
               Edit Wizard
             </Button>
           )}
-          <Link href={`/duels/create?wizardId=${id}`}>
+          <Link href={`/duels/create?wizardId=${wizardId}`}>
             <Button size="lg" className="text-lg px-8 py-3">
               ⚔️ {isOwner ? "Start New Duel" : "Challenge to Duel"}
             </Button>
@@ -250,15 +272,12 @@ export default function WizardPage({ params }: WizardPageProps) {
           <h2 className="text-2xl font-bold text-foreground mb-6">
             Statistics
           </h2>
-          <WizardStatistics
-            wizardId={id as Id<"wizards">}
-            showDetailedHistory={false}
-          />
+          <WizardStatistics wizardId={wizardId} showDetailedHistory={false} />
         </div>
 
         {/* Trophy Hall */}
         <div className="mb-12">
-          <TrophyHall wizardId={id as Id<"wizards">} />
+          <TrophyHall wizardId={wizardId} />
         </div>
 
         {/* Duel History */}
@@ -301,7 +320,7 @@ export default function WizardPage({ params }: WizardPageProps) {
                 <p className="text-muted-foreground mb-4">
                   This wizard hasn&apos;t participated in any duels.
                 </p>
-                <Link href={`/duels/create?wizardId=${id}`}>
+                <Link href={`/duels/create?wizardId=${wizardId}`}>
                   <Button>Start First Duel</Button>
                 </Link>
               </CardContent>

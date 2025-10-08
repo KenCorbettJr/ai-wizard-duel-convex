@@ -28,7 +28,7 @@ export function Navigation({
         )}
         <SignedIn>
           {showDashboard && (
-            <Link href="/dashboard">
+            <Link href="/">
               <Button variant="outline">Dashboard</Button>
             </Link>
           )}

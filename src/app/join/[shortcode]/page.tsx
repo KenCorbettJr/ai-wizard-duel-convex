@@ -166,7 +166,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                   might be incorrect.
                 </p>
                 <div className="flex gap-3 justify-center">
-                  <Link href="/dashboard">
+                  <Link href="/">
                     <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
                       Go to Dashboard
                     </Button>
@@ -412,7 +412,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                     </div>
                   </div>
                   <div className="mt-6 flex gap-3">
-                    <Link href="/dashboard">
+                    <Link href="/">
                       <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
                         Go to Dashboard
                       </Button>
