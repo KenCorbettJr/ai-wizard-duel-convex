@@ -16,6 +16,7 @@ import type {
 import type * as ai_getAI from "../ai/getAI.js";
 import type * as aiTextGeneration from "../aiTextGeneration.js";
 import type * as duelIntroduction from "../duelIntroduction.js";
+import type * as duelLobby from "../duelLobby.js";
 import type * as duels from "../duels.js";
 import type * as generateImage from "../generateImage.js";
 import type * as generateImageWithGemini from "../generateImageWithGemini.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "ai/getAI": typeof ai_getAI;
   aiTextGeneration: typeof aiTextGeneration;
   duelIntroduction: typeof duelIntroduction;
+  duelLobby: typeof duelLobby;
   duels: typeof duels;
   generateImage: typeof generateImage;
   generateImageWithGemini: typeof generateImageWithGemini;

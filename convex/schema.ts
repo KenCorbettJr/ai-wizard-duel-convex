@@ -86,4 +86,18 @@ export default defineSchema({
       v.literal("COMPLETED")
     ),
   }).index("by_duel", ["duelId"]),
+  duelLobby: defineTable({
+    userId: v.string(), // Clerk user ID
+    wizardId: v.id("wizards"),
+    joinedAt: v.number(),
+    duelType: v.union(v.number(), v.literal("TO_THE_DEATH")), // Number of rounds or "TO_THE_DEATH"
+    status: v.union(
+      v.literal("WAITING"), // Waiting for match
+      v.literal("MATCHED") // Found a match, duel being created
+    ),
+    matchedWith: v.optional(v.id("duelLobby")), // Reference to the matched lobby entry
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_wizard", ["wizardId"]),
 });

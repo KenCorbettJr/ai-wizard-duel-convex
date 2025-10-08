@@ -6,12 +6,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { cn } from "@/lib/utils";
 import {
   Home,
   Swords,
   Eye,
-  Trophy,
   Users,
   Wand2,
   Menu,
@@ -26,53 +26,83 @@ interface SidebarItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   requiresAuth?: boolean;
+  showStatus?: boolean;
 }
 
-const sidebarItems: SidebarItem[] = [
+interface SidebarGroup {
+  title?: string;
+  items: SidebarItem[];
+}
+
+const sidebarGroups: SidebarGroup[] = [
+  // General navigation
   {
-    href: "/",
-    label: "Home",
-    icon: Home,
+    items: [
+      {
+        href: "/",
+        label: "Home",
+        icon: Home,
+      },
+      {
+        href: "/leaderboard",
+        label: "Leaderboard",
+        icon: Crown,
+      },
+      {
+        href: "/stats",
+        label: "Stats",
+        icon: BarChart3,
+        requiresAuth: true,
+      },
+    ],
   },
+  // Wizard management
   {
-    href: "/duels/watch",
-    label: "Watch Duels",
-    icon: Eye,
+    title: "Wizards",
+    items: [
+      {
+        href: "/wizards",
+        label: "My Wizards",
+        icon: Wand2,
+        requiresAuth: true,
+      },
+    ],
   },
+  // Duel management
   {
-    href: "/leaderboard",
-    label: "Leaderboard",
-    icon: Crown,
-  },
-  {
-    href: "/wizards",
-    label: "My Wizards",
-    icon: Wand2,
-    requiresAuth: true,
-  },
-  {
-    href: "/duels",
-    label: "My Duels",
-    icon: Swords,
-    requiresAuth: true,
-  },
-  {
-    href: "/duels/create",
-    label: "Create Duel",
-    icon: Plus,
-    requiresAuth: true,
-  },
-  {
-    href: "/duels/join",
-    label: "Join Duel",
-    icon: Users,
-    requiresAuth: true,
-  },
-  {
-    href: "/stats",
-    label: "Stats",
-    icon: BarChart3,
-    requiresAuth: true,
+    title: "Duels",
+    items: [
+      {
+        href: "/duels/watch",
+        label: "Watch Duels",
+        icon: Eye,
+      },
+      {
+        href: "/duels",
+        label: "My Duels",
+        icon: Swords,
+        requiresAuth: true,
+      },
+      {
+        href: "/duels/lobby",
+        label: "Quick Match",
+        icon: Users,
+        requiresAuth: true,
+        showStatus: true,
+      },
+      {
+        href: "/duels/create",
+        label: "Create Duel",
+        icon: Plus,
+        requiresAuth: true,
+      },
+      {
+        href: "/duels/join",
+        label: "Join by Code",
+        icon: Users,
+        requiresAuth: true,
+      },
+    ],
   },
 ];
 
@@ -108,52 +138,65 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
       </div>
 
       <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {sidebarItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
+        <div className="space-y-6">
+          {sidebarGroups.map((group, groupIndex) => (
+            <div key={groupIndex}>
+              {group.title && (
+                <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {group.title}
+                </h3>
+              )}
+              <ul className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
 
-            if (item.requiresAuth) {
-              return (
-                <SignedIn key={item.href}>
-                  <li>
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  </li>
-                </SignedIn>
-              );
-            }
+                  if (item.requiresAuth) {
+                    return (
+                      <SignedIn key={item.href}>
+                        <li>
+                          <Link
+                            href={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                              isActive
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                            <span className="flex-1">{item.label}</span>
+                            {item.showStatus && <LobbyStatusIndicator />}
+                          </Link>
+                        </li>
+                      </SignedIn>
+                    );
+                  }
 
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="flex-1">{item.label}</span>
+                        {item.showStatus && <LobbyStatusIndicator />}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
       {/* Bottom section with theme toggle and user controls */}

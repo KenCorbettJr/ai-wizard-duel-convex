@@ -38,7 +38,24 @@ export default function DuelsPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Quick Match
+              </CardTitle>
+              <CardDescription>
+                Join the lobby and get matched with another player instantly
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/duels/lobby">
+                <Button className="w-full">Join Lobby</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -51,7 +68,9 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               <Link href="/duels/create">
-                <Button className="w-full">Create Duel</Button>
+                <Button variant="outline" className="w-full">
+                  Create Duel
+                </Button>
               </Link>
             </CardContent>
           </Card>
@@ -59,17 +78,17 @@ export default function DuelsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Join Existing Duel
+                <Search className="h-5 w-5" />
+                Join by Code
               </CardTitle>
               <CardDescription>
-                Find an open duel and join the magical battle
+                Enter a duel code to join a specific magical battle
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/duels/join">
                 <Button variant="outline" className="w-full">
-                  Join Duel
+                  Join by Code
                 </Button>
               </Link>
             </CardContent>
@@ -120,12 +139,15 @@ export default function DuelsPage() {
                   <p className="text-muted-foreground mb-4">
                     Create or join a duel to start your magical battles.
                   </p>
-                  <div className="flex gap-2 justify-center">
+                  <div className="flex gap-2 justify-center flex-wrap">
+                    <Link href="/duels/lobby">
+                      <Button>Quick Match</Button>
+                    </Link>
                     <Link href="/duels/create">
-                      <Button>Create Duel</Button>
+                      <Button variant="outline">Create Duel</Button>
                     </Link>
                     <Link href="/duels/join">
-                      <Button variant="outline">Join Duel</Button>
+                      <Button variant="outline">Join by Code</Button>
                     </Link>
                   </div>
                 </CardContent>
@@ -164,9 +186,14 @@ export default function DuelsPage() {
                   <p className="text-muted-foreground mb-4">
                     Be the first to create a new duel!
                   </p>
-                  <Link href="/duels/create">
-                    <Button>Create First Duel</Button>
-                  </Link>
+                  <div className="flex gap-2 justify-center">
+                    <Link href="/duels/lobby">
+                      <Button>Quick Match</Button>
+                    </Link>
+                    <Link href="/duels/create">
+                      <Button variant="outline">Create Duel</Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             ) : (

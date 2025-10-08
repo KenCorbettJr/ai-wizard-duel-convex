@@ -63,14 +63,20 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
               No active duels. Ready for battle?
             </p>
             <div className="space-y-2">
-              <Link href="/duels/create" className="block">
+              <Link href="/duels/lobby" className="block">
                 <Button size="sm" className="w-full">
+                  <Users className="h-4 w-4 mr-2" />
+                  Quick Match
+                </Button>
+              </Link>
+              <Link href="/duels/create" className="block">
+                <Button variant="outline" size="sm" className="w-full">
                   Create Duel
                 </Button>
               </Link>
               <Link href="/duels/join" className="block">
                 <Button variant="outline" size="sm" className="w-full">
-                  Join Existing
+                  Join by Code
                 </Button>
               </Link>
             </div>
@@ -296,6 +302,17 @@ export default function DashboardContent() {
                         <span className="sm:hidden">All</span>
                       </Button>
                     </Link>
+                    <Link href="/duels/lobby" className="flex-1 sm:flex-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Quick Match</span>
+                        <span className="sm:hidden">Lobby</span>
+                      </Button>
+                    </Link>
                     <Link href="/duels/join" className="flex-1 sm:flex-none">
                       <Button
                         variant="outline"
@@ -303,7 +320,7 @@ export default function DashboardContent() {
                         className="w-full sm:w-auto"
                       >
                         <Users className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Join Duel</span>
+                        <span className="hidden sm:inline">Join Code</span>
                         <span className="sm:hidden">Join</span>
                       </Button>
                     </Link>
