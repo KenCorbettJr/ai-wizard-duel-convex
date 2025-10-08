@@ -1,17 +1,19 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
 import { TimeAgo } from "@/components/TimeAgo";
 import { Crown } from "@/components/ui/crown-icon";
-import { Clock, Sparkles } from "lucide-react";
+import { D20Die } from "@/components/ui/d20-die";
+import { Clock, Sparkles, RefreshCw } from "lucide-react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 
 interface DuelRoundCardProps {
   round: Doc<"duelRounds">;
@@ -23,6 +25,10 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   duel,
 }: DuelRoundCardProps) {
   const { user } = useUser();
+  const [showReprocessButton, setShowReprocessButton] = useState(false);
+  const [isReprocessing, setIsReprocessing] = useState(false);
+
+  const triggerRoundProcessing = useMutation(api.duels.triggerRoundProcessing);
 
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
@@ -33,6 +39,34 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     api.wizards.getWizard,
     duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
+
+  // Show reprocess button after 1 minute if round is stuck in PROCESSING
+  useEffect(() => {
+    if (round.status === "PROCESSING") {
+      const timer = setTimeout(() => {
+        setShowReprocessButton(true);
+      }, 60000); // 1 minute
+
+      return () => clearTimeout(timer);
+    } else {
+      setShowReprocessButton(false);
+    }
+  }, [round.status]);
+
+  const handleReprocess = async () => {
+    try {
+      setIsReprocessing(true);
+      await triggerRoundProcessing({
+        duelId: duel._id,
+        roundId: round._id,
+      });
+      setShowReprocessButton(false);
+    } catch (error) {
+      console.error("Failed to reprocess round:", error);
+    } finally {
+      setIsReprocessing(false);
+    }
+  };
 
   // Show loading state if wizards are still being fetched
   if (wizard1 === undefined || wizard2 === undefined) {
@@ -225,11 +259,41 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
         {round.status === "PROCESSING" && (
           <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>
-              <p className="text-purple-800 dark:text-purple-200 font-medium">
-                The Arcane Arbiter is weaving the tale of this round...
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>
+                <div>
+                  <p className="text-purple-800 dark:text-purple-200 font-medium">
+                    The Arcane Arbiter is weaving the tale of this round...
+                  </p>
+                  {showReprocessButton && (
+                    <p className="text-purple-600 dark:text-purple-400 text-sm mt-1">
+                      Taking longer than expected? Try reprocessing the round.
+                    </p>
+                  )}
+                </div>
+              </div>
+              {showReprocessButton && (
+                <Button
+                  onClick={handleReprocess}
+                  disabled={isReprocessing}
+                  variant="outline"
+                  size="sm"
+                  className="ml-4 bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                >
+                  {isReprocessing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border border-purple-300 border-t-purple-600 mr-2"></div>
+                      Reprocessing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-2" />
+                      Reprocess Round
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -323,7 +387,9 @@ export const DuelRoundCard = memo(function DuelRoundCard({
             )}
 
             {/* Outcome Table */}
-            {(round.outcome?.pointsAwarded || round.outcome?.healthChange) && (
+            {(round.outcome?.pointsAwarded ||
+              round.outcome?.healthChange ||
+              round.outcome?.luckRolls) && (
               <div>
                 <h3 className="text-lg font-bold mb-3">Outcome</h3>
                 <div className="overflow-x-auto text-sm">
@@ -352,6 +418,40 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                       </tr>
                     </thead>
                     <tbody>
+                      {round.outcome?.luckRolls && (
+                        <tr>
+                          <td className="border border-border/50 p-2 font-medium">
+                            Luck Roll (D20)
+                          </td>
+                          <td
+                            className={`border border-border/50 p-2 text-center ${
+                              isWinner(duel.wizards[0])
+                                ? "bg-yellow-100 dark:bg-yellow-900/30"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex justify-center">
+                              <D20Die value={20} size="sm" />
+                            </div>
+                          </td>
+                          <td
+                            className={`border border-border/50 p-2 text-center ${
+                              isWinner(duel.wizards[1])
+                                ? "bg-yellow-100 dark:bg-yellow-900/30"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex justify-center">
+                              <D20Die
+                                value={
+                                  round.outcome.luckRolls[duel.wizards[1]] || 1
+                                }
+                                size="sm"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                       {round.outcome?.pointsAwarded && (
                         <tr>
                           <td className="border border-border/50 p-2 font-medium">

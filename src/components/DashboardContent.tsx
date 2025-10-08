@@ -271,6 +271,59 @@ export default function DashboardContent() {
               </CardContent>
             </Card>
 
+            {/* Duels Section */}
+            <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-orange-50/50 to-red-50/50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200 dark:border-orange-800">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col gap-4 mb-6">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                      <Swords className="h-5 w-5 sm:h-6 sm:w-6" />
+                      Duels
+                    </h3>
+                    <p className="text-muted-foreground text-sm sm:text-base">
+                      Your magical battles and encounters
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Link href="/duels" className="flex-1 sm:flex-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Swords className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">View All</span>
+                        <span className="sm:hidden">All</span>
+                      </Button>
+                    </Link>
+                    <Link href="/duels/join" className="flex-1 sm:flex-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Join Duel</span>
+                        <span className="sm:hidden">Join</span>
+                      </Button>
+                    </Link>
+                    <Link href="/duels/create" className="flex-1 sm:flex-none">
+                      <Button size="sm" className="w-full sm:w-auto">
+                        <Swords className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Create Duel</span>
+                        <span className="sm:hidden">Create</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <ActiveDuelsCard userId={user?.id} />
+                  <CompletedDuelsCard userId={user?.id} />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Wizards Section */}
             <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:from-purple-950/20 dark:to-indigo-950/20 border-purple-200 dark:border-purple-800">
               <CardContent className="p-4 sm:p-6">
@@ -361,59 +414,6 @@ export default function DashboardContent() {
                 // Wizard list will automatically update due to Convex reactivity
               }}
             />
-
-            {/* Duels Section */}
-            <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-orange-50/50 to-red-50/50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200 dark:border-orange-800">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col gap-4 mb-6">
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-orange-700 dark:text-orange-300">
-                      <Swords className="h-5 w-5 sm:h-6 sm:w-6" />
-                      Duels
-                    </h3>
-                    <p className="text-muted-foreground text-sm sm:text-base">
-                      Your magical battles and encounters
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Link href="/duels" className="flex-1 sm:flex-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                      >
-                        <Swords className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">View All</span>
-                        <span className="sm:hidden">All</span>
-                      </Button>
-                    </Link>
-                    <Link href="/duels/join" className="flex-1 sm:flex-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Join Duel</span>
-                        <span className="sm:hidden">Join</span>
-                      </Button>
-                    </Link>
-                    <Link href="/duels/create" className="flex-1 sm:flex-none">
-                      <Button size="sm" className="w-full sm:w-auto">
-                        <Swords className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Create Duel</span>
-                        <span className="sm:hidden">Create</span>
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <ActiveDuelsCard userId={user?.id} />
-                  <CompletedDuelsCard userId={user?.id} />
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

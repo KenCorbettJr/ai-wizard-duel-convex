@@ -210,13 +210,13 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
               <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-2xl dark:shadow-3xl">
                 <div className="relative">
                   {creatorWizard.illustration && (
-                    <div className="h-80 md:h-96 w-full overflow-hidden">
+                    <div className="h-80 md:h-120 w-full overflow-hidden">
                       <ConvexImage
                         storageId={creatorWizard.illustration}
                         alt={creatorWizard.name}
                         width={800}
                         height={400}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                     </div>

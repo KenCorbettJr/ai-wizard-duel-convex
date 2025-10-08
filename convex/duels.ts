@@ -163,6 +163,7 @@ export const getDuelInternal = internalQuery({
               illustrationPrompt: v.optional(v.string()),
               pointsAwarded: v.optional(v.record(v.string(), v.number())),
               healthChange: v.optional(v.record(v.string(), v.number())),
+              luckRolls: v.optional(v.record(v.string(), v.number())),
             })
           ),
           status: v.union(
@@ -516,6 +517,7 @@ export const completeRound = mutation({
       illustrationPrompt: v.optional(v.string()),
       pointsAwarded: v.optional(v.record(v.string(), v.number())),
       healthChange: v.optional(v.record(v.string(), v.number())),
+      luckRolls: v.optional(v.record(v.string(), v.number())),
     }),
   },
   handler: async (ctx, { roundId, outcome }) => {
@@ -840,6 +842,7 @@ export const createIntroductionRound = mutation({
       illustrationPrompt: v.optional(v.string()),
       pointsAwarded: v.optional(v.record(v.string(), v.number())),
       healthChange: v.optional(v.record(v.string(), v.number())),
+      luckRolls: v.optional(v.record(v.string(), v.number())),
     }),
   },
   handler: async (ctx, { duelId, outcome }) => {
@@ -1350,6 +1353,7 @@ export const createConclusionRound = mutation({
       illustrationPrompt: v.optional(v.string()),
       pointsAwarded: v.optional(v.record(v.string(), v.number())),
       healthChange: v.optional(v.record(v.string(), v.number())),
+      luckRolls: v.optional(v.record(v.string(), v.number())),
     }),
   },
   handler: async (ctx, { duelId, roundNumber, outcome }) => {

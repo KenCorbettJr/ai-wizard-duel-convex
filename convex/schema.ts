@@ -77,6 +77,7 @@ export default defineSchema({
         illustrationPrompt: v.optional(v.string()),
         pointsAwarded: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to points
         healthChange: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to health change
+        luckRolls: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to luck roll (1-20)
       })
     ),
     status: v.union(

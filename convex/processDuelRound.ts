@@ -77,12 +77,15 @@ const DuelConclusionSchema = z.object({
 });
 
 // Types for the battle round response
-export type BattleRoundResponse = z.infer<typeof BattleRoundResponseSchema>;
+export type BattleRoundResponse = z.infer<typeof BattleRoundResponseSchema> & {
+  wizard1Luck?: number;
+  wizard2Luck?: number;
+};
 export type DuelConclusionResponse = z.infer<typeof DuelConclusionSchema>;
 
-// Generate a luck number (1-10)
+// Generate a luck number (1-20, like a D20)
 function generateLuck(): number {
-  return Math.floor(Math.random() * 10) + 1;
+  return Math.floor(Math.random() * 20) + 1;
 }
 
 // Validate and sanitize AI battle response
@@ -231,6 +234,10 @@ export const processDuelRound = action({
         duel.hitPoints[wizard2ID] || 100
       );
 
+      // Get the luck rolls that were used in the battle generation
+      const wizard1Luck = battleResult.wizard1Luck || generateLuck();
+      const wizard2Luck = battleResult.wizard2Luck || generateLuck();
+
       // Update the round with the outcome
       await ctx.runMutation(api.duels.completeRound, {
         roundId,
@@ -245,6 +252,10 @@ export const processDuelRound = action({
           healthChange: {
             [wizard1ID]: wizard1HealthUpdates.healthChange,
             [wizard2ID]: wizard2HealthUpdates.healthChange,
+          },
+          luckRolls: {
+            [wizard1ID]: wizard1Luck,
+            [wizard2ID]: wizard2Luck,
           },
         },
       });
@@ -375,12 +386,16 @@ async function generateBattleRound(
     if (isEmulatorMode() || process.env.NODE_ENV === "test") {
       console.log("🎭 Using mock AI battle generation (emulator/test mode)");
       // In emulator/test mode, generate a mock response that matches the schema
-      return generateMockBattleResult(
-        wizard1,
-        wizard2,
-        wizard1Action,
-        wizard2Action
-      );
+      return {
+        ...generateMockBattleResult(
+          wizard1,
+          wizard2,
+          wizard1Action,
+          wizard2Action
+        ),
+        wizard1Luck,
+        wizard2Luck,
+      };
     }
 
     const aiResponse = await generateObject(
@@ -393,7 +408,11 @@ async function generateBattleRound(
     // Validate the AI response structure
     const validatedResponse = validateBattleResponse(aiResponse);
     if (validatedResponse) {
-      return validatedResponse;
+      return {
+        ...validatedResponse,
+        wizard1Luck,
+        wizard2Luck,
+      };
     } else {
       throw new Error("AI returned invalid response structure");
     }
@@ -401,12 +420,16 @@ async function generateBattleRound(
     console.error("AI battle generation failed, using fallback:", error);
 
     // Fallback battle result
-    return generateFallbackBattleResult(
-      wizard1,
-      wizard2,
-      wizard1Action,
-      wizard2Action
-    );
+    return {
+      ...generateFallbackBattleResult(
+        wizard1,
+        wizard2,
+        wizard1Action,
+        wizard2Action
+      ),
+      wizard1Luck,
+      wizard2Luck,
+    };
   }
 }
 // Helper function to generate previous rounds context
@@ -531,10 +554,10 @@ When judging each round, consider:
    - Manipulating the environment to gain advantage
    - Anticipating environmental changes
 5. Luck Factor
-   - For each wizard, you will be provided a luck number from 1-10 which represents their fortune
+   - For each wizard, you will be provided a luck number from 1-20 which represents their fortune
    - Higher luck increases chances of successful execution
    - Luck should subtly influence outcomes without being explicitly mentioned
-   - Interpret luck 1-3 as unfavorable, 4-7 as neutral, 8-10 as favorable
+   - Interpret luck 1-5 as very unfavorable, 6-10 as unfavorable, 11-15 as neutral, 16-18 as favorable, 19-20 as very favorable
 
 ## Wizard Action Guidelines
 - Wizards may only declare their own actions, not their effects on opponents

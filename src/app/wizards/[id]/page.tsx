@@ -19,6 +19,7 @@ import {
   Users,
   Zap,
   Edit,
+  Swords,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -262,7 +263,8 @@ export default function WizardPage({ params }: WizardPageProps) {
           )}
           <Link href={`/duels/create?wizardId=${wizardId}`}>
             <Button size="lg" className="text-lg px-8 py-3">
-              ⚔️ {isOwner ? "Start New Duel" : "Challenge to Duel"}
+              <Swords className="w-5 h-5 mr-2" />
+              {isOwner ? "Start New Duel" : "Challenge to Duel"}
             </Button>
           </Link>
         </div>
