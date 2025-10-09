@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document outlines the technical design for implementing a comprehensive monetization system in the AI Wizard Duel application. The system will support freemium subscriptions, usage-based limitations, premium features, cosmetic purchases, tournament entry fees, and AI generation credits.
+This document outlines the technical design for implementing a comprehensive monetization system in the AI Wizard Duel application. The system will support advertisement-based revenue for anonymous users, image generation credits with ad-based earning, unlimited dueling with tiered experiences, freemium subscriptions, premium features, cosmetic purchases, and tournament entry fees.
 
-The design leverages Stripe for payment processing, extends the existing Convex database schema, and integrates seamlessly with the current Clerk authentication system.
+The design leverages ad networks for anonymous user monetization, Stripe for payment processing, extends the existing Convex database schema, and integrates seamlessly with the current Clerk authentication system.
 
 ## Architecture
 
@@ -14,41 +14,53 @@ The design leverages Stripe for payment processing, extends the existing Convex 
 graph TB
     subgraph "Frontend (Next.js)"
         A[User Interface]
-        B[Subscription Management]
-        C[Payment Components]
-        D[Usage Tracking]
+        B[Ad Components]
+        C[Subscription Management]
+        D[Payment Components]
+        E[Usage Tracking]
+        F[Image Credit System]
     end
 
     subgraph "Backend (Convex)"
-        E[Subscription Service]
-        F[Usage Limiter]
-        G[Payment Webhooks]
-        H[Analytics Service]
+        G[Ad Service]
+        H[Image Credit Service]
+        I[Subscription Service]
+        J[Usage Limiter]
+        K[Payment Webhooks]
+        L[Analytics Service]
     end
 
     subgraph "External Services"
-        I[Stripe API]
-        J[Clerk Auth]
-        K[AI Services]
+        M[Ad Networks]
+        N[Stripe API]
+        O[Clerk Auth]
+        P[AI Services]
     end
 
-    A --> E
-    B --> E
+    A --> I
+    B --> G
+    B --> M
     C --> I
-    E --> G
-    G --> I
-    F --> K
-    E --> J
-    H --> E
+    D --> N
+    F --> H
+    I --> K
+    K --> N
+    J --> P
+    I --> O
+    L --> I
+    G --> M
+    H --> P
 ```
 
 ### Data Flow
 
-1. **User Registration**: New users get free tier by default
-2. **Usage Tracking**: All actions are tracked against user limits
-3. **Upgrade Flow**: Users can upgrade through Stripe Checkout
-4. **Webhook Processing**: Stripe webhooks update subscription status
-5. **Feature Gating**: Services check user tier before allowing actions
+1. **Anonymous Users**: See ads on wizard and duel pages, must register to participate in duels
+2. **User Registration**: New users get free tier with 10 image credits by default
+3. **Image Credit System**: Credits consumed for AI-generated duel images, replenishable via ads
+4. **Usage Tracking**: All actions are tracked against user limits and credit balances
+5. **Upgrade Flow**: Users can upgrade through Stripe Checkout for unlimited features
+6. **Webhook Processing**: Stripe webhooks update subscription status
+7. **Feature Gating**: Services check user tier and credit balance before allowing actions
 
 ## Components and Interfaces
 
@@ -69,11 +81,12 @@ users: defineTable({
   stripeCustomerId: v.optional(v.string()),
   stripeSubscriptionId: v.optional(v.string()),
   subscriptionEndsAt: v.optional(v.number()),
-  aiCredits: v.number(), // Remaining AI generation credits
+  imageCredits: v.number(), // Remaining image generation credits
   monthlyUsage: v.object({
     duelsPlayed: v.number(),
     wizardsCreated: v.number(),
-    aiGenerations: v.number(),
+    imageGenerations: v.number(),
+    adsWatched: v.number(),
     resetDate: v.number(), // When usage resets
   }),
   createdAt: v.number(),
@@ -81,6 +94,37 @@ users: defineTable({
 })
   .index("by_clerk_id", ["clerkId"])
   .index("by_stripe_customer", ["stripeCustomerId"]);
+```
+
+#### Ad Interactions Table (New)
+
+```typescript
+adInteractions: defineTable({
+  userId: v.optional(v.string()), // Null for anonymous users
+  sessionId: v.string(), // Track anonymous sessions
+  adType: v.union(
+    v.literal("DISPLAY_BANNER"),
+    v.literal("VIDEO_REWARD"),
+    v.literal("INTERSTITIAL")
+  ),
+  placement: v.union(
+    v.literal("WIZARD_PAGE"),
+    v.literal("DUEL_PAGE"),
+    v.literal("CREDIT_REWARD")
+  ),
+  action: v.union(
+    v.literal("IMPRESSION"),
+    v.literal("CLICK"),
+    v.literal("COMPLETION")
+  ),
+  revenue: v.optional(v.number()), // Revenue in cents
+  adNetworkId: v.string(),
+  metadata: v.optional(v.record(v.string(), v.any())),
+  createdAt: v.number(),
+})
+  .index("by_user", ["userId"])
+  .index("by_session", ["sessionId"])
+  .index("by_placement", ["placement"]);
 ```
 
 #### Cosmetic Items Table (New)
@@ -180,6 +224,44 @@ transactions: defineTable({
 
 ### Core Services
 
+#### Ad Service
+
+```typescript
+interface AdService {
+  // Ad display management
+  shouldShowAds(userId?: string): Promise<boolean>;
+  getAdConfiguration(placement: AdPlacement): Promise<AdConfig>;
+  trackAdInteraction(
+    interaction: AdInteraction,
+    userId?: string,
+    sessionId?: string
+  ): Promise<void>;
+
+  // Revenue tracking
+  calculateAdRevenue(userId?: string, timeframe: TimeFrame): Promise<number>;
+  getAdPerformanceMetrics(placement: AdPlacement): Promise<AdMetrics>;
+}
+```
+
+#### Image Credit Service
+
+```typescript
+interface ImageCreditService {
+  // Credit management
+  getUserImageCredits(userId: string): Promise<number>;
+  consumeImageCredit(userId: string): Promise<boolean>;
+  awardImageCredit(userId: string, source: CreditSource): Promise<void>;
+
+  // Credit earning through ads
+  canEarnCreditFromAd(userId: string): Promise<boolean>;
+  processAdRewardCredit(userId: string, adInteractionId: string): Promise<void>;
+
+  // Credit validation
+  hasImageCreditsForDuel(userId: string): Promise<boolean>;
+  getImageCreditHistory(userId: string): Promise<CreditTransaction[]>;
+}
+```
+
 #### Subscription Service
 
 ```typescript
@@ -226,23 +308,61 @@ interface PaymentService {
 ```typescript
 interface UsageLimiterService {
   // Limit definitions
-  FREE_WIZARD_LIMIT: 2;
-  FREE_DAILY_DUELS: 5;
-  FREE_MONTHLY_AI_CREDITS: 10;
+  FREE_WIZARD_LIMIT: 3;
+  INITIAL_IMAGE_CREDITS: 10;
+  AD_REWARD_COOLDOWN: 300000; // 5 minutes in milliseconds
 
   // Validation methods
   canCreateWizard(userId: string): Promise<boolean>;
-  canStartDuel(userId: string): Promise<boolean>;
-  canUseAI(userId: string, creditsRequired: number): Promise<boolean>;
+  canStartDuel(userId: string): Promise<boolean>; // Requires registration
+  canGenerateImages(userId: string): Promise<boolean>;
 
   // Usage tracking
   trackWizardCreation(userId: string): Promise<void>;
   trackDuelParticipation(userId: string): Promise<void>;
-  trackAIUsage(userId: string, creditsUsed: number): Promise<void>;
+  trackImageGeneration(userId: string): Promise<void>;
 }
 ```
 
 ### Frontend Components
+
+#### Ad Display Component
+
+```typescript
+interface AdDisplayProps {
+  placement: AdPlacement;
+  userId?: string;
+  sessionId: string;
+  onAdInteraction?: (interaction: AdInteraction) => void;
+}
+
+const AdDisplay: React.FC<AdDisplayProps>;
+```
+
+#### Image Credit Display Component
+
+```typescript
+interface ImageCreditDisplayProps {
+  credits: number;
+  onWatchAd?: () => void;
+  onUpgrade?: () => void;
+  canWatchAd: boolean;
+}
+
+const ImageCreditDisplay: React.FC<ImageCreditDisplayProps>;
+```
+
+#### Reward Ad Component
+
+```typescript
+interface RewardAdProps {
+  onAdCompleted: (reward: AdReward) => void;
+  onAdFailed: (error: AdError) => void;
+  rewardType: "IMAGE_CREDIT";
+}
+
+const RewardAd: React.FC<RewardAdProps>;
+```
 
 #### Subscription Management Component
 
@@ -294,15 +414,48 @@ interface User {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   subscriptionEndsAt?: number;
-  aiCredits: number;
+  imageCredits: number;
   monthlyUsage: {
     duelsPlayed: number;
     wizardsCreated: number;
-    aiGenerations: number;
+    imageGenerations: number;
+    adsWatched: number;
     resetDate: number;
   };
   createdAt: number;
   updatedAt: number;
+}
+```
+
+### Ad Interaction Model
+
+```typescript
+interface AdInteraction {
+  _id: Id<"adInteractions">;
+  userId?: string;
+  sessionId: string;
+  adType: "DISPLAY_BANNER" | "VIDEO_REWARD" | "INTERSTITIAL";
+  placement: "WIZARD_PAGE" | "DUEL_PAGE" | "CREDIT_REWARD";
+  action: "IMPRESSION" | "CLICK" | "COMPLETION";
+  revenue?: number;
+  adNetworkId: string;
+  metadata?: Record<string, any>;
+  createdAt: number;
+}
+```
+
+### Image Credit Transaction Model
+
+```typescript
+interface ImageCreditTransaction {
+  _id: Id<"imageCreditTransactions">;
+  userId: string;
+  type: "EARNED" | "CONSUMED" | "GRANTED" | "EXPIRED";
+  amount: number;
+  source: "SIGNUP_BONUS" | "AD_REWARD" | "PREMIUM_GRANT" | "ADMIN_GRANT";
+  relatedAdId?: Id<"adInteractions">;
+  metadata?: Record<string, any>;
+  createdAt: number;
 }
 ```
 
@@ -420,44 +573,62 @@ interface Tournament {
 
 ## Implementation Phases
 
-### Phase 1: Core Infrastructure
+### Phase 1: Ad System and Anonymous User Support
 
-1. Database schema updates
-2. User service with subscription tracking
-3. Basic usage limiting
-4. Stripe integration setup
+1. Ad network integration (Google AdSense, Media.net)
+2. Anonymous session tracking
+3. Ad display components for wizard and duel pages
+4. Ad interaction tracking and analytics
+5. Registration prompts for anonymous users attempting to duel
 
-### Phase 2: Subscription Management
+### Phase 2: Image Credit System
+
+1. Database schema for image credits and transactions
+2. Image credit service implementation
+3. Credit consumption for AI image generation
+4. Reward ad integration for credit earning
+5. Credit balance UI components
+
+### Phase 3: Core Infrastructure
+
+1. User service with subscription tracking
+2. Updated usage limiting with image credits
+3. Stripe integration setup
+4. Database schema updates for subscriptions
+
+### Phase 4: Subscription Management
 
 1. Subscription upgrade/downgrade flows
 2. Billing portal integration
 3. Webhook processing
 4. Usage limit enforcement
+5. Premium unlimited image generation
 
-### Phase 3: Premium Features
+### Phase 5: Premium Features
 
 1. Advanced wizard customization
 2. Premium AI model access
 3. Enhanced UI for premium users
 4. Feature access controls
 
-### Phase 4: Marketplace Features
+### Phase 6: Marketplace Features
 
 1. Cosmetic item system
 2. Shopping interface
 3. Inventory management
 4. Item application system
 
-### Phase 5: Tournament System
+### Phase 7: Tournament System
 
 1. Tournament creation and management
 2. Entry fee processing
 3. Prize distribution
 4. Tournament UI components
 
-### Phase 6: Analytics and Optimization
+### Phase 8: Analytics and Optimization
 
-1. Revenue tracking dashboard
+1. Revenue tracking dashboard (ads + subscriptions)
 2. User behavior analytics
 3. A/B testing framework
 4. Conversion optimization
+5. Ad performance optimization

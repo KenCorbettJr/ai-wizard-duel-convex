@@ -6,7 +6,19 @@ This document outlines the requirements for implementing monetization features i
 
 ## Requirements
 
-### Requirement 1: Freemium Model Implementation
+### Requirement 1: Advertisement-Based Revenue for Anonymous Users
+
+**User Story:** As a product owner, I want to display ads to non-logged-in users on key pages so that we can generate revenue from anonymous traffic while incentivizing account creation.
+
+#### Acceptance Criteria
+
+1. WHEN an anonymous user visits wizard pages THEN the system SHALL display non-intrusive advertisements
+2. WHEN an anonymous user visits duel pages THEN the system SHALL display targeted ads relevant to gaming content
+3. WHEN a user creates an account and signs in THEN the system SHALL remove all advertisements from their experience
+4. WHEN ads are displayed THEN the system SHALL ensure they don't interfere with core functionality or user experience
+5. WHEN anonymous users see ads THEN the system SHALL include clear messaging that signing up removes ads
+
+### Requirement 2: Freemium Model Implementation
 
 **User Story:** As a product owner, I want to implement a freemium model so that we can attract users with free features while generating revenue from premium subscriptions.
 
@@ -17,7 +29,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a user upgrades to premium THEN the system SHALL unlock all premium features immediately
 4. IF a user's subscription expires THEN the system SHALL gracefully downgrade them to free tier without data loss
 
-### Requirement 2: Usage-Based Limitations for Free Users
+### Requirement 3: Usage-Based Limitations for Free Users
 
 **User Story:** As a free user, I want to experience the core functionality with reasonable limitations so that I can evaluate the value before upgrading.
 
@@ -28,7 +40,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a free user generates AI content THEN the system SHALL use standard quality AI models
 4. WHEN free users view their dashboard THEN the system SHALL display their current usage and limits clearly
 
-### Requirement 3: Premium Subscription Tiers
+### Requirement 4: Premium Subscription Tiers
 
 **User Story:** As a paying customer, I want access to enhanced features and unlimited usage so that I can fully enjoy the magical dueling experience.
 
@@ -39,7 +51,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a user subscribes to Premium THEN the system SHALL provide access to exclusive spell templates and magical items
 4. WHEN a Premium user generates content THEN the system SHALL use higher quality AI models for better illustrations and narratives
 
-### Requirement 4: Premium Wizard Customization
+### Requirement 5: Premium Wizard Customization
 
 **User Story:** As a premium user, I want advanced wizard customization options so that I can create more unique and powerful magical characters.
 
@@ -50,7 +62,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a premium user customizes their wizard THEN the system SHALL allow custom backstory generation with AI assistance
 4. WHEN a premium user views their wizards THEN the system SHALL display premium-exclusive visual effects and animations
 
-### Requirement 5: Cosmetic Purchases and Virtual Items
+### Requirement 6: Cosmetic Purchases and Virtual Items
 
 **User Story:** As a user, I want to purchase cosmetic items and magical accessories so that I can personalize my wizards and show my achievements.
 
@@ -61,7 +73,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a user applies cosmetic items THEN the system SHALL reflect these changes in duel illustrations and wizard profiles
 4. WHEN users view other wizards THEN the system SHALL display their equipped cosmetic items and achievements
 
-### Requirement 6: Tournament Entry Fees and Prize Pools
+### Requirement 7: Tournament Entry Fees and Prize Pools
 
 **User Story:** As a competitive player, I want to participate in premium tournaments with entry fees so that I can compete for valuable prizes and recognition.
 
@@ -72,7 +84,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a tournament concludes THEN the system SHALL distribute prizes to winners automatically
 4. WHEN users view tournaments THEN the system SHALL display entry requirements, prize pools, and participant counts clearly
 
-### Requirement 7: AI Generation Credits System
+### Requirement 8: AI Generation Credits System
 
 **User Story:** As a user, I want to purchase additional AI generation credits so that I can create more custom content beyond my subscription limits.
 
@@ -83,7 +95,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a user uses AI features THEN the system SHALL deduct appropriate credits and display remaining balance
 4. WHEN credits are low THEN the system SHALL notify users and suggest credit packages
 
-### Requirement 8: Subscription Management and Billing
+### Requirement 9: Subscription Management and Billing
 
 **User Story:** As a user, I want to easily manage my subscription and billing so that I have control over my payments and can modify my plan as needed.
 
@@ -94,7 +106,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN a user cancels their subscription THEN the system SHALL continue service until the end of the billing period
 4. WHEN payment fails THEN the system SHALL retry payment and notify the user with grace period options
 
-### Requirement 9: Analytics and Revenue Tracking
+### Requirement 10: Analytics and Revenue Tracking
 
 **User Story:** As a business owner, I want to track monetization metrics so that I can optimize pricing and features for better revenue performance.
 
@@ -105,7 +117,7 @@ This document outlines the requirements for implementing monetization features i
 3. WHEN generating reports THEN the system SHALL provide insights on most popular premium features and pricing effectiveness
 4. WHEN analyzing user segments THEN the system SHALL identify high-value users and optimization opportunities
 
-### Requirement 10: Fair Usage and Anti-Abuse Measures
+### Requirement 11: Fair Usage and Anti-Abuse Measures
 
 **User Story:** As a platform operator, I want to prevent abuse of the monetization system so that legitimate users have a fair experience and revenue is protected.
 
