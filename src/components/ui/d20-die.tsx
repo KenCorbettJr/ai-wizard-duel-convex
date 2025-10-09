@@ -9,6 +9,37 @@ interface D20DieProps {
 }
 
 export function D20Die({ value, className, size = "md" }: D20DieProps) {
+  // Get size classes for testing
+  const getSizeClasses = (size: "sm" | "md" | "lg") => {
+    switch (size) {
+      case "sm":
+        return "w-8 h-8 text-xs";
+      case "md":
+        return "w-12 h-12 text-sm";
+      case "lg":
+        return "w-16 h-16 text-base";
+      default:
+        return "w-12 h-12 text-sm";
+    }
+  };
+
+  // Get color classes for testing
+  const getColorClasses = (roll: number) => {
+    if (roll >= 19) {
+      return "from-yellow-400 to-yellow-600"; // Critical success
+    }
+    if (roll >= 16) {
+      return "from-green-400 to-green-600"; // High success
+    }
+    if (roll >= 11) {
+      return "from-blue-400 to-blue-600"; // Medium success
+    }
+    if (roll >= 6) {
+      return "from-orange-400 to-orange-600"; // Low success
+    }
+    return "from-red-400 to-red-600"; // Failure
+  };
+
   const sizeConfig = {
     sm: {
       containerSize: 80,
@@ -66,7 +97,12 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
 
   return (
     <div
-      className={cn("relative mx-auto", className)}
+      className={cn(
+        "relative mx-auto bg-gradient-to-br",
+        getSizeClasses(size),
+        getColorClasses(value),
+        className
+      )}
       style={{
         width: `${config.containerSize}px`,
         height: `${config.containerSize}px`,

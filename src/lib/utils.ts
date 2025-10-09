@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Id } from "../../../convex/_generated/dataModel";
+import { Id, TableNames } from "../../convex/_generated/dataModel";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -31,7 +31,7 @@ export function isValidConvexId(id: string, tableName?: string): boolean {
 /**
  * Safely casts a string to a Convex ID if it's valid, otherwise returns null
  */
-export function safeConvexId<T extends string>(
+export function safeConvexId<T extends TableNames>(
   id: string,
   tableName: T
 ): Id<T> | null {

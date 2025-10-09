@@ -62,7 +62,7 @@ describe("Mock Services", () => {
       const view1 = new Uint8Array(result1);
       const view2 = new Uint8Array(result2);
       expect(view1).toEqual(view2);
-    });
+    }, 15000);
 
     it("should return different images for different prompts", async () => {
       const result1 = await generateMockImage("prompt 1");

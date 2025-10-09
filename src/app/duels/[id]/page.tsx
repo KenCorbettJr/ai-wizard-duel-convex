@@ -216,8 +216,8 @@ export default function DuelPage({ params }: DuelPageProps) {
                     </>
                   ) : (
                     <>
-                      <li>The duel doesn't exist or has been deleted</li>
-                      <li>You don't have permission to view this duel</li>
+                      <li>The duel doesn&apos;t exist or has been deleted</li>
+                      <li>You don&apos;t have permission to view this duel</li>
                       <li>There&apos;s a temporary connection issue</li>
                     </>
                   )}
@@ -246,6 +246,11 @@ export default function DuelPage({ params }: DuelPageProps) {
         </div>
       </div>
     );
+  }
+
+  // At this point, duel is guaranteed to be defined (not null or undefined)
+  if (!duel) {
+    throw new Error("Duel should be defined at this point");
   }
 
   const getStatusBadge = (status: string) => {

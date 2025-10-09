@@ -1,12 +1,8 @@
 {
-  "typescript.autoClosingTags": false,
-  "cSpell.words": [
-    "Gemni",
-    "GENAI",
-    "genkit",
-    "googleai",
-    "schnell",
-    "spellcaster",
-    "turbopack"
-  ]
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.autoImports": true,
+  "files.associations": {
+    "*.test.ts": "typescript",
+    "*.test.tsx": "typescriptreact"
+  }
 }

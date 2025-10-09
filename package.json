@@ -44,6 +44,7 @@
     "next-themes": "^0.4.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "simplex-noise": "^4.0.3",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
@@ -52,10 +53,12 @@
     "@tailwindcss/postcss": "^4.1.13",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.19.19",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.3",
+    "@vitest/expect": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "concurrently": "^9.2.1",
     "convex-test": "^0.0.38",

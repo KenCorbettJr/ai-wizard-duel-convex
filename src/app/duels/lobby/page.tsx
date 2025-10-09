@@ -35,6 +35,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import MagicVortex from "@/components/MagicVortex";
 
 export default function DuelLobbyPage() {
   const { user } = useUser();
@@ -94,19 +95,27 @@ export default function DuelLobbyPage() {
   // Show loading state if user is being redirected to a duel
   if (userRecentDuel && !userLobbyStatus) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
+      <MagicVortex
+        baseHue={280}
+        baseSpeed={0.15}
+        rangeSpeed={1.2}
+        baseRadius={0.8}
+        rangeRadius={1.5}
+        backgroundColor="rgba(15, 23, 42, 0.95)"
+        className="min-h-screen"
+      >
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto text-purple-600 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Match Found!</h2>
-              <p className="text-muted-foreground">
-                Redirecting you to your duel...
-              </p>
+              <h2 className="text-xl font-semibold mb-2 text-white">
+                Match Found!
+              </h2>
+              <p className="text-gray-300">Redirecting you to your duel...</p>
             </div>
           </div>
         </div>
-      </div>
+      </MagicVortex>
     );
   }
 
@@ -129,7 +138,15 @@ export default function DuelLobbyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
+    <MagicVortex
+      baseHue={280}
+      baseSpeed={0.15}
+      rangeSpeed={1.2}
+      baseRadius={0.8}
+      rangeRadius={1.5}
+      backgroundColor="rgba(15, 23, 42, 0.95)"
+      className="min-h-screen"
+    >
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -154,7 +171,7 @@ export default function DuelLobbyPage() {
 
         {/* Lobby Stats */}
         {lobbyStats && (
-          <Card className="mb-6">
+          <Card className="mb-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
@@ -188,7 +205,7 @@ export default function DuelLobbyPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Join Lobby Section */}
-          <Card>
+          <Card className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Swords className="h-5 w-5" />
@@ -364,7 +381,7 @@ export default function DuelLobbyPage() {
           </Card>
 
           {/* Current Lobby */}
-          <Card>
+          <Card className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -428,6 +445,6 @@ export default function DuelLobbyPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </MagicVortex>
   );
 }

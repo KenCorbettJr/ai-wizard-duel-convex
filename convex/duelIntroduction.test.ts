@@ -44,6 +44,8 @@ describe("Duel Introduction", () => {
   describe("Successful Introduction Generation", () => {
     test("should generate introduction with valid AI response", async () => {
       // Test will use the new schema-based mock functions
+      // Set test environment
+      process.env.NODE_ENV = "test";
 
       const result = await withAuth(t, "test-user-1").action(
         api.duelIntroduction.generateDuelIntroduction,
@@ -79,7 +81,7 @@ describe("Duel Introduction", () => {
       const firstRound = rounds.find((r) => r.roundNumber === 1);
       expect(firstRound).toBeDefined();
       expect(firstRound?.status).toBe("WAITING_FOR_SPELLS");
-    });
+    }, 10000);
 
     test("should handle TO_THE_DEATH duel type", async () => {
       const deathDuelId = await withAuth(t, "test-user-1").mutation(

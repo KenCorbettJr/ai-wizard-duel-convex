@@ -18,8 +18,8 @@ describe("Convex ID validation", () => {
     });
 
     it("should handle null and undefined", () => {
-      expect(isValidConvexId(null as any)).toBe(false);
-      expect(isValidConvexId(undefined as any)).toBe(false);
+      expect(isValidConvexId(null as unknown as string)).toBe(false);
+      expect(isValidConvexId(undefined as unknown as string)).toBe(false);
     });
   });
 

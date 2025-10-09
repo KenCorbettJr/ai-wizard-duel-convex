@@ -15,37 +15,37 @@ describe("D20Die", () => {
 
   it("applies correct color classes for different luck ranges", () => {
     const { rerender } = render(<D20Die value={1} />);
-    let die = screen.getByText("1");
-    expect(die.parentElement).toHaveClass("from-red-400", "to-red-600");
+    let container = screen.getByTitle("Luck Roll: 1/20");
+    expect(container).toHaveClass("from-red-400", "to-red-600");
 
     rerender(<D20Die value={8} />);
-    die = screen.getByText("8");
-    expect(die.parentElement).toHaveClass("from-orange-400", "to-orange-600");
+    container = screen.getByTitle("Luck Roll: 8/20");
+    expect(container).toHaveClass("from-orange-400", "to-orange-600");
 
     rerender(<D20Die value={13} />);
-    die = screen.getByText("13");
-    expect(die.parentElement).toHaveClass("from-blue-400", "to-blue-600");
+    container = screen.getByTitle("Luck Roll: 13/20");
+    expect(container).toHaveClass("from-blue-400", "to-blue-600");
 
     rerender(<D20Die value={17} />);
-    die = screen.getByText("17");
-    expect(die.parentElement).toHaveClass("from-green-400", "to-green-600");
+    container = screen.getByTitle("Luck Roll: 17/20");
+    expect(container).toHaveClass("from-green-400", "to-green-600");
 
     rerender(<D20Die value={20} />);
-    die = screen.getByText("20");
-    expect(die.parentElement).toHaveClass("from-yellow-400", "to-yellow-600");
+    container = screen.getByTitle("Luck Roll: 20/20");
+    expect(container).toHaveClass("from-yellow-400", "to-yellow-600");
   });
 
   it("applies correct size classes", () => {
     const { rerender } = render(<D20Die value={10} size="sm" />);
-    let die = screen.getByText("10");
-    expect(die.parentElement).toHaveClass("w-8", "h-8", "text-xs");
+    let container = screen.getByTitle("Luck Roll: 10/20");
+    expect(container).toHaveClass("w-8", "h-8", "text-xs");
 
     rerender(<D20Die value={10} size="md" />);
-    die = screen.getByText("10");
-    expect(die.parentElement).toHaveClass("w-12", "h-12", "text-sm");
+    container = screen.getByTitle("Luck Roll: 10/20");
+    expect(container).toHaveClass("w-12", "h-12", "text-sm");
 
     rerender(<D20Die value={10} size="lg" />);
-    die = screen.getByText("10");
-    expect(die.parentElement).toHaveClass("w-16", "h-16", "text-base");
+    container = screen.getByTitle("Luck Roll: 10/20");
+    expect(container).toHaveClass("w-16", "h-16", "text-base");
   });
 });
