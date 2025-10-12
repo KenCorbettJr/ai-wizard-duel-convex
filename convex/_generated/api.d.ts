@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as adService from "../adService.js";
 import type * as ai_getAI from "../ai/getAI.js";
 import type * as aiTextGeneration from "../aiTextGeneration.js";
 import type * as duelIntroduction from "../duelIntroduction.js";
@@ -25,6 +26,7 @@ import type * as generateWizardIllustration from "../generateWizardIllustration.
 import type * as imageGenerationConfig from "../imageGenerationConfig.js";
 import type * as mocks_mockServices from "../mocks/mockServices.js";
 import type * as processDuelRound from "../processDuelRound.js";
+import type * as sessionService from "../sessionService.js";
 import type * as testGeminiIntegration from "../testGeminiIntegration.js";
 import type * as test_utils from "../test_utils.js";
 import type * as users from "../users.js";
@@ -39,6 +41,7 @@ import type * as wizards from "../wizards.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adService: typeof adService;
   "ai/getAI": typeof ai_getAI;
   aiTextGeneration: typeof aiTextGeneration;
   duelIntroduction: typeof duelIntroduction;
@@ -51,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   imageGenerationConfig: typeof imageGenerationConfig;
   "mocks/mockServices": typeof mocks_mockServices;
   processDuelRound: typeof processDuelRound;
+  sessionService: typeof sessionService;
   testGeminiIntegration: typeof testGeminiIntegration;
   test_utils: typeof test_utils;
   users: typeof users;

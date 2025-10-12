@@ -7,6 +7,10 @@ import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AdDisplay } from "@/components/AdDisplay";
+import { RegistrationPrompt } from "@/components/RegistrationPrompt";
+import { RewardVideoAd } from "@/components/RewardVideoAd";
+import { CreditDisplay } from "@/components/CreditDisplay";
 import { useState } from "react";
 import { Wand2, Loader2, Plus } from "lucide-react";
 
@@ -35,15 +39,45 @@ export default function MyWizardsPage() {
                 Manage your magical champions and view their achievements
               </p>
             </div>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              size="lg"
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-5 w-5" />
-              Create New Wizard
-            </Button>
+            {user && (
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                Create New Wizard
+              </Button>
+            )}
           </div>
+
+          {/* Credit Display for Anonymous Users */}
+          {!user && (
+            <div className="mb-4 flex justify-center">
+              <CreditDisplay />
+            </div>
+          )}
+
+          {/* Ad Display for Anonymous Users */}
+          {!user && (
+            <div className="mb-6">
+              <AdDisplay placement="WIZARD_PAGE" className="mb-4" />
+            </div>
+          )}
+
+          {/* Reward Video Ad for Anonymous Users */}
+          {!user && (
+            <div className="mb-6">
+              <RewardVideoAd />
+            </div>
+          )}
+
+          {/* Registration Prompt for Anonymous Users */}
+          {!user && (
+            <div className="mb-6">
+              <RegistrationPrompt context="premium_features" />
+            </div>
+          )}
 
           {/* Quick Stats */}
           {wizards && wizards.length > 0 && (
@@ -99,7 +133,30 @@ export default function MyWizardsPage() {
         />
 
         {/* Wizards Grid */}
-        {wizards === undefined ? (
+        {!user ? (
+          // Show preview content for anonymous users
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="text-center py-16">
+                <div className="mb-6">
+                  <Wand2 className="h-20 w-20 mx-auto text-purple-600 mb-4" />
+                </div>
+                <h2 className="text-2xl font-semibold mb-3">
+                  Discover Magical Wizards!
+                </h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Create an account to build your own wizards and participate in
+                  epic magical duels. Join thousands of players in the ultimate
+                  wizard battle experience.
+                </p>
+                <div className="text-sm text-muted-foreground mb-4">
+                  ✨ Create unlimited wizards • 🎮 Participate in duels • 🏆
+                  Track your victories
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : wizards === undefined ? (
           <div className="text-center py-12">
             <Loader2 className="h-12 w-12 animate-spin mx-auto text-purple-600 mb-4" />
             <p className="text-muted-foreground text-lg">

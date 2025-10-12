@@ -47,7 +47,7 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
   const { id } = use(params);
 
   // Validate the ID format first
-  const duelId = safeConvexId(id, "duels");
+  const duelId = safeConvexId<"duels">(id);
 
   const duel = useQuery(api.duels.getDuel, duelId ? { duelId } : "skip");
 

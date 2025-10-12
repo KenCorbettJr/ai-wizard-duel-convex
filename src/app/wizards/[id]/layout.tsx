@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
 import { safeConvexId } from "../../../lib/utils";
 
@@ -17,7 +16,7 @@ export async function generateMetadata({
   const { id } = await params;
 
   // Validate the ID format first
-  const wizardId = safeConvexId(id, "wizards");
+  const wizardId = safeConvexId<"wizards">(id);
   if (!wizardId) {
     return {
       title: "Invalid Wizard",

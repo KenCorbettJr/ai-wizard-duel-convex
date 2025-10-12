@@ -14,7 +14,7 @@ function CreateDuelContent() {
 
   const wizardIdParam = searchParams.get("wizardId");
   const preSelectedWizardId = wizardIdParam
-    ? safeConvexId(wizardIdParam, "wizards")
+    ? safeConvexId<"wizards">(wizardIdParam)
     : null;
 
   const handleSuccess = (duelId: Id<"duels">) => {

@@ -100,4 +100,30 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_wizard", ["wizardId"]),
+  adInteractions: defineTable({
+    userId: v.optional(v.string()), // Null for anonymous users
+    sessionId: v.string(), // Track anonymous sessions
+    adType: v.union(
+      v.literal("DISPLAY_BANNER"),
+      v.literal("VIDEO_REWARD"),
+      v.literal("INTERSTITIAL")
+    ),
+    placement: v.union(
+      v.literal("WIZARD_PAGE"),
+      v.literal("DUEL_PAGE"),
+      v.literal("CREDIT_REWARD")
+    ),
+    action: v.union(
+      v.literal("IMPRESSION"),
+      v.literal("CLICK"),
+      v.literal("COMPLETION")
+    ),
+    revenue: v.optional(v.number()), // Revenue in cents
+    adNetworkId: v.string(),
+    metadata: v.optional(v.record(v.string(), v.any())),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_session", ["sessionId"])
+    .index("by_placement", ["placement"]),
 });

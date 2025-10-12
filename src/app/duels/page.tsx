@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
+import { AdDisplay } from "@/components/AdDisplay";
+import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { Swords, Users, Search, Shield } from "lucide-react";
 
 export default function DuelsPage() {
@@ -38,6 +40,20 @@ export default function DuelsPage() {
           </p>
         </div>
 
+        {/* Ad Display for Anonymous Users */}
+        {!user && (
+          <div className="mb-6">
+            <AdDisplay placement="DUEL_PAGE" className="mb-4" />
+          </div>
+        )}
+
+        {/* Registration Prompt for Anonymous Users */}
+        {!user && (
+          <div className="mb-6">
+            <RegistrationPrompt context="duel_access" />
+          </div>
+        )}
+
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader>
@@ -50,9 +66,15 @@ export default function DuelsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/duels/lobby">
-                <Button className="w-full">Join Lobby</Button>
-              </Link>
+              {user ? (
+                <Link href="/duels/lobby">
+                  <Button className="w-full">Join Lobby</Button>
+                </Link>
+              ) : (
+                <Button disabled className="w-full">
+                  Sign up to join
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -67,11 +89,17 @@ export default function DuelsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/duels/create">
-                <Button variant="outline" className="w-full">
-                  Create Duel
+              {user ? (
+                <Link href="/duels/create">
+                  <Button variant="outline" className="w-full">
+                    Create Duel
+                  </Button>
+                </Link>
+              ) : (
+                <Button disabled variant="outline" className="w-full">
+                  Sign up to create
                 </Button>
-              </Link>
+              )}
             </CardContent>
           </Card>
 
@@ -86,11 +114,17 @@ export default function DuelsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/duels/join">
-                <Button variant="outline" className="w-full">
-                  Join by Code
+              {user ? (
+                <Link href="/duels/join">
+                  <Button variant="outline" className="w-full">
+                    Join by Code
+                  </Button>
+                </Link>
+              ) : (
+                <Button disabled variant="outline" className="w-full">
+                  Sign up to join
                 </Button>
-              </Link>
+              )}
             </CardContent>
           </Card>
 

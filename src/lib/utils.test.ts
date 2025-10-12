@@ -25,15 +25,15 @@ describe("Convex ID validation", () => {
 
   describe("safeConvexId", () => {
     it("should return null for invalid IDs", () => {
-      expect(safeConvexId("invalid", "duels")).toBe(null);
-      expect(safeConvexId("123", "wizards")).toBe(null);
-      expect(safeConvexId("", "duels")).toBe(null);
+      expect(safeConvexId("invalid")).toBe(null);
+      expect(safeConvexId("123")).toBe(null);
+      expect(safeConvexId("")).toBe(null);
     });
 
     it("should return the ID for valid-looking IDs", () => {
       const validId = "k123456789abcdef";
-      expect(safeConvexId(validId, "duels")).toBe(validId);
-      expect(safeConvexId(validId, "wizards")).toBe(validId);
+      expect(safeConvexId(validId)).toBe(validId);
+      expect(safeConvexId(validId)).toBe(validId);
     });
   });
 });

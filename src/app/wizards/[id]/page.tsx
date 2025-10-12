@@ -41,7 +41,7 @@ export default function WizardPage({ params }: WizardPageProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   // Validate the ID format first
-  const wizardId = safeConvexId(id, "wizards");
+  const wizardId = safeConvexId<"wizards">(id);
 
   // Use safe queries that handle invalid IDs gracefully
   const wizard = useQuery(

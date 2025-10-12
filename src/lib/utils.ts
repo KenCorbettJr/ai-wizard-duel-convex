@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * Validates if a string is a valid Convex ID format
  * Convex IDs are base64url encoded strings that start with a table prefix
  */
-export function isValidConvexId(id: string, tableName?: string): boolean {
+export function isValidConvexId(id: string): boolean {
   if (!id || typeof id !== "string") {
     return false;
   }
@@ -31,11 +31,8 @@ export function isValidConvexId(id: string, tableName?: string): boolean {
 /**
  * Safely casts a string to a Convex ID if it's valid, otherwise returns null
  */
-export function safeConvexId<T extends TableNames>(
-  id: string,
-  tableName: T
-): Id<T> | null {
-  if (!isValidConvexId(id, tableName)) {
+export function safeConvexId<T extends TableNames>(id: string): Id<T> | null {
+  if (!isValidConvexId(id)) {
     return null;
   }
   return id as Id<T>;
