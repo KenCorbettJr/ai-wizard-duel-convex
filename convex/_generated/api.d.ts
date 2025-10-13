@@ -24,6 +24,7 @@ import type * as generateImageWithGemini from "../generateImageWithGemini.js";
 import type * as generateRoundIllustration from "../generateRoundIllustration.js";
 import type * as generateWizardIllustration from "../generateWizardIllustration.js";
 import type * as imageGenerationConfig from "../imageGenerationConfig.js";
+import type * as metadata from "../metadata.js";
 import type * as mocks_mockServices from "../mocks/mockServices.js";
 import type * as processDuelRound from "../processDuelRound.js";
 import type * as sessionService from "../sessionService.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   generateRoundIllustration: typeof generateRoundIllustration;
   generateWizardIllustration: typeof generateWizardIllustration;
   imageGenerationConfig: typeof imageGenerationConfig;
+  metadata: typeof metadata;
   "mocks/mockServices": typeof mocks_mockServices;
   processDuelRound: typeof processDuelRound;
   sessionService: typeof sessionService;
