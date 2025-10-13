@@ -6,6 +6,9 @@ import {
   formatDescription,
   getSocialImage,
   generateCacheKey,
+  validateDescriptionLength,
+  canonicalizeUrl,
+  validateMetadataConfig,
   SOCIAL_IMAGE_DIMENSIONS,
   DEFAULT_SOCIAL_IMAGES,
   type MetadataConfig,
@@ -86,36 +89,66 @@ describe("Metadata Utilities", () => {
   });
 
   describe("validateImageDimensions", () => {
-    it("should return true for valid dimensions", () => {
-      expect(validateImageDimensions(1200, 630)).toBe(true);
-      expect(validateImageDimensions(1400, 700)).toBe(true);
-      expect(validateImageDimensions(2000, 1000)).toBe(true);
+    it("should return valid result for valid dimensions", () => {
+      const result1 = validateImageDimensions(1200, 630);
+      expect(result1.isValid).toBe(true);
+      expect(result1.width).toBe(1200);
+      expect(result1.height).toBe(630);
+      expect(result1.recommendation).toBeUndefined();
+
+      const result2 = validateImageDimensions(1400, 700);
+      expect(result2.isValid).toBe(true);
+
+      const result3 = validateImageDimensions(2000, 1000);
+      expect(result3.isValid).toBe(true);
     });
 
-    it("should return false for dimensions below minimum width", () => {
-      expect(validateImageDimensions(1199, 630)).toBe(false);
-      expect(validateImageDimensions(800, 630)).toBe(false);
-      expect(validateImageDimensions(0, 630)).toBe(false);
+    it("should return invalid result for dimensions below minimum width", () => {
+      const result1 = validateImageDimensions(1199, 630);
+      expect(result1.isValid).toBe(false);
+      expect(result1.width).toBe(1199);
+      expect(result1.height).toBe(630);
+      expect(result1.recommendation).toContain("below the minimum requirement");
+
+      const result2 = validateImageDimensions(800, 630);
+      expect(result2.isValid).toBe(false);
+
+      const result3 = validateImageDimensions(0, 630);
+      expect(result3.isValid).toBe(false);
     });
 
-    it("should return false for dimensions below minimum height", () => {
-      expect(validateImageDimensions(1200, 629)).toBe(false);
-      expect(validateImageDimensions(1200, 400)).toBe(false);
-      expect(validateImageDimensions(1200, 0)).toBe(false);
+    it("should return invalid result for dimensions below minimum height", () => {
+      const result1 = validateImageDimensions(1200, 629);
+      expect(result1.isValid).toBe(false);
+      expect(result1.width).toBe(1200);
+      expect(result1.height).toBe(629);
+      expect(result1.recommendation).toContain("below the minimum requirement");
+
+      const result2 = validateImageDimensions(1200, 400);
+      expect(result2.isValid).toBe(false);
+
+      const result3 = validateImageDimensions(1200, 0);
+      expect(result3.isValid).toBe(false);
     });
 
-    it("should return false for both dimensions below minimum", () => {
-      expect(validateImageDimensions(800, 400)).toBe(false);
-      expect(validateImageDimensions(1199, 629)).toBe(false);
+    it("should return invalid result for both dimensions below minimum", () => {
+      const result1 = validateImageDimensions(800, 400);
+      expect(result1.isValid).toBe(false);
+      expect(result1.recommendation).toContain("below the minimum requirement");
+
+      const result2 = validateImageDimensions(1199, 629);
+      expect(result2.isValid).toBe(false);
     });
 
     it("should handle edge cases with exact minimum dimensions", () => {
-      expect(
-        validateImageDimensions(
-          SOCIAL_IMAGE_DIMENSIONS.minWidth,
-          SOCIAL_IMAGE_DIMENSIONS.minHeight
-        )
-      ).toBe(true);
+      const result = validateImageDimensions(
+        SOCIAL_IMAGE_DIMENSIONS.minWidth,
+        SOCIAL_IMAGE_DIMENSIONS.minHeight
+      );
+      expect(result.isValid).toBe(true);
+      expect(result.width).toBe(SOCIAL_IMAGE_DIMENSIONS.minWidth);
+      expect(result.height).toBe(SOCIAL_IMAGE_DIMENSIONS.minHeight);
+      expect(result.recommendation).toBeUndefined();
     });
   });
 
@@ -312,6 +345,119 @@ describe("Metadata Utilities", () => {
     it("should handle empty ID", () => {
       expect(generateCacheKey("wizard", "")).toBe("metadata_wizard_");
       expect(generateCacheKey("duel", "")).toBe("metadata_duel_");
+    });
+  });
+
+  describe("validateDescriptionLength", () => {
+    it("should return valid for descriptions within range", () => {
+      const result = validateDescriptionLength("A".repeat(200));
+      expect(result.isValid).toBe(true);
+      expect(result.length).toBe(200);
+      expect(result.recommendation).toBeUndefined();
+    });
+
+    it("should return invalid for descriptions too short", () => {
+      const result = validateDescriptionLength("Short");
+      expect(result.isValid).toBe(false);
+      expect(result.length).toBe(5);
+      expect(result.recommendation).toContain("at least 150 characters");
+    });
+
+    it("should return invalid for descriptions too long", () => {
+      const result = validateDescriptionLength("A".repeat(350));
+      expect(result.isValid).toBe(false);
+      expect(result.length).toBe(350);
+      expect(result.recommendation).toContain("no more than 300 characters");
+    });
+
+    it("should handle edge cases", () => {
+      const result150 = validateDescriptionLength("A".repeat(150));
+      expect(result150.isValid).toBe(true);
+
+      const result300 = validateDescriptionLength("A".repeat(300));
+      expect(result300.isValid).toBe(true);
+    });
+  });
+
+  describe("canonicalizeUrl", () => {
+    it("should return valid canonical URL for valid input", () => {
+      const result = canonicalizeUrl("https://example.com/path");
+      expect(result.isValid).toBe(true);
+      expect(result.canonicalUrl).toBe("https://example.com/path");
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("should remove tracking parameters", () => {
+      const result = canonicalizeUrl(
+        "https://example.com/path?utm_source=test&utm_medium=email&normal=keep"
+      );
+      expect(result.isValid).toBe(true);
+      expect(result.canonicalUrl).toBe("https://example.com/path?normal=keep");
+    });
+
+    it("should upgrade HTTP to HTTPS", () => {
+      const result = canonicalizeUrl("http://example.com/path");
+      expect(result.isValid).toBe(true);
+      expect(result.canonicalUrl).toBe("https://example.com/path");
+      expect(result.issues).toContain("Upgraded HTTP to HTTPS for security");
+    });
+
+    it("should remove trailing slash", () => {
+      const result = canonicalizeUrl("https://example.com/path/");
+      expect(result.isValid).toBe(true);
+      expect(result.canonicalUrl).toBe("https://example.com/path");
+    });
+
+    it("should preserve root path trailing slash", () => {
+      const result = canonicalizeUrl("https://example.com/");
+      expect(result.isValid).toBe(true);
+      expect(result.canonicalUrl).toBe("https://example.com/");
+    });
+
+    it("should handle invalid URLs", () => {
+      const result = canonicalizeUrl("not-a-url");
+      expect(result.isValid).toBe(false);
+      expect(result.issues.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("validateMetadataConfig", () => {
+    const validConfig = {
+      title: "Test Title",
+      description: "A".repeat(200),
+      image: "https://example.com/image.jpg",
+      url: "https://example.com/page",
+      type: "article" as const,
+    };
+
+    it("should return valid for complete config", () => {
+      const result = validateMetadataConfig(validConfig);
+      expect(result.isValid).toBe(true);
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("should detect missing title", () => {
+      const result = validateMetadataConfig({ ...validConfig, title: "" });
+      expect(result.isValid).toBe(false);
+      expect(result.issues).toContain("Title is required");
+    });
+
+    it("should warn about long title", () => {
+      const result = validateMetadataConfig({
+        ...validConfig,
+        title: "A".repeat(70),
+      });
+      expect(result.isValid).toBe(true);
+      expect(result.warnings.length).toBeGreaterThan(0);
+    });
+
+    it("should detect invalid image URL", () => {
+      const result = validateMetadataConfig({
+        ...validConfig,
+        image: "not-a-url",
+      });
+      expect(result.isValid).toBe(false);
+      expect(result.issues).toContain("Invalid image URL format");
     });
   });
 

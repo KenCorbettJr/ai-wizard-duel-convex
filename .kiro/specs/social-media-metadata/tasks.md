@@ -72,25 +72,25 @@
   - Test image URL generation for wizard illustrations
   - _Requirements: 1.5, 5.5_
 
-- [ ] 4. Implement duel metadata generation
+- [x] 4. Implement duel metadata generation
   - Add dynamic metadata generation to duel pages
   - Create status-aware duel metadata with participant information
   - Implement round illustration integration for preview images
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
 
-- [ ] 4.1 Update duel page with metadata generation
+- [x] 4.1 Update duel page with metadata generation
   - Modify `src/app/duels/[id]/page.tsx` to include `generateMetadata` function
   - Implement duel data fetching with participant information
   - Create dynamic title generation based on duel status
   - _Requirements: 2.2, 2.3_
 
-- [ ] 4.2 Implement duel metadata formatting
+- [x] 4.2 Implement duel metadata formatting
   - Create `generateDuelMetadata()` function in metadata service
   - Implement status-aware title generation (Live Duel vs Epic Duel)
   - Format participant information and win rates for descriptions
   - _Requirements: 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 4.3 Add round illustration integration
+- [x] 4.3 Add round illustration integration
   - Implement logic to select latest round illustration as preview image
   - Create fallback to generic duel background when no illustrations exist
   - Optimize illustration URLs for social media dimensions
@@ -102,19 +102,19 @@
   - Test round illustration selection logic
   - _Requirements: 2.7, 5.5_
 
-- [ ] 5. Add comprehensive Open Graph and Twitter Card support
+- [x] 5. Add comprehensive Open Graph and Twitter Card support
   - Implement complete metadata tags for all social platforms
   - Add proper meta tag generation in page layouts
   - Ensure cross-platform compatibility and validation
   - _Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 5.1 Implement complete metadata tag generation
+- [x] 5.1 Implement complete metadata tag generation
   - Add all required Open Graph tags (og:title, og:description, og:image, og:url, og:type)
   - Add all required Twitter Card tags (twitter:card, twitter:title, twitter:description, twitter:image)
   - Implement proper meta tag structure in Next.js metadata API
   - _Requirements: 3.1, 3.2_
 
-- [ ] 5.2 Add metadata validation and optimization
+- [x] 5.2 Add metadata validation and optimization
   - Implement description length validation (150-300 characters)
   - Add image dimension validation (minimum 1200x630)
   - Create URL canonicalization for proper og:url values

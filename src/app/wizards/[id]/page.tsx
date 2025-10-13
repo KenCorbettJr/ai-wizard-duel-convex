@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../../convex/_generated/api";
 import {
-  generateWizardMetadata,
-  generateDefaultMetadata,
+  generateCompleteWizardMetadata,
+  generateCompleteDefaultMetadata,
 } from "@/lib/metadata";
 import { safeConvexId } from "../../../lib/utils";
 import WizardPageClient from "./WizardPageClient";
@@ -22,7 +22,7 @@ export async function generateMetadata({
     const wizardId = safeConvexId<"wizards">(id);
 
     if (!wizardId) {
-      return generateDefaultMetadata({
+      return generateCompleteDefaultMetadata({
         title: "Invalid Wizard - AI Wizard Duel",
         description:
           "The wizard you're looking for could not be found. Explore other magical wizards in our arena.",
@@ -35,7 +35,7 @@ export async function generateMetadata({
     });
 
     if (!wizard) {
-      return generateDefaultMetadata({
+      return generateCompleteDefaultMetadata({
         title: "Wizard Not Found - AI Wizard Duel",
         description:
           "The wizard you're looking for doesn't exist. Discover other powerful wizards ready for battle.",
@@ -55,42 +55,11 @@ export async function generateMetadata({
       }
     }
 
-    // Generate wizard-specific metadata
-    const wizardMetadata = generateWizardMetadata(wizard, optimizedImageUrl);
-
-    return {
-      title: wizardMetadata.title,
-      description: wizardMetadata.description,
-      openGraph: {
-        title: wizardMetadata.title,
-        description: wizardMetadata.description,
-        url: wizardMetadata.url,
-        type: wizardMetadata.type,
-        images: wizardMetadata.image
-          ? [
-              {
-                url: wizardMetadata.image,
-                width: 1200,
-                height: 630,
-                alt: `${wizard.name} - AI Wizard`,
-              },
-            ]
-          : undefined,
-        siteName: "AI Wizard Duel",
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: wizardMetadata.title,
-        description: wizardMetadata.description,
-        images: wizardMetadata.image ? [wizardMetadata.image] : undefined,
-      },
-      alternates: {
-        canonical: wizardMetadata.url,
-      },
-    };
+    // Generate complete wizard-specific metadata
+    return generateCompleteWizardMetadata(wizard, optimizedImageUrl);
   } catch (error) {
     console.error("Error generating wizard metadata:", error);
-    return generateDefaultMetadata({
+    return generateCompleteDefaultMetadata({
       title: "Wizard Profile - AI Wizard Duel",
       description:
         "Explore this wizard's magical abilities and battle history in our AI-powered dueling arena.",
