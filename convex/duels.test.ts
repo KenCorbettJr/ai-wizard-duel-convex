@@ -344,3 +344,69 @@ test("should allow unauthenticated users to view duels", async () => {
   expect(completedDuelAsUnauthenticated).not.toBeNull();
   expect(completedDuelAsUnauthenticated?.status).toBe("COMPLETED");
 });
+test("should create duel with image generation disabled", async () => {
+  const t = convexTest(schema);
+
+  // Create a wizard
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create a duel with image generation disabled
+  const duelId = await withAuth(t, "test-user-1").mutation(
+    api.duels.createDuel,
+    {
+      numberOfRounds: 3,
+      wizards: [wizard1Id],
+      enableImageGeneration: false,
+    }
+  );
+
+  // Verify the duel was created with text-only mode enabled
+  const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
+    duelId,
+  });
+  expect(duel).toBeTruthy();
+  expect(duel!.textOnlyMode).toBe(true);
+  expect(duel!.textOnlyReason).toBe("user_preference");
+});
+
+test("should create duel with image generation enabled by default", async () => {
+  const t = convexTest(schema);
+
+  // Create a wizard
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create a duel without specifying image generation preference (should default to enabled)
+  const duelId = await withAuth(t, "test-user-1").mutation(
+    api.duels.createDuel,
+    {
+      numberOfRounds: 3,
+      wizards: [wizard1Id],
+    }
+  );
+
+  // Verify the duel was created with text-only mode disabled
+  const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
+    duelId,
+  });
+  expect(duel).toBeTruthy();
+  expect(duel!.textOnlyMode).toBe(false);
+  expect(duel!.textOnlyReason).toBeUndefined();
+});

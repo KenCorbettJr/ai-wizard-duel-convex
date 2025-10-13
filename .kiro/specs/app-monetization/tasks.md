@@ -14,14 +14,14 @@
   - Add clear value proposition messaging about ad-free experience
   - _Requirements: 1.3, 1.5, 4.5_
 
-- [ ] 3. Extend database schema for image credits and ad tracking
+- [x] 3. Extend database schema for image credits and ad tracking
   - Add users table with imageCredits field and updated usage tracking
   - Create adInteractions table for tracking ad performance and revenue
   - Add imageCreditTransactions table for credit earning/spending history
   - Update existing schema to support new monetization features
   - _Requirements: 3.1, 3.5_
 
-- [ ] 4. Build image credit management system
+- [x] 4. Build image credit management system
   - Create image credit service with balance tracking and validation
   - Implement credit consumption for AI-generated duel images
   - Build credit earning system through reward ad completion
@@ -35,14 +35,14 @@
   - Add reward ad UI components with clear credit earning messaging
   - _Requirements: 3.4_
 
-- [ ] 6. Create unlimited dueling with tiered visual experience
+- [x] 6. Create unlimited dueling with tiered visual experience
   - Modify duel system to support both image-enabled and text-only modes
   - Implement image credit checking before AI image generation
   - Build fallback to text-only narratives when credits are exhausted
   - Create clear UI indicators showing image vs text-only duel modes
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 7. Build image credit UI components
+- [x] 7. Build image credit UI components
   - Create credit balance display with current count and usage history
   - Implement "Watch Ad for Credit" button with reward ad integration
   - Build credit exhaustion notifications with upgrade/ad-watch options
@@ -56,10 +56,8 @@
   - Update usage tracking to include image generations and ads watched
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 9. Set up core subscription infrastructure
-  - Install and configure Stripe SDK and webhook handling
-  - Create environment variables for Stripe API keys and ad network credentials
-  - Set up basic error handling utilities for payment and ad operations
+- [x] 9. Set up core subscription infrastructure
+  - Set up subscription infrastructure with Clerk
   - Build user service with subscription and credit management
   - _Requirements: 6.1, 6.3_
 

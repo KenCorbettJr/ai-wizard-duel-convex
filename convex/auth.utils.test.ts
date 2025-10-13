@@ -13,6 +13,16 @@ describe("Auth Utils", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
+        subscriptionTier: "FREE",
+        subscriptionStatus: "ACTIVE",
+        imageCredits: 10,
+        monthlyUsage: {
+          duelsPlayed: 0,
+          wizardsCreated: 0,
+          imageGenerations: 0,
+          adsWatched: 0,
+          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
+        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -34,6 +44,16 @@ describe("Auth Utils", () => {
       await ctx.db.insert("users", {
         clerkId: "regular-user",
         role: "user",
+        subscriptionTier: "FREE",
+        subscriptionStatus: "ACTIVE",
+        imageCredits: 10,
+        monthlyUsage: {
+          duelsPlayed: 0,
+          wizardsCreated: 0,
+          imageGenerations: 0,
+          adsWatched: 0,
+          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
+        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });

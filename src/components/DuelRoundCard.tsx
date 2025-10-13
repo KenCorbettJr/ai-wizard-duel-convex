@@ -354,8 +354,8 @@ export const DuelRoundCard = memo(function DuelRoundCard({
               </div>
             )}
 
-            {/* Round Illustration */}
-            {round.outcome?.illustration && (
+            {/* Round Illustration or Text-Only Placeholder */}
+            {round.outcome?.illustration ? (
               <div className="bg-black aspect-square mb-4 max-w-2xl mx-auto rounded-lg overflow-hidden">
                 <ConvexImage
                   storageId={round.outcome.illustration}
@@ -368,7 +368,24 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   className="w-full h-full object-cover"
                 />
               </div>
-            )}
+            ) : duel.textOnlyMode && round.outcome?.illustrationPrompt ? (
+              <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-2 border-dashed border-orange-300 dark:border-orange-600/50 aspect-square mb-4 max-w-2xl mx-auto rounded-lg flex items-center justify-center p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📜</div>
+                  <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-2">
+                    Text-Only Mode
+                  </h3>
+                  <p className="text-sm text-orange-600 dark:text-orange-300 mb-4">
+                    This round would have been illustrated, but the duel is in
+                    text-only mode
+                  </p>
+                  <div className="text-xs text-orange-500 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 rounded-lg p-3 max-w-md">
+                    <strong>Illustration prompt:</strong>{" "}
+                    {round.outcome.illustrationPrompt}
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
             {/* Result */}
             {round.outcome?.result && (

@@ -10,12 +10,20 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
-import { Loader2 } from "lucide-react";
+import { ImageCreditDisplay } from "./ImageCreditDisplay";
+import {
+  Loader2,
+  Image as ImageIcon,
+  Type,
+  AlertTriangle,
+  Info,
+} from "lucide-react";
 import Image from "next/image";
 
 interface CreateDuelFormProps {
@@ -36,10 +44,23 @@ export function CreateDuelForm({
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(
     3
   );
+  const [enableImageGeneration, setEnableImageGeneration] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
+
+  // Check if user has credits for image generation
+  const hasImageCredits = useQuery(
+    api.imageCreditService.hasImageCreditsForDuel,
+    user?.id ? { userId: user.id } : "skip"
+  );
+
+  // Get user info to check if premium
+  const userInfo = useQuery(
+    api.users.getUserByClerkId,
+    user?.id ? { clerkId: user.id } : "skip"
+  );
 
   const createDuel = useMutation(api.duels.createDuel);
 
@@ -69,6 +90,7 @@ export function CreateDuelForm({
       const duelId = await createDuel({
         numberOfRounds,
         wizards: [selectedWizard],
+        enableImageGeneration,
       });
       onSuccess(duelId);
     } catch (error) {
@@ -78,6 +100,13 @@ export function CreateDuelForm({
       setIsCreating(false);
     }
   };
+
+  const isPremium =
+    userInfo?.subscriptionTier === "PREMIUM" &&
+    userInfo?.subscriptionStatus === "ACTIVE";
+
+  const shouldShowCreditWarning =
+    enableImageGeneration && !isPremium && !hasImageCredits;
 
   if (!wizards || wizards.length === 0) {
     return (
@@ -195,6 +224,86 @@ export function CreateDuelForm({
                 Please select a wizard
               </p>
             )}
+          </div>
+
+          {/* Image Generation Settings */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-3">
+              Image Generation
+            </label>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    {enableImageGeneration ? (
+                      <ImageIcon className="h-5 w-5 text-purple-500" />
+                    ) : (
+                      <Type className="h-5 w-5 text-gray-500" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-foreground">
+                        {enableImageGeneration
+                          ? "Images Enabled"
+                          : "Text-Only Mode"}
+                      </span>
+                      {enableImageGeneration && !isPremium && (
+                        <Badge variant="outline" className="text-xs">
+                          Uses 1 credit
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {enableImageGeneration
+                        ? "Generate AI illustrations for your duel rounds"
+                        : "Duel will use text descriptions only"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={enableImageGeneration}
+                  onCheckedChange={setEnableImageGeneration}
+                />
+              </div>
+
+              {/* Credit Information */}
+              {enableImageGeneration && (
+                <div className="space-y-3">
+                  {isPremium ? (
+                    <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 rounded-lg">
+                      <Info className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      <span className="text-sm text-purple-700 dark:text-purple-300">
+                        Premium: Unlimited image generation included
+                      </span>
+                    </div>
+                  ) : hasImageCredits ? (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
+                      <Info className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <span className="text-sm text-green-700 dark:text-green-300">
+                        This duel will use 1 of your image credits
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                        <div className="space-y-2">
+                          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                            No image credits available
+                          </p>
+                          <p className="text-sm text-amber-600 dark:text-amber-400">
+                            Your duel will automatically switch to text-only
+                            mode. You can earn credits by watching ads or
+                            upgrading to Premium.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

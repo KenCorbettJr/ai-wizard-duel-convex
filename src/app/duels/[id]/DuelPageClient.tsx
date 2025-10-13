@@ -30,6 +30,7 @@ import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
 import { DuelRoundCard } from "@/components/DuelRoundCard";
 import { CastSpellModal } from "@/components/CastSpellModal";
+import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { safeConvexId } from "../../../lib/utils";
 
 interface DuelPageClientProps {
@@ -320,7 +321,13 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     ? `${duel.numberOfRounds} Round Duel`
                     : "Duel to the Death"}
               </h2>
-              {getStatusBadge(duel.status)}
+              <div className="flex items-center gap-2">
+                <DuelModeIndicator
+                  textOnlyMode={duel.textOnlyMode}
+                  textOnlyReason={duel.textOnlyReason}
+                />
+                {getStatusBadge(duel.status)}
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground">
@@ -376,6 +383,17 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   />
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Text-Only Mode Explanation */}
+          {duel.textOnlyMode && (
+            <div className="mb-8">
+              <DuelModeIndicator
+                textOnlyMode={duel.textOnlyMode}
+                textOnlyReason={duel.textOnlyReason}
+                showDetails={true}
+              />
             </div>
           )}
 

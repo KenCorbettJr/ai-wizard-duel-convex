@@ -260,16 +260,41 @@ export const processDuelRound = action({
         },
       });
 
-      // Schedule round illustration generation
+      // Schedule round illustration generation (with credit checking)
       if (process.env.NODE_ENV !== "test" && battleResult.illustrationPrompt) {
         // Check if we should use Gemini Nano Banana
         const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+
+        // Determine which user should be charged for the image generation
+        // Use the first player in the duel for credit consumption
+        const firstPlayerId = duel.players[0];
+
+        // Check if duel is in text-only mode or user has image credits
+        let skipImageGeneration = duel.textOnlyMode || false;
+        if (!skipImageGeneration && firstPlayerId) {
+          const hasCredits = await ctx.runQuery(
+            api.imageCreditService.hasImageCreditsForDuel,
+            { userId: firstPlayerId }
+          );
+          if (!hasCredits) {
+            skipImageGeneration = true;
+            console.log(
+              `User ${firstPlayerId} has insufficient credits for duel ${duelId} round ${round.roundNumber}, using text-only mode`
+            );
+          }
+        } else if (skipImageGeneration) {
+          console.log(
+            `Duel ${duelId} round ${round.roundNumber} is in text-only mode by user preference`
+          );
+        }
 
         await ctx.runMutation(api.duels.scheduleRoundIllustration, {
           illustrationPrompt: battleResult.illustrationPrompt,
           duelId,
           roundNumber: round.roundNumber.toString(),
           useGemini,
+          userId: firstPlayerId,
+          skipImageGeneration,
         });
       }
 

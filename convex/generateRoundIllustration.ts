@@ -11,24 +11,90 @@ export const generateRoundIllustration = action({
     duelId: v.id("duels"),
     roundNumber: v.string(), // Can be "0" for introduction or actual round number
     useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
+    userId: v.optional(v.string()), // User ID for credit consumption
+    skipImageGeneration: v.optional(v.boolean()), // Skip image generation for text-only mode
   },
   handler: async (
     ctx,
-    { illustrationPrompt, duelId, roundNumber, useGemini = false }
+    {
+      illustrationPrompt,
+      duelId,
+      roundNumber,
+      useGemini = false,
+      userId,
+      skipImageGeneration = false,
+    }
   ) => {
     console.log(
-      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"}`
+      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"} ${skipImageGeneration ? "(text-only mode)" : ""}`
     );
 
     try {
-      let imageBuffer: ArrayBuffer;
-      let previousImage: string | undefined;
-
       // Get duel and wizard information
       const duel = await ctx.runQuery(api.duels.getDuel, { duelId });
       if (!duel) {
         throw new Error("Duel not found");
       }
+
+      // If skipImageGeneration is true, just return success without generating image
+      if (skipImageGeneration) {
+        console.log(
+          `Skipping image generation for duel ${duelId}, round ${roundNumber} (text-only mode)`
+        );
+        return { success: true, textOnlyMode: true };
+      }
+
+      // Check and consume image credits if userId is provided
+      if (userId) {
+        const hasCredits = await ctx.runQuery(
+          api.imageCreditService.hasImageCreditsForDuel,
+          {
+            userId,
+          }
+        );
+
+        if (!hasCredits) {
+          console.log(
+            `User ${userId} has insufficient image credits for duel ${duelId} round ${roundNumber}, falling back to text-only mode`
+          );
+          return {
+            success: true,
+            textOnlyMode: true,
+            reason: "insufficient_credits",
+          };
+        }
+
+        // Consume one credit for image generation
+        const creditConsumed = await ctx.runMutation(
+          api.imageCreditService.consumeImageCredit,
+          {
+            userId,
+            metadata: {
+              duelId,
+              roundNumber,
+              purpose: "duel_illustration",
+            },
+          }
+        );
+
+        if (!creditConsumed) {
+          console.log(
+            `Failed to consume image credit for user ${userId} for duel ${duelId} round ${roundNumber}, falling back to text-only mode`
+          );
+          return {
+            success: true,
+            textOnlyMode: true,
+            reason: "credit_consumption_failed",
+          };
+        }
+
+        console.log(
+          `Consumed 1 image credit for user ${userId} for duel ${duelId} round ${roundNumber}`
+        );
+      }
+
+      let imageBuffer: ArrayBuffer;
+      let previousImage: string | undefined;
 
       if (useGemini) {
         // For Gemini Nano Banana, we need to handle different scenarios
@@ -111,15 +177,22 @@ export const generateRoundIllustration = action({
       console.log(
         `Successfully generated illustration for duel ${duelId}, round ${roundNumber}`
       );
-      return { success: true, storageId };
+      return { success: true, storageId, textOnlyMode: false };
     } catch (error) {
       console.error(
         `Error generating illustration for duel ${duelId}, round ${roundNumber}:`,
         error
       );
-      throw new Error(
-        `Failed to generate round illustration: ${error instanceof Error ? error.message : "Unknown error"}`
+
+      // If image generation fails, fall back to text-only mode instead of throwing error
+      console.log(
+        `Falling back to text-only mode for duel ${duelId}, round ${roundNumber} due to image generation error`
       );
+      return {
+        success: true,
+        textOnlyMode: true,
+        reason: "image_generation_failed",
+      };
     }
   },
 });

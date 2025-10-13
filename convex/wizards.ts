@@ -394,6 +394,29 @@ export const getDefeatedWizards = query({
   },
 });
 
+// Internal function to create wizard for testing
+export const createWizardInternal = internalMutation({
+  args: {
+    owner: v.string(),
+    name: v.string(),
+    description: v.string(),
+  },
+  returns: v.id("wizards"),
+  handler: async (ctx, { owner, name, description }) => {
+    const wizardId = await ctx.db.insert("wizards", {
+      owner,
+      name,
+      description,
+      wins: 0,
+      losses: 0,
+      illustrationVersion: 1,
+      isAIPowered: false,
+    });
+
+    return wizardId;
+  },
+});
+
 // Get leaderboard of wizards ordered by win rate - public information
 export const getWizardLeaderboard = query({
   args: {

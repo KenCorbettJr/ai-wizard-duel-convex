@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdDisplay } from "@/components/AdDisplay";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
-import { RewardVideoAd } from "@/components/RewardVideoAd";
+
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { useState } from "react";
 import { Wand2, Loader2, Plus } from "lucide-react";
@@ -62,13 +62,6 @@ export default function MyWizardsPage() {
           {!user && (
             <div className="mb-6">
               <AdDisplay placement="WIZARD_PAGE" className="mb-4" />
-            </div>
-          )}
-
-          {/* Reward Video Ad for Anonymous Users */}
-          {!user && (
-            <div className="mb-6">
-              <RewardVideoAd />
             </div>
           )}
 

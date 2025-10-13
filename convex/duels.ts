@@ -48,6 +48,8 @@ export const getPlayerDuels = query({
       winners: v.optional(v.array(v.id("wizards"))),
       losers: v.optional(v.array(v.id("wizards"))),
       shortcode: v.optional(v.string()),
+      textOnlyMode: v.optional(v.boolean()),
+      textOnlyReason: v.optional(v.string()),
     })
   ),
   handler: async (ctx) => {
@@ -133,6 +135,8 @@ export const getDuelInternal = internalQuery({
       winners: v.optional(v.array(v.id("wizards"))),
       losers: v.optional(v.array(v.id("wizards"))),
       shortcode: v.optional(v.string()),
+      textOnlyMode: v.optional(v.boolean()),
+      textOnlyReason: v.optional(v.string()),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -259,8 +263,12 @@ export const createDuel = mutation({
   args: {
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
+    enableImageGeneration: v.optional(v.boolean()),
   },
-  handler: async (ctx, { numberOfRounds, wizards }) => {
+  handler: async (
+    ctx,
+    { numberOfRounds, wizards, enableImageGeneration = true }
+  ) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Not authenticated");
@@ -307,6 +315,8 @@ export const createDuel = mutation({
       hitPoints: initialHitPoints,
       needActionsFrom: wizards, // All wizards need to act initially
       shortcode,
+      textOnlyMode: !enableImageGeneration,
+      textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
     });
 
     return duelId;
@@ -380,6 +390,7 @@ export const joinDuel = mutation({
           api.duelIntroduction.generateDuelIntroduction,
           {
             duelId,
+            userId: updatedPlayers[0], // Use first player for credit consumption
           }
         );
       }
@@ -745,6 +756,22 @@ export const updateFeaturedIllustration = mutation({
   },
 });
 
+// Update duel text-only mode status
+export const updateDuelTextOnlyMode = mutation({
+  args: {
+    duelId: v.id("duels"),
+    textOnlyMode: v.boolean(),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, { duelId, textOnlyMode, reason }) => {
+    await ctx.db.patch(duelId, {
+      textOnlyMode,
+      textOnlyReason: reason,
+    });
+    return duelId;
+  },
+});
+
 // Get duels for a specific wizard
 export const getWizardDuels = query({
   args: { wizardId: v.id("wizards") },
@@ -891,10 +918,19 @@ export const scheduleRoundIllustration = mutation({
     duelId: v.id("duels"),
     roundNumber: v.string(),
     useGemini: v.optional(v.boolean()),
+    userId: v.optional(v.string()),
+    skipImageGeneration: v.optional(v.boolean()),
   },
   handler: async (
     ctx,
-    { illustrationPrompt, duelId, roundNumber, useGemini = false }
+    {
+      illustrationPrompt,
+      duelId,
+      roundNumber,
+      useGemini = false,
+      userId,
+      skipImageGeneration = false,
+    }
   ) => {
     // Schedule the illustration generation
     // Skip scheduling in test environment to avoid transaction escape errors
@@ -907,6 +943,8 @@ export const scheduleRoundIllustration = mutation({
           duelId,
           roundNumber,
           useGemini,
+          userId,
+          skipImageGeneration,
         }
       );
     }

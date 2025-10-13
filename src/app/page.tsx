@@ -1,6 +1,7 @@
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import FeatureCard from "@/components/FeatureCard";
 import DuelExample from "@/components/DuelExample";
@@ -15,6 +16,9 @@ import {
   ScanHeart,
   Trophy,
   Zap,
+  Coins,
+  Gift,
+  Crown,
 } from "lucide-react";
 import type { Metadata } from "next";
 import DashboardContent from "@/components/DashboardContent";
@@ -54,7 +58,7 @@ function LandingPage() {
             <h1 className="text-6xl font-bold mb-6 text-white">
               AI Wizard Duel
             </h1>
-            <p className="text-2xl text-white mb-6">
+            <p className="text-2xl text-white mb-4">
               Where Wizards Clash and Legends Rise!
             </p>
             <SignedOut>
@@ -236,6 +240,305 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Image Credits System */}
+      <section className="bg-secondary/30 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <Coins className="w-12 h-12 mb-4 text-yellow-500 inline-block" />
+            <h2 className="text-3xl font-bold mb-6">
+              Bring Your Spells to Life
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              Every duel features stunning AI-generated artwork that visualizes
+              your magical creations. Use image credits to generate unique
+              illustrations for your spells and wizards.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FeatureCard
+              icon={Gift}
+              title="Free Credits"
+              description="Start with 10 free image credits when you sign up. Perfect for trying out the magic!"
+            />
+            <FeatureCard
+              icon={Sparkles}
+              title="Earn More Credits"
+              description="Watch short video ads to earn additional credits. One ad = one credit, with a 5-minute cooldown."
+            />
+            <FeatureCard
+              icon={Crown}
+              title="Unlimited with Premium"
+              description="Premium users get unlimited image generation plus exclusive features and faster processing."
+            />
+          </div>
+          <div className="text-center mt-8">
+            <p className="text-sm text-muted-foreground">
+              <strong>Want to play without using credits?</strong> You can
+              always duel in text-only mode, which focuses purely on the magical
+              storytelling without AI-generated images.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-6">Choose Your Path</h2>
+            <p className="text-lg text-muted-foreground">
+              Start free and upgrade when you&apos;re ready to unleash your full
+              magical potential.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Tier */}
+            <Card className="relative">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Free Wizard</CardTitle>
+                <div className="text-3xl font-bold">$0</div>
+                <p className="text-muted-foreground">
+                  Perfect for getting started
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>10 free image credits</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Create up to 3 wizards</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Unlimited duels</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Earn credits by watching ads</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Access to all game features</span>
+                  </div>
+                </div>
+                <SignedOut>
+                  <SignInButton>
+                    <Button className="w-full" size="lg">
+                      Start Free
+                    </Button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <Link href="/dashboard">
+                    <Button className="w-full" size="lg">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                </SignedIn>
+              </CardContent>
+            </Card>
+
+            {/* Premium Tier */}
+            <Card className="relative border-purple-200 dark:border-purple-800 bg-gradient-to-b from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  Most Popular
+                </div>
+              </div>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                  <Crown className="w-6 h-6 text-purple-600" />
+                  Premium Wizard
+                </CardTitle>
+                <div className="text-3xl font-bold">$9.99</div>
+                <p className="text-muted-foreground">per month</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span className="font-medium">
+                      Unlimited image generation
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span className="font-medium">Unlimited wizards</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span className="font-medium">Priority AI processing</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span className="font-medium">Advanced customization</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span className="font-medium">Ad-free experience</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <span className="font-medium">Premium AI models</span>
+                  </div>
+                </div>
+                <Link href="/credits">
+                  <Button
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    size="lg"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Premium
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="bg-secondary/30 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-6">How It Works</h2>
+            <p className="text-lg text-muted-foreground">
+              Get started in minutes and begin your magical journey
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-purple-600">1</span>
+              </div>
+              <h3 className="text-xl font-semibold">Sign Up Free</h3>
+              <p className="text-muted-foreground">
+                Create your account and get 10 free image credits to start
+              </p>
+            </div>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-blue-600">2</span>
+              </div>
+              <h3 className="text-xl font-semibold">Create Your Wizard</h3>
+              <p className="text-muted-foreground">
+                Design your magical character with AI-generated artwork
+              </p>
+            </div>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-green-600">3</span>
+              </div>
+              <h3 className="text-xl font-semibold">Cast Spells</h3>
+              <p className="text-muted-foreground">
+                Enter duels and cast creative spells against other wizards
+              </p>
+            </div>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-yellow-600">4</span>
+              </div>
+              <h3 className="text-xl font-semibold">Watch Magic Unfold</h3>
+              <p className="text-muted-foreground">
+                See your spells come to life with AI-generated stories and
+                images
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What Players Are Saying */}
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-6">What Players Are Saying</h2>
+            <p className="text-lg text-muted-foreground">
+              Join thousands of wizards already casting spells and having epic
+              duels
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="bg-background">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex text-yellow-400">{"★".repeat(5)}</div>
+                  <p className="text-muted-foreground italic">
+                    &ldquo;The creativity this game unleashes is incredible!
+                    I&apos;ve never had so much fun coming up with magical
+                    spells. The AI artwork makes every duel feel like an epic
+                    fantasy movie.&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
+                      M
+                    </div>
+                    <div>
+                      <div className="font-semibold">MysticMage47</div>
+                      <div className="text-sm text-muted-foreground">
+                        Premium Wizard
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex text-yellow-400">{"★".repeat(5)}</div>
+                  <p className="text-muted-foreground italic">
+                    &ldquo;Way better than rock-paper-scissors! My friends and I
+                    use this to settle everything now. The simultaneous spell
+                    casting keeps everyone on their toes. So much fun!&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
+                      S
+                    </div>
+                    <div>
+                      <div className="font-semibold">SpellSlinger</div>
+                      <div className="text-sm text-muted-foreground">
+                        Free Wizard
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex text-yellow-400">{"★".repeat(5)}</div>
+                  <p className="text-muted-foreground italic">
+                    &ldquo;The free tier is generous enough to really enjoy the
+                    game, but Premium is totally worth it for unlimited image
+                    generation. The AI creates such beautiful and unique
+                    artwork!&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-red-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold">
+                      A
+                    </div>
+                    <div>
+                      <div className="font-semibold">ArcaneArtist</div>
+                      <div className="text-sm text-muted-foreground">
+                        Premium Wizard
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Leaderboard */}
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
@@ -257,8 +560,102 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* FAQ */}
       <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-6">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Everything you need to know about AI Wizard Duel
+            </p>
+          </div>
+          <div className="max-w-3xl mx-auto space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  What are image credits?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Image credits are used to generate AI artwork for your spells
+                  and wizards. Each duel with images consumes 1 credit. You
+                  start with 10 free credits and can earn more by watching ads
+                  or upgrade to Premium for unlimited generation.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  Can I play without spending money?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Absolutely! The game is completely free to play. You can
+                  create wizards, participate in unlimited duels, and earn
+                  additional image credits by watching short video ads. Premium
+                  is optional and adds convenience and extra features.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">How do duels work?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Both wizards submit their spells simultaneously without
+                  knowing what the other will cast. Our AI then weaves both
+                  spells into an epic narrative, determining the outcome based
+                  on creativity, strategy, and a touch of magical luck!
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  What makes Premium worth it?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Premium removes all limitations: unlimited image generation,
+                  unlimited wizards, faster AI processing, advanced
+                  customization options, and an ad-free experience. Perfect for
+                  serious wizards who want to duel frequently with stunning
+                  visuals.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  Is there a limit to creativity?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Not at all! Cast any spell your imagination can conjure.
+                  Summon mythical creatures, manipulate elements, bend reality,
+                  or invent entirely new forms of magic. The more creative and
+                  unique your spells, the more engaging the battle becomes.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">
             Begin Your Magical Journey
@@ -268,7 +665,7 @@ function LandingPage() {
             Join other wizards in creating spectacular magical duels that push
             the boundaries of imagination.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/duels/watch">
               <Button variant="outline" size="lg">
                 Watch Duels
@@ -286,13 +683,13 @@ function LandingPage() {
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <Link href="/">
+              <Link href="/dashboard">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
                 >
                   <Zap className="w-5 h-5 mr-2" />
-                  Start Dueling
+                  Go to Dashboard
                 </Button>
               </Link>
             </SignedIn>

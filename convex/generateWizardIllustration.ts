@@ -12,17 +12,53 @@ export const generateWizardIllustration = action({
     wizardId: v.id("wizards"),
     name: v.string(),
     description: v.string(),
+    userId: v.optional(v.string()), // User ID for credit consumption
   },
   returns: v.object({
     success: v.boolean(),
     storageId: v.string(),
   }),
-  handler: async (ctx, { wizardId, name, description }) => {
+  handler: async (ctx, { wizardId, name, description, userId }) => {
     console.log(
       `Starting illustration generation for wizard ${wizardId} (${name})`
     );
 
     try {
+      // Check and consume image credits if userId is provided
+      if (userId) {
+        const hasCredits = await ctx.runQuery(
+          api.imageCreditService.hasImageCreditsForDuel,
+          {
+            userId,
+          }
+        );
+
+        if (!hasCredits) {
+          throw new Error(
+            "Insufficient image credits for wizard illustration generation"
+          );
+        }
+
+        // Consume one credit for image generation
+        const creditConsumed = await ctx.runMutation(
+          api.imageCreditService.consumeImageCredit,
+          {
+            userId,
+            metadata: {
+              wizardId,
+              purpose: "wizard_illustration",
+            },
+          }
+        );
+
+        if (!creditConsumed) {
+          throw new Error("Failed to consume image credit");
+        }
+
+        console.log(
+          `Consumed 1 image credit for user ${userId} for wizard ${wizardId}`
+        );
+      }
       // Use AI to create a detailed illustration prompt
       const illustrationPrompt = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" in an action pose that would fit this type of wizard. The wizard has this description: ${description}. Use Dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them. If it makes sense, have them holding a magical implement or familiar. Match the background to the wizard's theme. Only give me the image prompt, no other text.`;
 

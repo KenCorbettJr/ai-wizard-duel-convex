@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
+import { CreditDisplay } from "@/components/CreditDisplay";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -19,6 +20,7 @@ import {
   Plus,
   Crown,
   BarChart3,
+  Coins,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -52,6 +54,12 @@ const sidebarGroups: SidebarGroup[] = [
         href: "/stats",
         label: "Stats",
         icon: BarChart3,
+        requiresAuth: true,
+      },
+      {
+        href: "/credits",
+        label: "Credits",
+        icon: Coins,
         requiresAuth: true,
       },
     ],
@@ -198,6 +206,13 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
           ))}
         </div>
       </nav>
+
+      {/* Credit display for signed-in users */}
+      <SignedIn>
+        <div className="p-4 border-t border-border">
+          <CreditDisplay showLabel={false} size="sm" />
+        </div>
+      </SignedIn>
 
       {/* Bottom section with theme toggle and user controls */}
       <div className="p-4 border-t border-border">

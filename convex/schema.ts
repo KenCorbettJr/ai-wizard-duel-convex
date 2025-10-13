@@ -11,9 +11,29 @@ export default defineSchema({
     ),
     email: v.optional(v.string()),
     name: v.optional(v.string()),
+    subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),
+    subscriptionStatus: v.union(
+      v.literal("ACTIVE"),
+      v.literal("CANCELED"),
+      v.literal("PAST_DUE"),
+      v.literal("TRIALING")
+    ),
+    stripeCustomerId: v.optional(v.string()),
+    stripeSubscriptionId: v.optional(v.string()),
+    subscriptionEndsAt: v.optional(v.number()),
+    imageCredits: v.number(), // Remaining image generation credits
+    monthlyUsage: v.object({
+      duelsPlayed: v.number(),
+      wizardsCreated: v.number(),
+      imageGenerations: v.number(),
+      adsWatched: v.number(),
+      resetDate: v.number(), // When usage resets
+    }),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_clerk_id", ["clerkId"]),
+  })
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_stripe_customer", ["stripeCustomerId"]),
   wizards: defineTable({
     owner: v.string(), // User ID from Clerk
     name: v.string(),
@@ -46,6 +66,8 @@ export default defineSchema({
     winners: v.optional(v.array(v.id("wizards"))),
     losers: v.optional(v.array(v.id("wizards"))),
     shortcode: v.optional(v.string()), // 6-character shortcode for sharing
+    textOnlyMode: v.optional(v.boolean()), // Whether this duel is in text-only mode due to insufficient credits
+    textOnlyReason: v.optional(v.string()), // Reason for text-only mode (insufficient_credits, image_generation_failed, etc.)
   })
     .index("by_status", ["status"])
     .index("by_player", ["players"])
@@ -126,4 +148,98 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_session", ["sessionId"])
     .index("by_placement", ["placement"]),
+  imageCreditTransactions: defineTable({
+    userId: v.string(),
+    type: v.union(
+      v.literal("EARNED"),
+      v.literal("CONSUMED"),
+      v.literal("GRANTED"),
+      v.literal("EXPIRED")
+    ),
+    amount: v.number(),
+    source: v.union(
+      v.literal("SIGNUP_BONUS"),
+      v.literal("AD_REWARD"),
+      v.literal("PREMIUM_GRANT"),
+      v.literal("ADMIN_GRANT")
+    ),
+    relatedAdId: v.optional(v.id("adInteractions")),
+    metadata: v.optional(v.record(v.string(), v.any())),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+  cosmeticItems: defineTable({
+    name: v.string(),
+    description: v.string(),
+    category: v.union(
+      v.literal("SPELL_EFFECT"),
+      v.literal("WIZARD_ACCESSORY"),
+      v.literal("BACKGROUND"),
+      v.literal("ANIMATION")
+    ),
+    price: v.number(), // Price in cents
+    rarity: v.union(
+      v.literal("COMMON"),
+      v.literal("RARE"),
+      v.literal("EPIC"),
+      v.literal("LEGENDARY")
+    ),
+    previewImage: v.optional(v.string()),
+    isActive: v.boolean(),
+    premiumOnly: v.boolean(),
+  }),
+  userInventory: defineTable({
+    userId: v.string(), // Clerk ID
+    itemId: v.id("cosmeticItems"),
+    purchasedAt: v.number(),
+    equipped: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_item", ["userId", "itemId"]),
+  tournaments: defineTable({
+    name: v.string(),
+    description: v.string(),
+    entryFee: v.number(), // In cents, 0 for free tournaments
+    prizePool: v.number(), // In cents
+    maxParticipants: v.number(),
+    startDate: v.number(),
+    endDate: v.number(),
+    status: v.union(
+      v.literal("UPCOMING"),
+      v.literal("ACTIVE"),
+      v.literal("COMPLETED"),
+      v.literal("CANCELLED")
+    ),
+    participants: v.array(v.string()), // User IDs
+    winners: v.optional(
+      v.array(
+        v.object({
+          userId: v.string(),
+          position: v.number(),
+          prize: v.number(),
+        })
+      )
+    ),
+  }),
+  transactions: defineTable({
+    userId: v.string(),
+    type: v.union(
+      v.literal("SUBSCRIPTION"),
+      v.literal("COSMETIC_PURCHASE"),
+      v.literal("TOURNAMENT_ENTRY"),
+      v.literal("AI_CREDITS"),
+      v.literal("TOURNAMENT_PRIZE")
+    ),
+    amount: v.number(), // In cents
+    stripePaymentIntentId: v.optional(v.string()),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("COMPLETED"),
+      v.literal("FAILED"),
+      v.literal("REFUNDED")
+    ),
+    metadata: v.optional(v.record(v.string(), v.any())),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_stripe_payment", ["stripePaymentIntentId"]),
 });

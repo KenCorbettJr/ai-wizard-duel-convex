@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 // Ad configuration types
@@ -265,5 +265,38 @@ export const getAdInteractionHistory = query({
       revenue: interaction.revenue,
       createdAt: interaction.createdAt,
     }));
+  },
+});
+
+/**
+ * Internal function to create ad interaction for testing
+ */
+export const createAdInteractionInternal = internalMutation({
+  args: {
+    userId: v.optional(v.string()),
+    sessionId: v.string(),
+    adType: AdType,
+    placement: AdPlacement,
+    action: AdAction,
+    adNetworkId: v.string(),
+    revenue: v.optional(v.number()),
+    metadata: v.optional(v.record(v.string(), v.string())),
+    createdAt: v.optional(v.number()),
+  },
+  returns: v.id("adInteractions"),
+  handler: async (ctx, args) => {
+    const interactionId = await ctx.db.insert("adInteractions", {
+      userId: args.userId,
+      sessionId: args.sessionId,
+      adType: args.adType,
+      placement: args.placement,
+      action: args.action,
+      revenue: args.revenue,
+      adNetworkId: args.adNetworkId,
+      metadata: args.metadata,
+      createdAt: args.createdAt || Date.now(),
+    });
+
+    return interactionId;
   },
 });

@@ -36,11 +36,16 @@ export type IntroductionResponse = z.infer<typeof IntroductionResponseSchema>;
 export const generateDuelIntroduction = action({
   args: {
     duelId: v.id("duels"),
+    userId: v.optional(v.string()), // User ID for credit consumption
   },
   handler: async (
     ctx,
-    { duelId }
-  ): Promise<{ success: boolean; introRoundId: Id<"duelRounds"> }> => {
+    { duelId, userId }
+  ): Promise<{
+    success: boolean;
+    introRoundId: Id<"duelRounds">;
+    textOnlyMode?: boolean;
+  }> => {
     try {
       // Get the duel data (using internal query to bypass access control for scheduled actions)
       const duel = await ctx.runQuery(internal.duels.getDuelInternal, {
@@ -57,7 +62,10 @@ export const generateDuelIntroduction = action({
         )
       );
 
-      if (wizards.length < 2 || wizards.some((w) => !w)) {
+      if (
+        wizards.length < 2 ||
+        wizards.some((w: Doc<"wizards"> | null) => !w)
+      ) {
         throw new Error("Could not fetch all wizard data");
       }
 
@@ -89,12 +97,29 @@ export const generateDuelIntroduction = action({
         }
       );
 
-      // Generate the illustration
-      if (introduction.illustrationPrompt) {
+      // Generate the illustration (with credit checking and user preference)
+      let textOnlyMode = duel.textOnlyMode || false;
+      if (introduction.illustrationPrompt && !textOnlyMode) {
         // Skip introduction illustration scheduling to avoid transaction escape errors in tests
         if (process.env.NODE_ENV !== "test") {
           // Check if we should use Gemini Nano Banana
           const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+
+          // Check if user has image credits before scheduling illustration
+          let skipImageGeneration = false;
+          if (userId) {
+            const hasCredits = await ctx.runQuery(
+              api.imageCreditService.hasImageCreditsForDuel,
+              { userId }
+            );
+            if (!hasCredits) {
+              skipImageGeneration = true;
+              textOnlyMode = true;
+              console.log(
+                `User ${userId} has insufficient credits for duel ${duelId} introduction, using text-only mode`
+              );
+            }
+          }
 
           await ctx.scheduler.runAfter(
             100, // Add small delay to ensure database transaction is committed
@@ -104,15 +129,26 @@ export const generateDuelIntroduction = action({
               duelId,
               roundNumber: "0", // Introduction round
               useGemini,
+              userId,
+              skipImageGeneration,
             }
           );
         }
       }
 
+      // Update duel text-only mode status if needed
+      if (textOnlyMode) {
+        await ctx.runMutation(api.duels.updateDuelTextOnlyMode, {
+          duelId,
+          textOnlyMode: true,
+          reason: "insufficient_credits",
+        });
+      }
+
       // Start the duel (move to first actual round)
       await ctx.runMutation(api.duels.startDuelAfterIntroduction, { duelId });
 
-      return { success: true, introRoundId };
+      return { success: true, introRoundId, textOnlyMode };
     } catch (error) {
       throw new Error(
         `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`
