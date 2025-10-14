@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
+import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { TimeAgo } from "@/components/TimeAgo";
 import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";
@@ -32,11 +33,11 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
   );
   const wizard2 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
 
@@ -184,13 +185,23 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
     const winner = isWinner(wizardId);
     return (
-      <span
-        className={`font-semibold flex items-center gap-1 ${winner ? "text-yellow-600 dark:text-yellow-400" : ""}`}
-      >
-        {winner && <Crown className="h-4 w-4" />}
-        {wizard?.name || "Loading..."}
-        {winner && <Crown className="h-4 w-4" />}
-      </span>
+      <div className="flex flex-col items-center gap-1">
+        <span
+          className={`font-semibold flex items-center gap-1 ${winner ? "text-yellow-600 dark:text-yellow-400" : ""}`}
+        >
+          {winner && <Crown className="h-4 w-4" />}
+          {wizard?.name || "Loading..."}
+          {winner && <Crown className="h-4 w-4" />}
+        </span>
+        {wizard?.ownerUserId && (
+          <UserIdDisplay
+            userId={wizard.ownerUserId}
+            displayName={wizard.ownerDisplayName}
+            size="sm"
+            showAvatar={false}
+          />
+        )}
+      </div>
     );
   };
 

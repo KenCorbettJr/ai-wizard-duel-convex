@@ -5,10 +5,12 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
+import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdDisplay } from "@/components/AdDisplay";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { useState } from "react";
@@ -17,7 +19,10 @@ import { Wand2, Loader2, Plus } from "lucide-react";
 export default function MyWizardsPage() {
   const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
+  const { isProfileComplete, getProfileCompletionPrompt } =
+    useProfileCompletion();
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   const totalWins =
@@ -27,6 +32,16 @@ export default function MyWizardsPage() {
   const totalDuels = totalWins + totalLosses;
   const winRate =
     totalDuels > 0 ? Math.round((totalWins / totalDuels) * 100) : 0;
+
+  const handleCreateWizard = () => {
+    if (isProfileComplete) {
+      setShowCreateModal(true);
+    } else {
+      setShowProfilePrompt(true);
+    }
+  };
+
+  const profilePrompt = getProfileCompletionPrompt("create wizards");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
@@ -41,7 +56,7 @@ export default function MyWizardsPage() {
             </div>
             {user && (
               <Button
-                onClick={() => setShowCreateModal(true)}
+                onClick={handleCreateWizard}
                 size="lg"
                 className="flex items-center gap-2"
               >
@@ -125,6 +140,16 @@ export default function MyWizardsPage() {
           }}
         />
 
+        <ProfileCompletionPrompt
+          open={showProfilePrompt}
+          onOpenChange={setShowProfilePrompt}
+          title={profilePrompt.title}
+          message={profilePrompt.message}
+          actionLabel={profilePrompt.actionLabel}
+          onAction={profilePrompt.onAction}
+          isSignInPrompt={!user}
+        />
+
         {/* Wizards Grid */}
         {!user ? (
           // Show preview content for anonymous users
@@ -168,7 +193,7 @@ export default function MyWizardsPage() {
                 wizard has unique abilities and can participate in epic duels.
               </p>
               <Button
-                onClick={() => setShowCreateModal(true)}
+                onClick={handleCreateWizard}
                 size="lg"
                 className="flex items-center gap-2"
               >

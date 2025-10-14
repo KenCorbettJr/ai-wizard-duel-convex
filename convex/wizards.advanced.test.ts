@@ -19,12 +19,12 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Test Wizard",
           description: "A test wizard",
-        }
+        },
       );
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard).toMatchObject({
@@ -44,7 +44,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "AI Wizard",
           description: "An AI-generated wizard",
-        }
+        },
       );
 
       // Update to AI-powered using internal function
@@ -54,7 +54,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.isAIPowered).toBe(true);
@@ -67,17 +67,17 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Wizard™ 🧙‍♂️",
           description: "A wizard with émojis and spëcial characters",
-        }
+        },
       );
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.name).toBe("Wizard™ 🧙‍♂️");
       expect(wizard?.description).toBe(
-        "A wizard with émojis and spëcial characters"
+        "A wizard with émojis and spëcial characters",
       );
     });
 
@@ -89,12 +89,12 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Verbose Wizard",
           description: longDescription,
-        }
+        },
       );
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.description).toBe(longDescription);
@@ -110,7 +110,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Updatable Wizard",
           description: "A wizard that can be updated",
-        }
+        },
       );
     });
 
@@ -123,7 +123,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.name).toBe("Updated Wizard");
@@ -133,7 +133,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should update only name", async () => {
       const originalWizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
@@ -143,7 +143,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const updatedWizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(updatedWizard?.name).toBe("New Name Only");
@@ -153,7 +153,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should update only description", async () => {
       const originalWizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
@@ -163,7 +163,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const updatedWizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(updatedWizard?.name).toBe(originalWizard?.name);
@@ -191,7 +191,7 @@ describe("Wizards - Advanced Tests", () => {
         withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
           wizardId: tempId,
           name: "Should not work",
-        })
+        }),
       ).rejects.toThrow("Wizard not found");
     });
 
@@ -202,14 +202,14 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Other User Wizard",
           description: "Owned by different user",
-        }
+        },
       );
 
       await expect(
         withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
           wizardId: otherUserWizardId,
           name: "Hacked name",
-        })
+        }),
       ).rejects.toThrow("Not authorized to update this wizard");
     });
   });
@@ -223,7 +223,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Stats Wizard",
           description: "A wizard for testing stats",
-        }
+        },
       );
     });
 
@@ -250,7 +250,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.wins).toBe(3);
@@ -265,7 +265,7 @@ describe("Wizards - Advanced Tests", () => {
           {
             wizardId,
             won: true,
-          }
+          },
         );
       }
       for (let i = 0; i < 3; i++) {
@@ -274,13 +274,13 @@ describe("Wizards - Advanced Tests", () => {
           {
             wizardId,
             won: false,
-          }
+          },
         );
       }
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.wins).toBe(5);
@@ -300,7 +300,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
-        { wizardId }
+        { wizardId },
       );
 
       expect(wizard?.wins).toBe(2);
@@ -328,7 +328,7 @@ describe("Wizards - Advanced Tests", () => {
         withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
           wizardId: tempId,
           won: true,
-        })
+        }),
       ).rejects.toThrow("Wizard not found");
     });
 
@@ -339,14 +339,14 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Other User Wizard",
           description: "Owned by different user",
-        }
+        },
       );
 
       await expect(
         withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
           wizardId: otherUserWizardId,
           won: true,
-        })
+        }),
       ).rejects.toThrow("Not authorized to update this wizard");
     });
   });
@@ -405,12 +405,12 @@ describe("Wizards - Advanced Tests", () => {
     test("should get all wizards for user1", async () => {
       const wizards = await withAuth(t, "test-user-1").query(
         api.wizards.getUserWizards,
-        {}
+        {},
       );
 
       expect(wizards).toHaveLength(3);
       expect(wizards.map((w) => w._id)).toEqual(
-        expect.arrayContaining(user1Wizards)
+        expect.arrayContaining(user1Wizards),
       );
       expect(wizards.every((w) => w.owner === "test-user-1")).toBe(true);
     });
@@ -418,12 +418,12 @@ describe("Wizards - Advanced Tests", () => {
     test("should get all wizards for user2", async () => {
       const wizards = await withAuth(t, "test-user-2").query(
         api.wizards.getUserWizards,
-        {}
+        {},
       );
 
       expect(wizards).toHaveLength(2);
       expect(wizards.map((w) => w._id)).toEqual(
-        expect.arrayContaining(user2Wizards)
+        expect.arrayContaining(user2Wizards),
       );
       expect(wizards.every((w) => w.owner === "test-user-2")).toBe(true);
     });
@@ -431,7 +431,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should return empty array for user with no wizards", async () => {
       const wizards = await withAuth(t, "test-user-3").query(
         api.wizards.getUserWizards,
-        {}
+        {},
       );
 
       expect(wizards).toEqual([]);
@@ -442,7 +442,7 @@ describe("Wizards - Advanced Tests", () => {
         api.wizards.getWizard,
         {
           wizardId: user1Wizards[0],
-        }
+        },
       );
 
       expect(wizard?._id).toBe(user1Wizards[0]);
@@ -453,11 +453,11 @@ describe("Wizards - Advanced Tests", () => {
     test("should verify wizard ownership isolation", async () => {
       const user1Wizards = await withAuth(t, "test-user-1").query(
         api.wizards.getUserWizards,
-        {}
+        {},
       );
       const user2Wizards = await withAuth(t, "test-user-2").query(
         api.wizards.getUserWizards,
-        {}
+        {},
       );
 
       const user1Ids = user1Wizards.map((w) => w._id);
@@ -477,7 +477,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Deletable Wizard",
           description: "A wizard that can be deleted",
-        }
+        },
       );
     });
 
@@ -490,7 +490,7 @@ describe("Wizards - Advanced Tests", () => {
         api.wizards.getWizard,
         {
           wizardId,
-        }
+        },
       );
 
       expect(wizard).toBeNull();
@@ -516,7 +516,7 @@ describe("Wizards - Advanced Tests", () => {
       await expect(
         withAuth(t, "test-user-1").mutation(api.wizards.deleteWizard, {
           wizardId: tempId,
-        })
+        }),
       ).resolves.not.toThrow();
     });
 
@@ -527,13 +527,13 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Other User Wizard",
           description: "Owned by different user",
-        }
+        },
       );
 
       await expect(
         withAuth(t, "test-user-1").mutation(api.wizards.deleteWizard, {
           wizardId: otherUserWizardId,
-        })
+        }),
       ).rejects.toThrow("Not authorized to delete this wizard");
     });
   });
@@ -547,7 +547,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Illustrated Wizard",
           description: "A wizard with illustrations",
-        }
+        },
       );
     });
 
@@ -556,25 +556,25 @@ describe("Wizards - Advanced Tests", () => {
         api.wizards.getWizard,
         {
           wizardId,
-        }
+        },
       );
 
       await withAuth(t, "test-user-1").mutation(
         api.wizards.regenerateIllustration,
         {
           wizardId,
-        }
+        },
       );
 
       const updatedWizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
         {
           wizardId,
-        }
+        },
       );
 
       expect(updatedWizard?.illustrationVersion).toBeGreaterThan(
-        originalWizard?.illustrationVersion || 0
+        originalWizard?.illustrationVersion || 0,
       );
     });
 
@@ -600,8 +600,8 @@ describe("Wizards - Advanced Tests", () => {
           api.wizards.regenerateIllustration,
           {
             wizardId: tempId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Wizard not found");
     });
 
@@ -612,7 +612,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Other User Wizard",
           description: "Owned by different user",
-        }
+        },
       );
 
       await expect(
@@ -620,10 +620,10 @@ describe("Wizards - Advanced Tests", () => {
           api.wizards.regenerateIllustration,
           {
             wizardId: otherUserWizardId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow(
-        "Not authorized to regenerate illustration for this wizard"
+        "Not authorized to regenerate illustration for this wizard",
       );
     });
   });
@@ -634,7 +634,7 @@ describe("Wizards - Advanced Tests", () => {
         withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
           name: `Concurrent Wizard ${i}`,
           description: `Description ${i}`,
-        })
+        }),
       );
 
       const wizardIds = await Promise.all(wizardPromises);
@@ -644,7 +644,7 @@ describe("Wizards - Advanced Tests", () => {
 
       const wizards = await withAuth(t, "test-user-1").query(
         api.wizards.getUserWizards,
-        {}
+        {},
       );
       expect(wizards).toHaveLength(5);
     });
@@ -655,7 +655,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Concurrent Stats Wizard",
           description: "For testing concurrent updates",
-        }
+        },
       );
 
       // Perform multiple concurrent stat updates
@@ -663,7 +663,7 @@ describe("Wizards - Advanced Tests", () => {
         withAuth(t, "test-user-1").mutation(api.wizards.updateWizardStats, {
           wizardId,
           won: true,
-        })
+        }),
       );
 
       await Promise.all(updatePromises);
@@ -672,7 +672,7 @@ describe("Wizards - Advanced Tests", () => {
         api.wizards.getWizard,
         {
           wizardId,
-        }
+        },
       );
 
       expect(wizard?.wins).toBe(10);
@@ -685,7 +685,7 @@ describe("Wizards - Advanced Tests", () => {
         {
           name: "Consistency Wizard",
           description: "For testing data consistency",
-        }
+        },
       );
 
       // Perform mixed updates
@@ -701,7 +701,7 @@ describe("Wizards - Advanced Tests", () => {
           {
             wizardId,
             won: true,
-          }
+          },
         );
       }
       for (let i = 0; i < 2; i++) {
@@ -710,7 +710,7 @@ describe("Wizards - Advanced Tests", () => {
           {
             wizardId,
             won: false,
-          }
+          },
         );
       }
 
@@ -718,14 +718,14 @@ describe("Wizards - Advanced Tests", () => {
         api.wizards.regenerateIllustration,
         {
           wizardId,
-        }
+        },
       );
 
       const wizard = await withAuth(t, "test-user-1").query(
         api.wizards.getWizard,
         {
           wizardId,
-        }
+        },
       );
 
       expect(wizard?.name).toBe("Updated Name");

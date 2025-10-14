@@ -18,7 +18,7 @@ export interface AITextGenerationConfig {
 export async function generateText(
   prompt: string,
   systemPrompt?: string,
-  config: AITextGenerationConfig = {}
+  config: AITextGenerationConfig = {},
 ): Promise<string> {
   try {
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
@@ -41,7 +41,7 @@ export async function generateText(
     return response.text;
   } catch (error) {
     throw new Error(
-      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -50,7 +50,7 @@ export async function generateObject<T extends z.ZodTypeAny>(
   prompt: string,
   schema: T,
   systemPrompt?: string,
-  config: AITextGenerationConfig = {}
+  config: AITextGenerationConfig = {},
 ): Promise<ReturnType<typeof generateMockObject<T>>> {
   try {
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
@@ -74,7 +74,7 @@ export async function generateObject<T extends z.ZodTypeAny>(
     return response.output;
   } catch (error) {
     throw new Error(
-      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `AI text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

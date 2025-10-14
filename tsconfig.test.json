@@ -5,10 +5,10 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/tests/**/*", 
-    "**/*.test.ts", 
-    "**/*.test.tsx", 
-    "**/*.spec.ts", 
+    "src/tests/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
     "**/*.spec.tsx",
     "vitest.d.ts"
   ]

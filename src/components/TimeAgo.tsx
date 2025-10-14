@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // Function to calculate the time difference and return a human-readable string
 const timeAgo = (timestamp: number): string => {

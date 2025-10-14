@@ -3,7 +3,7 @@
  * This will be implemented when the metadata queries are integrated
  */
 export async function resolveStorageUrl(
-  storageId: string
+  storageId: string,
 ): Promise<string | null> {
   // This is a placeholder implementation
   // In the actual implementation, this would use the Convex client to resolve storage URLs
@@ -15,13 +15,13 @@ export async function resolveStorageUrl(
  * Resolves multiple storage IDs to URLs in parallel
  */
 export async function resolveMultipleStorageUrls(
-  storageIds: string[]
+  storageIds: string[],
 ): Promise<Record<string, string | null>> {
   const results = await Promise.allSettled(
     storageIds.map(async (id) => ({
       id,
       url: await resolveStorageUrl(id),
-    }))
+    })),
   );
 
   const resolved: Record<string, string | null> = {};
@@ -43,7 +43,7 @@ export function optimizeImageUrl(
     width?: number;
     height?: number;
     quality?: number;
-  } = {}
+  } = {},
 ): string {
   try {
     const urlObj = new URL(url);
@@ -72,9 +72,7 @@ export function optimizeImageUrl(
 /**
  * Validates that an image URL meets social media requirements
  */
-export async function validateImageForSocialMedia(
-  url: string
-): Promise<{
+export async function validateImageForSocialMedia(url: string): Promise<{
   isValid: boolean;
   width?: number;
   height?: number;
@@ -102,7 +100,7 @@ export async function validateImageForSocialMedia(
  */
 export function getFallbackImageUrl(
   type: "wizard" | "duel" | "app",
-  status?: "active" | "completed" | "waiting"
+  status?: "active" | "completed" | "waiting",
 ): string {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://ai-wizard-duel.com";

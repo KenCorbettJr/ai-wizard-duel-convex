@@ -76,7 +76,7 @@ users: defineTable({
     v.literal("ACTIVE"),
     v.literal("CANCELED"),
     v.literal("PAST_DUE"),
-    v.literal("TRIALING")
+    v.literal("TRIALING"),
   ),
   stripeCustomerId: v.optional(v.string()),
   stripeSubscriptionId: v.optional(v.string()),
@@ -105,17 +105,17 @@ adInteractions: defineTable({
   adType: v.union(
     v.literal("DISPLAY_BANNER"),
     v.literal("VIDEO_REWARD"),
-    v.literal("INTERSTITIAL")
+    v.literal("INTERSTITIAL"),
   ),
   placement: v.union(
     v.literal("WIZARD_PAGE"),
     v.literal("DUEL_PAGE"),
-    v.literal("CREDIT_REWARD")
+    v.literal("CREDIT_REWARD"),
   ),
   action: v.union(
     v.literal("IMPRESSION"),
     v.literal("CLICK"),
-    v.literal("COMPLETION")
+    v.literal("COMPLETION"),
   ),
   revenue: v.optional(v.number()), // Revenue in cents
   adNetworkId: v.string(),
@@ -137,14 +137,14 @@ cosmeticItems: defineTable({
     v.literal("SPELL_EFFECT"),
     v.literal("WIZARD_ACCESSORY"),
     v.literal("BACKGROUND"),
-    v.literal("ANIMATION")
+    v.literal("ANIMATION"),
   ),
   price: v.number(), // Price in cents
   rarity: v.union(
     v.literal("COMMON"),
     v.literal("RARE"),
     v.literal("EPIC"),
-    v.literal("LEGENDARY")
+    v.literal("LEGENDARY"),
   ),
   previewImage: v.optional(v.string()),
   isActive: v.boolean(),
@@ -180,7 +180,7 @@ tournaments: defineTable({
     v.literal("UPCOMING"),
     v.literal("ACTIVE"),
     v.literal("COMPLETED"),
-    v.literal("CANCELLED")
+    v.literal("CANCELLED"),
   ),
   participants: v.array(v.string()), // User IDs
   winners: v.optional(
@@ -189,8 +189,8 @@ tournaments: defineTable({
         userId: v.string(),
         position: v.number(),
         prize: v.number(),
-      })
-    )
+      }),
+    ),
   ),
 });
 ```
@@ -205,7 +205,7 @@ transactions: defineTable({
     v.literal("COSMETIC_PURCHASE"),
     v.literal("TOURNAMENT_ENTRY"),
     v.literal("AI_CREDITS"),
-    v.literal("TOURNAMENT_PRIZE")
+    v.literal("TOURNAMENT_PRIZE"),
   ),
   amount: v.number(), // In cents
   stripePaymentIntentId: v.optional(v.string()),
@@ -213,7 +213,7 @@ transactions: defineTable({
     v.literal("PENDING"),
     v.literal("COMPLETED"),
     v.literal("FAILED"),
-    v.literal("REFUNDED")
+    v.literal("REFUNDED"),
   ),
   metadata: v.optional(v.record(v.string(), v.any())),
   createdAt: v.number(),
@@ -234,7 +234,7 @@ interface AdService {
   trackAdInteraction(
     interaction: AdInteraction,
     userId?: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<void>;
 
   // Revenue tracking
@@ -294,7 +294,7 @@ interface PaymentService {
   purchaseCosmetic(userId: string, itemId: string): Promise<Transaction>;
   purchaseAICredits(
     userId: string,
-    creditPackage: CreditPackage
+    creditPackage: CreditPackage,
   ): Promise<Transaction>;
 
   // Tournament payments

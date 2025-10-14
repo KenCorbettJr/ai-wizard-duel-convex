@@ -12,11 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
+import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { DuelListItem } from "@/components/DuelListItem";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { MigrationNotification } from "@/components/MigrationNotification";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Swords, Users, Wand2, BarChart3, Trophy, Loader2 } from "lucide-react";
 
 function ActiveDuelsCard({ userId }: { userId?: string }) {
@@ -168,7 +171,16 @@ function CompletedDuelsCard({ userId }: { userId?: string }) {
 export default function DashboardContent() {
   const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [showMigrationNotification, setShowMigrationNotification] =
+    useState(false);
 
+  const {
+    isLoaded,
+    isSignedIn,
+    isProfileComplete,
+    getProfileCompletionPrompt,
+  } = useProfileCompletion();
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   const totalWins =
@@ -178,6 +190,49 @@ export default function DashboardContent() {
   const totalDuels = totalWins + totalLosses;
   const winRate =
     totalDuels > 0 ? Math.round((totalWins / totalDuels) * 100) : 0;
+
+  const handleCreateWizard = () => {
+    if (isProfileComplete) {
+      setShowCreateModal(true);
+    } else {
+      setShowProfilePrompt(true);
+    }
+  };
+
+  const profilePrompt = getProfileCompletionPrompt("create wizards");
+
+  // Show migration notification for existing users without profiles
+  useEffect(() => {
+    if (
+      isLoaded &&
+      isSignedIn &&
+      !isProfileComplete &&
+      wizards !== undefined &&
+      user
+    ) {
+      // Check if user has dismissed the notification before
+      const dismissedKey = `migration-notification-dismissed-${user.id}`;
+      const wasDismissed = localStorage.getItem(dismissedKey);
+
+      if (!wasDismissed) {
+        // Show notification after a delay
+        const timer = setTimeout(() => {
+          setShowMigrationNotification(true);
+        }, 3000); // Show after 3 seconds
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isLoaded, isSignedIn, isProfileComplete, wizards, user]);
+
+  const handleDismissMigrationNotification = () => {
+    setShowMigrationNotification(false);
+    if (user) {
+      // Remember that user dismissed this notification
+      const dismissedKey = `migration-notification-dismissed-${user.id}`;
+      localStorage.setItem(dismissedKey, "true");
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -367,7 +422,7 @@ export default function DashboardContent() {
                     </Link>
                     <Button
                       size="sm"
-                      onClick={() => setShowCreateModal(true)}
+                      onClick={handleCreateWizard}
                       className="flex-1 sm:flex-none w-full sm:w-auto"
                     >
                       <Wand2 className="h-4 w-4 mr-2" />
@@ -395,10 +450,7 @@ export default function DashboardContent() {
                       <p className="text-muted-foreground mb-4">
                         Create your first wizard to start your magical journey.
                       </p>
-                      <Button
-                        size="sm"
-                        onClick={() => setShowCreateModal(true)}
-                      >
+                      <Button size="sm" onClick={handleCreateWizard}>
                         Create Your First Wizard
                       </Button>
                     </CardContent>
@@ -430,6 +482,21 @@ export default function DashboardContent() {
               onSuccess={() => {
                 // Wizard list will automatically update due to Convex reactivity
               }}
+            />
+
+            <ProfileCompletionPrompt
+              open={showProfilePrompt}
+              onOpenChange={setShowProfilePrompt}
+              title={profilePrompt.title}
+              message={profilePrompt.message}
+              actionLabel={profilePrompt.actionLabel}
+              onAction={profilePrompt.onAction}
+              isSignInPrompt={!user}
+            />
+
+            <MigrationNotification
+              show={showMigrationNotification}
+              onDismiss={handleDismissMigrationNotification}
             />
           </div>
         </div>

@@ -40,7 +40,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
 
       expect(initialStatus).not.toBeNull();
@@ -58,7 +58,7 @@ describe("Subscription Integration Tests", () => {
           api.usageLimiterService.canCreateWizard,
           {
             clerkId: freeClerkId,
-          }
+          },
         );
         expect(canCreate.canCreate).toBe(true);
 
@@ -78,11 +78,11 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.canCreateWizard,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(wizardLimitReached.canCreate).toBe(false);
       expect(wizardLimitReached.reason).toContain(
-        "Free tier wizard limit reached"
+        "Free tier wizard limit reached",
       );
 
       // 4. Play duels up to limit
@@ -102,7 +102,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.canStartDuel,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(duelLimitReached.canStart).toBe(false);
       expect(duelLimitReached.reason).toContain("Daily duel limit reached");
@@ -113,7 +113,7 @@ describe("Subscription Integration Tests", () => {
           api.usageLimiterService.canGenerateImages,
           {
             clerkId: freeClerkId,
-          }
+          },
         );
         expect(canGenerate.canGenerate).toBe(true);
 
@@ -128,7 +128,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.canGenerateImages,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(remainingCredits.imageCredits).toBe(5);
 
@@ -137,7 +137,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(finalStatus!.wizards.canCreate).toBe(false);
       expect(finalStatus!.duels.canStart).toBe(false);
@@ -153,7 +153,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: premiumClerkId,
-        }
+        },
       );
 
       expect(initialStatus).not.toBeNull();
@@ -168,7 +168,7 @@ describe("Subscription Integration Tests", () => {
           api.usageLimiterService.canCreateWizard,
           {
             clerkId: premiumClerkId,
-          }
+          },
         );
         expect(canCreate.canCreate).toBe(true);
         expect(canCreate.limit).toBe("UNLIMITED");
@@ -203,7 +203,7 @@ describe("Subscription Integration Tests", () => {
           api.usageLimiterService.canGenerateImages,
           {
             clerkId: premiumClerkId,
-          }
+          },
         );
         expect(canGenerate.canGenerate).toBe(true);
         expect(canGenerate.isPremium).toBe(true);
@@ -218,7 +218,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: premiumClerkId,
-        }
+        },
       );
       expect(finalStatus!.wizards.canCreate).toBe(true);
       expect(finalStatus!.duels.canStart).toBe(true);
@@ -249,7 +249,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(beforeUpgrade!.wizards.canCreate).toBe(false);
       expect(beforeUpgrade!.duels.canStart).toBe(false);
@@ -268,7 +268,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(afterUpgrade!.subscriptionTier).toBe("PREMIUM");
       expect(afterUpgrade!.wizards.canCreate).toBe(true);
@@ -283,7 +283,7 @@ describe("Subscription Integration Tests", () => {
           api.usageLimiterService.canCreateWizard,
           {
             clerkId: freeClerkId,
-          }
+          },
         );
         expect(canCreate.canCreate).toBe(true);
 
@@ -299,7 +299,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.canCreateWizard,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
       expect(finalCheck.canCreate).toBe(true);
       expect(finalCheck.currentCount).toBe(8);
@@ -321,7 +321,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: premiumClerkId,
-        }
+        },
       );
       expect(beforeDowngrade!.wizards.canCreate).toBe(true);
       expect(beforeDowngrade!.wizards.limit).toBe("UNLIMITED");
@@ -338,7 +338,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: premiumClerkId,
-        }
+        },
       );
       expect(afterDowngrade!.subscriptionTier).toBe("FREE");
       expect(afterDowngrade!.wizards.limit).toBe(3);
@@ -350,12 +350,12 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.canCreateWizard,
         {
           clerkId: premiumClerkId,
-        }
+        },
       );
       expect(canCreateAfterDowngrade.canCreate).toBe(false);
       expect(canCreateAfterDowngrade.currentCount).toBe(10);
       expect(canCreateAfterDowngrade.reason).toContain(
-        "Free tier wizard limit reached"
+        "Free tier wizard limit reached",
       );
     });
   });
@@ -417,7 +417,7 @@ describe("Subscription Integration Tests", () => {
         api.subscriptionService.getAIModelTier,
         {
           clerkId: premiumClerkId,
-        }
+        },
       );
       expect(premiumTier).toBe("PREMIUM");
     });
@@ -444,7 +444,7 @@ describe("Subscription Integration Tests", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
@@ -457,7 +457,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: freeClerkId,
-        }
+        },
       );
 
       expect(usageStatus!.monthlyUsage.wizardsCreated).toBe(1);
@@ -475,7 +475,7 @@ describe("Subscription Integration Tests", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: nonExistentUser,
-        }
+        },
       );
       expect(subscription).toBeNull();
 
@@ -483,7 +483,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.getUserUsageStatus,
         {
           clerkId: nonExistentUser,
-        }
+        },
       );
       expect(usageStatus).toBeNull();
 
@@ -491,7 +491,7 @@ describe("Subscription Integration Tests", () => {
         api.usageLimiterService.canCreateWizard,
         {
           clerkId: nonExistentUser,
-        }
+        },
       );
       expect(canCreateWizard.canCreate).toBe(false);
       expect(canCreateWizard.reason).toBe("User not found");
@@ -503,7 +503,7 @@ describe("Subscription Integration Tests", () => {
           clerkId: "non-existent-user",
           subscriptionTier: "PREMIUM",
           subscriptionStatus: "ACTIVE",
-        })
+        }),
       ).rejects.toThrow("User not found");
     });
   });

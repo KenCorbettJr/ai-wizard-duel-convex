@@ -30,7 +30,7 @@ describe("Navigation", () => {
 
     cy.log(
       "Current theme:",
-      Cypress.$("html").hasClass("dark") ? "dark" : "light"
+      Cypress.$("html").hasClass("dark") ? "dark" : "light",
     );
     // see if the html has a light or dark class right now
     if (Cypress.$("html").hasClass("dark")) {

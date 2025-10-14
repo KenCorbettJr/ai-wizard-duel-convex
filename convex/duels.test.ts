@@ -26,7 +26,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      }
+      },
     );
 
     const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
@@ -69,7 +69,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      }
+      },
     );
 
     const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
@@ -114,7 +114,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      }
+      },
     );
 
     const duel2Id = await withAuth(t, "test-user-1").mutation(
@@ -122,12 +122,12 @@ describe("Duels", () => {
       {
         numberOfRounds: 5,
         wizards: [wizard2Id],
-      }
+      },
     );
 
     const user1Duels = await withAuth(t, "test-user-1").query(
       api.duels.getPlayerDuels,
-      {}
+      {},
     );
 
     expect(user1Duels).toHaveLength(2);
@@ -154,7 +154,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      }
+      },
     );
 
     await t.mutation(api.duels.cancelDuel, { duelId });
@@ -196,7 +196,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      }
+      },
     );
 
     const inProgressDuelId = await withAuth(t, "test-user-2").mutation(
@@ -204,7 +204,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard2Id],
-      }
+      },
     );
 
     const completedDuelId = await withAuth(t, "test-user-1").mutation(
@@ -212,7 +212,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      }
+      },
     );
 
     // Set statuses
@@ -250,7 +250,7 @@ test("should get completed duels for a player", async () => {
     {
       numberOfRounds: 3,
       wizards: [wizard1Id],
-    }
+    },
   );
 
   // Manually set the duel as completed
@@ -271,7 +271,7 @@ test("should get completed duels for a player", async () => {
   // Get completed duels for user1
   const user1CompletedDuels = await withAuth(t, "test-user-1").query(
     api.duels.getPlayerCompletedDuels,
-    {}
+    {},
   );
 
   expect(user1CompletedDuels).toHaveLength(1);
@@ -281,7 +281,7 @@ test("should get completed duels for a player", async () => {
   // Get completed duels for a user with no duels
   const user3CompletedDuels = await withAuth(t, "test-user-3").query(
     api.duels.getPlayerCompletedDuels,
-    {}
+    {},
   );
 
   expect(user3CompletedDuels).toHaveLength(0);
@@ -308,7 +308,7 @@ test("should allow unauthenticated users to view duels", async () => {
     {
       numberOfRounds: 3,
       wizards: [wizard1Id],
-    }
+    },
   );
 
   // Test that unauthenticated users can view the duel
@@ -366,7 +366,7 @@ test("should create duel with image generation disabled", async () => {
       numberOfRounds: 3,
       wizards: [wizard1Id],
       enableImageGeneration: false,
-    }
+    },
   );
 
   // Verify the duel was created with text-only mode enabled
@@ -399,7 +399,7 @@ test("should create duel with image generation enabled by default", async () => 
     {
       numberOfRounds: 3,
       wizards: [wizard1Id],
-    }
+    },
   );
 
   // Verify the duel was created with text-only mode disabled

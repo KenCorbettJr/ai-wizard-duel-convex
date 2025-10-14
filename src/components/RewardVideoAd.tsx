@@ -31,7 +31,7 @@ export function RewardVideoAd({
 
   const trackAdInteraction = useMutation(api.adService.trackAdInteraction);
   const processAdReward = useMutation(
-    api.imageCreditService.processAdRewardCredit
+    api.imageCreditService.processAdRewardCredit,
   );
 
   const handleWatchVideo = async () => {

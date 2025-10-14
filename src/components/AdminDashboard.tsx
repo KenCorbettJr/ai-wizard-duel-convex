@@ -73,7 +73,7 @@ export function AdminDashboard() {
       ...filters,
       limit: 20,
       offset: 0,
-    }
+    },
   );
 
   const analytics = useQuery(api.duels.getDuelAnalytics, {
@@ -179,7 +179,7 @@ export function AdminDashboard() {
                 ? Math.round(
                     (analytics.statusBreakdown.completed /
                       analytics.totalDuels) *
-                      100
+                      100,
                   )
                 : 0}
               %

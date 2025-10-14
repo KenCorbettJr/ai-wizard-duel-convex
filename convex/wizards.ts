@@ -441,6 +441,8 @@ export const getWizardLeaderboard = query({
       winRate: v.number(),
       totalDuels: v.number(),
       rank: v.number(),
+      ownerUserId: v.optional(v.string()),
+      ownerDisplayName: v.optional(v.string()),
     })
   ),
   handler: async (ctx, { limit = 50, minDuels = 1 }) => {
@@ -475,12 +477,115 @@ export const getWizardLeaderboard = query({
       return b.totalDuels - a.totalDuels;
     });
 
-    // Assign ranks
-    wizardStats.forEach((wizard, index) => {
-      wizard.rank = index + 1;
-    });
+    // Assign ranks and get owner information
+    const wizardsWithOwners = await Promise.all(
+      wizardStats.map(async (wizard, index) => {
+        const owner = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
+          .first();
+
+        return {
+          ...wizard,
+          rank: index + 1,
+          ownerUserId: owner?.userId,
+          ownerDisplayName: owner?.displayName,
+        };
+      })
+    );
 
     // Apply limit
-    return wizardStats.slice(0, limit);
+    return wizardsWithOwners.slice(0, limit);
+  },
+});
+
+// Get wizard with owner information - public information
+export const getWizardWithOwner = query({
+  args: { wizardId: v.id("wizards") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      ownerUserId: v.optional(v.string()),
+      ownerDisplayName: v.optional(v.string()),
+    })
+  ),
+  handler: async (ctx, { wizardId }) => {
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      return null;
+    }
+
+    // Get owner information
+    const owner = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
+      .first();
+
+    return {
+      ...wizard,
+      ownerUserId: owner?.userId,
+      ownerDisplayName: owner?.displayName,
+    };
+  },
+});
+
+// Get all wizards with owner information - public information
+export const getAllWizardsWithOwners = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      ownerUserId: v.optional(v.string()),
+      ownerDisplayName: v.optional(v.string()),
+    })
+  ),
+  handler: async (ctx, { limit = 50 }) => {
+    // Get all wizards
+    const wizards = await ctx.db.query("wizards").order("desc").take(limit);
+
+    // Get owner information for each wizard
+    const wizardsWithOwners = await Promise.all(
+      wizards.map(async (wizard) => {
+        const owner = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
+          .first();
+
+        return {
+          ...wizard,
+          ownerUserId: owner?.userId,
+          ownerDisplayName: owner?.displayName,
+        };
+      })
+    );
+
+    return wizardsWithOwners;
   },
 });

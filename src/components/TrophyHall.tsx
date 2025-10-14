@@ -78,7 +78,7 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
           {defeatedWizards.map((wizard) => {
             const defeatedDate = new Date(
-              wizard.defeatedAt
+              wizard.defeatedAt,
             ).toLocaleDateString();
             return (
               <div

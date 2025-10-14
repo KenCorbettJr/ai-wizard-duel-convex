@@ -52,14 +52,14 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
   // Calculate statistics
   const totalDuels = wizardDuels.length;
   const completedDuels = wizardDuels.filter(
-    (duel) => duel.status === "COMPLETED"
+    (duel) => duel.status === "COMPLETED",
   );
   const activeDuels = wizardDuels.filter(
     (duel) =>
-      duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS"
+      duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS",
   );
   const cancelledDuels = wizardDuels.filter(
-    (duel) => duel.status === "CANCELLED"
+    (duel) => duel.status === "CANCELLED",
   );
 
   const wins = wizard.wins || 0;
@@ -75,7 +75,7 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
       return { current: 0, type: "none" as const, best: 0 };
 
     const sortedDuels = completedDuels.sort(
-      (a, b) => b.createdAt - a.createdAt
+      (a, b) => b.createdAt - a.createdAt,
     );
 
     let currentStreak = 0;

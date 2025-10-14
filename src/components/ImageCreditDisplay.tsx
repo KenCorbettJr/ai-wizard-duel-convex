@@ -39,31 +39,31 @@ export function ImageCreditDisplay({
   // Get user's current credit balance
   const credits = useQuery(
     api.imageCreditService.getUserImageCredits,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Check if user can earn credits from ads
   const adCooldown = useQuery(
     api.imageCreditService.canEarnCreditFromAd,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Get credit history if requested
   const creditHistory = useQuery(
     api.imageCreditService.getImageCreditHistory,
-    showHistory && user?.id ? { userId: user.id, limit: 10 } : "skip"
+    showHistory && user?.id ? { userId: user.id, limit: 10 } : "skip",
   );
 
   // Check if user has credits for duels
   const hasCreditsForDuel = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Get user info to check if premium
   const userInfo = useQuery(
     api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
+    user?.id ? { clerkId: user.id } : "skip",
   );
 
   // Credit celebration effect

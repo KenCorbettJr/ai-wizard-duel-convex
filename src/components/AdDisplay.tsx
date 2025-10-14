@@ -56,7 +56,7 @@ export function AdDisplay({
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
 
     if (adRef.current) {

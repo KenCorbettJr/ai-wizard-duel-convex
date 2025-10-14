@@ -7,16 +7,20 @@ export default defineSchema({
     role: v.union(
       v.literal("user"),
       v.literal("admin"),
-      v.literal("super_admin")
+      v.literal("super_admin"),
     ),
     email: v.optional(v.string()),
     name: v.optional(v.string()),
+    // User profile fields
+    userId: v.optional(v.string()), // Unique user handle (3-20 chars, alphanumeric + underscore/hyphen)
+    displayName: v.optional(v.string()), // User's chosen display name
+    profileCreatedAt: v.optional(v.number()), // When profile was completed
     subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),
     subscriptionStatus: v.union(
       v.literal("ACTIVE"),
       v.literal("CANCELED"),
       v.literal("PAST_DUE"),
-      v.literal("TRIALING")
+      v.literal("TRIALING"),
     ),
     stripeCustomerId: v.optional(v.string()),
     stripeSubscriptionId: v.optional(v.string()),
@@ -33,6 +37,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_clerk_id", ["clerkId"])
+    .index("by_user_id", ["userId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),
   wizards: defineTable({
     owner: v.string(), // User ID from Clerk
@@ -55,7 +60,7 @@ export default defineSchema({
       v.literal("WAITING_FOR_PLAYERS"),
       v.literal("IN_PROGRESS"),
       v.literal("COMPLETED"),
-      v.literal("CANCELLED")
+      v.literal("CANCELLED"),
     ),
     currentRound: v.number(),
     createdAt: v.number(),
@@ -79,7 +84,7 @@ export default defineSchema({
       v.literal("SPELL_CASTING"),
       v.literal("COUNTER_SPELL"),
       v.literal("FINAL_ROUND"),
-      v.literal("CONCLUSION")
+      v.literal("CONCLUSION"),
     ),
     spells: v.optional(
       v.record(
@@ -88,8 +93,8 @@ export default defineSchema({
           description: v.string(),
           castBy: v.id("wizards"),
           timestamp: v.number(),
-        })
-      )
+        }),
+      ),
     ), // Dictionary of wizard ID to spell
     outcome: v.optional(
       v.object({
@@ -100,12 +105,12 @@ export default defineSchema({
         pointsAwarded: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to points
         healthChange: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to health change
         luckRolls: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to luck roll (1-20)
-      })
+      }),
     ),
     status: v.union(
       v.literal("WAITING_FOR_SPELLS"),
       v.literal("PROCESSING"),
-      v.literal("COMPLETED")
+      v.literal("COMPLETED"),
     ),
   }).index("by_duel", ["duelId"]),
   duelLobby: defineTable({
@@ -115,7 +120,7 @@ export default defineSchema({
     duelType: v.union(v.number(), v.literal("TO_THE_DEATH")), // Number of rounds or "TO_THE_DEATH"
     status: v.union(
       v.literal("WAITING"), // Waiting for match
-      v.literal("MATCHED") // Found a match, duel being created
+      v.literal("MATCHED"), // Found a match, duel being created
     ),
     matchedWith: v.optional(v.id("duelLobby")), // Reference to the matched lobby entry
   })
@@ -128,17 +133,17 @@ export default defineSchema({
     adType: v.union(
       v.literal("DISPLAY_BANNER"),
       v.literal("VIDEO_REWARD"),
-      v.literal("INTERSTITIAL")
+      v.literal("INTERSTITIAL"),
     ),
     placement: v.union(
       v.literal("WIZARD_PAGE"),
       v.literal("DUEL_PAGE"),
-      v.literal("CREDIT_REWARD")
+      v.literal("CREDIT_REWARD"),
     ),
     action: v.union(
       v.literal("IMPRESSION"),
       v.literal("CLICK"),
-      v.literal("COMPLETION")
+      v.literal("COMPLETION"),
     ),
     revenue: v.optional(v.number()), // Revenue in cents
     adNetworkId: v.string(),
@@ -154,14 +159,14 @@ export default defineSchema({
       v.literal("EARNED"),
       v.literal("CONSUMED"),
       v.literal("GRANTED"),
-      v.literal("EXPIRED")
+      v.literal("EXPIRED"),
     ),
     amount: v.number(),
     source: v.union(
       v.literal("SIGNUP_BONUS"),
       v.literal("AD_REWARD"),
       v.literal("PREMIUM_GRANT"),
-      v.literal("ADMIN_GRANT")
+      v.literal("ADMIN_GRANT"),
     ),
     relatedAdId: v.optional(v.id("adInteractions")),
     metadata: v.optional(v.record(v.string(), v.any())),
@@ -174,14 +179,14 @@ export default defineSchema({
       v.literal("SPELL_EFFECT"),
       v.literal("WIZARD_ACCESSORY"),
       v.literal("BACKGROUND"),
-      v.literal("ANIMATION")
+      v.literal("ANIMATION"),
     ),
     price: v.number(), // Price in cents
     rarity: v.union(
       v.literal("COMMON"),
       v.literal("RARE"),
       v.literal("EPIC"),
-      v.literal("LEGENDARY")
+      v.literal("LEGENDARY"),
     ),
     previewImage: v.optional(v.string()),
     isActive: v.boolean(),
@@ -207,7 +212,7 @@ export default defineSchema({
       v.literal("UPCOMING"),
       v.literal("ACTIVE"),
       v.literal("COMPLETED"),
-      v.literal("CANCELLED")
+      v.literal("CANCELLED"),
     ),
     participants: v.array(v.string()), // User IDs
     winners: v.optional(
@@ -216,8 +221,8 @@ export default defineSchema({
           userId: v.string(),
           position: v.number(),
           prize: v.number(),
-        })
-      )
+        }),
+      ),
     ),
   }),
   transactions: defineTable({
@@ -227,7 +232,7 @@ export default defineSchema({
       v.literal("COSMETIC_PURCHASE"),
       v.literal("TOURNAMENT_ENTRY"),
       v.literal("AI_CREDITS"),
-      v.literal("TOURNAMENT_PRIZE")
+      v.literal("TOURNAMENT_PRIZE"),
     ),
     amount: v.number(), // In cents
     stripePaymentIntentId: v.optional(v.string()),
@@ -235,7 +240,7 @@ export default defineSchema({
       v.literal("PENDING"),
       v.literal("COMPLETED"),
       v.literal("FAILED"),
-      v.literal("REFUNDED")
+      v.literal("REFUNDED"),
     ),
     metadata: v.optional(v.record(v.string(), v.any())),
     createdAt: v.number(),

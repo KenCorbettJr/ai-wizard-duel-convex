@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
+import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,15 +55,15 @@ export function DuelListItem({
 
   // Fetch wizard details for all wizards in the duel
   const wizard1 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
   );
   const wizard2 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
   const wizard3 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel.wizards[2] ? { wizardId: duel.wizards[2] } : "skip"
   );
 
@@ -371,6 +372,16 @@ export function DuelListItem({
                               <Crown className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                             )}
                           </div>
+                          {wizard.ownerUserId && (
+                            <div className="mb-2">
+                              <UserIdDisplay
+                                userId={wizard.ownerUserId}
+                                displayName={wizard.ownerDisplayName}
+                                size="sm"
+                                showAvatar={false}
+                              />
+                            </div>
+                          )}
                           <div className="space-y-1 text-xs text-muted-foreground">
                             <div className="flex justify-between">
                               <span>Points:</span>

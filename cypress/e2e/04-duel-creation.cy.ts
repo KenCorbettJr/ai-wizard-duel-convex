@@ -64,7 +64,7 @@ describe("Duel Creation and Management", () => {
 
     // Fill out spell form
     cy.get('textarea[name="spell"]').type(
-      "I summon a mighty fireball to strike my opponent!"
+      "I summon a mighty fireball to strike my opponent!",
     );
 
     // Submit spell

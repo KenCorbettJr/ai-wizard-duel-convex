@@ -21,7 +21,7 @@ export function generateTestId<T extends TableNames>(table: T): Id<T> {
 // Generate multiple test IDs
 export function generateTestIds<T extends TableNames>(
   table: T,
-  count: number
+  count: number,
 ): Id<T>[] {
   return Array.from({ length: count }, () => generateTestId(table));
 }
@@ -29,7 +29,7 @@ export function generateTestIds<T extends TableNames>(
 // Mock user identity for testing
 export function createMockUserIdentity(
   userId: string = "test-user-1",
-  role: string = "user"
+  role: string = "user",
 ) {
   return {
     subject: userId,
@@ -48,7 +48,7 @@ export function createMockUserIdentity(
 // Set up authenticated context for tests
 export function withAuth(
   t: TestConvex<typeof schema>,
-  userId: string = "test-user-1"
+  userId: string = "test-user-1",
 ) {
   const identity = createMockUserIdentity(userId);
   return t.withIdentity(identity);
@@ -57,7 +57,7 @@ export function withAuth(
 // Set up super admin authenticated context for tests
 export function withSuperAdminAuth(
   t: TestConvex<typeof schema>,
-  userId: string = "super-admin-user"
+  userId: string = "super-admin-user",
 ) {
   const identity = createMockUserIdentity(userId, "super_admin");
   return t.withIdentity(identity);
@@ -67,7 +67,7 @@ export function withSuperAdminAuth(
 export async function createTestUser(
   t: TestConvex<typeof schema>,
   clerkId: string,
-  role: "user" | "admin" | "super_admin" = "user"
+  role: "user" | "admin" | "super_admin" = "user",
 ) {
   return await t
     .mutation(api.users.getOrCreateUser, {

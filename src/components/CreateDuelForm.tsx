@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -17,6 +18,8 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
 import { ImageCreditDisplay } from "./ImageCreditDisplay";
+import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import {
   Loader2,
   Image as ImageIcon,
@@ -38,6 +41,7 @@ export function CreateDuelForm({
   preSelectedWizardId,
 }: CreateDuelFormProps) {
   const { user } = useUser();
+  const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
     preSelectedWizardId || null
   );
@@ -47,6 +51,10 @@ export function CreateDuelForm({
   const [enableImageGeneration, setEnableImageGeneration] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+
+  const { isProfileComplete, getProfileCompletionPrompt } =
+    useProfileCompletion();
 
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
@@ -84,6 +92,12 @@ export function CreateDuelForm({
     e.preventDefault();
     if (!user?.id || !selectedWizard) return;
 
+    // Check if profile is complete before creating duel
+    if (!isProfileComplete) {
+      setShowProfilePrompt(true);
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
     try {
@@ -108,6 +122,8 @@ export function CreateDuelForm({
   const shouldShowCreditWarning =
     enableImageGeneration && !isPremium && !hasImageCredits;
 
+  const profilePrompt = getProfileCompletionPrompt("create duels");
+
   if (!wizards || wizards.length === 0) {
     return (
       <Card>
@@ -122,6 +138,9 @@ export function CreateDuelForm({
             Create a wizard first before starting a duel.
           </p>
           <div className="flex gap-2">
+            <Button onClick={() => router.push("/wizards")} className="flex-1">
+              Create Wizard
+            </Button>
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -154,7 +173,7 @@ export function CreateDuelForm({
               Select Your Wizard
             </label>
             <div className="grid grid-cols-1 gap-3">
-              {wizards.map((wizard) => (
+              {wizards?.map((wizard) => (
                 <div
                   key={wizard._id}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
@@ -383,6 +402,16 @@ export function CreateDuelForm({
           </div>
         </form>
       </CardContent>
+
+      <ProfileCompletionPrompt
+        open={showProfilePrompt}
+        onOpenChange={setShowProfilePrompt}
+        title={profilePrompt.title}
+        message={profilePrompt.message}
+        actionLabel={profilePrompt.actionLabel}
+        onAction={profilePrompt.onAction}
+        isSignInPrompt={!user?.id}
+      />
     </Card>
   );
 }

@@ -10,7 +10,7 @@ describe("Watch Duels Page", () => {
     // Check main heading and description
     cy.contains("Watch Duels").should("be.visible");
     cy.contains(
-      "Witness epic magical battles from wizards across the platform"
+      "Witness epic magical battles from wizards across the platform",
     ).should("be.visible");
   });
 
@@ -37,7 +37,7 @@ describe("Watch Duels Page", () => {
       } else {
         // If there are duels, the loading state should eventually resolve
         cy.get('[data-testid="duel-list-item"]', { timeout: 10000 }).should(
-          "exist"
+          "exist",
         );
       }
     });
@@ -71,7 +71,7 @@ describe("Watch Duels Page", () => {
     // Wait for content to load
     cy.get("body", { timeout: 10000 }).should(
       "not.contain",
-      "Loading duels..."
+      "Loading duels...",
     );
   });
 

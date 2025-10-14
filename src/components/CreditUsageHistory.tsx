@@ -31,7 +31,7 @@ export function CreditUsageHistory({
   // Get credit history
   const creditHistory = useQuery(
     api.imageCreditService.getImageCreditHistory,
-    user?.id ? { userId: user.id, limit } : "skip"
+    user?.id ? { userId: user.id, limit } : "skip",
   );
 
   if (!user) {

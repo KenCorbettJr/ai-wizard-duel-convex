@@ -56,7 +56,7 @@ Cypress.Commands.add(
 
     // Wait for wizard to be created
     cy.contains(name).should("be.visible");
-  }
+  },
 );
 
 // Cypress.Commands.add("mount", mount);

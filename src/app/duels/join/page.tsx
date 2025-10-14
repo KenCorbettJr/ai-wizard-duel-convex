@@ -1,40 +1,64 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { JoinDuelForm } from "@/components/JoinDuelForm";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Swords, Hash } from "lucide-react";
+import { useRouter } from "next/router";
 
 function ShortcodeInput() {
-  const [shortcode, setShortcode] = useState("");
+  const [input, setInput] = useState("");
   const router = useRouter();
+
+  const extractShortcode = (value: string): string => {
+    const trimmed = value.trim();
+
+    // Check if it's a full URL
+    if (trimmed.includes("/join/")) {
+      const match = trimmed.match(/\/join\/([A-Z0-9]{6})/i);
+      return match ? match[1].toUpperCase() : "";
+    }
+
+    // Remove any # prefix and return as shortcode
+    return trimmed.replace(/^#/, "").toUpperCase();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (shortcode.trim()) {
-      router.push(`/join/${shortcode.trim().toUpperCase()}`);
+    const shortcode = extractShortcode(input);
+    if (shortcode && shortcode.length === 6) {
+      router.push(`/join/${shortcode}`);
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInput(value);
+  };
+
+  const shortcode = extractShortcode(input);
+  const isValidShortcode = shortcode.length === 6;
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+    >
       <div className="relative">
         <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
         <Input
           type="text"
           placeholder="ABC123"
-          value={shortcode}
-          onChange={(e) => setShortcode(e.target.value.toUpperCase())}
-          className="w-36 pl-10 text-center font-mono bg-background/50 dark:bg-background/30 border-border/50 dark:border-border/30 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all"
-          maxLength={6}
+          value={input}
+          onChange={handleInputChange}
+          className="w-32 pl-10 text-center font-mono bg-background/50 dark:bg-background/30 border-border/50 dark:border-border/30 focus:border-purple-500/50 dark:focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 transition-all"
         />
       </div>
       <Button
         type="submit"
         size="sm"
-        disabled={!shortcode.trim()}
+        disabled={!isValidShortcode}
         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
       >
         <Swords className="h-4 w-4 mr-1" />
@@ -45,20 +69,10 @@ function ShortcodeInput() {
 }
 
 export default function JoinDuelPage() {
-  const router = useRouter();
-
-  const handleSuccess = (duelId: string) => {
-    router.push(`/duels/${duelId}`);
-  };
-
-  const handleClose = () => {
-    router.push("/");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
       <div className="container mx-auto px-6 py-12">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-md mx-auto">
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Swords className="h-8 w-8 text-purple-600 dark:text-purple-400" />
@@ -68,7 +82,7 @@ export default function JoinDuelPage() {
               <Swords className="h-8 w-8 text-purple-600 dark:text-purple-400 scale-x-[-1]" />
             </div>
             <p className="text-muted-foreground dark:text-muted-foreground/80 text-lg">
-              Find an open duel and join the magical battle
+              Enter a shortcode to join a duel.
             </p>
           </div>
 
@@ -76,28 +90,14 @@ export default function JoinDuelPage() {
             <div className="text-center">
               <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl p-6 shadow-lg dark:shadow-xl">
                 <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground dark:text-muted-foreground/80 mb-4">
-                  <Hash className="h-4 w-4" />
                   <span className="font-medium">Have a shortcode?</span>
                 </div>
                 <ShortcodeInput />
                 <p className="text-xs text-muted-foreground/60 dark:text-muted-foreground/50 mt-3">
-                  Enter the 6-character code to join a specific duel
+                  Enter the 6-character code or paste the full duel link
                 </p>
               </div>
             </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/30 dark:border-border/20"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-background/80 dark:bg-background/60 px-4 py-2 text-muted-foreground/60 dark:text-muted-foreground/50 rounded-full backdrop-blur-sm">
-                  or browse available duels
-                </span>
-              </div>
-            </div>
-
-            <JoinDuelForm onClose={handleClose} onSuccess={handleSuccess} />
           </div>
         </div>
       </div>

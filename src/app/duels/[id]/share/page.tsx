@@ -54,14 +54,14 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
   // Fetch wizard data for the creator's wizard (first wizard in the duel)
   const creatorWizard = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (isLoaded && !user) {
       router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`
+        `/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`,
       );
     }
   }, [isLoaded, user, router]);

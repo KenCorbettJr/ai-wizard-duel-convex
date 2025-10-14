@@ -32,7 +32,7 @@ describe("Auth Utils", () => {
     await expect(
       withSuperAdminAuth(t).run(async (ctx) => {
         return await verifySuperAdmin(ctx);
-      })
+      }),
     ).resolves.toBeDefined();
   });
 
@@ -63,7 +63,7 @@ describe("Auth Utils", () => {
     await expect(
       withAuth(t, "regular-user").run(async (ctx) => {
         return await verifySuperAdmin(ctx);
-      })
+      }),
     ).rejects.toThrow("Access denied: Super admin privileges required");
   });
 
@@ -74,7 +74,7 @@ describe("Auth Utils", () => {
     await expect(
       t.run(async (ctx) => {
         return await verifySuperAdmin(ctx);
-      })
+      }),
     ).rejects.toThrow("Not authenticated");
   });
 });

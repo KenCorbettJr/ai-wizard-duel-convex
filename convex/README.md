@@ -5,6 +5,7 @@ This directory contains unit tests for Convex functions using the `convex-test` 
 ## Setup
 
 The testing environment is configured to use:
+
 - **Vitest** as the test runner
 - **convex-test** for mocking the Convex backend
 - **@edge-runtime/vm** for better compatibility with Convex runtime
@@ -28,20 +29,25 @@ npm run test:debug
 ## Test Files
 
 ### `wizards.test.ts`
+
 Tests for wizard-related functions:
+
 - Creating wizards
 - Querying wizards by user
 - Updating wizard stats
 - Deleting wizards
 
 ### `duels.test.ts`
+
 Tests for duel-related functions:
+
 - Creating duels
 - Finding duels by shortcode
 - Managing duel status
 - Querying player duels
 
 ### `aiTextGeneration.test.ts`
+
 Tests for AI text generation with proper mocking of external dependencies.
 
 ## Writing Tests
@@ -57,10 +63,10 @@ import schema from "./schema";
 describe("My Function", () => {
   test("should do something", async () => {
     const t = convexTest(schema);
-    
+
     // Test your function
     const result = await t.query(api.myFunction.myQuery, { arg: "value" });
-    
+
     expect(result).toBe("expected");
   });
 });
@@ -100,7 +106,7 @@ import { myFunction } from "./myFunction";
 test("should handle external service", async () => {
   const { serviceFunction } = await import("./externalService");
   serviceFunction.mockResolvedValue("mocked result");
-  
+
   const result = await myFunction();
   expect(result).toBe("expected");
 });
@@ -115,22 +121,22 @@ import { vi } from "vitest";
 
 test("should schedule function", async () => {
   vi.useFakeTimers();
-  
+
   const t = convexTest(schema);
-  
+
   // Call function that schedules something
   await t.mutation(api.myFunction.scheduleTask, { delay: 5000 });
-  
+
   // Advance time
   vi.advanceTimersByTime(6000);
-  
+
   // Wait for scheduled functions to complete
   await t.finishInProgressScheduledFunctions();
-  
+
   // Assert results
   const result = await t.query(api.myFunction.getResult, {});
   expect(result).toBeTruthy();
-  
+
   vi.useRealTimers();
 });
 ```
@@ -147,6 +153,7 @@ test("should schedule function", async () => {
 ## Limitations
 
 The `convex-test` library is a mock implementation, so it doesn't have all the behaviors of the real Convex backend:
+
 - Error messages may differ
 - Size and time limits are not enforced
 - ID format may be different

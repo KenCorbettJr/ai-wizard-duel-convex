@@ -101,7 +101,7 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
         "relative mx-auto bg-gradient-to-br",
         getSizeClasses(size),
         getColorClasses(value),
-        className
+        className,
       )}
       style={{
         width: `${config.containerSize}px`,
@@ -207,7 +207,7 @@ function getDieRotation(face: number): string {
 // Get the 3D transform for each face
 function getFaceTransform(
   face: number,
-  config: { faceWidth: number; faceHeight: number }
+  config: { faceWidth: number; faceHeight: number },
 ): React.CSSProperties {
   const sideAngle = 72; // 360/5
   const angle = 53;

@@ -15,7 +15,7 @@ export const testGeminiIntegration = action({
   }),
   handler: async (
     ctx,
-    { testPrompt = "A magical wizard in a fantasy arena" }
+    { testPrompt = "A magical wizard in a fantasy arena" },
   ): Promise<{
     success: boolean;
     message: string;
@@ -63,7 +63,7 @@ export const testGeminiIntegration = action({
             // For subsequent rounds, you would pass:
             // previousImage: "previous_round_storage_id",
             // wizardDescriptions: [{ name: "Gandalf", description: "..." }, { name: "Saruman", description: "..." }],
-          }
+          },
         );
 
         if (imageBuffer && imageBuffer.byteLength > 0) {

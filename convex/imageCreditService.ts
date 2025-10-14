@@ -6,7 +6,7 @@ const CreditSource = v.union(
   v.literal("SIGNUP_BONUS"),
   v.literal("AD_REWARD"),
   v.literal("PREMIUM_GRANT"),
-  v.literal("ADMIN_GRANT")
+  v.literal("ADMIN_GRANT"),
 );
 
 // Transaction types
@@ -14,7 +14,7 @@ const TransactionType = v.union(
   v.literal("EARNED"),
   v.literal("CONSUMED"),
   v.literal("GRANTED"),
-  v.literal("EXPIRED")
+  v.literal("EXPIRED"),
 );
 
 /**
@@ -288,7 +288,7 @@ export const processAdRewardCredit = mutation({
       const timeSinceLastAd = Date.now() - lastAdReward.createdAt;
       if (timeSinceLastAd < COOLDOWN_PERIOD) {
         const remainingSeconds = Math.ceil(
-          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000
+          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000,
         );
         return {
           success: false,
@@ -361,7 +361,7 @@ export const getImageCreditHistory = query({
       source: CreditSource,
       createdAt: v.number(),
       metadata: v.optional(v.record(v.string(), v.string())),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
@@ -550,7 +550,7 @@ export const getCreditStatistics = query({
       (user) =>
         user.imageCredits > 0 ||
         (user.subscriptionTier === "PREMIUM" &&
-          user.subscriptionStatus === "ACTIVE")
+          user.subscriptionStatus === "ACTIVE"),
     ).length;
 
     return {

@@ -45,7 +45,7 @@ describe("Emulator Mode Specific Tests", () => {
     // Cast a spell to test AI text generation mocks
     cy.get("button").contains("Cast Spell").click();
     cy.get('textarea[name="spell"]').type(
-      "I cast a test spell for the emulator!"
+      "I cast a test spell for the emulator!",
     );
     cy.get('button[type="submit"]').click();
 

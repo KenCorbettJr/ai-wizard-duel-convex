@@ -41,7 +41,7 @@ export default function DuelLobbyPage() {
   const { user } = useUser();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null
+    null,
   );
   const [selectedDuelType, setSelectedDuelType] = useState<
     number | "TO_THE_DEATH"
@@ -335,7 +335,7 @@ export default function DuelLobbyPage() {
                         setSelectedDuelType(
                           value === "TO_THE_DEATH"
                             ? "TO_THE_DEATH"
-                            : parseInt(value)
+                            : parseInt(value),
                         )
                       }
                     >

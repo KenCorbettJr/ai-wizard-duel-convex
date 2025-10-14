@@ -30,19 +30,19 @@ export function CreditExhaustionNotification({
   // Check if user can earn credits from ads
   const adCooldown = useQuery(
     api.imageCreditService.canEarnCreditFromAd,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Check if user has credits for duels
   const hasCreditsForDuel = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Get user info to check if premium
   const userInfo = useQuery(
     api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
+    user?.id ? { clerkId: user.id } : "skip",
   );
 
   const isPremium =

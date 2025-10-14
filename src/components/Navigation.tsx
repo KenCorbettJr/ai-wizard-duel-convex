@@ -32,7 +32,7 @@ export function Navigation({
               <Button variant="outline">Dashboard</Button>
             </Link>
           )}
-          <UserButton />
+          <UserButton afterSignOutUrl="/" />
         </SignedIn>
         <SignedOut>
           <SignInButton>

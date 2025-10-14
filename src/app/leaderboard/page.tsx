@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { Trophy, Medal, Award, Star, Zap, Crown } from "lucide-react";
 import { useState } from "react";
 import {
@@ -36,6 +37,8 @@ function WizardLeaderboardCard({
     winRate: number;
     totalDuels: number;
     rank: number;
+    ownerUserId?: string;
+    ownerDisplayName?: string;
   };
 }) {
   const illustrationUrl = useQuery(
@@ -112,9 +115,17 @@ function WizardLeaderboardCard({
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground text-sm line-clamp-2">
+            <p className="text-muted-foreground text-sm line-clamp-2 mb-1">
               {wizard.description}
             </p>
+            {wizard.ownerUserId && (
+              <UserIdDisplay
+                userId={wizard.ownerUserId}
+                displayName={wizard.ownerDisplayName}
+                size="sm"
+                showAvatar={false}
+              />
+            )}
           </div>
 
           {/* Stats */}
@@ -272,7 +283,7 @@ export default function LeaderboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <Link href="/wizards">
                   <button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors">
                     My Wizards
@@ -281,11 +292,6 @@ export default function LeaderboardPage() {
                 <Link href="/duels/create">
                   <button className="w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors">
                     Start Duel
-                  </button>
-                </Link>
-                <Link href="/stats">
-                  <button className="w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                    View Stats
                   </button>
                 </Link>
               </div>

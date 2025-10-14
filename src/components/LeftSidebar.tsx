@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { CreditDisplay } from "@/components/CreditDisplay";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -21,6 +22,8 @@ import {
   Crown,
   BarChart3,
   Coins,
+  User,
+  Shield,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -29,11 +32,13 @@ interface SidebarItem {
   icon: React.ComponentType<{ className?: string }>;
   requiresAuth?: boolean;
   showStatus?: boolean;
+  requiresSuperAdmin?: boolean;
 }
 
 interface SidebarGroup {
   title?: string;
   items: SidebarItem[];
+  requiresSuperAdmin?: boolean;
 }
 
 const sidebarGroups: SidebarGroup[] = [
@@ -46,15 +51,15 @@ const sidebarGroups: SidebarGroup[] = [
         icon: Home,
       },
       {
+        href: "/profile",
+        label: "Profile",
+        icon: User,
+        requiresAuth: true,
+      },
+      {
         href: "/leaderboard",
         label: "Leaderboard",
         icon: Crown,
-      },
-      {
-        href: "/stats",
-        label: "Stats",
-        icon: BarChart3,
-        requiresAuth: true,
       },
       {
         href: "/credits",
@@ -121,8 +126,33 @@ interface LeftSidebarProps {
 export function LeftSidebar({ className }: LeftSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { isSuperAdmin } = useSuperAdmin();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  // Get sidebar groups with conditional super admin section
+  const getSidebarGroups = (): SidebarGroup[] => {
+    const groups = [...sidebarGroups];
+
+    // Add Super Admin section if user is super admin
+    if (isSuperAdmin) {
+      groups.push({
+        title: "Super Admin",
+        requiresSuperAdmin: true,
+        items: [
+          {
+            href: "/admin/platform-stats",
+            label: "Platform Stats",
+            icon: BarChart3,
+            requiresAuth: true,
+            requiresSuperAdmin: true,
+          },
+        ],
+      });
+    }
+
+    return groups;
+  };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -147,7 +177,7 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
 
       <nav className="flex-1 p-4">
         <div className="space-y-6">
-          {sidebarGroups.map((group, groupIndex) => (
+          {getSidebarGroups().map((group, groupIndex) => (
             <div key={groupIndex}>
               {group.title && (
                 <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -176,6 +206,9 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
                             <Icon className="h-4 w-4" />
                             <span className="flex-1">{item.label}</span>
                             {item.showStatus && <LobbyStatusIndicator />}
+                            {item.href === "/credits" && (
+                              <CreditDisplay showLabel={false} size="sm" />
+                            )}
                           </Link>
                         </li>
                       </SignedIn>
@@ -197,6 +230,11 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
                         <Icon className="h-4 w-4" />
                         <span className="flex-1">{item.label}</span>
                         {item.showStatus && <LobbyStatusIndicator />}
+                        {item.href === "/credits" && (
+                          <SignedIn>
+                            <CreditDisplay showLabel={false} size="sm" />
+                          </SignedIn>
+                        )}
                       </Link>
                     </li>
                   );
@@ -207,19 +245,12 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
         </div>
       </nav>
 
-      {/* Credit display for signed-in users */}
-      <SignedIn>
-        <div className="p-4 border-t border-border">
-          <CreditDisplay showLabel={false} size="sm" />
-        </div>
-      </SignedIn>
-
       {/* Bottom section with theme toggle and user controls */}
       <div className="p-4 border-t border-border">
         <div className="flex items-center justify-between">
           <ThemeToggle />
           <SignedIn>
-            <UserButton />
+            <UserButton afterSignOutUrl="/" />
           </SignedIn>
           <SignedOut>
             <SignInButton>

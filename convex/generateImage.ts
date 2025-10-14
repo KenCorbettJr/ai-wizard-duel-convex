@@ -14,7 +14,7 @@ export const generateImage = action({
       if (!falKey) {
         console.error("FAL_KEY environment variable is not set");
         throw new Error(
-          "FAL_KEY environment variable is not set. Please add it to your environment variables."
+          "FAL_KEY environment variable is not set. Please add it to your environment variables.",
         );
       }
 
@@ -39,7 +39,7 @@ export const generateImage = action({
             num_images: 1,
             enable_safety_checker: true,
           },
-        }
+        },
       );
 
       // Get the image URL from the result
@@ -52,7 +52,7 @@ export const generateImage = action({
       const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch generated image: ${response.statusText}`
+          `Failed to fetch generated image: ${response.statusText}`,
         );
       }
 
@@ -62,7 +62,7 @@ export const generateImage = action({
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   },

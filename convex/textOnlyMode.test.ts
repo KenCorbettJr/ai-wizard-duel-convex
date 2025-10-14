@@ -20,7 +20,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.hasImageCreditsForDuel,
       {
         userId: "user456",
-      }
+      },
     );
 
     expect(hasCredits).toBe(true);
@@ -31,7 +31,7 @@ describe("Text-Only Mode Functionality", () => {
       {
         userId: "user456",
         metadata: { purpose: "test" },
-      }
+      },
     );
 
     expect(consumed).toBe(true);
@@ -41,7 +41,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.getUserImageCredits,
       {
         userId: "user456",
-      }
+      },
     );
 
     expect(remainingCredits).toBe(4);
@@ -65,7 +65,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.hasImageCreditsForDuel,
       {
         userId: "premium123",
-      }
+      },
     );
 
     expect(hasCredits).toBe(true);
@@ -76,7 +76,7 @@ describe("Text-Only Mode Functionality", () => {
       {
         userId: "premium123",
         metadata: { purpose: "premium_test" },
-      }
+      },
     );
 
     expect(consumed).toBe(true);
@@ -86,7 +86,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.getUserImageCredits,
       {
         userId: "premium123",
-      }
+      },
     );
 
     expect(remainingCredits).toBe(0); // Still 0 because premium users don't consume actual credits

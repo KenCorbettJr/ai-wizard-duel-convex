@@ -75,6 +75,9 @@ export const getUserByClerkId = query({
       ),
       email: v.optional(v.string()),
       name: v.optional(v.string()),
+      userId: v.optional(v.string()),
+      displayName: v.optional(v.string()),
+      profileCreatedAt: v.optional(v.number()),
       subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),
       subscriptionStatus: v.union(
         v.literal("ACTIVE"),
@@ -168,6 +171,9 @@ export const listUsers = query({
       ),
       email: v.optional(v.string()),
       name: v.optional(v.string()),
+      userId: v.optional(v.string()),
+      displayName: v.optional(v.string()),
+      profileCreatedAt: v.optional(v.number()),
       subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),
       subscriptionStatus: v.union(
         v.literal("ACTIVE"),

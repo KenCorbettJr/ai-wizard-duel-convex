@@ -5,19 +5,19 @@ import { v } from "convex/values";
 const AdPlacement = v.union(
   v.literal("WIZARD_PAGE"),
   v.literal("DUEL_PAGE"),
-  v.literal("CREDIT_REWARD")
+  v.literal("CREDIT_REWARD"),
 );
 
 const AdType = v.union(
   v.literal("DISPLAY_BANNER"),
   v.literal("VIDEO_REWARD"),
-  v.literal("INTERSTITIAL")
+  v.literal("INTERSTITIAL"),
 );
 
 const AdAction = v.union(
   v.literal("IMPRESSION"),
   v.literal("CLICK"),
-  v.literal("COMPLETION")
+  v.literal("COMPLETION"),
 );
 
 /**
@@ -235,7 +235,7 @@ export const getAdInteractionHistory = query({
       action: AdAction,
       revenue: v.optional(v.number()),
       createdAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const limit = args.limit || 50;

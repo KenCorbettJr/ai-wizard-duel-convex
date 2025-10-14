@@ -9,7 +9,7 @@ const remotePatterns = [];
 
 if (process.env.ENV === "dev") {
   remotePatterns.push(
-    new URL("https://doting-bloodhound-926.convex.cloud/api/storage/**")
+    new URL("https://doting-bloodhound-926.convex.cloud/api/storage/**"),
   );
 } else if (process.env.ENV === "emulate") {
   remotePatterns.push(new URL("http://127.0.0.1:3210/api/storage/**"));

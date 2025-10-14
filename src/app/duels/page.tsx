@@ -24,7 +24,7 @@ export default function DuelsPage() {
   const activeDuels = useQuery(api.duels.getActiveDuels);
   const playerDuels = useQuery(
     api.duels.getPlayerDuels,
-    user?.id ? {} : "skip"
+    user?.id ? {} : "skip",
   );
 
   return (
@@ -207,7 +207,7 @@ export default function DuelsPage() {
                 </p>
               </div>
             ) : activeDuels.filter(
-                (duel) => !duel.players.includes(user?.id || "")
+                (duel) => !duel.players.includes(user?.id || ""),
               ).length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">

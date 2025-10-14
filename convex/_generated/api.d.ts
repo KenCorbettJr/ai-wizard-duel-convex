@@ -33,6 +33,8 @@ import type * as subscriptionService from "../subscriptionService.js";
 import type * as testGeminiIntegration from "../testGeminiIntegration.js";
 import type * as test_utils from "../test_utils.js";
 import type * as usageLimiterService from "../usageLimiterService.js";
+import type * as userProfileUtils from "../userProfileUtils.js";
+import type * as userProfiles from "../userProfiles.js";
 import type * as users from "../users.js";
 import type * as wizards from "../wizards.js";
 
@@ -65,6 +67,8 @@ declare const fullApi: ApiFromModules<{
   testGeminiIntegration: typeof testGeminiIntegration;
   test_utils: typeof test_utils;
   usageLimiterService: typeof usageLimiterService;
+  userProfileUtils: typeof userProfileUtils;
+  userProfiles: typeof userProfiles;
   users: typeof users;
   wizards: typeof wizards;
 }>;

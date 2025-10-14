@@ -74,7 +74,7 @@ describe("Wizards", () => {
 
     const userWizards = await withAuth(t, "test-user-1").query(
       api.wizards.getUserWizards,
-      {}
+      {},
     );
 
     expect(userWizards).toHaveLength(2);

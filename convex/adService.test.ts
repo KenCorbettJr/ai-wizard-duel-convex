@@ -61,7 +61,7 @@ test("session service functionality", async () => {
     {
       userAgent: "test-agent",
       referrer: "https://example.com",
-    }
+    },
   );
   expect(sessionId).toMatch(/^anon_\d+_[a-z0-9]+$/);
 

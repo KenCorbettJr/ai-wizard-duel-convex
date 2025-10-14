@@ -70,7 +70,7 @@ describe("generateWizardIllustration", () => {
         name: "Flame Master Zara",
         description:
           "A powerful fire wizard with crimson robes and a phoenix familiar",
-      }
+      },
     );
 
     expect(result.success).toBe(true);
@@ -115,7 +115,7 @@ describe("generateWizardIllustration", () => {
           wizardId,
           name: wizard.name,
           description: wizard.description,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -136,8 +136,8 @@ describe("generateWizardIllustration", () => {
           wizardId: invalidWizardId,
           name: "Test Wizard",
           description: "Test description",
-        }
-      )
+        },
+      ),
     ).rejects.toThrow();
   });
 });

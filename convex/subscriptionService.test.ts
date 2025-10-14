@@ -27,7 +27,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription).not.toBeNull();
@@ -41,7 +41,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: "non-existent-user",
-        }
+        },
       );
 
       expect(subscription).toBeNull();
@@ -55,7 +55,7 @@ describe("SubscriptionService", () => {
         {
           clerkId: testClerkId,
           feature: "UNLIMITED_WIZARDS",
-        }
+        },
       );
 
       expect(hasAccess).toBe(false);
@@ -74,7 +74,7 @@ describe("SubscriptionService", () => {
         {
           clerkId: testClerkId,
           feature: "UNLIMITED_WIZARDS",
-        }
+        },
       );
 
       expect(hasAccess).toBe(true);
@@ -93,7 +93,7 @@ describe("SubscriptionService", () => {
         {
           clerkId: testClerkId,
           feature: "UNLIMITED_WIZARDS",
-        }
+        },
       );
 
       expect(hasAccess).toBe(false);
@@ -255,7 +255,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
@@ -271,7 +271,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
@@ -287,7 +287,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.imageGenerations).toBe(1);
@@ -303,7 +303,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.adsWatched).toBe(1);
@@ -339,7 +339,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: "expired-user",
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
@@ -362,7 +362,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.subscriptionTier).toBe("PREMIUM");
@@ -377,7 +377,7 @@ describe("SubscriptionService", () => {
           clerkId: "non-existent-user",
           subscriptionTier: "PREMIUM",
           subscriptionStatus: "ACTIVE",
-        })
+        }),
       ).rejects.toThrow("User not found");
     });
   });
@@ -441,7 +441,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
@@ -456,7 +456,7 @@ describe("SubscriptionService", () => {
         api.subscriptionService.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(0);
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(0);

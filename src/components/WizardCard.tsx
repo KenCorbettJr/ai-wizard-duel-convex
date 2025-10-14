@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Heart } from "lucide-react";
 import { Crown } from "@/components/ui/crown-icon";
 import { ConvexImage } from "@/components/ConvexImage";
+import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { Id } from "../../convex/_generated/dataModel";
 import { memo } from "react";
 
@@ -16,6 +17,8 @@ interface WizardCardProps {
     name: string;
     description: string;
     illustration?: string; // This is a storage ID string, not Id<"_storage">
+    ownerUserId?: string;
+    ownerDisplayName?: string;
   };
   points?: number;
   hitPoints?: number;
@@ -23,6 +26,7 @@ interface WizardCardProps {
   className?: string;
   isUserWizard?: boolean;
   isWinner?: boolean;
+  showOwner?: boolean;
 }
 
 export const WizardCard = memo(function WizardCard({
@@ -33,6 +37,7 @@ export const WizardCard = memo(function WizardCard({
   className = "",
   isUserWizard = false,
   isWinner = false,
+  showOwner = false,
 }: WizardCardProps) {
   const getBorderClasses = () => {
     if (isWinner) {
@@ -108,6 +113,16 @@ export const WizardCard = memo(function WizardCard({
               </div>
             )}
           </div>
+          {showOwner && wizard.ownerUserId && (
+            <div className="mt-2">
+              <UserIdDisplay
+                userId={wizard.ownerUserId}
+                displayName={wizard.ownerDisplayName}
+                size="sm"
+                showAvatar={false}
+              />
+            </div>
+          )}
           {hitPoints !== undefined && (
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between text-sm">

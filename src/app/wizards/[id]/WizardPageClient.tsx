@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { ConvexImage } from "@/components/ConvexImage";
 import { EditWizardForm } from "@/components/EditWizardForm";
+import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
 
   // Use safe queries that handle invalid IDs gracefully
   const wizard = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     wizardId ? { wizardId } : "skip"
   );
   const wizardDuels = useQuery(
@@ -206,6 +207,20 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
             {wizard.description}
           </p>
+          {wizard.ownerUserId && (
+            <div className="mt-4 flex justify-center">
+              <div className="text-sm text-muted-foreground">
+                Created by{" "}
+                <UserIdDisplay
+                  userId={wizard.ownerUserId}
+                  displayName={wizard.ownerDisplayName}
+                  size="sm"
+                  showAvatar={false}
+                  className="inline-flex"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}

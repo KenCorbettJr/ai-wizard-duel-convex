@@ -18,7 +18,7 @@ test("image credit service functionality", async () => {
     api.imageCreditService.getUserImageCredits,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(initialCredits).toBe(10); // Initial credits from user creation
 
@@ -27,7 +27,7 @@ test("image credit service functionality", async () => {
     api.imageCreditService.hasImageCreditsForDuel,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(hasCredits).toBe(true);
 
@@ -37,7 +37,7 @@ test("image credit service functionality", async () => {
     {
       userId: "test_user_123",
       metadata: { reason: "test_duel_image" },
-    }
+    },
   );
   expect(consumeResult).toBe(true);
 
@@ -46,7 +46,7 @@ test("image credit service functionality", async () => {
     api.imageCreditService.getUserImageCredits,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(creditsAfterConsume).toBe(9);
 
@@ -62,7 +62,7 @@ test("image credit service functionality", async () => {
     api.imageCreditService.getUserImageCredits,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(creditsAfterAward).toBe(14);
 
@@ -80,7 +80,7 @@ test("image credit service functionality", async () => {
     api.imageCreditService.canEarnCreditFromAd,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(cooldownCheck.canEarn).toBe(true);
   expect(cooldownCheck.cooldownRemaining).toBe(0);
@@ -114,7 +114,7 @@ test("premium user unlimited credits", async () => {
     api.imageCreditService.hasImageCreditsForDuel,
     {
       userId: "premium_user_123",
-    }
+    },
   );
   expect(hasCredits).toBe(true);
 
@@ -124,7 +124,7 @@ test("premium user unlimited credits", async () => {
     {
       userId: "premium_user_123",
       metadata: { reason: "premium_test" },
-    }
+    },
   );
   expect(consumeResult).toBe(true);
 
@@ -133,7 +133,7 @@ test("premium user unlimited credits", async () => {
     api.imageCreditService.getUserImageCredits,
     {
       userId: "premium_user_123",
-    }
+    },
   );
   expect(creditsAfter).toBe(10); // Should still have initial credits
 });
@@ -165,7 +165,7 @@ test("ad reward processing", async () => {
     {
       userId: "ad_user_123",
       adInteractionId,
-    }
+    },
   );
 
   expect(rewardResult.success).toBe(true);
@@ -177,7 +177,7 @@ test("ad reward processing", async () => {
     api.imageCreditService.getUserImageCredits,
     {
       userId: "ad_user_123",
-    }
+    },
   );
   expect(creditsAfterReward).toBe(11); // 10 initial + 1 from ad
 
@@ -187,7 +187,7 @@ test("ad reward processing", async () => {
     {
       userId: "ad_user_123",
       adInteractionId,
-    }
+    },
   );
 
   expect(secondRewardResult.success).toBe(false);
@@ -222,7 +222,7 @@ test("credit consumption when out of credits", async () => {
     api.imageCreditService.consumeImageCredit,
     {
       userId: "broke_user_123",
-    }
+    },
   );
   expect(consumeResult).toBe(false);
 
@@ -231,7 +231,7 @@ test("credit consumption when out of credits", async () => {
     api.imageCreditService.hasImageCreditsForDuel,
     {
       userId: "broke_user_123",
-    }
+    },
   );
   expect(hasCreditsForDuel).toBe(false);
 });

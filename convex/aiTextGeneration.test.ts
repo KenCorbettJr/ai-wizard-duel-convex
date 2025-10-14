@@ -84,7 +84,7 @@ describe("AI Text Generation", () => {
     await expect(async () => {
       await generateText("Tell me a story");
     }).rejects.toThrowError(
-      "AI text generation failed: API rate limit exceeded"
+      "AI text generation failed: API rate limit exceeded",
     );
   });
 

@@ -20,7 +20,7 @@ export const generateWizardIllustration = action({
   }),
   handler: async (ctx, { wizardId, name, description, userId }) => {
     console.log(
-      `Starting illustration generation for wizard ${wizardId} (${name})`
+      `Starting illustration generation for wizard ${wizardId} (${name})`,
     );
 
     try {
@@ -30,12 +30,12 @@ export const generateWizardIllustration = action({
           api.imageCreditService.hasImageCreditsForDuel,
           {
             userId,
-          }
+          },
         );
 
         if (!hasCredits) {
           throw new Error(
-            "Insufficient image credits for wizard illustration generation"
+            "Insufficient image credits for wizard illustration generation",
           );
         }
 
@@ -48,7 +48,7 @@ export const generateWizardIllustration = action({
               wizardId,
               purpose: "wizard_illustration",
             },
-          }
+          },
         );
 
         if (!creditConsumed) {
@@ -56,7 +56,7 @@ export const generateWizardIllustration = action({
         }
 
         console.log(
-          `Consumed 1 image credit for user ${userId} for wizard ${wizardId}`
+          `Consumed 1 image credit for user ${userId} for wizard ${wizardId}`,
         );
       }
       // Use AI to create a detailed illustration prompt
@@ -74,7 +74,7 @@ export const generateWizardIllustration = action({
 
       // Store the image in Convex File Storage (Fal AI typically returns PNG)
       const storageId = await ctx.storage.store(
-        new Blob([imageBuffer], { type: "image/png" })
+        new Blob([imageBuffer], { type: "image/png" }),
       );
 
       // Update the wizard with the new illustration using internal mutation
@@ -88,18 +88,18 @@ export const generateWizardIllustration = action({
     } catch (error) {
       console.error(
         `Error generating illustration for wizard ${wizardId}:`,
-        error
+        error,
       );
 
       // If it's an environment variable issue, provide helpful guidance
       if (error instanceof Error && error.message.includes("FAL_KEY")) {
         throw new Error(
-          "Image generation is not configured. Please add your FAL_KEY to the environment variables."
+          "Image generation is not configured. Please add your FAL_KEY to the environment variables.",
         );
       }
 
       throw new Error(
-        `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   },

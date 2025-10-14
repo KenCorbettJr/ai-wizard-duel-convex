@@ -27,7 +27,7 @@ export const canCreateWizard = query({
       api.subscriptionService.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
 
     if (!subscription) {
@@ -99,7 +99,7 @@ export const canStartDuel = query({
       api.subscriptionService.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
 
     if (!subscription) {
@@ -172,7 +172,7 @@ export const canGenerateImages = query({
       api.subscriptionService.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
 
     if (!subscription) {
@@ -293,7 +293,7 @@ export const getUserUsageStatus = query({
         v.literal("ACTIVE"),
         v.literal("CANCELED"),
         v.literal("PAST_DUE"),
-        v.literal("TRIALING")
+        v.literal("TRIALING"),
       ),
       wizards: v.object({
         current: v.number(),
@@ -317,7 +317,7 @@ export const getUserUsageStatus = query({
         adsWatched: v.number(),
         resetDate: v.number(),
       }),
-    })
+    }),
   ),
   handler: async (ctx, { clerkId }) => {
     // Get subscription info
@@ -325,7 +325,7 @@ export const getUserUsageStatus = query({
       api.subscriptionService.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
 
     if (!subscription) {
@@ -337,7 +337,7 @@ export const getUserUsageStatus = query({
       api.usageLimiterService.canCreateWizard,
       {
         clerkId,
-      }
+      },
     );
 
     // Get duel participation status
@@ -345,7 +345,7 @@ export const getUserUsageStatus = query({
       api.usageLimiterService.canStartDuel,
       {
         clerkId,
-      }
+      },
     );
 
     // Get image generation status
@@ -353,7 +353,7 @@ export const getUserUsageStatus = query({
       api.usageLimiterService.canGenerateImages,
       {
         clerkId,
-      }
+      },
     );
 
     return {

@@ -559,7 +559,14 @@ export function validateMetadataConfig(config: MetadataConfig): {
   // Validate image URL if provided
   if (config.image) {
     try {
-      new URL(config.image);
+      // Handle relative URLs by converting them to absolute URLs
+      if (config.image.startsWith("/")) {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL || "https://ai-wizard-duel.com";
+        new URL(config.image, baseUrl);
+      } else {
+        new URL(config.image);
+      }
     } catch {
       issues.push("Invalid image URL format");
     }
@@ -890,4 +897,128 @@ function mapDuelStatus(
     default:
       return "active";
   }
+}
+
+/**
+ * User profile metadata interface
+ */
+export interface UserProfileMetadata {
+  userId: string;
+  displayName?: string;
+  totalWizards: number;
+  totalDuels: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  joinDate: number;
+}
+
+/**
+ * Generates user profile metadata for social media sharing
+ */
+export function generateUserProfileMetadata(
+  userProfile: UserProfileMetadata
+): MetadataConfig {
+  const displayName = userProfile.displayName || userProfile.userId;
+  const wizardText = userProfile.totalWizards === 1 ? "wizard" : "wizards";
+  const duelText = userProfile.totalDuels === 1 ? "duel" : "duels";
+
+  // Create user-specific title
+  const title = `${displayName} (@${userProfile.userId}) - AI Wizard Duel`;
+
+  // Create engaging description with stats
+  let description = `View ${displayName}'s magical profile on AI Wizard Duel.`;
+
+  if (userProfile.totalWizards > 0) {
+    description += ` ${userProfile.totalWizards} ${wizardText}`;
+
+    if (userProfile.totalDuels > 0) {
+      // userProfile.winRate is already a percentage (0-100), not a decimal
+      description += `, ${userProfile.totalDuels} ${duelText}, ${userProfile.winRate}% win rate`;
+    } else {
+      description += ", ready for their first magical duel";
+    }
+  } else {
+    description += " A new wizard ready to begin their magical journey.";
+  }
+
+  // Format description to optimal length
+  const formattedDescription = formatDescription(description, 280);
+
+  // Use default wizard image for user profiles
+  const socialImage = DEFAULT_SOCIAL_IMAGES.wizard;
+
+  // Generate user profile URL
+  const url = createCanonicalUrl(`/users/${userProfile.userId}`);
+
+  return {
+    title,
+    description: formattedDescription,
+    image: socialImage,
+    url,
+    type: "article",
+  };
+}
+
+/**
+ * Generates complete Next.js metadata for user profile pages
+ */
+export function generateCompleteUserProfileMetadata(
+  userProfile: UserProfileMetadata
+): CompleteMetadata {
+  const config = generateUserProfileMetadata(userProfile);
+
+  // Validate the metadata configuration
+  const validation = validateMetadataConfig(config);
+  if (!validation.isValid) {
+    console.error(
+      `User profile metadata validation failed:`,
+      validation.issues
+    );
+  }
+  if (validation.warnings.length > 0) {
+    console.warn(`User profile metadata warnings:`, validation.warnings);
+  }
+
+  // Canonicalize the URL
+  const canonicalResult = canonicalizeUrl(config.url);
+  const canonicalUrl = canonicalResult.canonicalUrl;
+
+  const displayName = userProfile.displayName || userProfile.userId;
+
+  return {
+    title: config.title,
+    description: config.description,
+    openGraph: {
+      title: config.title,
+      description: config.description,
+      url: canonicalUrl,
+      type: "profile",
+      images: [
+        {
+          url: config.image || DEFAULT_SOCIAL_IMAGES.wizard,
+          width: SOCIAL_IMAGE_DIMENSIONS.width,
+          height: SOCIAL_IMAGE_DIMENSIONS.height,
+          alt: `${displayName}'s AI Wizard Duel Profile`,
+        },
+      ],
+      siteName: "AI Wizard Duel",
+      locale: "en_US",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: config.title,
+      description: config.description,
+      images: [config.image || DEFAULT_SOCIAL_IMAGES.wizard],
+      site: "@aiwizardduel",
+      creator: "@aiwizardduel",
+    },
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 }

@@ -36,13 +36,13 @@ export function DuelStatistics({
   // Player-specific stats
   const playerStats = useQuery(
     api.duels.getPlayerDuelStats,
-    userId ? {} : "skip"
+    userId ? {} : "skip",
   );
 
   // Global analytics
   const globalAnalytics = useQuery(
     api.duels.getDuelAnalytics,
-    showGlobalStats ? { timeRange } : "skip"
+    showGlobalStats ? { timeRange } : "skip",
   );
 
   // Player duels for detailed analysis
@@ -93,7 +93,7 @@ export function DuelStatistics({
 
     for (const duel of completedDuels) {
       const hasWinningWizard = duel.winners?.some((winnerId) =>
-        duel.wizards.includes(winnerId)
+        duel.wizards.includes(winnerId),
       );
 
       if (currentStreak === 0) {
@@ -201,7 +201,7 @@ export function DuelStatistics({
                     ? Math.round(
                         ((playerStats.wins + playerStats.losses) /
                           playerStats.totalDuels) *
-                          100
+                          100,
                       )
                     : 0}
                   %
@@ -281,7 +281,7 @@ export function DuelStatistics({
                     ? Math.round(
                         (globalAnalytics.statusBreakdown.completed /
                           globalAnalytics.totalDuels) *
-                          100
+                          100,
                       )
                     : 0}
                   %

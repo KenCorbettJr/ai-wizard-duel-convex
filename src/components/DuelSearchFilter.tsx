@@ -63,7 +63,7 @@ export function DuelSearchFilter({
 
   const updateFilter = (
     key: keyof DuelFilters,
-    value: string | number | undefined
+    value: string | number | undefined,
   ) => {
     setFilters({ ...filters, [key]: value || undefined });
     setCurrentPage(0); // Reset to first page when filters change
@@ -75,7 +75,7 @@ export function DuelSearchFilter({
   };
 
   const hasActiveFilters = Object.values(filters).some(
-    (value) => value !== undefined
+    (value) => value !== undefined,
   );
 
   return (
@@ -153,7 +153,7 @@ export function DuelSearchFilter({
                         ? undefined
                         : value === "TO_THE_DEATH"
                           ? "TO_THE_DEATH"
-                          : parseInt(value)
+                          : parseInt(value),
                     )
                   }
                 >
@@ -205,7 +205,7 @@ export function DuelSearchFilter({
                       "createdAfter",
                       e.target.value
                         ? new Date(e.target.value).getTime()
-                        : undefined
+                        : undefined,
                     )
                   }
                 />
@@ -227,7 +227,7 @@ export function DuelSearchFilter({
                       "createdBefore",
                       e.target.value
                         ? new Date(e.target.value).getTime()
-                        : undefined
+                        : undefined,
                     )
                   }
                 />

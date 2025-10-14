@@ -18,7 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { CreateWizardModal } from "@/components/CreateWizardModal";
+import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { ConvexImage } from "@/components/ConvexImage";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import Image from "next/image";
 import {
   Swords,
@@ -33,6 +35,7 @@ import {
   Hash,
   Star,
   Heart,
+  LogIn,
 } from "lucide-react";
 
 interface JoinShortcodePageProps {
@@ -49,7 +52,11 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   );
   const [isJoining, setIsJoining] = useState(false);
   const [showCreateWizardModal, setShowCreateWizardModal] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const { shortcode } = use(params);
+
+  const { isProfileComplete, getProfileCompletionPrompt } =
+    useProfileCompletion();
 
   const duel = useQuery(api.duels.getDuelByShortcode, {
     shortcode: shortcode.toUpperCase(),
@@ -68,14 +75,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
   // Check if user is already in the duel (moved before early returns)
   const isAlreadyInDuel = duel?.players?.includes(user?.id || "") || false;
 
-  // Redirect to sign-in if not authenticated
-  useEffect(() => {
-    if (isLoaded && !user) {
-      router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`
-      );
-    }
-  }, [isLoaded, user, router]);
+  // Don't redirect unauthenticated users - let them see the duel first
 
   // Redirect to duel page when user is already in the duel
   useEffect(() => {
@@ -109,8 +109,18 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     setShowCreateWizardModal(false);
   };
 
-  // Loading state
-  if (!isLoaded || !user) {
+  const handleCreateWizard = () => {
+    if (isProfileComplete) {
+      setShowCreateWizardModal(true);
+    } else {
+      setShowProfilePrompt(true);
+    }
+  };
+
+  const profilePrompt = getProfileCompletionPrompt("create wizards");
+
+  // Loading state - only show loading if Clerk is still loading
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
         <div className="text-center">
@@ -169,15 +179,6 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                   <Link href="/">
                     <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
                       Go to Dashboard
-                    </Button>
-                  </Link>
-                  <Link href="/duels/join">
-                    <Button
-                      variant="outline"
-                      className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
-                    >
-                      <Swords className="h-4 w-4 mr-2" />
-                      Browse Open Duels
                     </Button>
                   </Link>
                 </div>
@@ -417,15 +418,6 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                         Go to Dashboard
                       </Button>
                     </Link>
-                    <Link href="/duels/join">
-                      <Button
-                        variant="outline"
-                        className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
-                      >
-                        <Swords className="h-4 w-4 mr-2" />
-                        Browse Open Duels
-                      </Button>
-                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -482,7 +474,47 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                   </Card>
                 )}
 
-                {!wizards || wizards.length === 0 ? (
+                {!user ? (
+                  <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
+                        <LogIn className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        Sign In to Join Duel
+                      </CardTitle>
+                      <CardDescription className="dark:text-muted-foreground/80">
+                        Create an account or sign in to participate in this epic
+                        duel
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground dark:text-muted-foreground/80 mb-6">
+                        Join the magical world of wizard dueling! Create your
+                        account to build wizards and challenge other players.
+                      </p>
+                      <div className="flex gap-3">
+                        <Link
+                          href={`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`}
+                        >
+                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
+                            <LogIn className="h-4 w-4 mr-2" />
+                            Sign In
+                          </Button>
+                        </Link>
+                        <Link
+                          href={`/sign-up?redirect_url=${encodeURIComponent(window.location.pathname)}`}
+                        >
+                          <Button
+                            variant="outline"
+                            className="border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/50"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Create Account
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : !wizards || wizards.length === 0 ? (
                   <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
@@ -499,7 +531,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                         duel!
                       </p>
                       <Button
-                        onClick={() => setShowCreateWizardModal(true)}
+                        onClick={handleCreateWizard}
                         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
@@ -615,7 +647,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => setShowCreateWizardModal(true)}
+                          onClick={handleCreateWizard}
                           disabled={isJoining}
                           className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30 disabled:opacity-50"
                         >
@@ -636,6 +668,16 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
         open={showCreateWizardModal}
         onOpenChange={setShowCreateWizardModal}
         onSuccess={handleWizardCreated}
+      />
+
+      <ProfileCompletionPrompt
+        open={showProfilePrompt}
+        onOpenChange={setShowProfilePrompt}
+        title={profilePrompt.title}
+        message={profilePrompt.message}
+        actionLabel={profilePrompt.actionLabel}
+        onAction={profilePrompt.onAction}
+        isSignInPrompt={!user}
       />
     </div>
   );

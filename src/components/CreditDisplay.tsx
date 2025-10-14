@@ -22,19 +22,19 @@ export function CreditDisplay({
   // Get user's current credit balance
   const credits = useQuery(
     api.imageCreditService.getUserImageCredits,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Check if user has credits for duels
   const hasCreditsForDuel = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Get user info to check if premium
   const userInfo = useQuery(
     api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
+    user?.id ? { clerkId: user.id } : "skip",
   );
 
   if (!user) {

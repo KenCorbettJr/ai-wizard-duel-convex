@@ -17,7 +17,7 @@ describe("Full User Journey", () => {
     const wizardName = `Journey Wizard ${Date.now()}`;
     cy.get('input[name="name"]').type(wizardName);
     cy.get('textarea[name="description"]').type(
-      "A wizard for the full journey test"
+      "A wizard for the full journey test",
     );
     cy.get('button[type="submit"]').click();
 
@@ -30,7 +30,7 @@ describe("Full User Journey", () => {
     const duelTitle = `Journey Duel ${Date.now()}`;
     cy.get('input[name="title"]').type(duelTitle);
     cy.get('textarea[name="description"]').type(
-      "A test duel for the full journey"
+      "A test duel for the full journey",
     );
     cy.get('button[type="submit"]').click();
 
@@ -43,7 +43,7 @@ describe("Full User Journey", () => {
     // 8. Cast a spell
     cy.get("button").contains("Cast Spell").click();
     cy.get('textarea[name="spell"]').type(
-      "I summon a mighty dragon to breathe fire upon my foe!"
+      "I summon a mighty dragon to breathe fire upon my foe!",
     );
     cy.get('button[type="submit"]').click();
 

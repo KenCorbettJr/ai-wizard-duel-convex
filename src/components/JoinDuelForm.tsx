@@ -36,7 +36,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
   const { user } = useUser();
   const [selectedDuel, setSelectedDuel] = useState<Id<"duels"> | null>(null);
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null
+    null,
   );
   const [isJoining, setIsJoining] = useState(false);
 
@@ -48,7 +48,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
     availableDuels?.filter(
       (duel) =>
         duel.status === "WAITING_FOR_PLAYERS" &&
-        !duel.players.includes(user?.id || "")
+        !duel.players.includes(user?.id || ""),
     ) || [];
 
   const handleWizardSelect = (wizardId: Id<"wizards">) => {

@@ -20,7 +20,7 @@ describe("Luck Rolls", () => {
       {
         name: "Gandalf",
         description: "A wise wizard with a long beard",
-      }
+      },
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -28,7 +28,7 @@ describe("Luck Rolls", () => {
       {
         name: "Saruman",
         description: "A powerful wizard with dark magic",
-      }
+      },
     );
 
     // Create test duel

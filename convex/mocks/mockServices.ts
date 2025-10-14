@@ -37,7 +37,7 @@ function generateMockFromSchema<T extends z.ZodTypeAny>(schema: T): z.infer<T> {
  */
 
 export function generateMockObject<T extends z.ZodTypeAny>(
-  schema: T
+  schema: T,
 ): ReturnType<typeof generateMockFromSchema> {
   return generateMockFromSchema(schema);
 }

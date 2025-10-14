@@ -143,7 +143,7 @@ describe("Metadata Utilities", () => {
     it("should handle edge cases with exact minimum dimensions", () => {
       const result = validateImageDimensions(
         SOCIAL_IMAGE_DIMENSIONS.minWidth,
-        SOCIAL_IMAGE_DIMENSIONS.minHeight
+        SOCIAL_IMAGE_DIMENSIONS.minHeight,
       );
       expect(result.isValid).toBe(true);
       expect(result.width).toBe(SOCIAL_IMAGE_DIMENSIONS.minWidth);
@@ -274,19 +274,19 @@ describe("Metadata Utilities", () => {
 
     it("should return active duel image for active status", () => {
       expect(getSocialImage("duel", "active")).toBe(
-        DEFAULT_SOCIAL_IMAGES.duelActive
+        DEFAULT_SOCIAL_IMAGES.duelActive,
       );
     });
 
     it("should return completed duel image for completed status", () => {
       expect(getSocialImage("duel", "completed")).toBe(
-        DEFAULT_SOCIAL_IMAGES.duelCompleted
+        DEFAULT_SOCIAL_IMAGES.duelCompleted,
       );
     });
 
     it("should return waiting duel image for waiting status", () => {
       expect(getSocialImage("duel", "waiting")).toBe(
-        DEFAULT_SOCIAL_IMAGES.duelWaiting
+        DEFAULT_SOCIAL_IMAGES.duelWaiting,
       );
     });
 
@@ -389,7 +389,7 @@ describe("Metadata Utilities", () => {
 
     it("should remove tracking parameters", () => {
       const result = canonicalizeUrl(
-        "https://example.com/path?utm_source=test&utm_medium=email&normal=keep"
+        "https://example.com/path?utm_source=test&utm_medium=email&normal=keep",
       );
       expect(result.isValid).toBe(true);
       expect(result.canonicalUrl).toBe("https://example.com/path?normal=keep");

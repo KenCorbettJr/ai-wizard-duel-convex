@@ -20,7 +20,7 @@ export const getLobbyEntries = query({
       duelType: v.union(v.number(), v.literal("TO_THE_DEATH")),
       status: v.union(v.literal("WAITING"), v.literal("MATCHED")),
       matchedWith: v.optional(v.id("duelLobby")),
-    })
+    }),
   ),
   handler: async (ctx) => {
     // Get all waiting lobby entries
@@ -55,7 +55,7 @@ export const getUserRecentDuel = query({
           duel.players.includes(identity.subject) &&
           duel.createdAt > recentTime &&
           (duel.status === "IN_PROGRESS" ||
-            duel.status === "WAITING_FOR_PLAYERS")
+            duel.status === "WAITING_FOR_PLAYERS"),
       )
       .sort((a, b) => b.createdAt - a.createdAt)[0];
 
@@ -77,7 +77,7 @@ export const getUserLobbyStatus = query({
       duelType: v.union(v.number(), v.literal("TO_THE_DEATH")),
       status: v.union(v.literal("WAITING"), v.literal("MATCHED")),
       matchedWith: v.optional(v.id("duelLobby")),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -213,8 +213,8 @@ export const tryMatchmaking = internalMutation({
       .filter((q) =>
         q.and(
           q.neq(q.field("_id"), lobbyId), // Not the same entry
-          q.eq(q.field("duelType"), lobbyEntry.duelType) // Same duel type
-        )
+          q.eq(q.field("duelType"), lobbyEntry.duelType), // Same duel type
+        ),
       )
       .order("asc") // First come, first served
       .first();
@@ -321,7 +321,7 @@ export const createMatchedDuel = internalMutation({
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
     }
 
@@ -357,7 +357,7 @@ export const getLobbyStats = query({
     const now = Date.now();
     const totalWaitTime = waiting.reduce(
       (sum, entry) => sum + (now - entry.joinedAt),
-      0
+      0,
     );
     const averageWaitTime =
       waiting.length > 0 ? totalWaitTime / waiting.length : 0;

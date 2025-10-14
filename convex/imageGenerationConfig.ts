@@ -28,7 +28,7 @@ export const toggleImageGenerationMethod = mutation({
     // In a real implementation, you might want to store this in the database
     // or make it user-specific. For now, this is just for demonstration.
     console.log(
-      `Image generation method toggled to: ${useGemini ? "Gemini Nano Banana" : "FAL"}`
+      `Image generation method toggled to: ${useGemini ? "Gemini Nano Banana" : "FAL"}`,
     );
 
     // Note: This doesn't actually change the environment variable at runtime
