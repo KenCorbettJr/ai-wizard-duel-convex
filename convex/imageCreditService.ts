@@ -6,7 +6,7 @@ const CreditSource = v.union(
   v.literal("SIGNUP_BONUS"),
   v.literal("AD_REWARD"),
   v.literal("PREMIUM_GRANT"),
-  v.literal("ADMIN_GRANT"),
+  v.literal("ADMIN_GRANT")
 );
 
 // Transaction types
@@ -14,7 +14,7 @@ const TransactionType = v.union(
   v.literal("EARNED"),
   v.literal("CONSUMED"),
   v.literal("GRANTED"),
-  v.literal("EXPIRED"),
+  v.literal("EXPIRED")
 );
 
 /**
@@ -142,6 +142,141 @@ export const consumeImageCredit = mutation({
     });
 
     return true;
+  },
+});
+
+/**
+ * Consume an image credit for a duel (only once per duel)
+ */
+export const consumeImageCreditForDuel = mutation({
+  args: {
+    userId: v.string(),
+    duelId: v.id("duels"),
+    metadata: v.optional(v.record(v.string(), v.string())),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    alreadyConsumed: v.boolean(),
+    reason: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    // Get the duel first
+    const duel = await ctx.db.get(args.duelId);
+    if (!duel) {
+      return {
+        success: false,
+        alreadyConsumed: false,
+        reason: "Duel not found",
+      };
+    }
+
+    // Check if credit has already been consumed for this duel
+    if (duel.imageCreditConsumed) {
+      return {
+        success: true,
+        alreadyConsumed: true,
+        reason: `Credit already consumed by user ${duel.imageCreditConsumedBy}`,
+      };
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
+      .first();
+
+    if (!user) {
+      return {
+        success: false,
+        alreadyConsumed: false,
+        reason: "User not found",
+      };
+    }
+
+    // Premium users have unlimited credits
+    if (
+      user.subscriptionTier === "PREMIUM" &&
+      user.subscriptionStatus === "ACTIVE"
+    ) {
+      // Mark the duel as having consumed a credit (even though it's free for premium)
+      await ctx.db.patch(args.duelId, {
+        imageCreditConsumed: true,
+        imageCreditConsumedBy: args.userId,
+      });
+
+      // Still track the usage for analytics
+      await ctx.db.insert("imageCreditTransactions", {
+        userId: args.userId,
+        type: "CONSUMED",
+        amount: 0, // No actual credit consumed for premium users
+        source: "PREMIUM_GRANT",
+        metadata: {
+          ...args.metadata,
+          duelId: args.duelId,
+          purpose: "duel_images",
+        },
+        createdAt: Date.now(),
+      });
+
+      // Update monthly usage
+      await ctx.db.patch(user._id, {
+        monthlyUsage: {
+          ...user.monthlyUsage,
+          imageGenerations: user.monthlyUsage.imageGenerations + 1,
+        },
+        updatedAt: Date.now(),
+      });
+
+      return {
+        success: true,
+        alreadyConsumed: false,
+        reason: "Premium user - unlimited credits",
+      };
+    }
+
+    // Check if user has credits
+    if (user.imageCredits <= 0) {
+      return {
+        success: false,
+        alreadyConsumed: false,
+        reason: "Insufficient credits",
+      };
+    }
+
+    // Consume one credit
+    await ctx.db.patch(user._id, {
+      imageCredits: user.imageCredits - 1,
+      monthlyUsage: {
+        ...user.monthlyUsage,
+        imageGenerations: user.monthlyUsage.imageGenerations + 1,
+      },
+      updatedAt: Date.now(),
+    });
+
+    // Mark the duel as having consumed a credit
+    await ctx.db.patch(args.duelId, {
+      imageCreditConsumed: true,
+      imageCreditConsumedBy: args.userId,
+    });
+
+    // Record the transaction
+    await ctx.db.insert("imageCreditTransactions", {
+      userId: args.userId,
+      type: "CONSUMED",
+      amount: 1,
+      source: "PREMIUM_GRANT", // This will be updated based on context
+      metadata: {
+        ...args.metadata,
+        duelId: args.duelId,
+        purpose: "duel_images",
+      },
+      createdAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      alreadyConsumed: false,
+      reason: "Credit consumed successfully",
+    };
   },
 });
 /**
@@ -288,7 +423,7 @@ export const processAdRewardCredit = mutation({
       const timeSinceLastAd = Date.now() - lastAdReward.createdAt;
       if (timeSinceLastAd < COOLDOWN_PERIOD) {
         const remainingSeconds = Math.ceil(
-          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000,
+          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000
         );
         return {
           success: false,
@@ -361,7 +496,7 @@ export const getImageCreditHistory = query({
       source: CreditSource,
       createdAt: v.number(),
       metadata: v.optional(v.record(v.string(), v.string())),
-    }),
+    })
   ),
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
@@ -550,7 +685,7 @@ export const getCreditStatistics = query({
       (user) =>
         user.imageCredits > 0 ||
         (user.subscriptionTier === "PREMIUM" &&
-          user.subscriptionStatus === "ACTIVE"),
+          user.subscriptionStatus === "ACTIVE")
     ).length;
 
     return {

@@ -26,7 +26,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
@@ -69,7 +69,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
@@ -114,7 +114,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     const duel2Id = await withAuth(t, "test-user-1").mutation(
@@ -122,12 +122,12 @@ describe("Duels", () => {
       {
         numberOfRounds: 5,
         wizards: [wizard2Id],
-      },
+      }
     );
 
     const user1Duels = await withAuth(t, "test-user-1").query(
       api.duels.getPlayerDuels,
-      {},
+      {}
     );
 
     expect(user1Duels).toHaveLength(2);
@@ -154,7 +154,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     await t.mutation(api.duels.cancelDuel, { duelId });
@@ -196,7 +196,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     const inProgressDuelId = await withAuth(t, "test-user-2").mutation(
@@ -204,7 +204,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard2Id],
-      },
+      }
     );
 
     const completedDuelId = await withAuth(t, "test-user-1").mutation(
@@ -212,7 +212,7 @@ describe("Duels", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     // Set statuses
@@ -250,7 +250,7 @@ test("should get completed duels for a player", async () => {
     {
       numberOfRounds: 3,
       wizards: [wizard1Id],
-    },
+    }
   );
 
   // Manually set the duel as completed
@@ -271,7 +271,7 @@ test("should get completed duels for a player", async () => {
   // Get completed duels for user1
   const user1CompletedDuels = await withAuth(t, "test-user-1").query(
     api.duels.getPlayerCompletedDuels,
-    {},
+    {}
   );
 
   expect(user1CompletedDuels).toHaveLength(1);
@@ -281,7 +281,7 @@ test("should get completed duels for a player", async () => {
   // Get completed duels for a user with no duels
   const user3CompletedDuels = await withAuth(t, "test-user-3").query(
     api.duels.getPlayerCompletedDuels,
-    {},
+    {}
   );
 
   expect(user3CompletedDuels).toHaveLength(0);
@@ -308,7 +308,7 @@ test("should allow unauthenticated users to view duels", async () => {
     {
       numberOfRounds: 3,
       wizards: [wizard1Id],
-    },
+    }
   );
 
   // Test that unauthenticated users can view the duel
@@ -366,7 +366,7 @@ test("should create duel with image generation disabled", async () => {
       numberOfRounds: 3,
       wizards: [wizard1Id],
       enableImageGeneration: false,
-    },
+    }
   );
 
   // Verify the duel was created with text-only mode enabled
@@ -399,7 +399,7 @@ test("should create duel with image generation enabled by default", async () => 
     {
       numberOfRounds: 3,
       wizards: [wizard1Id],
-    },
+    }
   );
 
   // Verify the duel was created with text-only mode disabled
@@ -409,4 +409,238 @@ test("should create duel with image generation enabled by default", async () => 
   expect(duel).toBeTruthy();
   expect(duel!.textOnlyMode).toBe(false);
   expect(duel!.textOnlyReason).toBeUndefined();
+});
+
+test("should allow undoing a spell while waiting for other wizards", async () => {
+  const t = convexTest(schema);
+
+  // Create two wizards for different users
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  const wizard2Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-2",
+      name: "Saruman",
+      description: "A powerful wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create duel
+  const duelId = await withAuth(t, "test-user-1").mutation(
+    api.duels.createDuel,
+    {
+      numberOfRounds: 3,
+      wizards: [wizard1Id],
+    }
+  );
+
+  // Join duel with second wizard
+  await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
+    duelId,
+    wizards: [wizard2Id],
+  });
+
+  // Start the duel
+  await withAuth(t, "test-user-1").mutation(
+    api.duels.startDuelAfterIntroduction,
+    {
+      duelId,
+    }
+  );
+
+  // Cast spell with first wizard
+  await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+    duelId,
+    wizardId: wizard1Id,
+    spellDescription: "Fireball!",
+  });
+
+  // Verify spell was cast
+  let duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
+    duelId,
+  });
+  expect(duel?.needActionsFrom).toEqual([wizard2Id]); // Only wizard2 needs to act
+
+  const currentRound = duel?.rounds?.find(
+    (r) => r.roundNumber === duel.currentRound
+  );
+  expect(currentRound?.spells?.[wizard1Id]?.description).toBe("Fireball!");
+
+  // Undo the spell
+  await withAuth(t, "test-user-1").mutation(api.duels.undoSpell, {
+    duelId,
+    wizardId: wizard1Id,
+  });
+
+  // Verify spell was undone
+  duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
+    duelId,
+  });
+  expect(duel?.needActionsFrom).toHaveLength(2); // Both wizards need to act again
+  expect(duel?.needActionsFrom).toContain(wizard1Id);
+  expect(duel?.needActionsFrom).toContain(wizard2Id);
+
+  const updatedRound = duel?.rounds?.find(
+    (r) => r.roundNumber === duel.currentRound
+  );
+  expect(updatedRound?.spells?.[wizard1Id]).toBeUndefined();
+});
+
+test("should not allow undoing a spell if wizard hasn't cast one", async () => {
+  const t = convexTest(schema);
+
+  // Create two wizards for different users
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  const wizard2Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-2",
+      name: "Saruman",
+      description: "A powerful wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create duel
+  const duelId = await withAuth(t, "test-user-1").mutation(
+    api.duels.createDuel,
+    {
+      numberOfRounds: 3,
+      wizards: [wizard1Id],
+    }
+  );
+
+  // Join duel with second wizard
+  await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
+    duelId,
+    wizards: [wizard2Id],
+  });
+
+  // Start the duel
+  await withAuth(t, "test-user-1").mutation(
+    api.duels.startDuelAfterIntroduction,
+    {
+      duelId,
+    }
+  );
+
+  // Try to undo a spell without casting one first
+  await expect(
+    withAuth(t, "test-user-1").mutation(api.duels.undoSpell, {
+      duelId,
+      wizardId: wizard1Id,
+    })
+  ).rejects.toThrow(
+    "No spell to undo - wizard has not cast a spell this round"
+  );
+});
+
+test("should not allow undoing a spell after round processing has started", async () => {
+  const t = convexTest(schema);
+
+  // Create two wizards for different users
+  const wizard1Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-1",
+      name: "Gandalf",
+      description: "A wise wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  const wizard2Id = await t.run(async (ctx) => {
+    return await ctx.db.insert("wizards", {
+      owner: "test-user-2",
+      name: "Saruman",
+      description: "A powerful wizard",
+      wins: 0,
+      losses: 0,
+      isAIPowered: false,
+    });
+  });
+
+  // Create duel
+  const duelId = await withAuth(t, "test-user-1").mutation(
+    api.duels.createDuel,
+    {
+      numberOfRounds: 3,
+      wizards: [wizard1Id],
+    }
+  );
+
+  // Join duel with second wizard
+  await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
+    duelId,
+    wizards: [wizard2Id],
+  });
+
+  // Start the duel
+  await withAuth(t, "test-user-1").mutation(
+    api.duels.startDuelAfterIntroduction,
+    {
+      duelId,
+    }
+  );
+
+  // Cast spells with both wizards (this will trigger processing)
+  await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+    duelId,
+    wizardId: wizard1Id,
+    spellDescription: "Fireball!",
+  });
+
+  await withAuth(t, "test-user-2").mutation(api.duels.castSpell, {
+    duelId,
+    wizardId: wizard2Id,
+    spellDescription: "Ice Shard!",
+  });
+
+  // Manually set round status to PROCESSING to simulate what happens when all spells are cast
+  const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
+    duelId,
+  });
+  const currentRound = duel?.rounds?.find(
+    (r) => r.roundNumber === duel.currentRound
+  );
+
+  if (currentRound) {
+    await t.run(async (ctx) => {
+      await ctx.db.patch(currentRound._id, {
+        status: "PROCESSING" as const,
+      });
+    });
+  }
+
+  // Try to undo a spell after processing has started
+  await expect(
+    withAuth(t, "test-user-1").mutation(api.duels.undoSpell, {
+      duelId,
+      wizardId: wizard1Id,
+    })
+  ).rejects.toThrow("Cannot undo spell - round is no longer accepting spells");
 });

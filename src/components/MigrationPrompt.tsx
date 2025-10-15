@@ -77,7 +77,7 @@ export function MigrationPrompt({
           <div className="space-y-3">
             <h4 className="font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
               <Star className="h-4 w-4" />
-              What you'll get:
+              What you&apos;ll get:
             </h4>
             <ul className="text-sm space-y-2 text-purple-700 dark:text-purple-300">
               <li className="flex items-center gap-2">

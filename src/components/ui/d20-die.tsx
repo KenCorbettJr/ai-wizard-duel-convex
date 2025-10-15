@@ -23,23 +23,6 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
     }
   };
 
-  // Get color classes for testing
-  const getColorClasses = (roll: number) => {
-    if (roll >= 19) {
-      return "from-yellow-400 to-yellow-600"; // Critical success
-    }
-    if (roll >= 16) {
-      return "from-green-400 to-green-600"; // High success
-    }
-    if (roll >= 11) {
-      return "from-blue-400 to-blue-600"; // Medium success
-    }
-    if (roll >= 6) {
-      return "from-orange-400 to-orange-600"; // Low success
-    }
-    return "from-red-400 to-red-600"; // Failure
-  };
-
   const sizeConfig = {
     sm: {
       containerSize: 80,
@@ -91,7 +74,7 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
     }
     return {
       "--face-color": "rgba(239, 68, 68, 0.85)",
-      "--text-color": "#991b1b",
+      "--text-color": "#6a1b1b",
     };
   };
 
@@ -100,8 +83,7 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
       className={cn(
         "relative mx-auto bg-gradient-to-br",
         getSizeClasses(size),
-        getColorClasses(value),
-        className,
+        className
       )}
       style={{
         width: `${config.containerSize}px`,
@@ -122,8 +104,8 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
         {Array.from({ length: 20 }, (_, i) => {
           const faceNumber = i + 1;
           const isTargetFace = faceNumber === value;
-          const faceOpacity = isTargetFace ? 1 : 0.8; // Darken non-target faces
-          const textOpacity = isTargetFace ? 1 : 0.4; // Slightly darken text on non-target faces
+          const faceOpacity = isTargetFace ? 1 : 0.85; // Darken non-target faces
+          const textOpacity = isTargetFace ? 1 : 0.85; // Slightly darken text on non-target faces
 
           return (
             <div
@@ -207,7 +189,7 @@ function getDieRotation(face: number): string {
 // Get the 3D transform for each face
 function getFaceTransform(
   face: number,
-  config: { faceWidth: number; faceHeight: number },
+  config: { faceWidth: number; faceHeight: number }
 ): React.CSSProperties {
   const sideAngle = 72; // 360/5
   const angle = 53;

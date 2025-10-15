@@ -44,7 +44,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const [spellDescription, setSpellDescription] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null,
+    null
   );
   const [isJoining, setIsJoining] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -58,11 +58,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
   );
   const wizard2 = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
+    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
@@ -75,7 +75,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   // Memoize expensive calculations
   const userWizard = useMemo(
     () => [wizard1, wizard2].find((wizard) => wizard?.owner === user?.id),
-    [wizard1, wizard2, user?.id],
+    [wizard1, wizard2, user?.id]
   );
 
   const userWizardId = userWizard?._id;
@@ -83,7 +83,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const currentRound = useMemo(
     () =>
       duel?.rounds?.find((round) => round.roundNumber === duel.currentRound),
-    [duel?.rounds, duel?.currentRound],
+    [duel?.rounds, duel?.currentRound]
   );
 
   const hasUserCastSpell = useMemo(
@@ -91,12 +91,12 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       currentRound?.spells && userWizardId
         ? currentRound.spells[userWizardId] !== undefined
         : false,
-    [currentRound?.spells, userWizardId],
+    [currentRound?.spells, userWizardId]
   );
 
   const isPlayerInDuel = useMemo(
     () => duel?.players.includes(user?.id || ""),
-    [duel?.players, user?.id],
+    [duel?.players, user?.id]
   );
 
   // Check for loading and error states
@@ -552,36 +552,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 onCastSpell={handleCastSpell}
                 isCasting={isCasting}
               />
-            )}
-
-          {/* Show waiting message when user has cast but others haven't */}
-          {duel.status === "IN_PROGRESS" &&
-            isPlayerInDuel &&
-            userWizard &&
-            userWizardId &&
-            hasUserCastSpell &&
-            duel.needActionsFrom.length > 0 && (
-              <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                    <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400 animate-pulse" />
-                    Waiting for Other Wizards
-                  </CardTitle>
-                  <CardDescription className="dark:text-muted-foreground/80">
-                    {userWizard.name} has cast their spell. Waiting for{" "}
-                    {duel.needActionsFrom.length} other wizard
-                    {duel.needActionsFrom.length !== 1 ? "s" : ""} to cast their
-                    spells.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground/80">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-orange-200/30 dark:border-orange-700/30 border-t-orange-500 dark:border-t-orange-400"></div>
-                    The round will continue once all wizards have cast their
-                    spells...
-                  </div>
-                </CardContent>
-              </Card>
             )}
 
           {/* Show introduction for in-progress or completed duels */}

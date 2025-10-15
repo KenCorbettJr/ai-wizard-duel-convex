@@ -12,7 +12,7 @@ import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { TimeAgo } from "@/components/TimeAgo";
 import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";
-import { Clock, Sparkles, RefreshCw } from "lucide-react";
+import { Clock, Sparkles, RefreshCw, Undo2 } from "lucide-react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 import { memo, useState, useEffect } from "react";
 
@@ -20,6 +20,44 @@ interface DuelRoundCardProps {
   round: Doc<"duelRounds">;
   duel: Doc<"duels">;
 }
+
+const UndoSpellButton = ({
+  duelId,
+  wizardId,
+}: {
+  duelId: Id<"duels">;
+  wizardId: Id<"wizards">;
+}) => {
+  const [isUndoing, setIsUndoing] = useState(false);
+  const undoSpell = useMutation(api.duels.undoSpell);
+
+  const handleUndoSpell = async () => {
+    setIsUndoing(true);
+    try {
+      await undoSpell({
+        duelId,
+        wizardId,
+      });
+    } catch (error) {
+      console.error("Failed to undo spell:", error);
+    } finally {
+      setIsUndoing(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleUndoSpell}
+      disabled={isUndoing}
+      className="border-orange-200 dark:border-orange-700/50 hover:bg-orange-50 dark:hover:bg-orange-900/30 text-orange-700 dark:text-orange-300"
+    >
+      <Undo2 className="h-3 w-3 mr-1" />
+      {isUndoing ? "Undoing..." : "Undo Spell"}
+    </Button>
+  );
+};
 
 export const DuelRoundCard = memo(function DuelRoundCard({
   round,
@@ -262,9 +300,14 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
         {round.status === "WAITING_FOR_SPELLS" && !isWaitingForMyAction() && (
           <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
-            <p className="text-blue-800 dark:text-blue-200 font-medium">
-              Actions Submitted. Awaiting other wizard&apos;s actions.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-blue-800 dark:text-blue-200 font-medium">
+                Actions Submitted. Awaiting other wizard&apos;s actions.
+              </p>
+              {userWizard && (
+                <UndoSpellButton duelId={duel._id} wizardId={userWizard._id} />
+              )}
+            </div>
           </div>
         )}
 

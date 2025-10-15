@@ -57,11 +57,6 @@ const sidebarGroups: SidebarGroup[] = [
         requiresAuth: true,
       },
       {
-        href: "/leaderboard",
-        label: "Leaderboard",
-        icon: Crown,
-      },
-      {
         href: "/credits",
         label: "Credits",
         icon: Coins,
@@ -74,9 +69,20 @@ const sidebarGroups: SidebarGroup[] = [
     title: "Wizards",
     items: [
       {
+        href: "/leaderboard",
+        label: "Leaderboard",
+        icon: Crown,
+      },
+      {
         href: "/wizards",
         label: "My Wizards",
         icon: Wand2,
+        requiresAuth: true,
+      },
+      {
+        href: "/wizards/create",
+        label: "Add Wizard",
+        icon: Plus,
         requiresAuth: true,
       },
     ],

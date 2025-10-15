@@ -37,7 +37,7 @@ export const getPlayerDuels = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED"),
+        v.literal("CANCELLED")
       ),
       currentRound: v.number(),
       createdAt: v.number(),
@@ -50,7 +50,9 @@ export const getPlayerDuels = query({
       shortcode: v.optional(v.string()),
       textOnlyMode: v.optional(v.boolean()),
       textOnlyReason: v.optional(v.string()),
-    }),
+      imageCreditConsumed: v.optional(v.boolean()),
+      imageCreditConsumedBy: v.optional(v.string()),
+    })
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -80,8 +82,7 @@ export const getPlayerCompletedDuels = query({
     return duels
       .filter(
         (duel) =>
-          duel.players.includes(identity.subject) &&
-          duel.status === "COMPLETED",
+          duel.players.includes(identity.subject) && duel.status === "COMPLETED"
       )
       .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
   },
@@ -125,7 +126,7 @@ export const getDuelInternal = internalQuery({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED"),
+        v.literal("CANCELLED")
       ),
       currentRound: v.number(),
       createdAt: v.number(),
@@ -138,6 +139,8 @@ export const getDuelInternal = internalQuery({
       shortcode: v.optional(v.string()),
       textOnlyMode: v.optional(v.boolean()),
       textOnlyReason: v.optional(v.string()),
+      imageCreditConsumed: v.optional(v.boolean()),
+      imageCreditConsumedBy: v.optional(v.string()),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -148,7 +151,7 @@ export const getDuelInternal = internalQuery({
             v.literal("SPELL_CASTING"),
             v.literal("COUNTER_SPELL"),
             v.literal("FINAL_ROUND"),
-            v.literal("CONCLUSION"),
+            v.literal("CONCLUSION")
           ),
           spells: v.optional(
             v.record(
@@ -157,8 +160,8 @@ export const getDuelInternal = internalQuery({
                 description: v.string(),
                 castBy: v.id("wizards"),
                 timestamp: v.number(),
-              }),
-            ),
+              })
+            )
           ),
           outcome: v.optional(
             v.object({
@@ -169,16 +172,16 @@ export const getDuelInternal = internalQuery({
               pointsAwarded: v.optional(v.record(v.string(), v.number())),
               healthChange: v.optional(v.record(v.string(), v.number())),
               luckRolls: v.optional(v.record(v.string(), v.number())),
-            }),
+            })
           ),
           status: v.union(
             v.literal("WAITING_FOR_SPELLS"),
             v.literal("PROCESSING"),
-            v.literal("COMPLETED"),
+            v.literal("COMPLETED")
           ),
-        }),
+        })
       ),
-    }),
+    })
   ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -205,7 +208,7 @@ export const getDuelByShortcode = query({
     const duel = await ctx.db
       .query("duels")
       .withIndex("by_shortcode", (q) =>
-        q.eq("shortcode", shortcode.toUpperCase()),
+        q.eq("shortcode", shortcode.toUpperCase())
       )
       .first();
 
@@ -268,7 +271,7 @@ export const createDuel = mutation({
   },
   handler: async (
     ctx,
-    { numberOfRounds, wizards, enableImageGeneration = true },
+    { numberOfRounds, wizards, enableImageGeneration = true }
   ) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -392,7 +395,7 @@ export const joinDuel = mutation({
           {
             duelId,
             userId: updatedPlayers[0], // Use first player for credit consumption
-          },
+          }
         );
       }
     }
@@ -490,7 +493,7 @@ export const castSpell = mutation({
 
     // Remove wizard from needActionsFrom
     const updatedNeedActions = duel.needActionsFrom.filter(
-      (id) => id !== wizardId,
+      (id) => id !== wizardId
     );
     await ctx.db.patch(duelId, {
       needActionsFrom: updatedNeedActions,
@@ -510,7 +513,7 @@ export const castSpell = mutation({
           {
             duelId,
             roundId: currentRound._id,
-          },
+          }
         );
       }
     }
@@ -518,6 +521,85 @@ export const castSpell = mutation({
     return currentRound._id;
   },
 });
+
+// Undo a spell cast in the current round (only while waiting for other wizards)
+export const undoSpell = mutation({
+  args: {
+    duelId: v.id("duels"),
+    wizardId: v.id("wizards"),
+  },
+  handler: async (ctx, { duelId, wizardId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Verify that the wizard belongs to the authenticated user
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard || wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to undo spells for this wizard");
+    }
+
+    const duel = await ctx.db.get(duelId);
+    if (!duel) {
+      throw new Error("Duel not found");
+    }
+
+    if (duel.status !== "IN_PROGRESS") {
+      throw new Error("Duel is not in progress");
+    }
+
+    // Get the current round
+    const currentRound = await ctx.db
+      .query("duelRounds")
+      .withIndex("by_duel", (q) => q.eq("duelId", duelId))
+      .filter((q) => q.eq(q.field("roundNumber"), duel.currentRound))
+      .first();
+
+    if (!currentRound) {
+      throw new Error("Current round not found");
+    }
+
+    if (currentRound.status !== "WAITING_FOR_SPELLS") {
+      throw new Error(
+        "Cannot undo spell - round is no longer accepting spells"
+      );
+    }
+
+    // Check if the wizard is participating in this duel
+    if (!duel.wizards.includes(wizardId)) {
+      throw new Error("Wizard is not participating in this duel");
+    }
+
+    // Check if the wizard has actually cast a spell this round
+    if (!currentRound.spells || !currentRound.spells[wizardId]) {
+      throw new Error(
+        "No spell to undo - wizard has not cast a spell this round"
+      );
+    }
+
+    // Remove the spell from the round
+    const currentSpells = currentRound.spells || {};
+    const updatedSpells = { ...currentSpells };
+    delete updatedSpells[wizardId];
+
+    await ctx.db.patch(currentRound._id, {
+      spells: Object.keys(updatedSpells).length > 0 ? updatedSpells : undefined,
+    });
+
+    // Add wizard back to needActionsFrom if not already there
+    const updatedNeedActions = duel.needActionsFrom.includes(wizardId)
+      ? duel.needActionsFrom
+      : [...duel.needActionsFrom, wizardId];
+
+    await ctx.db.patch(duelId, {
+      needActionsFrom: updatedNeedActions,
+    });
+
+    return currentRound._id;
+  },
+});
+
 // Complete a round with outcome
 export const completeRound = mutation({
   args: {
@@ -565,16 +647,16 @@ export const completeRound = mutation({
         ([wizardId, healthChange]) => {
           updatedHitPoints[wizardId] = Math.max(
             0,
-            (updatedHitPoints[wizardId] || 100) + (healthChange as number),
+            (updatedHitPoints[wizardId] || 100) + (healthChange as number)
           );
-        },
+        }
       );
     }
 
     // Check if duel should end
     const shouldEndDuel = checkDuelEndConditions(
       { ...duel, points: updatedPoints },
-      updatedHitPoints,
+      updatedHitPoints
     );
 
     if (shouldEndDuel.shouldEnd) {
@@ -632,7 +714,7 @@ function checkDuelEndConditions(
     currentRound: number;
     points: Record<string, number>;
   },
-  hitPoints: Record<string, number>,
+  hitPoints: Record<string, number>
 ): {
   shouldEnd: boolean;
   winners?: Id<"wizards">[];
@@ -640,7 +722,7 @@ function checkDuelEndConditions(
 } {
   // Check if any wizard has 0 hit points (death condition)
   const aliveWizards = duel.wizards.filter(
-    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0,
+    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0
   );
 
   if (aliveWizards.length <= 1) {
@@ -648,7 +730,7 @@ function checkDuelEndConditions(
       shouldEnd: true,
       winners: aliveWizards,
       losers: duel.wizards.filter(
-        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId),
+        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId)
       ),
     };
   }
@@ -668,11 +750,11 @@ function checkDuelEndConditions(
     wizardScores.sort(
       (
         a: { points: number; hitPoints: number },
-        b: { points: number; hitPoints: number },
+        b: { points: number; hitPoints: number }
       ) => {
         if (a.points !== b.points) return b.points - a.points;
         return b.hitPoints - a.hitPoints;
-      },
+      }
     );
 
     const highestScore = wizardScores[0];
@@ -680,7 +762,7 @@ function checkDuelEndConditions(
       .filter(
         (w: { points: number; hitPoints: number; wizardId: Id<"wizards"> }) =>
           w.points === highestScore.points &&
-          w.hitPoints === highestScore.hitPoints,
+          w.hitPoints === highestScore.hitPoints
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -690,7 +772,7 @@ function checkDuelEndConditions(
           !(
             w.points === highestScore.points &&
             w.hitPoints === highestScore.hitPoints
-          ),
+          )
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -836,7 +918,7 @@ export const getPlayerDuelStats = query({
           });
 
           const hasWinningWizard = duel.winners?.some((winnerId) =>
-            playerWizards.includes(winnerId),
+            playerWizards.includes(winnerId)
           );
 
           if (hasWinningWizard) {
@@ -931,7 +1013,7 @@ export const scheduleRoundIllustration = mutation({
       useGemini = false,
       userId,
       skipImageGeneration = false,
-    },
+    }
   ) => {
     // Schedule the illustration generation
     // Skip scheduling in test environment to avoid transaction escape errors
@@ -946,7 +1028,7 @@ export const scheduleRoundIllustration = mutation({
           useGemini,
           userId,
           skipImageGeneration,
-        },
+        }
       );
     }
   },
@@ -1016,8 +1098,8 @@ export const searchDuels = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED"),
-      ),
+        v.literal("CANCELLED")
+      )
     ),
     playerUserId: v.optional(v.string()),
     wizardId: v.optional(v.id("wizards")),
@@ -1038,7 +1120,7 @@ export const searchDuels = query({
       numberOfRounds,
       limit = 50,
       offset = 0,
-    },
+    }
   ) => {
     // Verify super admin access
     await verifySuperAdmin(ctx);
@@ -1099,8 +1181,8 @@ export const getDuelAnalytics = query({
         v.literal("24h"),
         v.literal("7d"),
         v.literal("30d"),
-        v.literal("all"),
-      ),
+        v.literal("all")
+      )
     ),
   },
   handler: async (ctx, { timeRange = "30d" }) => {
@@ -1139,10 +1221,10 @@ export const getDuelAnalytics = query({
       },
       roundTypeBreakdown: {
         fixedRounds: filteredDuels.filter(
-          (d) => typeof d.numberOfRounds === "number",
+          (d) => typeof d.numberOfRounds === "number"
         ).length,
         toTheDeath: filteredDuels.filter(
-          (d) => d.numberOfRounds === "TO_THE_DEATH",
+          (d) => d.numberOfRounds === "TO_THE_DEATH"
         ).length,
       },
       averageRoundsPerDuel: 0,
@@ -1153,12 +1235,12 @@ export const getDuelAnalytics = query({
 
     // Calculate average rounds for completed duels
     const completedDuels = filteredDuels.filter(
-      (d) => d.status === "COMPLETED",
+      (d) => d.status === "COMPLETED"
     );
     if (completedDuels.length > 0) {
       const totalRounds = completedDuels.reduce(
         (sum, duel) => sum + duel.currentRound,
-        0,
+        0
       );
       analytics.averageRoundsPerDuel =
         Math.round((totalRounds / completedDuels.length) * 10) / 10;
@@ -1184,12 +1266,12 @@ export const getDuelAnalytics = query({
       const dayStart = new Date(
         date.getFullYear(),
         date.getMonth(),
-        date.getDate(),
+        date.getDate()
       ).getTime();
       const dayEnd = dayStart + 24 * 60 * 60 * 1000;
 
       const duelsOnDay = filteredDuels.filter(
-        (d) => d.createdAt >= dayStart && d.createdAt < dayEnd,
+        (d) => d.createdAt >= dayStart && d.createdAt < dayEnd
       ).length;
       analytics.dailyActivity.push({
         date: date.toISOString().split("T")[0],
@@ -1212,8 +1294,8 @@ export const getActiveDuelMonitoring = query({
       .filter((q) =>
         q.or(
           q.eq(q.field("status"), "WAITING_FOR_PLAYERS"),
-          q.eq(q.field("status"), "IN_PROGRESS"),
-        ),
+          q.eq(q.field("status"), "IN_PROGRESS")
+        )
       )
       .collect();
 
@@ -1233,7 +1315,7 @@ export const getActiveDuelMonitoring = query({
             return wizard
               ? { id: wizardId, name: wizard.name, owner: wizard.owner }
               : null;
-          }),
+          })
         );
 
         return {
@@ -1249,12 +1331,12 @@ export const getActiveDuelMonitoring = query({
               ? Date.now() -
                 (Math.max(
                   ...Object.values(currentRound.spells || {}).map(
-                    (s) => s.timestamp,
-                  ),
+                    (s) => s.timestamp
+                  )
                 ) || duel.createdAt)
               : null,
         };
-      }),
+      })
     );
 
     return monitoringData.sort((a, b) => b.duel.createdAt - a.duel.createdAt);
@@ -1304,7 +1386,7 @@ export const getAllRecentDuels = query({
 
     // Filter to only show active (in progress) or completed duels
     const watchableDuels = duels.filter(
-      (duel) => duel.status === "IN_PROGRESS" || duel.status === "COMPLETED",
+      (duel) => duel.status === "IN_PROGRESS" || duel.status === "COMPLETED"
     );
 
     // Sort by creation date (newest first) and apply pagination
@@ -1350,7 +1432,7 @@ export const getMultiPlayerDuelStats = query({
 
             // Check if any of the player's wizards won
             const hasWinningWizard = duel.winners?.some((winnerId) =>
-              duel.wizards.includes(winnerId),
+              duel.wizards.includes(winnerId)
             );
 
             if (hasWinningWizard) {
