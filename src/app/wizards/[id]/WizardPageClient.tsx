@@ -153,28 +153,53 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
       </div>
 
       {/* Hero Image Section */}
-      <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] mb-8 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+      <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] mb-8 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
+        {/* Dynamic blurred background when wizard has an image */}
+        {(wizard.illustration || wizard.illustrationURL) && (
+          <div className="absolute inset-0 w-full h-full">
+            {wizard.illustration ? (
+              <ConvexImage
+                storageId={wizard.illustration}
+                alt={`${wizard.name} background`}
+                width={1200}
+                height={600}
+                className="w-full h-full object-cover blur-2xl scale-110 opacity-60"
+              />
+            ) : wizard.illustrationURL ? (
+              <Image
+                src={wizard.illustrationURL}
+                alt={`${wizard.name} background`}
+                fill
+                className="object-cover blur-2xl scale-110 opacity-60"
+                priority
+              />
+            ) : null}
+            {/* Dark overlay for better contrast */}
+            <div className="absolute inset-0 bg-black/30" />
+          </div>
+        )}
+
         {wizard.illustration || wizard.illustrationURL ? (
-          <div className="w-full h-full relative overflow-hidden">
+          <div className="w-full h-full relative overflow-hidden z-10">
             {wizard.illustration ? (
               <ConvexImage
                 storageId={wizard.illustration}
                 alt={wizard.name}
                 width={1200}
                 height={600}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain relative z-10"
               />
             ) : wizard.illustrationURL ? (
               <Image
                 src={wizard.illustrationURL}
                 alt={wizard.name}
                 fill
-                className="object-contain"
+                className="object-contain relative z-10"
                 priority
               />
             ) : null}
             {/* Subtle gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-20" />
           </div>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center">
@@ -183,15 +208,15 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
         )}
 
         {/* Wizard name overlay */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-30">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-2xl">
               {wizard.name}
             </h1>
             {wizard.isAIPowered && (
               <Badge
                 variant="secondary"
-                className="text-sm bg-white/90 text-gray-800"
+                className="text-sm bg-white/90 text-gray-800 shadow-lg"
               >
                 🤖 AI Powered
               </Badge>

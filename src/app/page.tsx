@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, PricingTable } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -291,111 +291,31 @@ function LandingPage() {
               magical potential.
             </p>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free Tier */}
-            <Card className="relative">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Free Wizard</CardTitle>
-                <div className="text-3xl font-bold">$0</div>
-                <p className="text-muted-foreground">
-                  Perfect for getting started
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>10 free image credits</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Create up to 3 wizards</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Unlimited duels</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Earn credits by watching ads</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    <span>Access to all game features</span>
-                  </div>
-                </div>
-                <SignedOut>
-                  <SignInButton>
-                    <Button className="w-full" size="lg">
-                      Start Free
-                    </Button>
-                  </SignInButton>
-                </SignedOut>
-                <SignedIn>
-                  <Link href="/dashboard">
-                    <Button className="w-full" size="lg">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
-                </SignedIn>
-              </CardContent>
-            </Card>
-
-            {/* Premium Tier */}
-            <Card className="relative border-purple-200 dark:border-purple-800 bg-gradient-to-b from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                  Most Popular
-                </div>
-              </div>
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl flex items-center justify-center gap-2">
-                  <Crown className="w-6 h-6 text-purple-600" />
-                  Premium Wizard
-                </CardTitle>
-                <div className="text-3xl font-bold">$9.99</div>
-                <p className="text-muted-foreground">per month</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span className="font-medium">
-                      Unlimited image generation
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span className="font-medium">Unlimited wizards</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span className="font-medium">Priority AI processing</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span className="font-medium">Advanced customization</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span className="font-medium">Ad-free experience</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    <span className="font-medium">Premium AI models</span>
-                  </div>
-                </div>
-                <Link href="/credits">
-                  <Button
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                    size="lg"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Premium
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+          <div className="max-w-4xl mx-auto">
+            {/* 
+              Clerk PricingTable component - requires pricing plans to be configured in Clerk Dashboard
+              Go to: Clerk Dashboard > Billing > Pricing Plans to set up your plans
+              Plans should include:
+              1. Free Wizard - $0/month with basic features
+              2. Premium Wizard - $9.99/month with unlimited features
+            */}
+            <PricingTable
+              appearance={{
+                elements: {
+                  pricingTable: "bg-transparent",
+                  pricingTableCard:
+                    "border border-border bg-card text-card-foreground shadow-sm rounded-lg",
+                  pricingTableCardHeader: "text-center p-6",
+                  pricingTableCardTitle: "text-2xl font-bold",
+                  pricingTableCardPrice: "text-3xl font-bold mt-2",
+                  pricingTableCardDescription: "text-muted-foreground mt-1",
+                  pricingTableCardFeatures: "space-y-3 p-6",
+                  pricingTableCardFeature: "flex items-center gap-3",
+                  pricingTableCardButton:
+                    "w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200",
+                },
+              }}
+            />
           </div>
         </div>
       </section>

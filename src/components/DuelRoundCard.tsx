@@ -231,14 +231,6 @@ export const DuelRoundCard = memo(function DuelRoundCard({
           {wizard?.name || "Loading..."}
           {winner && <Crown className="h-4 w-4" />}
         </span>
-        {wizard?.ownerUserId && (
-          <UserIdDisplay
-            userId={wizard.ownerUserId}
-            displayName={wizard.ownerDisplayName}
-            size="sm"
-            showAvatar={false}
-          />
-        )}
       </div>
     );
   };

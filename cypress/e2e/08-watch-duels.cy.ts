@@ -10,17 +10,8 @@ describe("Watch Duels Page", () => {
     // Check main heading and description
     cy.contains("Watch Duels").should("be.visible");
     cy.contains(
-      "Witness epic magical battles from wizards across the platform",
+      "Witness epic magical battles from wizards across the platform"
     ).should("be.visible");
-  });
-
-  it("should display stats overview cards", () => {
-    cy.visit("/duels/watch");
-
-    // Check for stats cards
-    cy.contains("Watchable Duels").should("be.visible");
-    cy.contains("Active Duels").should("be.visible");
-    cy.contains("Completed Duels").should("be.visible");
   });
 
   it("should display recent duels section", () => {
@@ -37,7 +28,7 @@ describe("Watch Duels Page", () => {
       } else {
         // If there are duels, the loading state should eventually resolve
         cy.get('[data-testid="duel-list-item"]', { timeout: 10000 }).should(
-          "exist",
+          "exist"
         );
       }
     });
@@ -71,7 +62,7 @@ describe("Watch Duels Page", () => {
     // Wait for content to load
     cy.get("body", { timeout: 10000 }).should(
       "not.contain",
-      "Loading duels...",
+      "Loading duels..."
     );
   });
 
@@ -81,7 +72,6 @@ describe("Watch Duels Page", () => {
 
     // Check that main elements are visible on mobile
     cy.contains("Watch Duels").should("be.visible");
-    cy.contains("Total Duels").should("be.visible");
     cy.contains("Recent Duels").should("be.visible");
   });
 });

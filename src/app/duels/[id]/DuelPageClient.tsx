@@ -57,11 +57,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
   );
   const wizard2 = useQuery(
-    api.wizards.getWizard,
+    api.wizards.getWizardWithOwner,
     duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
   );
 
@@ -363,6 +363,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     hitPoints={duel.hitPoints[duel.wizards[0]] || 100}
                     isUserWizard={wizard1.owner === user?.id}
                     isWinner={duel.winners?.includes(duel.wizards[0]) || false}
+                    showOwner={true}
                   />
                 )}
 
@@ -380,6 +381,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     hitPoints={duel.hitPoints[duel.wizards[1]] || 100}
                     isUserWizard={wizard2.owner === user?.id}
                     isWinner={duel.winners?.includes(duel.wizards[1]) || false}
+                    showOwner={true}
                   />
                 )}
               </div>

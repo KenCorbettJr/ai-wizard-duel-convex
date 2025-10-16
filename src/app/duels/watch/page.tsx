@@ -6,7 +6,7 @@ import { api } from "../../../../convex/_generated/api";
 import { DuelListItem } from "@/components/DuelListItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Clock, Trophy, Users } from "lucide-react";
+import { Eye } from "lucide-react";
 
 export default function WatchDuelsPage() {
   const [offset, setOffset] = useState(0);
@@ -40,53 +40,6 @@ export default function WatchDuelsPage() {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <Trophy className="h-8 w-8 text-yellow-500" />
-                <div>
-                  <p className="text-2xl font-bold">{total}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Watchable Duels
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <Clock className="h-8 w-8 text-blue-500" />
-                <div>
-                  <p className="text-2xl font-bold">
-                    {duels.filter((d) => d.status === "IN_PROGRESS").length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Active Duels</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <Users className="h-8 w-8 text-green-500" />
-                <div>
-                  <p className="text-2xl font-bold">
-                    {duels.filter((d) => d.status === "COMPLETED").length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Completed Duels
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Duels List */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-6">
@@ -110,7 +63,7 @@ export default function WatchDuelsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {duels.map((duel) => (
                 <DuelListItem key={duel._id} duel={duel} variant="card" />
               ))}
