@@ -6,26 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageCreditDisplay } from "@/components/ImageCreditDisplay";
 import { CreditUsageHistory } from "@/components/CreditUsageHistory";
-import { CreditExhaustionNotification } from "@/components/CreditExhaustionNotification";
-import { CreditCelebration } from "@/components/CreditCelebration";
-import { Coins, Crown, Gift, AlertTriangle } from "lucide-react";
+import { Coins, Crown } from "lucide-react";
 
 export function CreditsPageClient() {
   const { user } = useUser();
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [showExhaustionModal, setShowExhaustionModal] = useState(false);
 
   const handleUpgrade = () => {
-    // This would typically navigate to a subscription page
-    console.log("Navigate to upgrade page");
-  };
-
-  const handleTestCelebration = () => {
-    setShowCelebration(true);
-  };
-
-  const handleTestExhaustionModal = () => {
-    setShowExhaustionModal(true);
+    // Navigate to Clerk checkout for the specific plan
+    const checkoutUrl = `https://checkout.clerk.com/plan/cplan_30kNnUiaUJomHTdauIDaRMldR5F`;
+    window.open(checkoutUrl, "_blank");
   };
 
   if (!user) {
@@ -64,76 +53,6 @@ export function CreditsPageClient() {
           />
           <CreditUsageHistory />
         </div>
-
-        {/* Credit Exhaustion Notification Examples */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold flex items-center gap-2">
-            <AlertTriangle className="h-6 w-6 text-orange-500" />
-            Notification Examples
-          </h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Inline Notification */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Inline Notification</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CreditExhaustionNotification
-                  variant="inline"
-                  onUpgradeClick={handleUpgrade}
-                  showDismiss={true}
-                  onDismiss={() => console.log("Dismissed")}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Banner Notification */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Banner Notification</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CreditExhaustionNotification
-                  variant="banner"
-                  onUpgradeClick={handleUpgrade}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Demo Controls */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5 text-purple-500" />
-              Demo Controls
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Test the different UI components and animations:
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={handleTestCelebration} variant="outline">
-                <Gift className="h-4 w-4 mr-2" />
-                Test Credit Celebration
-              </Button>
-              <Button onClick={handleTestExhaustionModal} variant="outline">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Test Exhaustion Modal
-              </Button>
-              <Button
-                onClick={handleUpgrade}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              >
-                <Crown className="h-4 w-4 mr-2" />
-                Upgrade to Premium
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Premium Benefits */}
         <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200 dark:border-purple-800">
@@ -188,23 +107,6 @@ export function CreditsPageClient() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Credit Celebration Modal */}
-      <CreditCelebration
-        show={showCelebration}
-        creditsEarned={1}
-        onComplete={() => setShowCelebration(false)}
-      />
-
-      {/* Credit Exhaustion Modal */}
-      {showExhaustionModal && (
-        <CreditExhaustionNotification
-          variant="modal"
-          onUpgradeClick={handleUpgrade}
-          onDismiss={() => setShowExhaustionModal(false)}
-          showDismiss={true}
-        />
-      )}
     </div>
   );
 }

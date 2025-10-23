@@ -12,7 +12,7 @@ interface MagicVortexProps {
   children: React.ReactNode;
 }
 
-const MagicVortex = ({
+export function MagicVortex({
   baseHue = 200,
   baseSpeed = 0.2,
   rangeSpeed = 1.5,
@@ -21,11 +21,10 @@ const MagicVortex = ({
   backgroundColor = "#000000",
   className = "",
   children,
-}: MagicVortexProps) => {
+}: MagicVortexProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(100);
-  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const particleCount =
@@ -63,7 +62,9 @@ const MagicVortex = ({
     };
 
     const initParticle = (i: number): void => {
-      if (!canvasRef.current) return;
+      if (!canvasRef.current) {
+        return;
+      }
 
       const x = rand(canvasRef.current.width);
       const y = center[1] + randRange(getRangeY());
@@ -96,12 +97,16 @@ const MagicVortex = ({
       ttl: number,
       radius: number,
       hue: number,
-      ctx: CanvasRenderingContext2D,
+      ctx: CanvasRenderingContext2D
     ): void => {
+      const alpha = fadeInOut(life, ttl);
+      // Make particles brighter and more visible
+      const strokeStyle = `hsla(${hue},100%,70%,${alpha})`;
+
       ctx.save();
       ctx.lineCap = "round";
-      ctx.lineWidth = radius;
-      ctx.strokeStyle = `hsla(${hue},100%,60%,${fadeInOut(life, ttl)})`;
+      ctx.lineWidth = Math.max(radius, 2); // Ensure minimum visibility
+      ctx.strokeStyle = strokeStyle;
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x2, y2);
@@ -113,7 +118,7 @@ const MagicVortex = ({
     const checkBounds = (
       x: number,
       y: number,
-      canvas: HTMLCanvasElement,
+      canvas: HTMLCanvasElement
     ): boolean => {
       return x > canvas.width || x < 0 || y > canvas.height || y < 0;
     };
@@ -165,16 +170,16 @@ const MagicVortex = ({
 
     const renderGlow = (
       canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D,
-    ): void => {
+      ctx: CanvasRenderingContext2D
+    ) => {
       ctx.save();
-      ctx.filter = "blur(6px) brightness(200%)";
+      ctx.filter = "blur(3px) brightness(200%)";
       ctx.globalCompositeOperation = "lighter";
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
 
       ctx.save();
-      ctx.filter = "blur(3px) brightness(200%)";
+      ctx.filter = "blur(6px) brightness(200%)";
       ctx.globalCompositeOperation = "lighter";
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
@@ -182,8 +187,8 @@ const MagicVortex = ({
 
     const renderToScreen = (
       canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D,
-    ): void => {
+      ctx: CanvasRenderingContext2D
+    ) => {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
       ctx.drawImage(canvas, 0, 0);
@@ -192,34 +197,25 @@ const MagicVortex = ({
 
     const resize = (canvas: HTMLCanvasElement): void => {
       const { innerWidth, innerHeight } = window;
-
       canvas.width = innerWidth;
       canvas.height = innerHeight;
-
       center[0] = 0.5 * canvas.width;
       center[1] = 0.5 * canvas.height;
     };
 
     const draw = (
       canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D,
+      ctx: CanvasRenderingContext2D
     ): void => {
       tick++;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       drawParticles(ctx);
       renderGlow(canvas, ctx);
       renderToScreen(canvas, ctx);
 
-      if (typeof window !== "undefined" && animationFrameRef.current !== null) {
-        animationFrameRef.current = window.requestAnimationFrame(() =>
-          draw(canvas, ctx),
-        );
-      }
+      window.requestAnimationFrame(() => draw(canvas, ctx));
     };
 
     const setup = (): void => {
@@ -243,9 +239,9 @@ const MagicVortex = ({
       }
     };
 
-    // Update container height
     if (containerRef.current) {
-      setContainerHeight(containerRef.current.clientHeight);
+      const newHeight = containerRef.current.clientHeight;
+      setContainerHeight(newHeight);
     }
 
     setup();
@@ -253,23 +249,19 @@ const MagicVortex = ({
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
     };
   }, [
-    baseHue,
-    baseSpeed,
-    rangeSpeed,
-    baseRadius,
-    rangeRadius,
     backgroundColor,
+    baseHue,
+    baseRadius,
+    baseSpeed,
     containerHeight,
+    rangeRadius,
+    rangeSpeed,
   ]);
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`relative w-full h-screen ${className}`}>
       <div
         ref={containerRef}
         className="absolute inset-0 z-0 bg-transparent flex items-center justify-center"
@@ -279,6 +271,4 @@ const MagicVortex = ({
       <div className="relative z-10">{children}</div>
     </div>
   );
-};
-
-export default MagicVortex;
+}

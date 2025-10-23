@@ -40,7 +40,7 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),
   wizards: defineTable({
-    owner: v.string(), // User ID from Clerk
+    owner: v.string(), // User ID from Clerk or "campaign" for AI opponents
     name: v.string(),
     description: v.string(),
     illustrationURL: v.optional(v.string()),
@@ -51,7 +51,23 @@ export default defineSchema({
     isAIPowered: v.optional(v.boolean()),
     wins: v.optional(v.number()),
     losses: v.optional(v.number()),
-  }).index("by_owner", ["owner"]),
+    // Campaign-specific fields (only for AI opponents)
+    isCampaignOpponent: v.optional(v.boolean()),
+    opponentNumber: v.optional(v.number()), // 1-10 for campaign opponents
+    personalityTraits: v.optional(v.array(v.string())),
+    spellStyle: v.optional(v.string()),
+    difficulty: v.optional(
+      v.union(
+        v.literal("BEGINNER"),
+        v.literal("INTERMEDIATE"),
+        v.literal("ADVANCED")
+      )
+    ),
+    luckModifier: v.optional(v.number()),
+    illustrationPrompt: v.optional(v.string()),
+  })
+    .index("by_owner", ["owner"])
+    .index("by_campaign_opponent", ["isCampaignOpponent", "opponentNumber"]),
   duels: defineTable({
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
@@ -64,6 +80,7 @@ export default defineSchema({
     ),
     currentRound: v.number(),
     createdAt: v.number(),
+    completedAt: v.optional(v.number()), // When the duel was completed
     points: v.record(v.string(), v.number()), // Dictionary of wizard ID to points
     hitPoints: v.record(v.string(), v.number()), // Dictionary of wizard ID to hit points
     needActionsFrom: v.array(v.id("wizards")),
@@ -75,10 +92,12 @@ export default defineSchema({
     textOnlyReason: v.optional(v.string()), // Reason for text-only mode (insufficient_credits, image_generation_failed, etc.)
     imageCreditConsumed: v.optional(v.boolean()), // Whether an image credit has been consumed for this duel
     imageCreditConsumedBy: v.optional(v.string()), // User ID who had the credit consumed for this duel
+    isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels
   })
     .index("by_status", ["status"])
     .index("by_player", ["players"])
-    .index("by_shortcode", ["shortcode"]),
+    .index("by_shortcode", ["shortcode"])
+    .index("by_completed_at", ["completedAt"]),
   duelRounds: defineTable({
     duelId: v.id("duels"),
     roundNumber: v.number(),
@@ -249,4 +268,35 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_stripe_payment", ["stripePaymentIntentId"]),
+
+  // Individual wizard campaign progress
+  wizardCampaignProgress: defineTable({
+    wizardId: v.id("wizards"),
+    userId: v.string(),
+    currentOpponent: v.number(), // Next opponent to face (1-10, or 11 if completed)
+    defeatedOpponents: v.array(v.number()), // Array of defeated opponent numbers
+    hasCompletionRelic: v.boolean(), // Whether wizard earned the +1 luck relic
+    createdAt: v.number(),
+    lastBattleAt: v.optional(v.number()),
+  })
+    .index("by_wizard", ["wizardId"])
+    .index("by_user", ["userId"]),
+
+  // Campaign battle records (separate from multiplayer duels)
+  campaignBattles: defineTable({
+    wizardId: v.id("wizards"),
+    userId: v.string(),
+    opponentNumber: v.number(),
+    duelId: v.id("duels"), // Links to duel system but marked as campaign
+    status: v.union(
+      v.literal("IN_PROGRESS"),
+      v.literal("WON"),
+      v.literal("LOST")
+    ),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_wizard", ["wizardId"])
+    .index("by_duel", ["duelId"])
+    .index("by_user_opponent", ["userId", "opponentNumber"]),
 });

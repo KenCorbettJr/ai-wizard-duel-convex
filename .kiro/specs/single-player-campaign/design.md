@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Single Player Campaign Mode extends the existing wizard dueling system to provide structured single-player adventures. The design leverages the current duel mechanics, wizard system, and AI-powered opponents while introducing new concepts like campaign progression, stages, and experience points. The campaign mode will be implemented as a new section of the application that reuses existing battle logic but provides a curated, progressive experience against AI opponents.
+The Single Player Campaign Mode provides a linear progression system where each player wizard faces 10 unique AI-powered wizard opponents in sequence. Each wizard maintains their own individual campaign progress, and upon defeating all 10 opponents, the wizard receives a permanent +1 luck boost relic. The design leverages existing duel mechanics while introducing campaign-specific progression tracking, AI opponent definitions, and relic rewards. Campaign battles are isolated from multiplayer statistics and leaderboards.
 
 ## Architecture
 
@@ -20,12 +20,13 @@ The campaign system follows the existing application architecture patterns:
 
 ```
 Campaign System
-├── Campaign Map (Visual progression interface)
-├── Stage Selection (Choose difficulty and opponents)
-├── AI Opponent Generation (Dynamic AI wizard creation)
-├── Campaign Battle Engine (Reuses existing duel system)
-├── Progression System (Experience, unlocks, achievements)
-└── Campaign Statistics (Progress tracking and analytics)
+├── Linear Progression Interface (10 AI wizard opponents)
+├── Wizard Selection (Choose which wizard to progress)
+├── Predefined AI Opponents (10 unique AI wizards with increasing difficulty)
+├── Campaign Battle Engine (Isolated from multiplayer statistics)
+├── Individual Wizard Progress (Per-wizard campaign tracking)
+├── Relic Reward System (Permanent luck boost for completion)
+└── Campaign Statistics (Progress tracking per wizard)
 ```
 
 ### Integration with Existing Systems
@@ -44,112 +45,117 @@ The campaign mode integrates with existing systems:
 ```typescript
 // New tables to add to convex/schema.ts
 
-campaigns: defineTable({
-  userId: v.string(), // Owner of the campaign progress
-  currentStage: v.number(), // Current unlocked stage
-  completedStages: v.array(v.number()), // Array of completed stage numbers
-  totalExperience: v.number(), // Total XP earned across all wizards
-  createdAt: v.number(),
-  lastPlayedAt: v.number(),
-}).index("by_user", ["userId"]),
+// Predefined AI opponents (seeded data)
+campaignOpponents: defineTable({
+  opponentNumber: v.number(), // 1-10 sequence position
+  name: v.string(), // Unique AI wizard name
+  description: v.string(), // AI wizard background story
+  personalityTraits: v.array(v.string()), // AI behavior characteristics
+  spellStyle: v.string(), // AI magical specialization
+  difficulty: v.union(v.literal("BEGINNER"), v.literal("INTERMEDIATE"), v.literal("ADVANCED")),
+  luckModifier: v.number(), // -2 for beginner, 0 for intermediate, +2 for advanced
+  illustrationPrompt: v.string(), // AI image generation prompt
+}).index("by_opponent_number", ["opponentNumber"]),
 
-campaignStages: defineTable({
-  stageNumber: v.number(), // Sequential stage identifier
-  name: v.string(), // Display name for the stage
-  description: v.string(), // Stage description
-  difficulty: v.union(v.literal("EASY"), v.literal("MEDIUM"), v.literal("HARD"), v.literal("EXPERT")),
-  requiredStage: v.optional(v.number()), // Previous stage required to unlock
-  experienceReward: v.number(), // XP awarded for completion
-  specialConditions: v.optional(v.object({
-    modifiedHealth: v.optional(v.number()),
-    roundLimit: v.optional(v.number()),
-    environmentalEffect: v.optional(v.string()),
-  })),
-  aiOpponentTemplate: v.object({
-    namePattern: v.string(), // Template for generating AI names
-    descriptionPattern: v.string(), // Template for AI descriptions
-    personalityTraits: v.array(v.string()), // AI behavior characteristics
-    spellStyle: v.string(), // AI spell casting style
-  }),
-}).index("by_stage_number", ["stageNumber"]),
-
-campaignBattles: defineTable({
-  userId: v.string(),
-  campaignId: v.id("campaigns"),
-  stageNumber: v.number(),
-  duelId: v.id("duels"), // Links to existing duel system
-  playerWizardId: v.id("wizards"),
-  aiOpponentId: v.id("wizards"), // AI-generated opponent
-  status: v.union(v.literal("IN_PROGRESS"), v.literal("WON"), v.literal("LOST")),
-  experienceEarned: v.number(),
-  completedAt: v.optional(v.number()),
-  createdAt: v.number(),
-}).index("by_user_campaign", ["userId", "campaignId"])
-  .index("by_duel", ["duelId"]),
-
-wizardExperience: defineTable({
+// Individual wizard campaign progress
+wizardCampaignProgress: defineTable({
   wizardId: v.id("wizards"),
   userId: v.string(),
-  totalExperience: v.number(),
-  campaignWins: v.number(),
-  campaignLosses: v.number(),
-  lastCampaignBattle: v.optional(v.number()),
+  currentOpponent: v.number(), // Next opponent to face (1-10, or 11 if completed)
+  defeatedOpponents: v.array(v.number()), // Array of defeated opponent numbers
+  hasCompletionRelic: v.boolean(), // Whether wizard earned the +1 luck relic
+  createdAt: v.number(),
+  lastBattleAt: v.optional(v.number()),
 }).index("by_wizard", ["wizardId"])
   .index("by_user", ["userId"]),
+
+// Campaign battle records (separate from multiplayer duels)
+campaignBattles: defineTable({
+  wizardId: v.id("wizards"),
+  userId: v.string(),
+  opponentNumber: v.number(),
+  duelId: v.id("duels"), // Links to duel system but marked as campaign
+  status: v.union(v.literal("IN_PROGRESS"), v.literal("WON"), v.literal("LOST")),
+  completedAt: v.optional(v.number()),
+  createdAt: v.number(),
+}).index("by_wizard", ["wizardId"])
+  .index("by_duel", ["duelId"])
+  .index("by_user_opponent", ["userId", "opponentNumber"]),
+
+// Extend existing duels table with campaign flag
+// Add to existing duels schema:
+// isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels
 ```
 
 ### Frontend Components
 
-#### Campaign Map Component
+#### Campaign Progression Component
 
 ```typescript
-// src/components/CampaignMap.tsx
-interface CampaignMapProps {
-  userCampaign: Campaign;
-  availableStages: CampaignStage[];
-  onStageSelect: (stage: CampaignStage) => void;
+// src/components/CampaignProgression.tsx
+interface CampaignProgressionProps {
+  campaignOpponents: CampaignOpponent[];
+  userWizards: WizardWithProgress[];
+  onOpponentSelect: (opponentNumber: number) => void;
 }
 
 // Features:
-// - Visual representation of campaign progression
-// - Locked/unlocked stage indicators
-// - Stage difficulty and reward display
-// - Progress percentage visualization
+// - Linear display of 10 AI opponents
+// - Per-wizard progress indicators
+// - Opponent difficulty and characteristics
+// - Relic completion badges
 ```
 
-#### Stage Selection Component
+#### Wizard Selection Component
 
 ```typescript
-// src/components/StageSelection.tsx
-interface StageSelectionProps {
-  stage: CampaignStage;
-  userWizards: Wizard[];
+// src/components/CampaignWizardSelection.tsx
+interface CampaignWizardSelectionProps {
+  wizards: WizardWithProgress[];
+  selectedOpponent: CampaignOpponent;
   onWizardSelect: (wizardId: Id<"wizards">) => void;
   onStartBattle: () => void;
 }
 
 // Features:
-// - Stage information display
-// - Wizard selection interface
-// - Special conditions explanation
-// - Battle initiation
+// - Wizard list with campaign progress
+// - Next available opponent display
+// - Relic status indicators
+// - Battle initiation for selected wizard
 ```
 
-#### AI Opponent Generator
+#### AI Opponent Display
 
 ```typescript
-// src/components/AIOpponentCard.tsx
-interface AIOpponentCardProps {
-  opponent: Wizard;
-  stage: CampaignStage;
-  isRevealed: boolean;
+// src/components/CampaignOpponentCard.tsx
+interface CampaignOpponentCardProps {
+  opponent: CampaignOpponent;
+  isUnlocked: boolean;
+  isDefeated: boolean;
 }
 
 // Features:
-// - Dynamic AI opponent display
+// - Predefined AI opponent information
+// - Difficulty and luck modifier display
 // - Personality trait visualization
-// - Difficulty indicator
-// - Mysterious reveal animation
+// - Lock/unlock status indicators
+```
+
+#### Relic Display Component
+
+```typescript
+// src/components/CampaignRelicBadge.tsx
+interface CampaignRelicBadgeProps {
+  wizard: Wizard;
+  hasRelic: boolean;
+  effectiveLuckScore: number;
+}
+
+// Features:
+// - Relic completion indicator
+// - Luck boost visualization
+// - Special completion badge
+// - Tooltip with relic benefits
 ```
 
 #### Campaign Statistics Dashboard
@@ -157,31 +163,32 @@ interface AIOpponentCardProps {
 ```typescript
 // src/components/CampaignStats.tsx
 interface CampaignStatsProps {
-  userCampaign: Campaign;
-  wizardExperience: WizardExperience[];
+  wizardProgress: WizardCampaignProgress[];
+  campaignOpponents: CampaignOpponent[];
   recentBattles: CampaignBattle[];
 }
 
 // Features:
-// - Overall progress tracking
-// - Wizard experience display
-// - Achievement showcase
-// - Battle history
+// - Per-wizard progress tracking
+// - Completion statistics
+// - Relic achievement showcase
+// - Battle history per wizard
 ```
 
 ### Page Structure
 
 ```
 src/app/campaign/
-├── page.tsx                    // Campaign overview and map
+├── page.tsx                    // Campaign overview with 10 AI opponents
 ├── layout.tsx                  // Campaign-specific layout
-├── [stageId]/
-│   ├── page.tsx               // Stage selection and preparation
-│   └── battle/
-│       └── [battleId]/
-│           └── page.tsx       // Campaign battle (reuses duel UI)
+├── wizard-selection/
+│   └── [opponentNumber]/
+│       └── page.tsx           // Select wizard for specific opponent
+├── battle/
+│   └── [battleId]/
+│       └── page.tsx           // Campaign battle (reuses duel UI with campaign flag)
 └── stats/
-    └── page.tsx               // Campaign statistics and achievements
+    └── page.tsx               // Campaign statistics per wizard
 ```
 
 ### API Layer (Convex Functions)
@@ -191,63 +198,68 @@ src/app/campaign/
 ```typescript
 // convex/campaigns.ts
 
-// Initialize user campaign progress
-export const initializeCampaign = mutation({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
-    // Create initial campaign record
-    // Unlock first stage
-    // Return campaign data
+// Get all campaign opponents (seeded data)
+export const getCampaignOpponents = query({
+  args: {},
+  handler: async (ctx) => {
+    // Return all 10 predefined AI opponents in order
   },
 });
 
-// Get user's campaign progress
-export const getUserCampaign = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
-    // Return campaign progress, unlocked stages, statistics
+// Get wizard's campaign progress
+export const getWizardCampaignProgress = query({
+  args: { wizardId: v.id("wizards") },
+  handler: async (ctx, { wizardId }) => {
+    // Return wizard's current opponent, defeated opponents, relic status
   },
 });
 
-// Complete a campaign stage
-export const completeStage = mutation({
+// Get all user's wizard campaign progress
+export const getUserCampaignProgress = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    // Return campaign progress for all user's wizards
+  },
+});
+
+// Complete a campaign opponent
+export const defeatOpponent = mutation({
   args: {
-    userId: v.string(),
-    stageNumber: v.number(),
-    experienceEarned: v.number(),
+    wizardId: v.id("wizards"),
+    opponentNumber: v.number(),
   },
   handler: async (ctx, args) => {
-    // Update campaign progress
-    // Unlock next stage
-    // Award experience points
-    // Update wizard statistics
+    // Update wizard's campaign progress
+    // Add to defeated opponents
+    // Advance to next opponent or award relic if completed
+    // Update wizard's luck if relic earned
   },
 });
 ```
 
-#### AI Opponent Generation
+#### AI Opponent Management
 
 ```typescript
-// convex/aiOpponents.ts
+// convex/campaignOpponents.ts
 
-// Generate AI opponent for a stage
-export const generateAIOpponent = mutation({
+// Create AI wizard instance for battle
+export const createCampaignAIWizard = mutation({
   args: {
-    stageNumber: v.number(),
-    userId: v.string(),
+    opponentNumber: v.number(),
+    battleId: v.string(), // Unique identifier for this battle instance
   },
-  handler: async (ctx, { stageNumber, userId }) => {
-    // Get stage template
-    // Generate unique AI wizard
-    // Create wizard record with isAIPowered: true
-    // Return AI opponent data
+  handler: async (ctx, { opponentNumber, battleId }) => {
+    // Get predefined opponent data
+    // Create temporary AI wizard instance for this battle
+    // Apply luck modifiers based on difficulty
+    // Return AI wizard with campaign-specific attributes
   },
 });
 
 // Get AI spell strategy for campaign battles
-export const getAISpellStrategy = query({
+export const getCampaignAISpellStrategy = query({
   args: {
-    aiWizardId: v.id("wizards"),
+    opponentNumber: v.number(),
     roundNumber: v.number(),
     battleContext: v.object({
       playerSpells: v.array(v.string()),
@@ -256,7 +268,9 @@ export const getAISpellStrategy = query({
     }),
   },
   handler: async (ctx, args) => {
-    // Generate contextual AI spell based on personality and situation
+    // Get opponent personality and spell style
+    // Generate contextual AI spell based on difficulty level
+    // Apply luck modifiers to spell effectiveness
     // Return spell description and strategy
   },
 });
@@ -270,83 +284,150 @@ export const getAISpellStrategy = query({
 // Start a campaign battle
 export const startCampaignBattle = mutation({
   args: {
-    userId: v.string(),
-    stageNumber: v.number(),
-    playerWizardId: v.id("wizards"),
+    wizardId: v.id("wizards"),
+    opponentNumber: v.number(),
   },
   handler: async (ctx, args) => {
-    // Generate AI opponent
-    // Create duel using existing system
+    // Validate wizard can face this opponent
+    // Create AI wizard instance for battle
+    // Create duel with isCampaignBattle: true flag
     // Create campaign battle record
-    // Link battle to campaign progress
+    // Return battle ID for navigation
   },
 });
 
 // Process campaign battle completion
 export const completeCampaignBattle = mutation({
   args: {
-    battleId: v.id("campaignBattles"),
+    campaignBattleId: v.id("campaignBattles"),
     won: v.boolean(),
   },
-  handler: async (ctx, { battleId, won }) => {
-    // Update battle status
-    // Award experience if won
-    // Update campaign progress
-    // Update wizard statistics
+  handler: async (ctx, { campaignBattleId, won }) => {
+    // Update campaign battle status
+    // If won, update wizard's campaign progress
+    // Check if wizard completed all 10 opponents
+    // Award relic and luck boost if campaign completed
+    // Do NOT update multiplayer statistics
+  },
+});
+
+// Check if wizard earned campaign relic
+export const checkCampaignCompletion = mutation({
+  args: { wizardId: v.id("wizards") },
+  handler: async (ctx, { wizardId }) => {
+    // Check if wizard defeated all 10 opponents
+    // Award +1 luck relic if completed
+    // Update wizard's effective luck score (max 20)
+    // Mark wizard as having completion relic
   },
 });
 ```
 
 ## Data Models
 
-### Campaign Progression Model
+### Campaign Opponent Model
 
 ```typescript
-interface Campaign {
-  _id: Id<"campaigns">;
+interface CampaignOpponent {
+  _id: Id<"campaignOpponents">;
+  opponentNumber: number; // 1-10
+  name: string; // e.g., "Zephyr the Storm Caller"
+  description: string; // Background story and personality
+  personalityTraits: string[]; // ["aggressive", "elemental", "unpredictable"]
+  spellStyle: string; // "storm magic", "illusion", "necromancy"
+  difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  luckModifier: number; // -2, 0, or +2
+  illustrationPrompt: string; // For AI image generation
+}
+```
+
+### Wizard Campaign Progress Model
+
+```typescript
+interface WizardCampaignProgress {
+  _id: Id<"wizardCampaignProgress">;
+  wizardId: Id<"wizards">;
   userId: string;
-  currentStage: number;
-  completedStages: number[];
-  totalExperience: number;
+  currentOpponent: number; // 1-10, or 11 if completed
+  defeatedOpponents: number[]; // Array of defeated opponent numbers
+  hasCompletionRelic: boolean; // Whether wizard earned +1 luck relic
   createdAt: number;
-  lastPlayedAt: number;
+  lastBattleAt?: number;
 }
 ```
 
-### Campaign Stage Model
+### Campaign Battle Model
 
 ```typescript
-interface CampaignStage {
-  _id: Id<"campaignStages">;
-  stageNumber: number;
-  name: string;
-  description: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD" | "EXPERT";
-  requiredStage?: number;
-  experienceReward: number;
-  specialConditions?: {
-    modifiedHealth?: number;
-    roundLimit?: number;
-    environmentalEffect?: string;
-  };
-  aiOpponentTemplate: {
-    namePattern: string;
-    descriptionPattern: string;
-    personalityTraits: string[];
-    spellStyle: string;
-  };
+interface CampaignBattle {
+  _id: Id<"campaignBattles">;
+  wizardId: Id<"wizards">;
+  userId: string;
+  opponentNumber: number;
+  duelId: Id<"duels">; // Links to duel system
+  status: "IN_PROGRESS" | "WON" | "LOST";
+  completedAt?: number;
+  createdAt: number;
 }
 ```
 
-### AI Opponent Generation Model
+### Extended Wizard Model
 
 ```typescript
-interface AIOpponentTemplate {
-  namePattern: string; // e.g., "The {adjective} {title}"
-  descriptionPattern: string; // e.g., "A {personality} wizard who {behavior}"
-  personalityTraits: string[]; // ["aggressive", "defensive", "cunning"]
-  spellStyle: string; // "elemental", "illusion", "necromancy"
+// Extension to existing wizard model
+interface WizardWithCampaignData extends Wizard {
+  campaignProgress?: WizardCampaignProgress;
+  effectiveLuckScore: number; // Base luck + relic bonus (max 20)
+  hasCompletionRelic: boolean;
 }
+```
+
+### Predefined Campaign Opponents Data
+
+```typescript
+// Seeded data for the 10 campaign opponents
+const CAMPAIGN_OPPONENTS = [
+  // Beginner (1-3): Luck penalty -2
+  {
+    opponentNumber: 1,
+    name: "Pip the Apprentice",
+    difficulty: "BEGINNER",
+    luckModifier: -2,
+    // ... other properties
+  },
+  {
+    opponentNumber: 2,
+    name: "Bumbling Boris",
+    difficulty: "BEGINNER",
+    luckModifier: -2,
+    // ... other properties
+  },
+  {
+    opponentNumber: 3,
+    name: "Nervous Nellie",
+    difficulty: "BEGINNER",
+    luckModifier: -2,
+    // ... other properties
+  },
+  // Intermediate (4-7): Standard luck
+  {
+    opponentNumber: 4,
+    name: "Steady Sam",
+    difficulty: "INTERMEDIATE",
+    luckModifier: 0,
+    // ... other properties
+  },
+  // ... opponents 5-7
+  // Advanced (8-10): Luck bonus +2
+  {
+    opponentNumber: 8,
+    name: "Archmage Vex",
+    difficulty: "ADVANCED",
+    luckModifier: 2,
+    // ... other properties
+  },
+  // ... opponents 9-10
+];
 ```
 
 ## Error Handling

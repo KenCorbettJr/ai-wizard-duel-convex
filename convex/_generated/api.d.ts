@@ -8,14 +8,12 @@
  * @module
  */
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
 import type * as adService from "../adService.js";
 import type * as ai_getAI from "../ai/getAI.js";
 import type * as aiTextGeneration from "../aiTextGeneration.js";
+import type * as campaignAI from "../campaignAI.js";
+import type * as campaignOpponents from "../campaignOpponents.js";
+import type * as campaigns from "../campaigns.js";
 import type * as duelIntroduction from "../duelIntroduction.js";
 import type * as duelLobby from "../duelLobby.js";
 import type * as duels from "../duels.js";
@@ -38,6 +36,12 @@ import type * as userProfiles from "../userProfiles.js";
 import type * as users from "../users.js";
 import type * as wizards from "../wizards.js";
 
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
 /**
  * A utility for referencing Convex functions in your app's API.
  *
@@ -50,6 +54,9 @@ declare const fullApi: ApiFromModules<{
   adService: typeof adService;
   "ai/getAI": typeof ai_getAI;
   aiTextGeneration: typeof aiTextGeneration;
+  campaignAI: typeof campaignAI;
+  campaignOpponents: typeof campaignOpponents;
+  campaigns: typeof campaigns;
   duelIntroduction: typeof duelIntroduction;
   duelLobby: typeof duelLobby;
   duels: typeof duels;
@@ -72,11 +79,15 @@ declare const fullApi: ApiFromModules<{
   users: typeof users;
   wizards: typeof wizards;
 }>;
+declare const fullApiWithMounts: typeof fullApi;
+
 export declare const api: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "public">
 >;
 export declare const internal: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "internal">
 >;
+
+export declare const components: {};

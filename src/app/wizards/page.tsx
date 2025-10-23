@@ -4,7 +4,6 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { WizardCard } from "@/components/WizardCard";
-import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,11 +13,13 @@ import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { useState } from "react";
-import { Wand2, Loader2, Plus } from "lucide-react";
+import { Wand2, Loader2, Plus, Scroll } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function MyWizardsPage() {
   const { user } = useUser();
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const router = useRouter();
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   const { isProfileComplete, getProfileCompletionPrompt } =
@@ -26,16 +27,22 @@ export default function MyWizardsPage() {
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
   const totalWins =
-    wizards?.reduce((sum, wizard) => sum + (wizard.wins || 0), 0) || 0;
+    wizards?.reduce(
+      (sum: number, wizard: any) => sum + (wizard.wins || 0),
+      0
+    ) || 0;
   const totalLosses =
-    wizards?.reduce((sum, wizard) => sum + (wizard.losses || 0), 0) || 0;
+    wizards?.reduce(
+      (sum: number, wizard: any) => sum + (wizard.losses || 0),
+      0
+    ) || 0;
   const totalDuels = totalWins + totalLosses;
   const winRate =
     totalDuels > 0 ? Math.round((totalWins / totalDuels) * 100) : 0;
 
   const handleCreateWizard = () => {
     if (isProfileComplete) {
-      setShowCreateModal(true);
+      router.push("/wizards/create");
     } else {
       setShowProfilePrompt(true);
     }
@@ -87,58 +94,81 @@ export default function MyWizardsPage() {
             </div>
           )}
 
-          {/* Quick Stats */}
+          {/* Quick Stats and Campaign Link */}
           {wizards && wizards.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {wizards.length}
+            <div className="space-y-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {wizards.length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Wizards
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {totalWins}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Wins
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {totalDuels}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Duels
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      {winRate}%
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Win Rate
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Campaign Mode Promotion */}
+              <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border-purple-200 dark:border-purple-800">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-full">
+                        <Scroll className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          Ready for Campaign Mode?
+                        </h3>
+                        <p className="text-muted-foreground">
+                          Take your wizards through 10 challenging AI opponents
+                          and earn powerful relics
+                        </p>
+                      </div>
+                    </div>
+                    <Link href="/campaign">
+                      <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                        Start Campaign
+                      </Button>
+                    </Link>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Total Wizards
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {totalWins}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Total Wins
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {totalDuels}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Total Duels
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {winRate}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Win Rate</div>
                 </CardContent>
               </Card>
             </div>
           )}
         </div>
-
-        <CreateWizardModal
-          open={showCreateModal}
-          onOpenChange={setShowCreateModal}
-          onSuccess={() => {
-            // Wizard list will automatically update due to Convex reactivity
-          }}
-        />
 
         <ProfileCompletionPrompt
           open={showProfilePrompt}
@@ -204,7 +234,7 @@ export default function MyWizardsPage() {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {wizards.map((wizard) => (
+            {wizards.map((wizard: unknown) => (
               <WizardCard key={wizard._id} wizard={wizard} />
             ))}
           </div>

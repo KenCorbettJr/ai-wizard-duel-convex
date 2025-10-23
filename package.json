@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"convex dev\"",
-    "start": "concurrently \"next start\" \"npx convex dev\"",
-    "emulate": "concurrently \"next dev\" \"npx convex dev --local\"",
+    "dev": "next dev & convex dev",
+    "start": "next start & convex dev",
     "build-deploy-start": "npm run build && npm run deploy && npm run start",
     "deploy": "convex deploy",
     "dashboard": "convex dashboard",

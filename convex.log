@@ -1,0 +1,1564 @@
+- Preparing Convex functions...
+
+[36mA minor update is available for Convex[39m [2m(1.27.4 → 1.28.0)[22m
+[2mChangelog:[22m [4mhttps://github.com/get-convex/convex-js/blob/main/CHANGELOG.md#changelog[24m
+✘ [ERROR] Could not resolve "node:async_hooks"
+
+    node_modules/@genkit-ai/core/lib/node-async-context.js:25:38:
+      25 │ var import_node_async_hooks = require("node:async_hooks");
+         ╵                                       ~~~~~~~~~~~~~~~~~~
+
+  The package "node:async_hooks" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "crypto"
+
+    node_modules/@genkit-ai/ai/lib/evaluator.js:43:28:
+      43 │ var import_crypto = require("crypto");
+         ╵                             ~~~~~~~~
+
+  The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/@genkit-ai/ai/lib/prompt.js:36:24:
+      36 │ var import_fs = require("fs");
+         ╵                         ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:perf_hooks"
+
+    node_modules/@genkit-ai/core/lib/tracing/instrumentation.js:33:37:
+      33 │ var import_node_perf_hooks = require("node:perf_hooks");
+         ╵                                      ~~~~~~~~~~~~~~~~~
+
+  The package "node:perf_hooks" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:perf_hooks"
+
+    node_modules/@genkit-ai/ai/lib/model.js:43:37:
+      43 │ var import_node_perf_hooks = require("node:perf_hooks");
+         ╵                                      ~~~~~~~~~~~~~~~~~
+
+  The package "node:perf_hooks" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/@genkit-ai/ai/lib/prompt.js:37:26:
+      37 │ var import_path = require("path");
+         ╵                           ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs/promises"
+
+    node_modules/@genkit-ai/core/lib/reflection.js:36:38:
+      36 │ var import_promises = __toESM(require("fs/promises"));
+         ╵                                       ~~~~~~~~~~~~~
+
+  The package "fs/promises" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:http"
+
+    node_modules/node-fetch/src/index.js:9:17:
+      9 │ import http from 'node:http';
+        ╵                  ~~~~~~~~~~~
+
+  The package "node:http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:https"
+
+    node_modules/node-fetch/src/index.js:10:18:
+      10 │ import https from 'node:https';
+         ╵                   ~~~~~~~~~~~~
+
+  The package "node:https" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/@genkit-ai/core/lib/reflection.js:38:34:
+      38 │ var import_path = __toESM(require("path"));
+         ╵                                   ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:zlib"
+
+    node_modules/node-fetch/src/index.js:11:17:
+      11 │ import zlib from 'node:zlib';
+         ╵                  ~~~~~~~~~~~
+
+  The package "node:zlib" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:stream"
+
+    node_modules/node-fetch/src/index.js:12:52:
+      12 │ import Stream, {PassThrough, pipeline as pump} from 'node:stream';
+         ╵                                                     ~~~~~~~~~~~~~
+
+  The package "node:stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:buffer"
+
+    node_modules/node-fetch/src/index.js:13:21:
+      13 │ import {Buffer} from 'node:buffer';
+         ╵                      ~~~~~~~~~~~~~
+
+  The package "node:buffer" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/google-auth-library/build/src/auth/downscopedclient.js:17:23:
+      17 │ const stream = require("stream");
+         ╵                        ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/get-port/index.js:2:20:
+      2 │ const net = require('net');
+        ╵                     ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "child_process"
+
+    node_modules/google-auth-library/build/src/auth/googleauth.js:29:32:
+      29 │ const child_process_1 = require("child_process");
+         ╵                                 ~~~~~~~~~~~~~~~
+
+  The package "child_process" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "events"
+
+    node_modules/express/lib/express.js:16:27:
+      16 │ var EventEmitter = require('events').EventEmitter;
+         ╵                            ~~~~~~~~
+
+  The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "events"
+
+    node_modules/google-auth-library/build/src/auth/authclient.js:17:25:
+      17 │ const events_1 = require("events");
+         ╵                          ~~~~~~~~
+
+  The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/google-auth-library/build/src/auth/baseexternalclient.js:29:23:
+      29 │ const stream = require("stream");
+         ╵                        ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/google-auth-library/build/src/auth/oauth2client.js:18:28:
+      18 │ const querystring = require("querystring");
+         ╵                             ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/google-auth-library/build/src/auth/refreshclient.js:18:30:
+      18 │ const querystring_1 = require("querystring");
+         ╵                               ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/google-auth-library/build/src/auth/googleauth.js:30:19:
+      30 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/gaxios/build/src/common.js:21:22:
+      21 │ const url_1 = require("url");
+         ╵                       ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/google-auth-library/build/src/auth/filesubjecttokensupplier.js:18:23:
+      18 │ const util_1 = require("util");
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "async_hooks"
+
+    node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:20:30:
+      20 │ const async_hooks_1 = require("async_hooks");
+         ╵                               ~~~~~~~~~~~~~
+
+  The package "async_hooks" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/google-auth-library/build/src/auth/oauth2client.js:19:23:
+      19 │ const stream = require("stream");
+         ╵                        ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "async_hooks"
+
+    node_modules/@opentelemetry/context-async-hooks/build/src/AsyncHooksContextManager.js:20:27:
+      20 │ const asyncHooks = require("async_hooks");
+         ╵                            ~~~~~~~~~~~~~
+
+  The package "async_hooks" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/google-auth-library/build/src/auth/stscredentials.js:18:28:
+      18 │ const querystring = require("querystring");
+         ╵                             ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/gcp-metadata/build/src/gcp-residency.js:24:21:
+      24 │ const fs_1 = require("fs");
+         ╵                      ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "https"
+
+    node_modules/gaxios/build/src/gaxios.js:55:24:
+      55 │ const https_1 = require("https");
+         ╵                         ~~~~~~~
+
+  The package "https" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "crypto"
+
+    node_modules/google-auth-library/build/src/crypto/node/crypto.js:17:23:
+      17 │ const crypto = require("crypto");
+         │                        ~~~~~~~~
+         ╵                        "./crypto"
+
+  The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/google-auth-library/build/src/auth/filesubjecttokensupplier.js:19:19:
+      19 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "os"
+
+    node_modules/google-auth-library/build/src/auth/googleauth.js:32:19:
+      32 │ const os = require("os");
+         ╵                    ~~~~
+
+  The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "events"
+
+    node_modules/@opentelemetry/context-async-hooks/build/src/AbstractAsyncHooksContextManager.js:19:25:
+      19 │ const events_1 = require("events");
+         ╵                          ~~~~~~~~
+
+  The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:events"
+
+    node_modules/google-logging-utils/build/src/logging-utils.js:45:30:
+      45 │ const node_events_1 = require("node:events");
+         ╵                               ~~~~~~~~~~~~~
+
+  The package "node:events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/google-auth-library/build/src/auth/googleauth.js:33:21:
+      33 │ const path = require("path");
+         ╵                      ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "child_process"
+
+    node_modules/google-auth-library/build/src/auth/pluggable-auth-handler.js:19:29:
+      19 │ const childProcess = require("child_process");
+         ╵                              ~~~~~~~~~~~~~~~
+
+  The package "child_process" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/gtoken/build/src/index.js:22:19:
+      22 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/gaxios/build/src/gaxios.js:57:46:
+      57 │ const querystring_1 = __importDefault(require("querystring"));
+         ╵                                               ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "os"
+
+    node_modules/gcp-metadata/build/src/gcp-residency.js:25:21:
+      25 │ const os_1 = require("os");
+         ╵                      ~~~~
+
+  The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/google-auth-library/build/src/auth/pluggable-auth-handler.js:20:19:
+      20 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/google-auth-library/build/src/auth/oauth2common.js:18:28:
+      18 │ const querystring = require("querystring");
+         ╵                             ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:process"
+
+    node_modules/google-logging-utils/build/src/logging-utils.js:46:37:
+      46 │ const process = __importStar(require("node:process"));
+         ╵                                      ~~~~~~~~~~~~~~
+
+  The package "node:process" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:util"
+
+    node_modules/google-logging-utils/build/src/logging-utils.js:47:34:
+      47 │ const util = __importStar(require("node:util"));
+         ╵                                   ~~~~~~~~~~~
+
+  The package "node:util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/jws/lib/sign-stream.js:5:21:
+      5 │ var Stream = require('stream');
+        ╵                      ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/jws/lib/verify-stream.js:5:21:
+      5 │ var Stream = require('stream');
+        ╵                      ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/gtoken/build/src/index.js:25:21:
+      25 │ const path = require("path");
+         ╵                      ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/gaxios/build/src/gaxios.js:59:22:
+      59 │ const url_1 = require("url");
+         ╵                       ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/gtoken/build/src/index.js:26:23:
+      26 │ const util_1 = require("util");
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:url"
+
+    node_modules/node-fetch/src/request.js:9:34:
+      9 │ import {format as formatUrl} from 'node:url';
+        ╵                                   ~~~~~~~~~~
+
+  The package "node:url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/jws/lib/sign-stream.js:7:19:
+      7 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:net"
+
+    node_modules/node-fetch/src/utils/referrer.js:1:19:
+      1 │ import {isIP} from 'node:net';
+        ╵                    ~~~~~~~~~~
+
+  The package "node:net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/jws/lib/verify-stream.js:7:19:
+      7 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:fs"
+
+    node_modules/fetch-blob/from.js:1:59:
+      1 │ import { statSync, createReadStream, promises as fs } from 'node:fs'
+        ╵                                                            ~~~~~~~~~
+
+  The package "node:fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:stream"
+
+    node_modules/node-fetch/src/body.js:8:34:
+      8 │ import Stream, {PassThrough} from 'node:stream';
+        ╵                                   ~~~~~~~~~~~~~
+
+  The package "node:stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:util"
+
+    node_modules/node-fetch/src/request.js:10:24:
+      10 │ import {deprecate} from 'node:util';
+         ╵                         ~~~~~~~~~~~
+
+  The package "node:util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:util"
+
+    node_modules/node-fetch/src/headers.js:7:20:
+      7 │ import {types} from 'node:util';
+        ╵                     ~~~~~~~~~~~
+
+  The package "node:util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/express/lib/request.js:18:19:
+      18 │ var isIP = require('net').isIP;
+         ╵                    ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/jws/lib/data-stream.js:3:21:
+      3 │ var Stream = require('stream');
+        ╵                      ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "crypto"
+
+    node_modules/jwa/index.js:2:21:
+      2 │ var crypto = require('crypto');
+        ╵                      ~~~~~~~~
+
+  The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:http"
+
+    node_modules/node-fetch/src/headers.js:8:17:
+      8 │ import http from 'node:http';
+        ╵                  ~~~~~~~~~~~
+
+  The package "node:http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/parseurl/index.js:15:18:
+      15 │ var url = require('url')
+         ╵                   ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:path"
+
+    node_modules/fetch-blob/from.js:2:25:
+      2 │ import { basename } from 'node:path'
+        ╵                          ~~~~~~~~~~~
+
+  The package "node:path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:util"
+
+    node_modules/node-fetch/src/body.js:9:42:
+      9 │ import {types, deprecate, promisify} from 'node:util';
+        ╵                                           ~~~~~~~~~~~
+
+  The package "node:util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/gaxios/build/src/gaxios.js:62:25:
+      62 │ const stream_1 = require("stream");
+         ╵                          ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/serve-static/index.js:19:22:
+      19 │ var resolve = require('path').resolve
+         ╵                       ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "node:buffer"
+
+    node_modules/node-fetch/src/body.js:10:21:
+      10 │ import {Buffer} from 'node:buffer';
+         ╵                      ~~~~~~~~~~~~~
+
+  The package "node:buffer" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/jws/lib/data-stream.js:4:19:
+      4 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/jwa/index.js:4:19:
+      4 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/serve-static/index.js:21:18:
+      21 │ var url = require('url')
+         ╵                   ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/express/lib/request.js:20:19:
+      20 │ var http = require('http');
+         ╵                    ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/express/lib/application.js:23:19:
+      23 │ var http = require('http');
+         ╵                    ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/express/lib/response.js:21:19:
+      21 │ var http = require('http');
+         ╵                    ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/https-proxy-agent/dist/index.js:30:33:
+      30 │ const net = __importStar(require("net"));
+         ╵                                  ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "dgram"
+
+    node_modules/@opentelemetry/exporter-jaeger/build/src/jaeger.js:21:24:
+      21 │ const dgram_1 = require("dgram");
+         ╵                         ~~~~~~~
+
+  The package "dgram" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "tls"
+
+    node_modules/https-proxy-agent/dist/index.js:31:33:
+      31 │ const tls = __importStar(require("tls"));
+         ╵                                  ~~~~~
+
+  The package "tls" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/express/lib/response.js:24:19:
+      24 │ var path = require('path');
+         ╵                    ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/mime-types/index.js:16:22:
+      16 │ var extname = require('path').extname
+         ╵                       ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/express/lib/application.js:30:22:
+      30 │ var resolve = require('path').resolve;
+         ╵                       ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/https-proxy-agent/dist/index.js:32:41:
+      32 │ const assert_1 = __importDefault(require("assert"));
+         ╵                                          ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/body-parser/lib/types/urlencoded.js:251:20:
+      251 │       mod = require('querystring')
+          ╵                     ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/google-auth-library/build/src/auth/externalAccountAuthorizedUserClient.js:20:23:
+      20 │ const stream = require("stream");
+         ╵                        ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/@opentelemetry/otlp-grpc-exporter-base/build/src/util.js:21:21:
+      21 │ const path = require("path");
+         ╵                      ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "zlib"
+
+    node_modules/body-parser/lib/read.js:20:19:
+      20 │ var zlib = require('zlib')
+         ╵                    ~~~~~~
+
+  The package "zlib" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/https-proxy-agent/dist/index.js:35:22:
+      35 │ const url_1 = require("url");
+         ╵                       ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/express/lib/view.js:17:19:
+      17 │ var path = require('path');
+         ╵                    ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/send/index.js:23:17:
+      23 │ var fs = require('fs')
+         ╵                  ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/@opentelemetry/otlp-grpc-exporter-base/build/src/util.js:22:22:
+      22 │ const url_1 = require("url");
+         ╵                       ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/jaeger-client/dist/src/reporters/http_sender.js:20:18:
+      20 │ var _fs = require('fs');
+         ╵                   ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/@opentelemetry/otlp-grpc-exporter-base/build/src/util.js:23:19:
+      23 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "dgram"
+
+    node_modules/jaeger-client/dist/src/reporters/udp_sender.js:20:21:
+      20 │ var _dgram = require('dgram');
+         ╵                      ~~~~~~~
+
+  The package "dgram" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/jaeger-client/dist/src/reporters/http_sender.js:24:20:
+      24 │ var _http = require('http');
+         ╵                     ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/jaeger-client/dist/src/thrift.js:22:18:
+      22 │ var _fs = require('fs');
+         ╵                   ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "events"
+
+    node_modules/destroy/index.js:15:27:
+      15 │ var EventEmitter = require('events').EventEmitter
+         ╵                            ~~~~~~~~
+
+  The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/express/lib/view.js:18:17:
+      18 │ var fs = require('fs');
+         ╵                  ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/jaeger-client/dist/src/reporters/udp_sender.js:24:18:
+      24 │ var _fs = require('fs');
+         ╵                   ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "https"
+
+    node_modules/jaeger-client/dist/src/reporters/http_sender.js:28:21:
+      28 │ var _https = require('https');
+         ╵                      ~~~~~~~
+
+  The package "https" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/destroy/index.js:16:25:
+      16 │ var ReadStream = require('fs').ReadStream
+         ╵                          ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/agent-base/dist/index.js:30:33:
+      30 │ const net = __importStar(require("net"));
+         ╵                                  ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/jaeger-client/dist/src/thrift.js:30:20:
+      30 │ var _path = require('path');
+         ╵                     ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/jaeger-client/dist/src/reporters/http_sender.js:32:20:
+      32 │ var _path = require('path');
+         ╵                     ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/jaeger-client/dist/src/reporters/http_sender.js:36:19:
+      36 │ var _url = require('url');
+         ╵                    ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/destroy/index.js:17:21:
+      17 │ var Stream = require('stream')
+         ╵                      ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/content-disposition/index.js:22:23:
+      22 │ var basename = require('path').basename
+         ╵                        ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "crypto"
+
+    node_modules/cookie-signature/index.js:5:21:
+      5 │ var crypto = require('crypto');
+        ╵                      ~~~~~~~~
+
+  The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/jaeger-client/dist/src/reporters/udp_sender.js:28:20:
+      28 │ var _path = require('path');
+         ╵                     ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "os"
+
+    node_modules/jaeger-client/dist/src/util.js:28:18:
+      28 │ var _os = require('os');
+         ╵                   ~~~~
+
+  The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "zlib"
+
+    node_modules/destroy/index.js:18:19:
+      18 │ var Zlib = require('zlib')
+         ╵                    ~~~~~~
+
+  The package "zlib" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/agent-base/dist/index.js:31:34:
+      31 │ const http = __importStar(require("http"));
+         ╵                                   ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "https"
+
+    node_modules/agent-base/dist/index.js:32:24:
+      32 │ const https_1 = require("https");
+         ╵                         ~~~~~~~
+
+  The package "https" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/send/index.js:28:19:
+      28 │ var path = require('path')
+         ╵                    ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/jaeger-client/dist/src/util.js:32:20:
+      32 │ var _http = require('http');
+         ╵                     ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/send/index.js:30:21:
+      30 │ var Stream = require('stream')
+         ╵                      ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/agent-base/dist/helpers.js:27:34:
+      27 │ const http = __importStar(require("http"));
+         ╵                                   ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "querystring"
+
+    node_modules/express/lib/utils.js:24:26:
+      24 │ var querystring = require('querystring');
+         ╵                           ~~~~~~~~~~~~~
+
+  The package "querystring" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "crypto"
+
+    node_modules/etag/index.js:21:21:
+      21 │ var crypto = require('crypto')
+         ╵                      ~~~~~~~~
+
+  The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/send/index.js:31:19:
+      31 │ var util = require('util')
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/etag/index.js:22:20:
+      22 │ var Stats = require('fs').Stats
+         ╵                     ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "https"
+
+    node_modules/agent-base/dist/helpers.js:28:35:
+      28 │ const https = __importStar(require("https"));
+         ╵                                    ~~~~~~~
+
+  The package "https" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/mime/mime.js:1:19:
+      1 │ var path = require('path');
+        ╵                    ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/mime/mime.js:2:17:
+      2 │ var fs = require('fs');
+        ╵                  ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/thriftrw/thrift.js:24:21:
+      24 │ var assert = require('assert');
+         ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/tlist.js:25:23:
+      25 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/tstruct.js:26:23:
+      26 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/thrift.js:25:19:
+      25 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/thriftrw/thrift.js:26:17:
+      26 │ var fs = require('fs');
+         ╵                  ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/tmap.js:26:23:
+      26 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/thriftrw/thrift.js:27:19:
+      27 │ var path = require('path');
+         ╵                    ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/i64.js:25:19:
+      25 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/set.js:23:19:
+      23 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/thriftrw/list.js:25:21:
+      25 │ var assert = require('assert');
+         ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/thriftrw/set.js:24:21:
+      24 │ var assert = require('assert');
+         ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "tls"
+
+    node_modules/@grpc/grpc-js/build/src/channel-credentials.js:21:22:
+      21 │ const tls_1 = require("tls");
+         ╵                       ~~~~~
+
+  The package "tls" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/map-entries.js:25:23:
+      25 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/channelz.js:24:22:
+      24 │ const net_1 = require("net");
+         ╵                       ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/@grpc/grpc-js/build/src/tls-helpers.js:21:19:
+      21 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/i8.js:25:19:
+      25 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/error/typed.js:5:21:
+      5 │ var assert = require('assert');
+        ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http2"
+
+    node_modules/@grpc/grpc-js/build/src/server.js:54:22:
+      54 │ const http2 = require("http2");
+         ╵                       ~~~~~~~
+
+  The package "http2" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/i16.js:25:19:
+      25 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/i32.js:25:19:
+      25 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/map-object.js:25:23:
+      25 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "dns"
+
+    node_modules/@grpc/grpc-js/build/src/resolver-dns.js:21:22:
+      21 │ const dns_1 = require("dns");
+         ╵                       ~~~~~
+
+  The package "dns" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/@grpc/grpc-js/build/src/server.js:55:21:
+      55 │ const util = require("util");
+         ╵                      ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/resolver-ip.js:19:22:
+      19 │ const net_1 = require("net");
+         ╵                       ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/error/wrapped.js:4:21:
+      4 │ var assert = require('assert');
+        ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/list.js:28:19:
+      28 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http2"
+
+    node_modules/@grpc/grpc-js/build/src/server-interceptors.js:24:22:
+      24 │ const http2 = require("http2");
+         ╵                       ~~~~~~~
+
+  The package "http2" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/load-balancer-pick-first.js:29:22:
+      29 │ const net_1 = require("net");
+         ╵                       ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "zlib"
+
+    node_modules/@grpc/grpc-js/build/src/server-interceptors.js:26:21:
+      26 │ const zlib = require("zlib");
+         ╵                      ~~~~~~
+
+  The package "zlib" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "events"
+
+    node_modules/@grpc/grpc-js/build/src/call.js:21:25:
+      21 │ const events_1 = require("events");
+         │                          ~~~~~~~~
+         ╵                          "./events"
+
+  The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/resolver-dns.js:28:22:
+      28 │ const net_1 = require("net");
+         ╵                       ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/string_rw.js:24:23:
+      24 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/skip.js:23:23:
+      23 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/subchannel-address.js:27:22:
+      27 │ const net_1 = require("net");
+         ╵                       ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/series.js:23:23:
+      23 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/struct.js:23:23:
+      23 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/atoms.js:21:23:
+      21 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/repeat.js:23:23:
+      23 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/variable_buffer_rw.js:23:23:
+      23 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/switch.js:23:23:
+      23 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/bufrw/base.js:22:21:
+      22 │ var assert = require('assert');
+         ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/fixed_width_rw.js:24:23:
+      24 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "events"
+
+    node_modules/@grpc/grpc-js/build/src/server-call.js:21:25:
+      21 │ const events_1 = require("events");
+         │                          ~~~~~~~~
+         ╵                          "./events"
+
+  The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/@grpc/grpc-js/build/src/call.js:22:25:
+      22 │ const stream_1 = require("stream");
+         ╵                          ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/@grpc/grpc-js/build/src/server-call.js:22:25:
+      22 │ const stream_1 = require("stream");
+         ╵                          ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/interface.js:25:19:
+      25 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "os"
+
+    node_modules/@grpc/grpc-js/build/src/service-config.js:31:19:
+      31 │ const os = require("os");
+         ╵                    ~~~~
+
+  The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/hexer/hex_spy.js:1:19:
+      1 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/hexer/hex_spy.js:2:24:
+      2 │ var Transform = require('stream').Transform;
+        ╵                         ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/@grpc/proto-loader/build/src/util.js:21:19:
+      21 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/bufrw/annotated_buffer.js:28:22:
+      28 │ var inspect = require('util').inspect;
+         ╵                       ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/hexer/hex_transform.js:4:19:
+      4 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/hexer/chunked_hex_transform.js:3:19:
+      3 │ var util = require('util');
+        ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "path"
+
+    node_modules/@grpc/proto-loader/build/src/util.js:22:21:
+      22 │ const path = require("path");
+         ╵                      ~~~~~~
+
+  The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/union.js:23:19:
+      23 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "stream"
+
+    node_modules/hexer/hex_transform.js:5:24:
+      5 │ var Transform = require('stream').Transform;
+        ╵                         ~~~~~~~~
+
+  The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "fs"
+
+    node_modules/@grpc/grpc-js/build/src/certificate-provider.js:20:19:
+      20 │ const fs = require("fs");
+         ╵                    ~~~~
+
+  The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/message.js:27:19:
+      27 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/thriftrw/enum.js:23:21:
+      23 │ var assert = require('assert');
+         ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "assert"
+
+    node_modules/thriftrw/struct.js:26:21:
+      26 │ var assert = require('assert');
+         ╵                      ~~~~~~~~
+
+  The package "assert" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/@grpc/grpc-js/build/src/certificate-provider.js:23:23:
+      23 │ const util_1 = require("util");
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/rw.js:24:19:
+      24 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/enum.js:29:23:
+      29 │ var inherits = require('util').inherits;
+         ╵                        ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "zlib"
+
+    node_modules/@grpc/grpc-js/build/src/compression-filter.js:20:21:
+      20 │ const zlib = require("zlib");
+         ╵                      ~~~~~~
+
+  The package "zlib" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/http_proxy.js:24:22:
+      24 │ const net_1 = require("net");
+         ╵                       ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "util"
+
+    node_modules/thriftrw/struct.js:33:19:
+      33 │ var util = require('util');
+         ╵                    ~~~~~~
+
+  The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http"
+
+    node_modules/@grpc/grpc-js/build/src/http_proxy.js:25:21:
+      25 │ const http = require("http");
+         ╵                      ~~~~~~
+
+  The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http2"
+
+    node_modules/@grpc/grpc-js/build/src/load-balancing-call.js:28:22:
+      28 │ const http2 = require("http2");
+         ╵                       ~~~~~~~
+
+  The package "http2" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "url"
+
+    node_modules/@grpc/grpc-js/build/src/http_proxy.js:29:22:
+      29 │ const url_1 = require("url");
+         ╵                       ~~~~~
+
+  The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http2"
+
+    node_modules/@grpc/grpc-js/build/src/transport.js:20:22:
+      20 │ const http2 = require("http2");
+         ╵                       ~~~~~~~
+
+  The package "http2" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "net"
+
+    node_modules/@grpc/grpc-js/build/src/transport.js:28:20:
+      28 │ const net = require("net");
+         ╵                     ~~~~~
+
+  The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "http2"
+
+    node_modules/@grpc/grpc-js/build/src/subchannel-call.js:20:22:
+      20 │ const http2 = require("http2");
+         ╵                       ~~~~~~~
+
+  The package "http2" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✘ [ERROR] Could not resolve "os"
+
+    node_modules/@grpc/grpc-js/build/src/subchannel-call.js:21:19:
+      21 │ const os = require("os");
+         ╵                    ~~~~
+
+  The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+
+✖ 
+It looks like you are using Node APIs from a file without the "use node" directive.
+Split out actions using Node.js APIs like this into a new file only containing actions that uses "use node" so these actions will run in a Node.js environment.
+For more information see https://docs.convex.dev/functions/runtimes#nodejs-runtime
+

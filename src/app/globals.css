@@ -183,3 +183,189 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+
+/* Campaign-specific animations and styles */
+@keyframes campaignUnlock {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotateY(-90deg);
+    filter: blur(4px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05) rotateY(0deg);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes relicAward {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-180deg);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.2) rotate(-90deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.9) rotate(0deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes campaignGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(147, 51, 234, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(147, 51, 234, 0.6),
+      0 0 30px rgba(147, 51, 234, 0.4);
+  }
+}
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--progress-width);
+  }
+}
+
+@keyframes opponentReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes magicalSparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+@keyframes campaignPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+/* Campaign animation classes */
+.animate-campaign-unlock {
+  animation: campaignUnlock 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-relic-award {
+  animation: relicAward 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-campaign-glow {
+  animation: campaignGlow 2s ease-in-out infinite;
+}
+
+.animate-progress-fill {
+  animation: progressFill 1s ease-out;
+}
+
+.animate-opponent-reveal {
+  animation: opponentReveal 0.6s ease-out;
+}
+
+.animate-magical-sparkle {
+  animation: magicalSparkle 1.5s ease-in-out infinite;
+}
+
+.animate-campaign-pulse {
+  animation: campaignPulse 2s ease-in-out infinite;
+}
+
+/* Campaign theme gradients */
+.campaign-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 51, 234, 0.1) 0%,
+    rgba(79, 70, 229, 0.1) 25%,
+    rgba(236, 72, 153, 0.1) 50%,
+    rgba(147, 51, 234, 0.1) 75%,
+    rgba(79, 70, 229, 0.1) 100%
+  );
+}
+
+.campaign-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.campaign-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(147, 51, 234, 0.15);
+}
+
+/* Loading states */
+@keyframes campaignLoading {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.campaign-loading {
+  animation: campaignLoading 1s linear infinite;
+}
+
+/* Responsive campaign grid */
+.campaign-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (min-width: 640px) {
+  .campaign-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .campaign-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .campaign-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

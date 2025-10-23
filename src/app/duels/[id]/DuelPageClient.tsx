@@ -74,7 +74,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   // Memoize expensive calculations
   const userWizard = useMemo(
-    () => [wizard1, wizard2].find((wizard) => wizard?.owner === user?.id),
+    () => [wizard1, wizard2].find((wizard: any) => wizard?.owner === user?.id),
     [wizard1, wizard2, user?.id]
   );
 
@@ -82,7 +82,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   const currentRound = useMemo(
     () =>
-      duel?.rounds?.find((round) => round.roundNumber === duel.currentRound),
+      duel?.rounds?.find(
+        (round: any) => round.roundNumber === duel.currentRound
+      ),
     [duel?.rounds, duel?.currentRound]
   );
 
@@ -322,6 +324,15 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     : "Duel to the Death"}
               </h2>
               <div className="flex items-center gap-2">
+                {duel.isCampaignBattle && (
+                  <Badge
+                    variant="outline"
+                    className="bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 flex items-center gap-1"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Campaign Battle
+                  </Badge>
+                )}
                 <DuelModeIndicator
                   textOnlyMode={duel.textOnlyMode}
                   textOnlyReason={duel.textOnlyReason}
@@ -403,20 +414,52 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           {duel.status === "COMPLETED" &&
             duel.winners &&
             duel.winners.length > 0 && (
-              <Card className="mb-8 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-2 border-yellow-300 dark:border-yellow-600/50 shadow-lg dark:shadow-xl">
+              <Card
+                className={`mb-8 ${
+                  duel.isCampaignBattle
+                    ? "bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border-2 border-purple-300 dark:border-purple-600/50"
+                    : "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-2 border-yellow-300 dark:border-yellow-600/50"
+                } shadow-lg dark:shadow-xl`}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-center gap-3 text-2xl text-yellow-800 dark:text-yellow-200">
-                    <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                    {duel.winners.length === 1 ? "Victory!" : "Draw!"}
-                    <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                  <CardTitle
+                    className={`flex items-center justify-center gap-3 text-2xl ${
+                      duel.isCampaignBattle
+                        ? "text-purple-800 dark:text-purple-200"
+                        : "text-yellow-800 dark:text-yellow-200"
+                    }`}
+                  >
+                    {duel.isCampaignBattle ? (
+                      <Sparkles className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                    ) : (
+                      <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                    )}
+                    {duel.winners.length === 1
+                      ? duel.isCampaignBattle
+                        ? "Campaign Victory!"
+                        : "Victory!"
+                      : "Draw!"}
+                    {duel.isCampaignBattle ? (
+                      <Sparkles className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                    ) : (
+                      <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                    )}
                   </CardTitle>
-                  <CardDescription className="text-center text-yellow-700 dark:text-yellow-300 text-lg font-medium">
+                  <CardDescription
+                    className={`text-center text-lg font-medium ${
+                      duel.isCampaignBattle
+                        ? "text-purple-700 dark:text-purple-300"
+                        : "text-yellow-700 dark:text-yellow-300"
+                    }`}
+                  >
                     {duel.winners.length === 1 ? (
                       <>
                         {duel.wizards[0] === duel.winners[0]
                           ? wizard1?.name
                           : wizard2?.name}{" "}
-                        emerges victorious!
+                        {duel.isCampaignBattle
+                          ? "defeats the AI opponent!"
+                          : "emerges victorious!"}
                       </>
                     ) : (
                       "The duel ends in an honorable draw!"
@@ -578,8 +621,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           {duel.rounds && duel.rounds.length > 0 && (
             <div className="space-y-6">
               {duel.rounds
-                .filter((round) => round.roundNumber > 0) // Exclude introduction round
-                .map((round) => (
+                .filter((round: any) => round.roundNumber > 0) // Exclude introduction round
+                .map((round: unknown) => (
                   <DuelRoundCard
                     key={`${round._id}-${round.status}-${round.roundNumber}`}
                     round={round}

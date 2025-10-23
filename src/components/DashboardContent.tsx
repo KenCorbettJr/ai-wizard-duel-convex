@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
-import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { DuelListItem } from "@/components/DuelListItem";
 import { useQuery } from "convex/react";
@@ -20,6 +19,7 @@ import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { MigrationNotification } from "@/components/MigrationNotification";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Swords, Users, Wand2, BarChart3, Trophy, Loader2 } from "lucide-react";
 
 function ActiveDuelsCard({ userId }: { userId?: string }) {
@@ -170,7 +170,7 @@ function CompletedDuelsCard({ userId }: { userId?: string }) {
 
 export default function DashboardContent() {
   const { user } = useUser();
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const router = useRouter();
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showMigrationNotification, setShowMigrationNotification] =
     useState(false);
@@ -193,7 +193,7 @@ export default function DashboardContent() {
 
   const handleCreateWizard = () => {
     if (isProfileComplete) {
-      setShowCreateModal(true);
+      router.push("/wizards/create");
     } else {
       setShowProfilePrompt(true);
     }
@@ -475,14 +475,6 @@ export default function DashboardContent() {
                 )}
               </CardContent>
             </Card>
-
-            <CreateWizardModal
-              open={showCreateModal}
-              onOpenChange={setShowCreateModal}
-              onSuccess={() => {
-                // Wizard list will automatically update due to Convex reactivity
-              }}
-            />
 
             <ProfileCompletionPrompt
               open={showProfilePrompt}

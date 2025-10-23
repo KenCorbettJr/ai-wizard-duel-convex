@@ -1,4 +1,9 @@
-import { query, mutation, internalQuery } from "./_generated/server";
+import {
+  query,
+  mutation,
+  internalQuery,
+  internalMutation,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
@@ -662,24 +667,27 @@ export const completeRound = mutation({
     if (shouldEndDuel.shouldEnd) {
       await ctx.db.patch(duel._id, {
         status: "COMPLETED" as DuelStatus,
+        completedAt: Date.now(),
         points: updatedPoints,
         hitPoints: updatedHitPoints,
         winners: shouldEndDuel.winners,
         losers: shouldEndDuel.losers,
       });
 
-      // Update wizard stats
+      // Update wizard stats (only for non-campaign battles)
       if (shouldEndDuel.winners && shouldEndDuel.losers) {
         for (const winnerId of shouldEndDuel.winners) {
           await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
             wizardId: winnerId,
             won: true,
+            isCampaignBattle: duel.isCampaignBattle || false,
           });
         }
         for (const loserId of shouldEndDuel.losers) {
           await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
             wizardId: loserId,
             won: false,
+            isCampaignBattle: duel.isCampaignBattle || false,
           });
         }
       }
@@ -807,9 +815,38 @@ export const cancelDuel = mutation({
   },
 });
 
-// Get active duels (in progress or waiting for players)
+// Get active duels (in progress or waiting for players) - excludes campaign battles
 export const getActiveDuels = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("duels"),
+      _creationTime: v.number(),
+      numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+      wizards: v.array(v.id("wizards")),
+      players: v.array(v.string()),
+      status: v.union(
+        v.literal("WAITING_FOR_PLAYERS"),
+        v.literal("IN_PROGRESS"),
+        v.literal("COMPLETED"),
+        v.literal("CANCELLED")
+      ),
+      currentRound: v.number(),
+      createdAt: v.number(),
+      points: v.record(v.string(), v.number()),
+      hitPoints: v.record(v.string(), v.number()),
+      needActionsFrom: v.array(v.id("wizards")),
+      featuredIllustration: v.optional(v.string()),
+      winners: v.optional(v.array(v.id("wizards"))),
+      losers: v.optional(v.array(v.id("wizards"))),
+      shortcode: v.optional(v.string()),
+      textOnlyMode: v.optional(v.boolean()),
+      textOnlyReason: v.optional(v.string()),
+      imageCreditConsumed: v.optional(v.boolean()),
+      imageCreditConsumedBy: v.optional(v.string()),
+      isCampaignBattle: v.optional(v.boolean()),
+    })
+  ),
   handler: async (ctx) => {
     const inProgressDuels = await ctx.db
       .query("duels")
@@ -821,7 +858,67 @@ export const getActiveDuels = query({
       .withIndex("by_status", (q) => q.eq("status", "WAITING_FOR_PLAYERS"))
       .collect();
 
-    return [...inProgressDuels, ...waitingDuels];
+    // Filter out campaign battles
+    const allDuels = [...inProgressDuels, ...waitingDuels];
+    return allDuels.filter((duel) => !duel.isCampaignBattle);
+  },
+});
+
+// Get watchable duels (excludes campaign battles)
+export const getWatchableDuels = query({
+  args: {
+    limit: v.number(),
+    offset: v.number(),
+  },
+  returns: v.object({
+    duels: v.array(
+      v.object({
+        _id: v.id("duels"),
+        _creationTime: v.number(),
+        numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+        wizards: v.array(v.id("wizards")),
+        players: v.array(v.string()),
+        status: v.union(
+          v.literal("WAITING_FOR_PLAYERS"),
+          v.literal("IN_PROGRESS"),
+          v.literal("COMPLETED"),
+          v.literal("CANCELLED")
+        ),
+        currentRound: v.number(),
+        createdAt: v.number(),
+        points: v.record(v.string(), v.number()),
+        hitPoints: v.record(v.string(), v.number()),
+        needActionsFrom: v.array(v.id("wizards")),
+        featuredIllustration: v.optional(v.string()),
+        winners: v.optional(v.array(v.id("wizards"))),
+        losers: v.optional(v.array(v.id("wizards"))),
+        shortcode: v.optional(v.string()),
+        textOnlyMode: v.optional(v.boolean()),
+        textOnlyReason: v.optional(v.string()),
+        imageCreditConsumed: v.optional(v.boolean()),
+        imageCreditConsumedBy: v.optional(v.string()),
+        isCampaignBattle: v.optional(v.boolean()),
+      })
+    ),
+    total: v.number(),
+    hasMore: v.boolean(),
+  }),
+  handler: async (ctx, { limit, offset }) => {
+    // Get all duels excluding campaign battles
+    const allDuels = await ctx.db.query("duels").collect();
+    const watchableDuels = allDuels
+      .filter((duel) => !duel.isCampaignBattle)
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    const total = watchableDuels.length;
+    const duels = watchableDuels.slice(offset, offset + limit);
+    const hasMore = offset + limit < total;
+
+    return {
+      duels,
+      total,
+      hasMore,
+    };
   },
 });
 
@@ -1502,5 +1599,45 @@ export const checkAdminAccess = query({
   args: {},
   handler: async (ctx) => {
     return await checkSuperAdminAccess(ctx);
+  },
+});
+
+// Internal function to create duel for testing
+export const createDuelInternal = internalMutation({
+  args: {
+    numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+    wizards: v.array(v.id("wizards")),
+    players: v.array(v.string()),
+    isCampaignBattle: v.optional(v.boolean()),
+  },
+  returns: v.id("duels"),
+  handler: async (
+    ctx,
+    { numberOfRounds, wizards, players, isCampaignBattle }
+  ) => {
+    // Initialize points and hit points for all wizards
+    const points: Record<string, number> = {};
+    const hitPoints: Record<string, number> = {};
+
+    for (const wizardId of wizards) {
+      points[wizardId] = 0;
+      hitPoints[wizardId] = 100; // Starting hit points
+    }
+
+    const duelId = await ctx.db.insert("duels", {
+      numberOfRounds,
+      wizards,
+      players,
+      status: "IN_PROGRESS",
+      currentRound: 1,
+      createdAt: Date.now(),
+      points,
+      hitPoints,
+      needActionsFrom: wizards,
+      textOnlyMode: false,
+      isCampaignBattle: isCampaignBattle || false,
+    });
+
+    return duelId;
   },
 });

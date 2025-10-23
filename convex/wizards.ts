@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { Wizard } from "@/types/wizard";
 
-// Get all wizards for the authenticated user
+// Get all wizards for the authenticated user with campaign relic status
 export const getUserWizards = query({
   args: {},
   returns: v.array(
@@ -21,6 +21,8 @@ export const getUserWizards = query({
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
       losses: v.optional(v.number()),
+      hasCompletionRelic: v.boolean(),
+      effectiveLuckScore: v.number(),
     })
   ),
   handler: async (ctx) => {
@@ -29,10 +31,39 @@ export const getUserWizards = query({
       throw new Error("Not authenticated");
     }
 
-    return await ctx.db
+    const wizards = await ctx.db
       .query("wizards")
       .withIndex("by_owner", (q) => q.eq("owner", identity.subject))
       .collect();
+
+    // Enhance each wizard with campaign relic information
+    const wizardsWithRelics = await Promise.all(
+      wizards.map(async (wizard) => {
+        // Get campaign progress to check for completion relic
+        const campaignProgress = await ctx.db
+          .query("wizardCampaignProgress")
+          .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
+          .unique();
+
+        const hasCompletionRelic =
+          campaignProgress?.hasCompletionRelic || false;
+
+        // Calculate effective luck score (base luck would be stored on wizard, defaulting to 10)
+        const baseLuck = 10; // This could be a field on the wizard in the future
+        const effectiveLuckScore = Math.min(
+          20,
+          baseLuck + (hasCompletionRelic ? 1 : 0)
+        );
+
+        return {
+          ...wizard,
+          hasCompletionRelic,
+          effectiveLuckScore,
+        };
+      })
+    );
+
+    return wizardsWithRelics;
   },
 });
 
@@ -122,25 +153,32 @@ export const updateWizardStats = mutation({
 });
 
 // Internal function to update wizard stats (used by system functions like duel completion)
+// Only updates stats for non-campaign battles
 export const updateWizardStatsInternal = internalMutation({
   args: {
     wizardId: v.id("wizards"),
     won: v.boolean(),
+    isCampaignBattle: v.optional(v.boolean()),
   },
   returns: v.null(),
-  handler: async (ctx, { wizardId, won }) => {
+  handler: async (ctx, { wizardId, won, isCampaignBattle = false }) => {
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       throw new Error("Wizard not found");
     }
 
-    const currentWins = wizard.wins || 0;
-    const currentLosses = wizard.losses || 0;
+    // Only update multiplayer stats for non-campaign battles
+    if (!isCampaignBattle) {
+      const currentWins = wizard.wins || 0;
+      const currentLosses = wizard.losses || 0;
 
-    await ctx.db.patch(wizardId, {
-      wins: won ? currentWins + 1 : currentWins,
-      losses: won ? currentLosses : currentLosses + 1,
-    });
+      await ctx.db.patch(wizardId, {
+        wins: won ? currentWins + 1 : currentWins,
+        losses: won ? currentLosses : currentLosses + 1,
+      });
+    }
+
+    // Campaign battle stats are tracked separately in the campaign system
   },
 });
 
@@ -417,7 +455,7 @@ export const createWizardInternal = internalMutation({
   },
 });
 
-// Get leaderboard of wizards ordered by win rate - public information
+// Get leaderboard of wizards ordered by win rate - public information (excludes campaign battles)
 export const getWizardLeaderboard = query({
   args: {
     limit: v.optional(v.number()),
@@ -443,43 +481,88 @@ export const getWizardLeaderboard = query({
       rank: v.number(),
       ownerUserId: v.optional(v.string()),
       ownerDisplayName: v.optional(v.string()),
+      hasCompletionRelic: v.boolean(),
+      effectiveLuckScore: v.number(),
     })
   ),
   handler: async (ctx, { limit = 50, minDuels = 1 }) => {
     // Get all wizards
     const wizards = await ctx.db.query("wizards").collect();
 
-    // Calculate win rates and filter by minimum duels
-    const wizardStats = wizards
-      .map((wizard) => {
-        const wins = wizard.wins || 0;
-        const losses = wizard.losses || 0;
+    // Calculate win rates and filter by minimum duels, excluding campaign battles
+    const wizardStats = await Promise.all(
+      wizards.map(async (wizard) => {
+        // Get campaign progress for relic status
+        const campaignProgress = await ctx.db
+          .query("wizardCampaignProgress")
+          .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
+          .unique();
+
+        const hasCompletionRelic =
+          campaignProgress?.hasCompletionRelic || false;
+        const baseLuck = 10;
+        const effectiveLuckScore = Math.min(
+          20,
+          baseLuck + (hasCompletionRelic ? 1 : 0)
+        );
+
+        // Calculate multiplayer-only stats (excluding campaign battles)
+        const allMultiplayerDuels = await ctx.db
+          .query("duels")
+          .filter((q) => q.eq(q.field("status"), "COMPLETED"))
+          .filter((q) => q.neq(q.field("isCampaignBattle"), true))
+          .collect();
+
+        const wizardMultiplayerDuels = allMultiplayerDuels.filter((duel) =>
+          duel.wizards.includes(wizard._id)
+        );
+
+        let wins = 0;
+        let losses = 0;
+
+        wizardMultiplayerDuels.forEach((duel) => {
+          if (duel.winners?.includes(wizard._id)) {
+            wins++;
+          } else if (duel.losers?.includes(wizard._id)) {
+            losses++;
+          }
+        });
+
         const totalDuels = wins + losses;
         const winRate = totalDuels > 0 ? wins / totalDuels : 0;
 
         return {
           ...wizard,
+          wins,
+          losses,
           winRate,
           totalDuels,
           rank: 0, // Will be set after sorting
+          hasCompletionRelic,
+          effectiveLuckScore,
         };
       })
-      .filter((wizard) => wizard.totalDuels >= minDuels);
+    );
+
+    // Filter by minimum duels
+    const filteredStats = wizardStats.filter(
+      (wizard) => wizard.totalDuels >= minDuels
+    );
 
     // Sort by win rate (descending), then by total wins (descending), then by total duels (descending)
-    wizardStats.sort((a, b) => {
+    filteredStats.sort((a, b) => {
       if (a.winRate !== b.winRate) {
         return b.winRate - a.winRate;
       }
-      if ((a.wins || 0) !== (b.wins || 0)) {
-        return (b.wins || 0) - (a.wins || 0);
+      if (a.wins !== b.wins) {
+        return b.wins - a.wins;
       }
       return b.totalDuels - a.totalDuels;
     });
 
     // Assign ranks and get owner information
     const wizardsWithOwners = await Promise.all(
-      wizardStats.map(async (wizard, index) => {
+      filteredStats.map(async (wizard, index) => {
         const owner = await ctx.db
           .query("users")
           .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
@@ -499,7 +582,7 @@ export const getWizardLeaderboard = query({
   },
 });
 
-// Get wizard with owner information - public information
+// Get wizard with owner information and campaign relic status - public information
 export const getWizardWithOwner = query({
   args: { wizardId: v.id("wizards") },
   returns: v.union(
@@ -520,6 +603,8 @@ export const getWizardWithOwner = query({
       losses: v.optional(v.number()),
       ownerUserId: v.optional(v.string()),
       ownerDisplayName: v.optional(v.string()),
+      hasCompletionRelic: v.boolean(),
+      effectiveLuckScore: v.number(),
     })
   ),
   handler: async (ctx, { wizardId }) => {
@@ -534,10 +619,28 @@ export const getWizardWithOwner = query({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
       .first();
 
+    // Get campaign progress to check for completion relic
+    const campaignProgress = await ctx.db
+      .query("wizardCampaignProgress")
+      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .unique();
+
+    const hasCompletionRelic = campaignProgress?.hasCompletionRelic || false;
+
+    // Calculate effective luck score (base luck would be stored on wizard, defaulting to 10)
+    // For now, we'll assume base luck is 10 and add +1 if has relic, capped at 20
+    const baseLuck = 10; // This could be a field on the wizard in the future
+    const effectiveLuckScore = Math.min(
+      20,
+      baseLuck + (hasCompletionRelic ? 1 : 0)
+    );
+
     return {
       ...wizard,
       ownerUserId: owner?.userId,
       ownerDisplayName: owner?.displayName,
+      hasCompletionRelic,
+      effectiveLuckScore,
     };
   },
 });
@@ -587,5 +690,212 @@ export const getAllWizardsWithOwners = query({
     );
 
     return wizardsWithOwners;
+  },
+});
+// Get leaderboard of wizards for a specific time period - public information (excludes campaign battles)
+export const getWizardLeaderboardByPeriod = query({
+  args: {
+    period: v.union(v.literal("week"), v.literal("month"), v.literal("all")),
+    limit: v.optional(v.number()),
+    minDuels: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      winRate: v.number(),
+      totalDuels: v.number(),
+      rank: v.number(),
+      ownerUserId: v.optional(v.string()),
+      ownerDisplayName: v.optional(v.string()),
+      periodWins: v.number(),
+      periodLosses: v.number(),
+      periodWinRate: v.number(),
+      periodTotalDuels: v.number(),
+      hasCompletionRelic: v.boolean(),
+      effectiveLuckScore: v.number(),
+    })
+  ),
+  handler: async (ctx, { period, limit = 50, minDuels = 1 }) => {
+    const now = Date.now();
+    let startTime: number;
+
+    // Calculate the start time based on the period
+    switch (period) {
+      case "week":
+        startTime = now - 7 * 24 * 60 * 60 * 1000; // 7 days ago
+        break;
+      case "month":
+        startTime = now - 30 * 24 * 60 * 60 * 1000; // 30 days ago
+        break;
+      case "all":
+        startTime = 0; // All time
+        break;
+    }
+
+    // Get all wizards
+    const wizards = await ctx.db.query("wizards").collect();
+
+    // Get duels completed in the specified period, excluding campaign battles
+    const periodDuels = await ctx.db
+      .query("duels")
+      .withIndex("by_completed_at", (q) =>
+        period === "all"
+          ? q.gte("completedAt", 0)
+          : q.gte("completedAt", startTime)
+      )
+      .filter((q) => q.eq(q.field("status"), "COMPLETED"))
+      .filter((q) => q.neq(q.field("isCampaignBattle"), true)) // Exclude campaign battles
+      .collect();
+
+    // Calculate period-specific stats for each wizard
+    const wizardStats = await Promise.all(
+      wizards.map(async (wizard) => {
+        // Get campaign progress for relic status
+        const campaignProgress = await ctx.db
+          .query("wizardCampaignProgress")
+          .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
+          .unique();
+
+        const hasCompletionRelic =
+          campaignProgress?.hasCompletionRelic || false;
+        const baseLuck = 10;
+        const effectiveLuckScore = Math.min(
+          20,
+          baseLuck + (hasCompletionRelic ? 1 : 0)
+        );
+
+        // Calculate multiplayer-only stats (excluding campaign battles)
+        // Note: The wizard.wins and wizard.losses should already exclude campaign battles
+        // but we need to recalculate from actual duel records to be sure
+        const allMultiplayerDuels = await ctx.db
+          .query("duels")
+          .filter((q) => q.eq(q.field("status"), "COMPLETED"))
+          .filter((q) => q.neq(q.field("isCampaignBattle"), true))
+          .collect();
+
+        const wizardMultiplayerDuels = allMultiplayerDuels.filter((duel) =>
+          duel.wizards.includes(wizard._id)
+        );
+
+        let overallWins = 0;
+        let overallLosses = 0;
+
+        wizardMultiplayerDuels.forEach((duel) => {
+          if (duel.winners?.includes(wizard._id)) {
+            overallWins++;
+          } else if (duel.losers?.includes(wizard._id)) {
+            overallLosses++;
+          }
+        });
+
+        const overallTotalDuels = overallWins + overallLosses;
+        const overallWinRate =
+          overallTotalDuels > 0 ? overallWins / overallTotalDuels : 0;
+
+        // Period-specific stats
+        let periodWins: number;
+        let periodLosses: number;
+        let periodTotalDuels: number;
+        let periodWinRate: number;
+
+        if (period === "all") {
+          // For all-time, use the calculated multiplayer stats
+          periodWins = overallWins;
+          periodLosses = overallLosses;
+          periodTotalDuels = overallTotalDuels;
+          periodWinRate = overallWinRate;
+        } else {
+          // For specific periods, calculate from duels in that period
+          const periodWizardDuels = periodDuels.filter((duel) =>
+            duel.wizards.includes(wizard._id)
+          );
+
+          periodWins = 0;
+          periodLosses = 0;
+
+          periodWizardDuels.forEach((duel) => {
+            if (duel.winners?.includes(wizard._id)) {
+              periodWins++;
+            } else if (duel.losers?.includes(wizard._id)) {
+              periodLosses++;
+            }
+          });
+
+          periodTotalDuels = periodWins + periodLosses;
+          periodWinRate =
+            periodTotalDuels > 0 ? periodWins / periodTotalDuels : 0;
+        }
+
+        return {
+          ...wizard,
+          winRate: overallWinRate,
+          totalDuels: overallTotalDuels,
+          periodWins,
+          periodLosses,
+          periodWinRate,
+          periodTotalDuels,
+          rank: 0, // Will be set after sorting
+          hasCompletionRelic,
+          effectiveLuckScore,
+        };
+      })
+    );
+
+    // Filter by minimum duels (using period duels for week/month, overall for all)
+    const filteredStats = wizardStats.filter((wizard) => {
+      const relevantDuels =
+        period === "all" ? wizard.totalDuels : wizard.periodTotalDuels;
+      return relevantDuels >= minDuels;
+    });
+
+    // Sort by period win rate, then by period wins, then by period total duels
+    filteredStats.sort((a, b) => {
+      const aWinRate = period === "all" ? a.winRate : a.periodWinRate;
+      const bWinRate = period === "all" ? b.winRate : b.periodWinRate;
+      const aWins = period === "all" ? a.periodWins : a.periodWins;
+      const bWins = period === "all" ? b.periodWins : b.periodWins;
+      const aTotalDuels = period === "all" ? a.totalDuels : a.periodTotalDuels;
+      const bTotalDuels = period === "all" ? b.totalDuels : b.periodTotalDuels;
+
+      if (aWinRate !== bWinRate) {
+        return bWinRate - aWinRate;
+      }
+      if (aWins !== bWins) {
+        return bWins - aWins;
+      }
+      return bTotalDuels - aTotalDuels;
+    });
+
+    // Assign ranks and get owner information
+    const wizardsWithOwners = await Promise.all(
+      filteredStats.map(async (wizard, index) => {
+        const owner = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
+          .first();
+
+        return {
+          ...wizard,
+          rank: index + 1,
+          ownerUserId: owner?.userId,
+          ownerDisplayName: owner?.displayName,
+        };
+      })
+    );
+
+    // Apply limit
+    return wizardsWithOwners.slice(0, limit);
   },
 });

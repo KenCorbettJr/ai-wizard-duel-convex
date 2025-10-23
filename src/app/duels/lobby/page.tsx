@@ -35,13 +35,13 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import MagicVortex from "@/components/MagicVortex";
+import { MagicVortex } from "@/components/MagicVortex";
 
 export default function DuelLobbyPage() {
   const { user } = useUser();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null,
+    null
   );
   const [selectedDuelType, setSelectedDuelType] = useState<
     number | "TO_THE_DEATH"
@@ -95,15 +95,7 @@ export default function DuelLobbyPage() {
   // Show loading state if user is being redirected to a duel
   if (userRecentDuel && !userLobbyStatus) {
     return (
-      <MagicVortex
-        baseHue={280}
-        baseSpeed={0.15}
-        rangeSpeed={1.2}
-        baseRadius={0.8}
-        rangeRadius={1.5}
-        backgroundColor="rgba(15, 23, 42, 0.95)"
-        className="min-h-screen"
-      >
+      <MagicVortex className="min-h-screen">
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
@@ -335,7 +327,7 @@ export default function DuelLobbyPage() {
                         setSelectedDuelType(
                           value === "TO_THE_DEATH"
                             ? "TO_THE_DEATH"
-                            : parseInt(value),
+                            : parseInt(value)
                         )
                       }
                     >

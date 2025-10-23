@@ -12,7 +12,7 @@ export default function WatchDuelsPage() {
   const [offset, setOffset] = useState(0);
   const limit = 20;
 
-  const { duels, total, hasMore } = useQuery(api.duels.getAllRecentDuels, {
+  const { duels, total, hasMore } = useQuery(api.duels.getWatchableDuels, {
     limit,
     offset,
   }) || { duels: [], total: 0, hasMore: false };

@@ -23,7 +23,7 @@ import {
   BarChart3,
   Coins,
   User,
-  Shield,
+  Scroll,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -83,6 +83,12 @@ const sidebarGroups: SidebarGroup[] = [
         href: "/wizards/create",
         label: "Add Wizard",
         icon: Plus,
+        requiresAuth: true,
+      },
+      {
+        href: "/campaign",
+        label: "Campaign",
+        icon: Scroll,
         requiresAuth: true,
       },
     ],

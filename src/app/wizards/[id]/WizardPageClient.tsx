@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
 import { WizardStatistics } from "@/components/WizardStatistics";
 import { TrophyHall } from "@/components/TrophyHall";
+import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
 import {
   ArrowLeft,
   Trophy,
@@ -213,14 +214,23 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-2xl">
               {wizard.name}
             </h1>
-            {wizard.isAIPowered && (
-              <Badge
-                variant="secondary"
-                className="text-sm bg-white/90 text-gray-800 shadow-lg"
-              >
-                🤖 AI Powered
-              </Badge>
-            )}
+            <div className="flex flex-col gap-2">
+              {wizard.hasCompletionRelic && (
+                <CampaignRelicBadge
+                  hasRelic={wizard.hasCompletionRelic}
+                  effectiveLuckScore={wizard.effectiveLuckScore}
+                  className="text-sm shadow-lg"
+                />
+              )}
+              {wizard.isAIPowered && (
+                <Badge
+                  variant="secondary"
+                  className="text-sm bg-white/90 text-gray-800 shadow-lg"
+                >
+                  🤖 AI Powered
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -249,7 +259,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8 max-w-5xl mx-auto">
           <div className="bg-green-50 dark:bg-green-950/30 p-6 rounded-lg text-center border border-green-200 dark:border-green-800">
             <Trophy className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
             <div className="text-3xl font-bold text-green-700 dark:text-green-300">
@@ -285,6 +295,21 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
             </div>
             <div className="text-sm text-purple-600 dark:text-purple-400">
               Total Duels
+            </div>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-950/30 p-6 rounded-lg text-center border border-amber-200 dark:border-amber-800">
+            <Zap className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-3" />
+            <div className="text-3xl font-bold text-amber-700 dark:text-amber-300">
+              {wizard.effectiveLuckScore || 10}
+            </div>
+            <div className="text-sm text-amber-600 dark:text-amber-400">
+              Luck Score
+              {wizard.hasCompletionRelic && (
+                <span className="block text-xs text-amber-500 dark:text-amber-300">
+                  (+1 Relic)
+                </span>
+              )}
             </div>
           </div>
         </div>

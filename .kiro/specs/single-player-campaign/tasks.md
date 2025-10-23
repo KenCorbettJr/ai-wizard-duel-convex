@@ -1,190 +1,156 @@
 # Implementation Plan
 
-- [ ] 1. Set up database schema and core data models
-  - Extend convex/schema.ts with new campaign-related tables
-  - Create campaigns, campaignStages, campaignBattles, and wizardExperience tables
-  - Add proper indexes for efficient querying
-  - _Requirements: 2.1, 5.1, 6.1, 6.2_
+- [x] 1. Set up database schema and seed campaign opponents
+  - Add new tables to convex/schema.ts for campaign system
+  - Create campaignOpponents table with 10 predefined AI wizards
+  - Add wizardCampaignProgress table for individual wizard tracking
+  - Add campaignBattles table for battle records
+  - Extend duels table with isCampaignBattle flag
+  - _Requirements: 2.1, 4.1, 5.2, 6.2, 7.5_
 
-- [ ] 2. Create campaign initialization and basic queries
-  - [ ] 2.1 Implement campaign initialization mutation
-    - Write initializeCampaign mutation in convex/campaigns.ts
-    - Create getUserCampaign query for fetching user progress
-    - Add campaign progress validation logic
-    - _Requirements: 5.1, 6.1_
+- [x] 1.1 Create campaign opponents seed data
+  - Define 10 unique AI wizard opponents with names, descriptions, and personalities
+  - Set difficulty levels: opponents 1-3 (BEGINNER, -2 luck), 4-7 (INTERMEDIATE, 0 luck), 8-10 (ADVANCED, +2 luck)
+  - Include spell styles and personality traits for each opponent
+  - Create illustration prompts for AI image generation
+  - _Requirements: 4.1, 4.2, 8.2, 8.3, 8.4_
 
-  - [ ] 2.2 Create campaign stage management functions
-    - Implement getCampaignStages query to fetch available stages
-    - Write completeStage mutation for progression tracking
-    - Add stage unlock validation logic
-    - _Requirements: 2.2, 5.2, 8.1_
+- [x] 1.2 Write database schema tests
+  - Test campaign opponents table structure and constraints
+  - Test wizard campaign progress tracking
+  - Test campaign battle record creation
+  - Verify proper indexing for performance
+  - _Requirements: 4.1, 5.2, 6.2_
 
-- [ ] 3. Build AI opponent generation system
-  - [ ] 3.1 Create AI opponent generation logic
-    - Write generateAIOpponent mutation in convex/aiOpponents.ts
-    - Implement dynamic name and description generation
-    - Create personality trait assignment system
-    - _Requirements: 4.1, 4.2, 8.3_
+- [ ] 2. Implement core campaign backend functions
+  - Create convex/campaigns.ts with campaign management functions
+  - Implement getCampaignOpponents query to return all 10 AI wizards
+  - Create getWizardCampaignProgress and getUserCampaignProgress queries
+  - Implement defeatOpponent mutation for progression tracking
+  - _Requirements: 3.3, 5.1, 5.2, 6.1, 6.2_
 
-  - [ ] 3.2 Implement AI spell strategy system
-    - Write getAISpellStrategy query for contextual AI behavior
-    - Create spell generation based on personality traits and battle context
-    - Implement difficulty-based AI intelligence scaling
-    - _Requirements: 4.3, 4.4, 8.3_
+- [x] 2.1 Create campaign opponent management functions
+  - Implement createCampaignAIWizard mutation for battle instances
+  - Create getCampaignAISpellStrategy query with difficulty-based AI
+  - Apply luck modifiers based on opponent difficulty level
+  - Generate contextual AI spells based on personality traits
+  - _Requirements: 4.3, 4.4, 4.5, 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 4. Create campaign battle integration
-  - [ ] 4.1 Implement campaign battle creation
-    - Write startCampaignBattle mutation in convex/campaignBattles.ts
-    - Integrate with existing duel creation system
-    - Link campaign battles to user progress
-    - _Requirements: 7.1, 7.2, 4.5_
+- [x] 2.2 Implement campaign battle integration
+  - Create startCampaignBattle mutation that integrates with existing duel system
+  - Implement completeCampaignBattle mutation for result processing
+  - Add checkCampaignCompletion mutation for relic award logic
+  - Ensure campaign battles are marked with isCampaignBattle flag
+  - _Requirements: 3.5, 5.1, 5.4, 7.1, 7.3, 7.5, 9.1, 9.2_
 
-  - [ ] 4.2 Create campaign battle completion handling
-    - Write completeCampaignBattle mutation
-    - Implement experience point calculation and awarding
-    - Update wizard statistics for campaign battles
-    - _Requirements: 5.1, 5.2, 7.3_
+- [ ]\* 2.3 Write backend function tests
+  - Test campaign progression logic and validation
+  - Test AI opponent creation and spell generation
+  - Test relic award system and luck boost calculation
+  - Test campaign battle isolation from multiplayer stats
+  - _Requirements: 5.1, 7.3, 9.1, 9.2, 9.3_
 
-- [ ] 5. Build campaign navigation and routing
-  - [ ] 5.1 Create campaign app router structure
-    - Create src/app/campaign directory with page.tsx and layout.tsx
-    - Set up [stageId] dynamic route for stage selection
-    - Create battle/[battleId] nested route for campaign battles
-    - _Requirements: 1.1, 1.2_
+- [ ] 3. Create campaign progression UI components
+  - Build CampaignProgression component showing linear 10-opponent layout
+  - Create CampaignOpponentCard component for individual AI wizard display
+  - Implement CampaignWizardSelection component for wizard choice interface
+  - Add CampaignRelicBadge component for completion rewards display
+  - _Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 6.3, 6.4, 9.5_
 
-  - [ ] 5.2 Add campaign navigation to main navbar
-    - Update src/components/Navbar.tsx to include Campaign link
-    - Add campaign navigation only for authenticated users
-    - Implement proper navigation styling and positioning
-    - _Requirements: 1.1, 1.2_
+- [x] 3.1 Implement wizard progress tracking UI
+  - Display per-wizard campaign progress with visual indicators
+  - Show which opponents each wizard has defeated
+  - Indicate next available opponent for each wizard
+  - Display relic status and effective luck scores
+  - _Requirements: 3.2, 6.1, 6.2, 6.4, 9.4, 9.5_
 
-- [ ] 6. Create campaign map and stage visualization
-  - [ ] 6.1 Build CampaignMap component
-    - Create src/components/CampaignMap.tsx with visual stage progression
-    - Implement locked/unlocked stage indicators
-    - Add stage hover information display
-    - Create responsive design for different screen sizes
-    - _Requirements: 2.1, 2.2, 2.3, 6.3_
+- [x] 3.2 Create opponent difficulty visualization
+  - Display opponent difficulty levels with clear indicators
+  - Show luck modifiers for each opponent (+2, 0, -2)
+  - Visualize personality traits and spell styles
+  - Implement lock/unlock status for linear progression
+  - _Requirements: 2.3, 4.2, 8.5_
 
-  - [ ] 6.2 Create campaign overview page
-    - Implement src/app/campaign/page.tsx with campaign map integration
-    - Add user progress display and statistics overview
-    - Handle cases where user has no wizards created
-    - _Requirements: 1.3, 2.1, 6.1_
+- [ ]\* 3.3 Write component tests
+  - Test campaign progression display logic
+  - Test wizard selection and progress indicators
+  - Test opponent card rendering and status display
+  - Test relic badge functionality
+  - _Requirements: 2.1, 3.1, 6.1, 9.5_
 
-- [ ] 7. Build stage selection and wizard selection interface
-  - [ ] 7.1 Create StageSelection component
-    - Build src/components/StageSelection.tsx for stage details
-    - Implement wizard selection interface for campaign battles
-    - Add special conditions and requirements display
-    - _Requirements: 2.4, 3.1, 3.2, 8.4_
+- [x] 4. Build campaign page structure and navigation
+  - Create src/app/campaign/page.tsx for main campaign overview
+  - Implement src/app/campaign/layout.tsx with campaign-specific navigation
+  - Build wizard selection pages for opponent battles
+  - Create campaign statistics page for progress tracking
+  - _Requirements: 1.1, 1.2, 2.1, 6.5_
 
-  - [ ] 7.2 Implement stage detail page
-    - Create src/app/campaign/[stageId]/page.tsx
-    - Integrate StageSelection component with battle initiation
-    - Add validation for wizard availability and stage requirements
-    - _Requirements: 3.3, 3.4, 2.4_
+- [x] 4.1 Integrate campaign battles with existing duel system
+  - Modify existing duel UI to handle campaign battles
+  - Ensure campaign battles don't appear in watchable duels list
+  - Prevent campaign battle results from affecting leaderboards
+  - Maintain same battle mechanics as multiplayer duels
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 8. Create AI opponent display and battle preparation
-  - [ ] 8.1 Build AIOpponentCard component
-    - Create src/components/AIOpponentCard.tsx for opponent display
-    - Implement mysterious reveal animation for AI opponents
-    - Add personality trait and difficulty visualization
-    - _Requirements: 4.1, 4.2, 8.1_
+- [x] 4.2 Add campaign navigation to main app
+  - Add "Campaign" option to main navigation menu
+  - Implement routing to campaign overview page
+  - Handle cases where users have no wizards created
+  - Provide clear entry points from wizard management pages
+  - _Requirements: 1.1, 1.2, 1.3_
 
-  - [ ] 8.2 Integrate AI opponents with battle system
-    - Modify existing battle components to handle AI opponents
-    - Ensure AI opponents automatically cast spells during battles
-    - Implement AI spell casting with personality-based behavior
-    - _Requirements: 4.3, 4.4, 4.5, 7.4_
+- [ ]\* 4.3 Write page integration tests
+  - Test campaign page navigation and routing
+  - Test wizard selection flow for campaign battles
+  - Test campaign battle initiation and completion
+  - Test navigation between campaign and other app sections
+  - _Requirements: 1.1, 1.2, 3.5, 4.1_
 
-- [ ] 9. Build experience and progression system
-  - [ ] 9.1 Create wizard experience tracking
-    - Implement wizardExperience table management
-    - Write updateWizardExperience mutation
-    - Create getWizardExperience query for display
-    - _Requirements: 5.1, 6.2_
+- [ ] 5. Implement relic reward system and luck boost mechanics
+  - Create relic award logic when wizard defeats all 10 opponents
+  - Implement permanent +1 luck boost with 20 maximum cap
+  - Update wizard statistics to include relic status
+  - Apply luck boost to all future battles for relic-holding wizards
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-  - [ ] 9.2 Build progression display components
-    - Create src/components/CampaignStats.tsx for progress tracking
-    - Implement experience point display in wizard cards
-    - Add campaign milestone and achievement indicators
-    - _Requirements: 6.1, 6.2, 6.4_
+- [x] 5.1 Update existing systems for campaign integration
+  - Modify leaderboard queries to exclude campaign battles
+  - Update watchable duels list to filter out campaign battles
+  - Ensure wizard win/loss stats separate campaign from multiplayer
+  - Update wizard display components to show relic status
+  - _Requirements: 7.3, 7.5, 9.5_
 
-- [ ] 10. Create campaign statistics and history
-  - [ ] 10.1 Implement campaign statistics page
-    - Create src/app/campaign/stats/page.tsx
-    - Build comprehensive campaign analytics display
-    - Add battle history and achievement showcase
-    - _Requirements: 6.1, 6.2, 6.5_
+- [ ]\* 5.2 Write relic system tests
+  - Test relic award conditions and logic
+  - Test luck boost calculation and maximum cap enforcement
+  - Test relic persistence across battles and sessions
+  - Test integration with existing wizard statistics
+  - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 10.2 Add campaign statistics to dashboard
-    - Update src/app/dashboard/page.tsx to include campaign stats
-    - Create campaign progress card for main dashboard
-    - Add quick access to campaign mode from dashboard
-    - _Requirements: 6.1, 6.2_
+- [x] 6. Create campaign statistics and progress tracking
+  - Build CampaignStats component for overall progress display
+  - Implement per-wizard progress visualization
+  - Create campaign battle history display
+  - Add completion percentage and milestone tracking
+  - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 11. Implement special stage conditions and mechanics
-  - [ ] 11.1 Create special condition handling
-    - Implement modified health, round limits, and environmental effects
-    - Update battle creation to apply special conditions
-    - Add special condition display in stage selection
-    - _Requirements: 8.1, 8.2, 8.4_
+- [ ]\* 6.1 Write statistics component tests
+  - Test campaign progress calculation and display
+  - Test wizard-specific statistics tracking
+  - Test battle history filtering and presentation
+  - Test completion milestone detection
+  - _Requirements: 6.1, 6.2, 6.5_
 
-  - [ ] 11.2 Build tutorial and help system
-    - Create tutorial components for first-time campaign users
-    - Add help tooltips and explanations for special mechanics
-    - Implement progressive disclosure of campaign features
-    - _Requirements: 8.5_
+- [x] 7. Polish UI and add campaign-specific styling
+  - Design visual theme for campaign mode distinct from multiplayer
+  - Add animations for opponent unlocking and relic awards
+  - Implement responsive design for campaign progression display
+  - Add loading states and error handling for campaign operations
+  - _Requirements: 2.1, 2.2, 6.3, 9.1_
 
-- [ ] 12. Add comprehensive error handling and validation
-  - [ ] 12.1 Implement campaign-specific error handling
-    - Add validation for stage progression requirements
-    - Create error recovery for AI generation failures
-    - Implement graceful degradation for offline scenarios
-    - _Requirements: 2.4, 4.1, 5.4_
-
-  - [ ] 12.2 Add loading states and user feedback
-    - Create loading components for AI generation and battle creation
-    - Add progress indicators for campaign operations
-    - Implement success/failure notifications for user actions
-    - _Requirements: 4.1, 5.3_
-
-- [ ] 13. Create comprehensive test coverage
-  - [ ] 13.1 Write unit tests for campaign logic
-    - Test campaign progression and stage unlock logic
-    - Create tests for AI opponent generation algorithms
-    - Add tests for experience calculation and awarding
-    - _Requirements: 5.1, 5.2, 4.1, 4.2_
-
-  - [ ] 13.2 Write integration tests for campaign flow
-    - Test complete campaign battle creation and completion flow
-    - Create tests for AI opponent integration with battle system
-    - Add tests for campaign statistics and progress tracking
-    - _Requirements: 7.1, 7.2, 7.3, 6.1_
-
-- [ ] 14. Implement performance optimizations
-  - [ ] 14.1 Optimize database queries and caching
-    - Add proper indexing for campaign-related queries
-    - Implement caching for frequently accessed stage data
-    - Optimize AI opponent generation performance
-    - _Requirements: 2.1, 4.1, 6.1_
-
-  - [ ] 14.2 Optimize frontend performance
-    - Implement lazy loading for campaign stages and components
-    - Add preloading for next stage content
-    - Optimize campaign map rendering for large numbers of stages
-    - _Requirements: 2.1, 2.2_
-
-- [ ] 15. Add seed data and initial campaign stages
-  - [ ] 15.1 Create initial campaign stage data
-    - Design and implement 10-15 initial campaign stages
-    - Create diverse AI opponent templates for different difficulties
-    - Add varied special conditions and environmental effects
-    - _Requirements: 2.2, 4.2, 8.1, 8.2_
-
-  - [ ] 15.2 Implement data seeding system
-    - Create database seeding scripts for campaign stages
-    - Add AI opponent template seeding
-    - Implement development data reset functionality
-    - _Requirements: 2.2, 4.1_
+- [ ]\* 7.1 Write end-to-end campaign tests
+  - Test complete campaign progression from start to relic award
+  - Test multiple wizards progressing through campaign simultaneously
+  - Test campaign battle flow integration with existing duel system
+  - Test error handling and edge cases in campaign progression
+  - _Requirements: 3.5, 5.1, 5.5, 9.1, 9.2_

@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { CreateWizardModal } from "@/components/CreateWizardModal";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { ConvexImage } from "@/components/ConvexImage";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
@@ -51,7 +50,6 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     null
   );
   const [isJoining, setIsJoining] = useState(false);
-  const [showCreateWizardModal, setShowCreateWizardModal] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const { shortcode } = use(params);
 
@@ -105,13 +103,9 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
     }
   };
 
-  const handleWizardCreated = () => {
-    setShowCreateWizardModal(false);
-  };
-
   const handleCreateWizard = () => {
     if (isProfileComplete) {
-      setShowCreateWizardModal(true);
+      router.push("/wizards/create");
     } else {
       setShowProfilePrompt(true);
     }
@@ -663,12 +657,6 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
           </div>
         </div>
       </div>
-
-      <CreateWizardModal
-        open={showCreateWizardModal}
-        onOpenChange={setShowCreateWizardModal}
-        onSuccess={handleWizardCreated}
-      />
 
       <ProfileCompletionPrompt
         open={showProfilePrompt}

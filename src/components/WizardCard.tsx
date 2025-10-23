@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Star, Heart } from "lucide-react";
+import { Star, Heart, Award } from "lucide-react";
 import { Crown } from "@/components/ui/crown-icon";
 import { ConvexImage } from "@/components/ConvexImage";
 import { UserIdDisplay } from "@/components/UserIdDisplay";
@@ -19,6 +19,8 @@ interface WizardCardProps {
     illustration?: string; // This is a storage ID string, not Id<"_storage">
     ownerUserId?: string;
     ownerDisplayName?: string;
+    hasCompletionRelic?: boolean;
+    effectiveLuckScore?: number;
   };
   points?: number;
   hitPoints?: number;
@@ -70,6 +72,16 @@ export const WizardCard = memo(function WizardCard({
             </div>
           )}
           <div className="absolute top-4 right-4 flex gap-2">
+            {wizard.hasCompletionRelic && (
+              <Badge
+                variant="default"
+                className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
+                title={`Campaign Relic (+1 Luck, Effective Luck: ${wizard.effectiveLuckScore || 11})`}
+              >
+                <Award className="h-3 w-3" />
+                Relic
+              </Badge>
+            )}
             {isWinner && (
               <Badge
                 variant="default"
