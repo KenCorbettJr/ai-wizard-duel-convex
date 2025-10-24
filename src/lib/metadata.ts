@@ -985,7 +985,7 @@ export function generateCompleteUserProfileMetadata(
       title: config.title,
       description: config.description,
       url: canonicalUrl,
-      type: "profile",
+      type: "website",
       images: [
         {
           url: config.image || DEFAULT_SOCIAL_IMAGES.wizard,

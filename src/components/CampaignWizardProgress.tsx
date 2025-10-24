@@ -15,7 +15,7 @@ interface WizardWithProgress {
 
 interface CampaignWizardProgressProps {
   wizardData: WizardWithProgress;
-  campaignOpponents: Doc<"campaignOpponents">[];
+  campaignOpponents: Doc<"wizards">[];
   onSelectWizard?: (wizardId: string) => void;
   isSelected?: boolean;
 }

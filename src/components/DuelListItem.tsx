@@ -88,7 +88,7 @@ export function DuelListItem({
     userWizards.some((wizard) => duel.losers?.includes(wizard._id));
 
   const handleCopyShortcode = async (shortcode: string) => {
-    const url = `${window.location.origin}/join/${shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${shortcode}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess(true);

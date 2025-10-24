@@ -32,7 +32,7 @@ export function DuelCreatedSuccess({
   const handleCopyLink = async () => {
     if (!duel?.shortcode) return;
 
-    const url = `${window.location.origin}/join/${duel.shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -45,7 +45,7 @@ export function DuelCreatedSuccess({
   const handleShare = async () => {
     if (!duel?.shortcode) return;
 
-    const url = `${window.location.origin}/join/${duel.shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`;
     const text = `Join my wizard duel! Use shortcode ${duel.shortcode} or click this link:`;
 
     if (navigator.share) {

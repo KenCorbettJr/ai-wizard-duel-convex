@@ -30,13 +30,13 @@ export function CampaignBattleHistory({
 }: CampaignBattleHistoryProps) {
   // Get battle history based on provided filters
   const wizardBattles = useQuery(
-    wizardId ? api.campaigns.getWizardCampaignBattles : "skip",
-    wizardId ? { wizardId } : undefined
+    api.campaigns.getWizardCampaignBattles,
+    wizardId ? { wizardId } : "skip"
   );
 
   const opponentBattles = useQuery(
-    userId && opponentNumber ? api.campaigns.getUserOpponentBattles : "skip",
-    userId && opponentNumber ? { userId, opponentNumber } : undefined
+    api.campaigns.getUserOpponentBattles,
+    userId && opponentNumber ? { userId, opponentNumber } : "skip"
   );
 
   // Get campaign opponents for display names
@@ -44,8 +44,8 @@ export function CampaignBattleHistory({
 
   // Get wizard details if showing wizard names
   const wizards = useQuery(
-    showWizardName ? api.wizards.getUserWizards : "skip",
-    showWizardName ? {} : undefined
+    api.wizards.getUserWizards,
+    showWizardName ? {} : "skip"
   );
 
   // Determine which battles to show

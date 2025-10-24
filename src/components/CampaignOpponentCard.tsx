@@ -13,7 +13,7 @@ import { Lock, CheckCircle, Swords, Star, Zap, Shield } from "lucide-react";
 import type { Doc } from "../../convex/_generated/dataModel";
 
 interface CampaignOpponentCardProps {
-  opponent: Doc<"campaignOpponents">;
+  opponent: Doc<"wizards">;
   isUnlocked: boolean;
   isDefeated: boolean;
   isCurrent?: boolean;
@@ -72,9 +72,11 @@ export function CampaignOpponentCard({
     return { text: "±0", color: "text-gray-600 dark:text-gray-400" };
   };
 
-  const difficultyConfig = getDifficultyConfig(opponent.difficulty);
+  const difficultyConfig = getDifficultyConfig(
+    opponent.difficulty || "BEGINNER"
+  );
   const DifficultyIcon = difficultyConfig.icon;
-  const luckDisplay = getLuckModifierDisplay(opponent.luckModifier);
+  const luckDisplay = getLuckModifierDisplay(opponent.luckModifier || 0);
 
   const getCardState = () => {
     if (isDefeated) {
@@ -112,7 +114,7 @@ export function CampaignOpponentCard({
 
   const handleClick = () => {
     if (isUnlocked && !isDefeated && onSelectOpponent) {
-      onSelectOpponent(opponent.opponentNumber);
+      onSelectOpponent(opponent.opponentNumber!);
     }
   };
 
@@ -167,9 +169,9 @@ export function CampaignOpponentCard({
                 <TooltipContent>
                   <p>Luck modifier: {luckDisplay.text}</p>
                   <p className="text-xs text-muted-foreground">
-                    {opponent.luckModifier > 0 &&
+                    {(opponent.luckModifier || 0) > 0 &&
                       "This opponent has increased luck"}
-                    {opponent.luckModifier < 0 &&
+                    {(opponent.luckModifier || 0) < 0 &&
                       "This opponent has reduced luck"}
                     {opponent.luckModifier === 0 &&
                       "This opponent has standard luck"}
@@ -202,23 +204,23 @@ export function CampaignOpponentCard({
               Personality
             </div>
             <div className="flex flex-wrap gap-1">
-              {opponent.personalityTraits.slice(0, 3).map((trait, index) => (
+              {opponent.personalityTraits?.slice(0, 3).map((trait, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
                   {trait}
                 </Badge>
               ))}
-              {opponent.personalityTraits.length > 3 && (
+              {(opponent.personalityTraits?.length || 0) > 3 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge variant="outline" className="text-xs cursor-help">
-                      +{opponent.personalityTraits.length - 3} more
+                      +{(opponent.personalityTraits?.length || 0) - 3} more
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
                     <div className="space-y-1">
                       {opponent.personalityTraits
-                        .slice(3)
-                        .map((trait, index) => (
+                        ?.slice(3)
+                        ?.map((trait, index) => (
                           <div key={index} className="text-xs">
                             {trait}
                           </div>

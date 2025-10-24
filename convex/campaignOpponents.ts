@@ -167,7 +167,7 @@ import { mutation, query } from "./_generated/server";
  */
 export const seedCampaignOpponent = mutation({
   args: campaignOpponentValidator,
-  returns: v.id("campaignOpponents"),
+  returns: v.id("wizards"),
   handler: async (ctx, args) => {
     // Validate opponent number range
     if (args.opponentNumber < 1 || args.opponentNumber > 10) {
@@ -176,9 +176,11 @@ export const seedCampaignOpponent = mutation({
 
     // Check for existing opponent with same number
     const existing = await ctx.db
-      .query("campaignOpponents")
-      .withIndex("by_opponent_number", (q) =>
-        q.eq("opponentNumber", args.opponentNumber)
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q
+          .eq("isCampaignOpponent", true)
+          .eq("opponentNumber", args.opponentNumber)
       )
       .unique();
 
@@ -188,8 +190,12 @@ export const seedCampaignOpponent = mutation({
       );
     }
 
-    // Insert the opponent
-    return await ctx.db.insert("campaignOpponents", args);
+    // Insert the opponent as a wizard with campaign flags
+    return await ctx.db.insert("wizards", {
+      ...args,
+      owner: "campaign",
+      isCampaignOpponent: true,
+    });
   },
 });
 
@@ -200,28 +206,40 @@ export const getCampaignOpponent = query({
   args: { opponentNumber: v.number() },
   returns: v.union(
     v.object({
-      _id: v.id("campaignOpponents"),
+      _id: v.id("wizards"),
       _creationTime: v.number(),
-      opponentNumber: v.number(),
+      owner: v.string(),
       name: v.string(),
       description: v.string(),
-      personalityTraits: v.array(v.string()),
-      spellStyle: v.string(),
-      difficulty: v.union(
-        v.literal("BEGINNER"),
-        v.literal("INTERMEDIATE"),
-        v.literal("ADVANCED")
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(
+        v.union(
+          v.literal("BEGINNER"),
+          v.literal("INTERMEDIATE"),
+          v.literal("ADVANCED")
+        )
       ),
-      luckModifier: v.number(),
-      illustrationPrompt: v.string(),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     }),
     v.null()
   ),
   handler: async (ctx, { opponentNumber }) => {
     return await ctx.db
-      .query("campaignOpponents")
-      .withIndex("by_opponent_number", (q) =>
-        q.eq("opponentNumber", opponentNumber)
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber)
       )
       .unique();
   },
@@ -234,28 +252,44 @@ export const getAllCampaignOpponents = query({
   args: {},
   returns: v.array(
     v.object({
-      _id: v.id("campaignOpponents"),
+      _id: v.id("wizards"),
       _creationTime: v.number(),
-      opponentNumber: v.number(),
+      owner: v.string(),
       name: v.string(),
       description: v.string(),
-      personalityTraits: v.array(v.string()),
-      spellStyle: v.string(),
-      difficulty: v.union(
-        v.literal("BEGINNER"),
-        v.literal("INTERMEDIATE"),
-        v.literal("ADVANCED")
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(
+        v.union(
+          v.literal("BEGINNER"),
+          v.literal("INTERMEDIATE"),
+          v.literal("ADVANCED")
+        )
       ),
-      luckModifier: v.number(),
-      illustrationPrompt: v.string(),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx) => {
     const opponents = await ctx.db
-      .query("campaignOpponents")
-      .withIndex("by_opponent_number")
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true)
+      )
       .collect();
 
-    return opponents.sort((a, b) => a.opponentNumber - b.opponentNumber);
+    return opponents.sort(
+      (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0)
+    );
   },
 });

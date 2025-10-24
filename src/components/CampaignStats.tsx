@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Doc } from "../../convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -68,27 +69,33 @@ export function CampaignStats({
   // Calculate statistics
   const totalWizards = userWizards.length;
   const completedCampaigns = campaignProgress.filter(
-    (p: any) => p.hasCompletionRelic
+    (p: Doc<"wizardCampaignProgress">) => p.hasCompletionRelic
   ).length;
   const activeCampaigns = campaignProgress.filter(
-    (p: any) => !p.hasCompletionRelic && p.currentOpponent <= 10
+    (p: Doc<"wizardCampaignProgress">) =>
+      !p.hasCompletionRelic && p.currentOpponent <= 10
   ).length;
   const totalBattlesWon = campaignProgress.reduce(
-    (sum: number, p: any) => sum + p.defeatedOpponents.length,
+    (sum: number, p: Doc<"wizardCampaignProgress">) =>
+      sum + p.defeatedOpponents.length,
     0
   );
   const averageProgress =
     totalWizards > 0
       ? campaignProgress.reduce(
-          (sum: number, p: any) => sum + Math.min(p.currentOpponent - 1, 10),
+          (sum: number, p: Doc<"wizardCampaignProgress">) =>
+            sum + Math.min(p.currentOpponent - 1, 10),
           0
         ) / totalWizards
       : 0;
 
   // Get most recent battle
   const mostRecentBattle = campaignProgress
-    .filter((p: any) => p.lastBattleAt)
-    .sort((a: any, b: any) => (b.lastBattleAt || 0) - (a.lastBattleAt || 0))[0];
+    .filter((p: Doc<"wizardCampaignProgress">) => p.lastBattleAt)
+    .sort(
+      (a: Doc<"wizardCampaignProgress">, b: Doc<"wizardCampaignProgress">) =>
+        (b.lastBattleAt || 0) - (a.lastBattleAt || 0)
+    )[0];
 
   // Calculate completion percentage and milestones
   const totalPossibleBattles = totalWizards * 10;
@@ -376,9 +383,10 @@ export function CampaignStats({
               </div>
             ) : (
               <div className="space-y-4">
-                {userWizards.map((wizard: any) => {
+                {userWizards.map((wizard: Doc<"wizards">) => {
                   const progress = campaignProgress.find(
-                    (p: any) => p.wizardId === wizard._id
+                    (p: Doc<"wizardCampaignProgress">) =>
+                      p.wizardId === wizard._id
                   );
                   const defeatedCount = progress?.defeatedOpponents.length || 0;
                   const progressPercent = (defeatedCount / 10) * 100;

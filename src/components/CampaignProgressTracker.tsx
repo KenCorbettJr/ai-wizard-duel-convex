@@ -223,7 +223,7 @@ export function CampaignProgressTracker({
                 Next Challenge
               </h3>
               <Badge
-                className={`${getDifficultyColor(nextOpponent.difficulty)} bg-transparent border`}
+                className={`${getDifficultyColor(nextOpponent.difficulty || "BEGINNER")} bg-transparent border`}
               >
                 {nextOpponent.difficulty}
               </Badge>
@@ -238,8 +238,9 @@ export function CampaignProgressTracker({
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span>Style: {nextOpponent.spellStyle}</span>
                 <span>
-                  Luck Modifier: {nextOpponent.luckModifier > 0 ? "+" : ""}
-                  {nextOpponent.luckModifier}
+                  Luck Modifier:{" "}
+                  {(nextOpponent.luckModifier || 0) > 0 ? "+" : ""}
+                  {nextOpponent.luckModifier || 0}
                 </span>
               </div>
             </div>

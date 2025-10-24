@@ -32,7 +32,7 @@ function ActiveDuelsCard({ userId }: { userId?: string }) {
     ) || [];
 
   const handleCopyShortcode = async (shortcode: string) => {
-    const url = `${window.location.origin}/join/${shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${shortcode}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch (error) {

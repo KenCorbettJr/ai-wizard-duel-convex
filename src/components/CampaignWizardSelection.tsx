@@ -15,8 +15,8 @@ interface WizardWithProgress {
 
 interface CampaignWizardSelectionProps {
   wizards: WizardWithProgress[];
-  selectedOpponent: Doc<"campaignOpponents">;
-  campaignOpponents: Doc<"campaignOpponents">[];
+  selectedOpponent: Doc<"wizards">;
+  campaignOpponents: Doc<"wizards">[];
   onWizardSelect: (wizardId: string) => void;
   onStartBattle: () => void;
   onBack: () => void;
@@ -91,12 +91,14 @@ export function CampaignWizardSelection({
             </span>
             <div className="flex items-center gap-2">
               <Badge
-                className={getDifficultyColor(selectedOpponent.difficulty)}
+                className={getDifficultyColor(
+                  selectedOpponent.difficulty || "BEGINNER"
+                )}
               >
                 {selectedOpponent.difficulty}
               </Badge>
               <Badge variant="outline">
-                {getLuckModifierText(selectedOpponent.luckModifier)}
+                {getLuckModifierText(selectedOpponent.luckModifier || 0)}
               </Badge>
             </div>
           </CardTitle>
@@ -113,7 +115,7 @@ export function CampaignWizardSelection({
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
-              {selectedOpponent.personalityTraits.map((trait, index) => (
+              {selectedOpponent.personalityTraits?.map((trait, index) => (
                 <Badge key={index} variant="secondary" className="text-xs">
                   {trait}
                 </Badge>

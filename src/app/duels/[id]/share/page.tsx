@@ -54,14 +54,14 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
   // Fetch wizard data for the creator's wizard (first wizard in the duel)
   const creatorWizard = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
   );
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (isLoaded && !user) {
       router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`,
+        `/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`
       );
     }
   }, [isLoaded, user, router]);
@@ -79,7 +79,7 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
   const handleCopyLink = async () => {
     if (!duel?.shortcode) return;
 
-    const url = `${window.location.origin}/join/${duel.shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess(true);
@@ -92,7 +92,7 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
   const handleShare = async () => {
     if (!duel?.shortcode) return;
 
-    const url = `${window.location.origin}/join/${duel.shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`;
     const text = `${creatorWizard?.name} challenges you to a magical duel! Join the battle: ${url}`;
 
     if (navigator.share) {
@@ -376,7 +376,7 @@ export default function DuelSharePage({ params }: DuelSharePageProps) {
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="px-3 py-2 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30 flex-1 truncate">
-                      {`${window.location.origin}/join/${duel.shortcode}`}
+                      {`${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`}
                     </code>
                     <Button
                       variant="outline"

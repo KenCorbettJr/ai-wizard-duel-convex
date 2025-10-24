@@ -114,8 +114,7 @@ Based on your personality and the current battle situation, choose your spell an
 Respond with a spell that fits your personality and a brief explanation of your strategy.`;
 
     try {
-      const response = await generateText({
-        prompt,
+      const response = await generateText(prompt, undefined, {
         temperature: 0.7,
         maxTokens: 200,
       });

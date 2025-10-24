@@ -19,7 +19,7 @@ interface WizardWithProgress {
 }
 
 interface CampaignProgressionProps {
-  campaignOpponents: Doc<"campaignOpponents">[];
+  campaignOpponents: Doc<"wizards">[];
   userWizards: WizardWithProgress[];
   onOpponentSelect: (opponentNumber: number) => void;
   onStartBattle: (wizardId: string, opponentNumber: number) => void;
@@ -212,6 +212,7 @@ export function CampaignProgression({
 
         <div className="campaign-grid">
           {campaignOpponents.map((opponent, index) => {
+            if (!opponent.opponentNumber) return null;
             const status = getOpponentStatus(opponent.opponentNumber);
 
             return (

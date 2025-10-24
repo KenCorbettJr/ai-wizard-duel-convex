@@ -24,10 +24,10 @@ describe("SubscriptionService", () => {
   describe("getUserSubscription", () => {
     test("should return user subscription info", async () => {
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
 
       expect(subscription).not.toBeNull();
@@ -38,10 +38,10 @@ describe("SubscriptionService", () => {
 
     test("should return null for non-existent user", async () => {
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: "non-existent-user",
-        },
+        }
       );
 
       expect(subscription).toBeNull();
@@ -55,7 +55,7 @@ describe("SubscriptionService", () => {
         {
           clerkId: testClerkId,
           feature: "UNLIMITED_WIZARDS",
-        },
+        }
       );
 
       expect(hasAccess).toBe(false);
@@ -74,7 +74,7 @@ describe("SubscriptionService", () => {
         {
           clerkId: testClerkId,
           feature: "UNLIMITED_WIZARDS",
-        },
+        }
       );
 
       expect(hasAccess).toBe(true);
@@ -93,7 +93,7 @@ describe("SubscriptionService", () => {
         {
           clerkId: testClerkId,
           feature: "UNLIMITED_WIZARDS",
-        },
+        }
       );
 
       expect(hasAccess).toBe(false);
@@ -252,10 +252,10 @@ describe("SubscriptionService", () => {
       });
 
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
 
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
@@ -268,10 +268,10 @@ describe("SubscriptionService", () => {
       });
 
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
 
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
@@ -284,10 +284,10 @@ describe("SubscriptionService", () => {
       });
 
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
 
       expect(subscription!.monthlyUsage.imageGenerations).toBe(1);
@@ -300,10 +300,10 @@ describe("SubscriptionService", () => {
       });
 
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
 
       expect(subscription!.monthlyUsage.adsWatched).toBe(1);
@@ -336,10 +336,10 @@ describe("SubscriptionService", () => {
       });
 
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: "expired-user",
-        },
+        }
       );
 
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
@@ -359,10 +359,10 @@ describe("SubscriptionService", () => {
       });
 
       const subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
 
       expect(subscription!.subscriptionTier).toBe("PREMIUM");
@@ -377,7 +377,7 @@ describe("SubscriptionService", () => {
           clerkId: "non-existent-user",
           subscriptionTier: "PREMIUM",
           subscriptionStatus: "ACTIVE",
-        }),
+        })
       ).rejects.toThrow("User not found");
     });
   });
@@ -438,10 +438,10 @@ describe("SubscriptionService", () => {
 
       // Verify usage was incremented
       let subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
@@ -453,10 +453,10 @@ describe("SubscriptionService", () => {
 
       // Verify usage was reset
       subscription = await t.query(
-        api.subscriptionService.getUserSubscription,
+        api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        },
+        }
       );
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(0);
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(0);

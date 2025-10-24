@@ -1,11 +1,5 @@
-import {
-  query,
-  mutation,
-  internalQuery,
-  internalMutation,
-} from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
 
 // Types for subscription management
 export type SubscriptionTier = "FREE" | "PREMIUM";
@@ -34,58 +28,6 @@ const FREE_TIER_LIMITS = {
 } as const;
 
 /**
- * Get user subscription and usage information
- */
-export const getUserSubscription = query({
-  args: { clerkId: v.string() },
-  returns: v.union(
-    v.null(),
-    v.object({
-      _id: v.id("users"),
-      subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),
-      subscriptionStatus: v.union(
-        v.literal("ACTIVE"),
-        v.literal("CANCELED"),
-        v.literal("PAST_DUE"),
-        v.literal("TRIALING"),
-      ),
-      stripeCustomerId: v.optional(v.string()),
-      stripeSubscriptionId: v.optional(v.string()),
-      subscriptionEndsAt: v.optional(v.number()),
-      imageCredits: v.number(),
-      monthlyUsage: v.object({
-        duelsPlayed: v.number(),
-        wizardsCreated: v.number(),
-        imageGenerations: v.number(),
-        adsWatched: v.number(),
-        resetDate: v.number(),
-      }),
-    }),
-  ),
-  handler: async (ctx, { clerkId }) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    return {
-      _id: user._id,
-      subscriptionTier: user.subscriptionTier,
-      subscriptionStatus: user.subscriptionStatus,
-      stripeCustomerId: user.stripeCustomerId,
-      stripeSubscriptionId: user.stripeSubscriptionId,
-      subscriptionEndsAt: user.subscriptionEndsAt,
-      imageCredits: user.imageCredits,
-      monthlyUsage: user.monthlyUsage,
-    };
-  },
-});
-
-/**
  * Check if user has access to a specific premium feature
  */
 export const hasFeatureAccess = query({
@@ -95,7 +37,7 @@ export const hasFeatureAccess = query({
       v.literal("UNLIMITED_WIZARDS"),
       v.literal("UNLIMITED_DUELS"),
       v.literal("PREMIUM_AI"),
-      v.literal("ADVANCED_CUSTOMIZATION"),
+      v.literal("ADVANCED_CUSTOMIZATION")
     ),
   },
   returns: v.boolean(),
@@ -160,7 +102,7 @@ export const checkUsageLimit = query({
       v.literal("DUEL_PLAYED"),
       v.literal("WIZARD_CREATED"),
       v.literal("IMAGE_GENERATED"),
-      v.literal("AD_WATCHED"),
+      v.literal("AD_WATCHED")
     ),
   },
   returns: v.object({
@@ -268,7 +210,7 @@ export const incrementUsage = mutation({
       v.literal("DUEL_PLAYED"),
       v.literal("WIZARD_CREATED"),
       v.literal("IMAGE_GENERATED"),
-      v.literal("AD_WATCHED"),
+      v.literal("AD_WATCHED")
     ),
   },
   returns: v.null(),
@@ -332,7 +274,7 @@ export const updateSubscription = mutation({
       v.literal("ACTIVE"),
       v.literal("CANCELED"),
       v.literal("PAST_DUE"),
-      v.literal("TRIALING"),
+      v.literal("TRIALING")
     ),
     stripeCustomerId: v.optional(v.string()),
     stripeSubscriptionId: v.optional(v.string()),
@@ -479,7 +421,7 @@ export const getUserUsageLimits = query({
         resetDate: v.number(),
       }),
       resetDate: v.number(),
-    }),
+    })
   ),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db

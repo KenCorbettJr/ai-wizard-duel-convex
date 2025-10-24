@@ -487,7 +487,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                       </p>
                       <div className="flex gap-3">
                         <Link
-                          href={`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`}
+                          href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}
                         >
                           <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
                             <LogIn className="h-4 w-4 mr-2" />
@@ -495,7 +495,7 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
                           </Button>
                         </Link>
                         <Link
-                          href={`/sign-up?redirect_url=${encodeURIComponent(window.location.pathname)}`}
+                          href={`/sign-up?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}
                         >
                           <Button
                             variant="outline"

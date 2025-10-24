@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
-import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { TimeAgo } from "@/components/TimeAgo";
 import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";

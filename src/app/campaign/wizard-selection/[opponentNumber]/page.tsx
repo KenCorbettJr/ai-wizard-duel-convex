@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "../../../../../convex/_generated/api";
-import { Id } from "../../../../../convex/_generated/dataModel";
+import { Id, Doc } from "../../../../../convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -42,7 +42,7 @@ export default function WizardSelectionPage({
   // Get campaign opponent data
   const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
   const selectedOpponent = campaignOpponents?.find(
-    (op: any) => op.opponentNumber === opponentNum
+    (op: Doc<"wizards">) => op.opponentNumber === opponentNum
   );
 
   // Get user's wizards and their campaign progress
@@ -123,9 +123,9 @@ export default function WizardSelectionPage({
   }
 
   // Get eligible wizards (those who can face this opponent)
-  const eligibleWizards = userWizards.filter((wizard: any) => {
+  const eligibleWizards = userWizards.filter((wizard: Doc<"wizards">) => {
     const progress = campaignProgress.find(
-      (p: any) => p.wizardId === wizard._id
+      (p: Doc<"wizardCampaignProgress">) => p.wizardId === wizard._id
     );
     if (!progress) {
       // New wizard can only face opponent 1
@@ -212,11 +212,14 @@ export default function WizardSelectionPage({
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   {selectedOpponent.name}
-                  {getDifficultyBadge(selectedOpponent.difficulty)}
+                  {getDifficultyBadge(
+                    selectedOpponent.difficulty || "BEGINNER"
+                  )}
                 </CardTitle>
                 <div className="text-sm text-muted-foreground">
-                  Luck Modifier: {selectedOpponent.luckModifier > 0 ? "+" : ""}
-                  {selectedOpponent.luckModifier}
+                  Luck Modifier:{" "}
+                  {(selectedOpponent.luckModifier || 0) > 0 ? "+" : ""}
+                  {selectedOpponent.luckModifier || 0}
                 </div>
               </div>
               <CardDescription>{selectedOpponent.description}</CardDescription>
@@ -229,7 +232,7 @@ export default function WizardSelectionPage({
                 </div>
                 <div>
                   <span className="font-medium">Personality:</span>{" "}
-                  {selectedOpponent.personalityTraits.join(", ")}
+                  {selectedOpponent.personalityTraits?.join(", ") || "Unknown"}
                 </div>
               </div>
             </CardContent>
@@ -269,9 +272,10 @@ export default function WizardSelectionPage({
             </Card>
           ) : (
             <div className="space-y-4">
-              {eligibleWizards.map((wizard: any) => {
+              {eligibleWizards.map((wizard: Doc<"wizards">) => {
                 const progress = campaignProgress.find(
-                  (p: unknown) => p.wizardId === wizard._id
+                  (p: Doc<"wizardCampaignProgress">) =>
+                    p.wizardId === wizard._id
                 );
                 const isSelected = selectedWizardId === wizard._id;
 

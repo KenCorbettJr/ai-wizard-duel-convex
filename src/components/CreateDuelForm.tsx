@@ -15,9 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { Id, Doc } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
-import { ImageCreditDisplay } from "./ImageCreditDisplay";
+
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import {
@@ -119,9 +119,6 @@ export function CreateDuelForm({
     userInfo?.subscriptionTier === "PREMIUM" &&
     userInfo?.subscriptionStatus === "ACTIVE";
 
-  const shouldShowCreditWarning =
-    enableImageGeneration && !isPremium && !hasImageCredits;
-
   const profilePrompt = getProfileCompletionPrompt("create duels");
 
   if (!wizards || wizards.length === 0) {
@@ -173,7 +170,7 @@ export function CreateDuelForm({
               Select Your Wizard
             </label>
             <div className="grid grid-cols-1 gap-3">
-              {wizards?.map((wizard) => (
+              {wizards?.map((wizard: Doc<"wizards">) => (
                 <div
                   key={wizard._id}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${

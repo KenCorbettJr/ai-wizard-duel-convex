@@ -1,6 +1,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
+import type {
+  UserSubscription,
+  UserUsageStatus,
+  CanCreateWizardResult,
+  CanStartDuelResult,
+  CanGenerateImagesResult,
+  CanWatchRewardAdResult,
+} from "./types";
 
 // Usage limits for free tier
 export const FREE_TIER_LIMITS = {
@@ -21,13 +29,13 @@ export const canCreateWizard = query({
     currentCount: v.number(),
     limit: v.union(v.number(), v.literal("UNLIMITED")),
   }),
-  handler: async (ctx, { clerkId }) => {
+  handler: async (ctx, { clerkId }): Promise<CanCreateWizardResult> => {
     // Check subscription status
-    const subscription = await ctx.runQuery(
-      api.subscriptionService.getUserSubscription,
+    const subscription: UserSubscription = await ctx.runQuery(
+      internal.userSubscriptionQueries.getUserSubscription,
       {
         clerkId,
-      },
+      }
     );
 
     if (!subscription) {
@@ -93,13 +101,11 @@ export const canStartDuel = query({
     currentCount: v.number(),
     limit: v.union(v.number(), v.literal("UNLIMITED")),
   }),
-  handler: async (ctx, { clerkId }) => {
+  handler: async (ctx, { clerkId }): Promise<CanStartDuelResult> => {
     // Check subscription status
-    const subscription = await ctx.runQuery(
-      api.subscriptionService.getUserSubscription,
-      {
-        clerkId,
-      },
+    const subscription: UserSubscription = await ctx.runQuery(
+      internal.userSubscriptionQueries.getUserSubscription,
+      { clerkId }
     );
 
     if (!subscription) {
@@ -166,13 +172,13 @@ export const canGenerateImages = query({
     imageCredits: v.number(),
     isPremium: v.boolean(),
   }),
-  handler: async (ctx, { clerkId }) => {
+  handler: async (ctx, { clerkId }): Promise<CanGenerateImagesResult> => {
     // Check subscription status
-    const subscription = await ctx.runQuery(
-      api.subscriptionService.getUserSubscription,
+    const subscription: UserSubscription = await ctx.runQuery(
+      internal.userSubscriptionQueries.getUserSubscription,
       {
         clerkId,
-      },
+      }
     );
 
     if (!subscription) {
@@ -293,7 +299,7 @@ export const getUserUsageStatus = query({
         v.literal("ACTIVE"),
         v.literal("CANCELED"),
         v.literal("PAST_DUE"),
-        v.literal("TRIALING"),
+        v.literal("TRIALING")
       ),
       wizards: v.object({
         current: v.number(),
@@ -317,63 +323,64 @@ export const getUserUsageStatus = query({
         adsWatched: v.number(),
         resetDate: v.number(),
       }),
-    }),
+    })
   ),
-  handler: async (ctx, { clerkId }) => {
+  handler: async (ctx, { clerkId }): Promise<UserUsageStatus> => {
     // Get subscription info
-    const subscription = await ctx.runQuery(
-      api.subscriptionService.getUserSubscription,
+    const subscription: UserSubscription = await ctx.runQuery(
+      internal.userSubscriptionQueries.getUserSubscription,
       {
         clerkId,
-      },
+      }
     );
-
     if (!subscription) {
       return null;
     }
 
-    // Get wizard creation status
-    const wizardStatus = await ctx.runQuery(
-      api.usageLimiterService.canCreateWizard,
-      {
-        clerkId,
-      },
-    );
+    const isPremium =
+      subscription.subscriptionTier === "PREMIUM" &&
+      subscription.subscriptionStatus === "ACTIVE";
 
-    // Get duel participation status
-    const duelStatus = await ctx.runQuery(
-      api.usageLimiterService.canStartDuel,
-      {
-        clerkId,
-      },
-    );
+    // Get wizard creation status inline to avoid circular reference
+    const wizardCount = await ctx.db
+      .query("wizards")
+      .withIndex("by_owner", (q) => q.eq("owner", clerkId))
+      .collect()
+      .then((wizards) => wizards.length);
 
-    // Get image generation status
-    const imageStatus = await ctx.runQuery(
-      api.usageLimiterService.canGenerateImages,
-      {
-        clerkId,
-      },
-    );
+    const wizardStatus = {
+      current: wizardCount,
+      limit: isPremium ? ("UNLIMITED" as const) : FREE_TIER_LIMITS.WIZARDS_MAX,
+      canCreate: isPremium || wizardCount < FREE_TIER_LIMITS.WIZARDS_MAX,
+    };
+
+    // Get duel participation status inline to avoid circular reference
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+      .unique();
+
+    const duelStatus = {
+      current: user?.monthlyUsage?.duelsPlayed || 0,
+      limit: isPremium
+        ? ("UNLIMITED" as const)
+        : FREE_TIER_LIMITS.DUELS_PER_DAY,
+      canStart: !!user,
+    };
+
+    // Get image generation status inline to avoid circular reference
+    const imageStatus = {
+      current: subscription.imageCredits,
+      canGenerate: isPremium || subscription.imageCredits > 0,
+      isPremium,
+    };
 
     return {
       subscriptionTier: subscription.subscriptionTier,
       subscriptionStatus: subscription.subscriptionStatus,
-      wizards: {
-        current: wizardStatus.currentCount,
-        limit: wizardStatus.limit,
-        canCreate: wizardStatus.canCreate,
-      },
-      duels: {
-        current: duelStatus.currentCount,
-        limit: duelStatus.limit,
-        canStart: duelStatus.canStart,
-      },
-      imageCredits: {
-        current: imageStatus.imageCredits,
-        canGenerate: imageStatus.canGenerate,
-        isPremium: imageStatus.isPremium,
-      },
+      wizards: wizardStatus,
+      duels: duelStatus,
+      imageCredits: imageStatus,
       monthlyUsage: subscription.monthlyUsage,
     };
   },
@@ -389,7 +396,7 @@ export const canWatchRewardAd = query({
     reason: v.optional(v.string()),
     cooldownEndsAt: v.optional(v.number()),
   }),
-  handler: async (ctx, { clerkId }) => {
+  handler: async (ctx, { clerkId }): Promise<CanWatchRewardAdResult> => {
     // Get the user's last ad interaction
     const lastAdInteraction = await ctx.db
       .query("adInteractions")

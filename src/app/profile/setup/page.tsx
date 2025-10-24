@@ -18,7 +18,9 @@ export default function ProfileSetupPage() {
 
   const handleProfileComplete = () => {
     // Check for redirect URL in query params
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(
+      typeof window !== "undefined" ? window.location.search : ""
+    );
     const redirectUrl = urlParams.get("redirect_url");
 
     if (redirectUrl) {

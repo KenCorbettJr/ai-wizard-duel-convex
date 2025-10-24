@@ -3,6 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Doc } from "../../../convex/_generated/dataModel";
 import { WizardCard } from "@/components/WizardCard";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { Button } from "@/components/ui/button";
@@ -28,12 +29,12 @@ export default function MyWizardsPage() {
 
   const totalWins =
     wizards?.reduce(
-      (sum: number, wizard: any) => sum + (wizard.wins || 0),
+      (sum: number, wizard: Doc<"wizards">) => sum + (wizard.wins || 0),
       0
     ) || 0;
   const totalLosses =
     wizards?.reduce(
-      (sum: number, wizard: any) => sum + (wizard.losses || 0),
+      (sum: number, wizard: Doc<"wizards">) => sum + (wizard.losses || 0),
       0
     ) || 0;
   const totalDuels = totalWins + totalLosses;
@@ -234,7 +235,7 @@ export default function MyWizardsPage() {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {wizards.map((wizard: unknown) => (
+            {wizards.map((wizard: Doc<"wizards">) => (
               <WizardCard key={wizard._id} wizard={wizard} />
             ))}
           </div>

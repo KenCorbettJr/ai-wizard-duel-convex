@@ -220,7 +220,9 @@ export default function CampaignPage() {
   // Handle starting a battle
   const handleStartBattle = (opponentNumber: number) => {
     if (!selectedWizardId) return;
-    window.location.href = `/campaign/wizard-selection/${opponentNumber}?wizardId=${selectedWizardId}`;
+    if (typeof window !== "undefined") {
+      window.location.href = `/campaign/wizard-selection/${opponentNumber}?wizardId=${selectedWizardId}`;
+    }
   };
 
   // Get difficulty styling
@@ -362,12 +364,14 @@ export default function CampaignPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 {campaignOpponents.map((opponent) => {
+                  if (!opponent.opponentNumber) return null;
+
                   const status = getOpponentStatusForWizard(
                     opponent.opponentNumber,
                     selectedWizard
                   );
                   const difficultyConfig = getDifficultyConfig(
-                    opponent.difficulty
+                    opponent.difficulty || "BEGINNER"
                   );
                   const DifficultyIcon = difficultyConfig.icon;
 
@@ -385,7 +389,7 @@ export default function CampaignPage() {
                       }`}
                       onClick={() =>
                         status.canBattle &&
-                        handleStartBattle(opponent.opponentNumber)
+                        handleStartBattle(opponent.opponentNumber!)
                       }
                     >
                       <CardContent className="p-4">

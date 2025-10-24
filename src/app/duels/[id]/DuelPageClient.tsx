@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+import { Id, Doc } from "../../../../convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -74,7 +74,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   // Memoize expensive calculations
   const userWizard = useMemo(
-    () => [wizard1, wizard2].find((wizard: any) => wizard?.owner === user?.id),
+    () =>
+      [wizard1, wizard2].find(
+        (wizard: Doc<"wizards"> | null | undefined) =>
+          wizard?.owner === user?.id
+      ),
     [wizard1, wizard2, user?.id]
   );
 
@@ -83,7 +87,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const currentRound = useMemo(
     () =>
       duel?.rounds?.find(
-        (round: any) => round.roundNumber === duel.currentRound
+        (round: Doc<"duelRounds">) => round.roundNumber === duel.currentRound
       ),
     [duel?.rounds, duel?.currentRound]
   );
@@ -143,7 +147,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const handleCopyLink = async () => {
     if (!duel?.shortcode) return;
 
-    const url = `${window.location.origin}/join/${duel.shortcode}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess(true);
@@ -504,7 +508,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                           Select a wizard to join this duel:
                         </p>
                         <div className="space-y-2 mb-4">
-                          {wizards.map((wizard) => (
+                          {wizards.map((wizard: Doc<"wizards">) => (
                             <div
                               key={wizard._id}
                               className={`p-3 border rounded-lg cursor-pointer transition-all ${
@@ -557,7 +561,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                         </p>
                         <div className="flex items-center gap-2">
                           <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30 flex-1 truncate">
-                            {`${window.location.origin}/join/${duel.shortcode}`}
+                            {`${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`}
                           </code>
                           <Button
                             variant="outline"
@@ -621,8 +625,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           {duel.rounds && duel.rounds.length > 0 && (
             <div className="space-y-6">
               {duel.rounds
-                .filter((round: any) => round.roundNumber > 0) // Exclude introduction round
-                .map((round: unknown) => (
+                .filter((round: Doc<"duelRounds">) => round.roundNumber > 0) // Exclude introduction round
+                .map((round: Doc<"duelRounds">) => (
                   <DuelRoundCard
                     key={`${round._id}-${round.status}-${round.roundNumber}`}
                     round={round}
