@@ -70,13 +70,62 @@ export const getUserWizards = query({
 // Get a specific wizard by ID (only if owned by authenticated user)
 export const getWizard = query({
   args: { wizardId: v.id("wizards") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      hasCompletionRelic: v.boolean(),
+      effectiveLuckScore: v.number(),
+    })
+  ),
   handler: async (ctx, { wizardId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       return null;
     }
 
-    return wizard;
+    // Only return wizard if owned by authenticated user
+    if (wizard.owner !== identity.subject) {
+      return null;
+    }
+
+    // Get campaign progress to check for completion relic
+    const campaignProgress = await ctx.db
+      .query("wizardCampaignProgress")
+      .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
+      .unique();
+
+    const hasCompletionRelic = campaignProgress?.hasCompletionRelic || false;
+
+    // Calculate effective luck score (base luck would be stored on wizard, defaulting to 10)
+    const baseLuck = 10; // This could be a field on the wizard in the future
+    const effectiveLuckScore = Math.min(
+      20,
+      baseLuck + (hasCompletionRelic ? 1 : 0)
+    );
+
+    return {
+      ...wizard,
+      hasCompletionRelic,
+      effectiveLuckScore,
+    };
   },
 });
 

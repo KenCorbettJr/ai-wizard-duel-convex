@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CampaignWizardProgress } from "./CampaignWizardProgress";
+import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ArrowLeft, Swords, Target } from "lucide-react";
 import type { Doc } from "../../convex/_generated/dataModel";
 
@@ -144,18 +144,20 @@ export function CampaignWizardSelection({
             </CardContent>
           </Card>
         ) : (
-          <div className="campaign-grid">
+          <div className="grid grid-cols-1 gap-4">
             {eligibleWizards.map((wizardData, index) => (
               <div
                 key={wizardData.wizard._id}
                 className="animate-opponent-reveal"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <CampaignWizardProgress
+                <WizardSelectionCard
                   wizardData={wizardData}
-                  campaignOpponents={campaignOpponents}
-                  onSelectWizard={onWizardSelect}
                   isSelected={wizardData.wizard._id === selectedWizardId}
+                  onSelect={onWizardSelect}
+                  showCampaignProgress={true}
+                  campaignOpponents={campaignOpponents}
+                  variant="detailed"
                 />
               </div>
             ))}

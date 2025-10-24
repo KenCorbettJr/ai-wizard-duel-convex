@@ -236,7 +236,12 @@ export default function MyWizardsPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wizards.map((wizard: Doc<"wizards">) => (
-              <WizardCard key={wizard._id} wizard={wizard} />
+              <WizardCard
+                key={wizard._id}
+                wizard={wizard}
+                isUserWizard={true}
+                showActions={true}
+              />
             ))}
           </div>
         )}

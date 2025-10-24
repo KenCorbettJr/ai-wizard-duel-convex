@@ -16,8 +16,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id, Doc } from "../../convex/_generated/dataModel";
-import { ConvexImage } from "./ConvexImage";
-
+import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import {
@@ -27,7 +26,6 @@ import {
   AlertTriangle,
   Info,
 } from "lucide-react";
-import Image from "next/image";
 
 interface CreateDuelFormProps {
   onClose: () => void;
@@ -84,8 +82,8 @@ export function CreateDuelForm({
     }
   }, [wizards, selectedWizard, preSelectedWizardId]);
 
-  const handleWizardSelect = (wizardId: Id<"wizards">) => {
-    setSelectedWizard(wizardId);
+  const handleWizardSelect = (wizardId: string) => {
+    setSelectedWizard(wizardId as Id<"wizards">);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,68 +169,13 @@ export function CreateDuelForm({
             </label>
             <div className="grid grid-cols-1 gap-3">
               {wizards?.map((wizard: Doc<"wizards">) => (
-                <div
+                <WizardSelectionCard
                   key={wizard._id}
-                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                    selectedWizard === wizard._id
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
-                      : "border-border hover:border-muted-foreground"
-                  }`}
-                  onClick={() => handleWizardSelect(wizard._id)}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Wizard Image */}
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
-                      {wizard.illustration ? (
-                        <ConvexImage
-                          storageId={wizard.illustration}
-                          alt={wizard.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : wizard.illustrationURL ? (
-                        <Image
-                          src={wizard.illustrationURL}
-                          alt={wizard.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
-                          {wizard.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Wizard Info */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-foreground">
-                        {wizard.name}
-                      </h4>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {wizard.description}
-                      </p>
-                    </div>
-
-                    {/* Stats and Selection Indicator */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {wizard.wins || wizard.losses ? (
-                        <Badge variant="outline">
-                          {wizard.wins || 0}W - {wizard.losses || 0}L
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">New</Badge>
-                      )}
-                      {selectedWizard === wizard._id && (
-                        <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  wizardData={{ wizard }}
+                  isSelected={selectedWizard === wizard._id}
+                  onSelect={handleWizardSelect}
+                  variant="compact"
+                />
               ))}
             </div>
             {!selectedWizard && (

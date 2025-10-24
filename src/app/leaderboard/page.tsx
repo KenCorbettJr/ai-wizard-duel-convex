@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useConvexImage } from "@/hooks/useConvexImage";
 import {
   Card,
   CardContent,
@@ -52,10 +51,11 @@ function WizardLeaderboardCard({
   };
   period: "all" | "week" | "month";
 }) {
-  const illustrationUrl = useConvexImage(
+  const rawIllustrationUrl = useQuery(
     api.wizards.getIllustrationUrl,
     wizard.illustration ? { storageId: wizard.illustration } : "skip"
   );
+  const illustrationUrl = rawIllustrationUrl;
 
   const getRankIcon = (rank: number, period: "all" | "week" | "month") => {
     const isTimePeriod = period !== "all";

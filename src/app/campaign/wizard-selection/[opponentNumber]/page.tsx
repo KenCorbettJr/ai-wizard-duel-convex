@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
@@ -27,9 +27,7 @@ interface WizardSelectionPageProps {
   }>;
 }
 
-export default function WizardSelectionPage({
-  params,
-}: WizardSelectionPageProps) {
+function WizardSelectionContent({ params }: WizardSelectionPageProps) {
   const { user } = useUser();
   const router = useRouter();
   const { opponentNumber } = use(params);
@@ -112,7 +110,7 @@ export default function WizardSelectionPage({
               <Link href="/campaign">
                 <Button>
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Campaign
+                  Back to Campaigns
                 </Button>
               </Link>
             </CardContent>
@@ -186,7 +184,7 @@ export default function WizardSelectionPage({
           <Link href="/campaign">
             <Button variant="ghost" className="mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Campaign
+              Back to Campaigns
             </Button>
           </Link>
 
@@ -265,7 +263,7 @@ export default function WizardSelectionPage({
                     </Link>
                   )}
                   <Link href="/campaign">
-                    <Button variant="outline">Back to Campaign</Button>
+                    <Button variant="outline">Back to Campaigns</Button>
                   </Link>
                 </div>
               </CardContent>
@@ -348,5 +346,28 @@ export default function WizardSelectionPage({
         )}
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="container mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading wizard selection...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function WizardSelectionPage({
+  params,
+}: WizardSelectionPageProps) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <WizardSelectionContent params={params} />
+    </Suspense>
   );
 }

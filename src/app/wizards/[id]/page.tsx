@@ -67,6 +67,25 @@ export async function generateMetadata({
   }
 }
 
+import { Suspense } from "react";
+
+function LoadingFallback() {
+  return (
+    <div className="container mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading wizard...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WizardPage({ params }: WizardPageProps) {
-  return <WizardPageClient params={params} />;
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <WizardPageClient params={params} />
+    </Suspense>
+  );
 }

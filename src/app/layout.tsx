@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import { ClerkProvider } from "@/providers/ClerkProvider";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
@@ -50,7 +51,15 @@ export default function RootLayout({
         >
           <ClerkProvider>
             <ConvexClientProvider>
-              <AppLayout>{children}</AppLayout>
+              <Suspense
+                fallback={
+                  <div className="min-h-screen flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                  </div>
+                }
+              >
+                <AppLayout>{children}</AppLayout>
+              </Suspense>
             </ConvexClientProvider>
           </ClerkProvider>
         </ThemeProvider>

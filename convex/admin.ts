@@ -14,7 +14,7 @@ export const promoteUserToSuperAdmin = mutation({
     success: v.boolean(),
     message: v.string(),
     user: v.object({
-      email: v.string(),
+      email: v.optional(v.string()),
       role: v.string(),
     }),
   }),
@@ -42,7 +42,7 @@ export const listUsersWithRoles = query({
   returns: v.array(
     v.object({
       _id: v.id("users"),
-      email: v.string(),
+      email: v.optional(v.string()),
       role: v.string(),
       clerkId: v.string(),
       createdAt: v.number(),

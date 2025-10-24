@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Star, Heart, Award } from "lucide-react";
+import { Star, Heart, Award, Scroll, Swords } from "lucide-react";
 import { Crown } from "@/components/ui/crown-icon";
 import { ConvexImage } from "@/components/ConvexImage";
 import { UserIdDisplay } from "@/components/UserIdDisplay";
@@ -29,6 +30,7 @@ interface WizardCardProps {
   isUserWizard?: boolean;
   isWinner?: boolean;
   showOwner?: boolean;
+  showActions?: boolean;
 }
 
 export const WizardCard = memo(function WizardCard({
@@ -40,6 +42,7 @@ export const WizardCard = memo(function WizardCard({
   isUserWizard = false,
   isWinner = false,
   showOwner = false,
+  showActions = false,
 }: WizardCardProps) {
   const getBorderClasses = () => {
     if (isWinner) {
@@ -159,6 +162,38 @@ export const WizardCard = memo(function WizardCard({
             </div>
           )}
         </CardHeader>
+
+        {/* Action Buttons for User's Wizards */}
+        {showActions && isUserWizard && (
+          <CardContent className="pt-0 pb-4">
+            <div className="flex gap-2">
+              <Link href={`/campaign/wizard/${wizard._id}`} className="flex-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Scroll className="h-3 w-3 mr-1" />
+                  Campaign
+                </Button>
+              </Link>
+              <Link
+                href={`/duels/create?wizardId=${wizard._id}`}
+                className="flex-1"
+              >
+                <Button
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Swords className="h-3 w-3 mr-1" />
+                  Duel
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        )}
       </Card>
     </Link>
   );

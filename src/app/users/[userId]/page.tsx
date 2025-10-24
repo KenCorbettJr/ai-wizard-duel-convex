@@ -53,10 +53,3 @@ export default async function UserProfilePageRoute({
 
   return <UserProfilePage userId={decodedUserId} />;
 }
-
-// Generate static params for known users (optional optimization)
-export async function generateStaticParams() {
-  // This could be enhanced to pre-generate pages for popular users
-  // For now, we'll rely on dynamic generation
-  return [];
-}

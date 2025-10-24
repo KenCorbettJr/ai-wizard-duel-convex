@@ -161,7 +161,7 @@ export async function promoteToSuperAdmin(
 
   const user = await ctx.db
     .query("users")
-    .withIndex("by_email", (q) => q.eq("email", userEmail))
+    .filter((q) => q.eq(q.field("email"), userEmail))
     .first();
 
   if (!user) {

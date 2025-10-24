@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,7 +43,7 @@ interface JoinShortcodePageProps {
   }>;
 }
 
-export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
+function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
@@ -668,5 +668,43 @@ export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
         isSignInPrompt={!user}
       />
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
+      <div className="text-center">
+        <div className="relative mb-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
+          <div
+            className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto"
+            style={{
+              animationDirection: "reverse",
+              animationDuration: "1.5s",
+            }}
+          ></div>
+        </div>
+        <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
+            <p className="text-foreground dark:text-foreground/95 font-medium">
+              Loading duel...
+            </p>
+          </div>
+          <p className="text-muted-foreground dark:text-muted-foreground/80 text-sm">
+            Preparing to join
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function JoinShortcodePage({ params }: JoinShortcodePageProps) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <JoinShortcodeContent params={params} />
+    </Suspense>
   );
 }

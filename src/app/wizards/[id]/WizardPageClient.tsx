@@ -22,6 +22,7 @@ import {
   Zap,
   Edit,
   Swords,
+  Scroll,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -325,6 +326,14 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
               <Edit className="w-5 h-5 mr-2" />
               Edit Wizard
             </Button>
+          )}
+          {isOwner && (
+            <Link href={`/campaign/wizard/${wizardId}`}>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                <Scroll className="w-5 h-5 mr-2" />
+                Campaign
+              </Button>
+            </Link>
           )}
           <Link href={`/duels/create?wizardId=${wizardId}`}>
             <Button size="lg" className="text-lg px-8 py-3">
