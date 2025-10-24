@@ -104,6 +104,230 @@ export const getCampaignOpponents = query({
 });
 
 /**
+ * Public mutation to seed campaign opponents (for development/admin use)
+ */
+export const seedCampaignOpponentsPublic = mutation({
+  args: {},
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    count: v.number(),
+  }),
+  handler: async (ctx) => {
+    // Check admin access
+    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    if (!adminAccess.hasAccess) {
+      throw new Error("Access denied: Super admin privileges required");
+    }
+
+    // Check if opponents are already seeded
+    const existingOpponents = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true)
+      )
+      .collect();
+
+    if (existingOpponents.length > 0) {
+      return {
+        success: false,
+        message: "Campaign opponents already exist",
+        count: existingOpponents.length,
+      };
+    }
+
+    // Insert all 10 campaign opponents as wizards
+    let insertedCount = 0;
+    for (const opponent of CAMPAIGN_OPPONENTS_DATA) {
+      await ctx.db.insert("wizards", {
+        owner: "campaign", // Special owner for campaign opponents
+        name: opponent.name,
+        description: opponent.description,
+        isAIPowered: true,
+        wins: 0,
+        losses: 0,
+        illustrationVersion: 1,
+        // Campaign-specific fields
+        isCampaignOpponent: true,
+        opponentNumber: opponent.opponentNumber,
+        personalityTraits: opponent.personalityTraits,
+        spellStyle: opponent.spellStyle,
+        difficulty: opponent.difficulty,
+        luckModifier: opponent.luckModifier,
+        illustrationPrompt: opponent.illustrationPrompt,
+      });
+      insertedCount++;
+    }
+
+    return {
+      success: true,
+      message: `Successfully seeded ${insertedCount} campaign opponents`,
+      count: insertedCount,
+    };
+  },
+});
+
+/**
+ * Delete all campaign opponents (super admin only)
+ */
+export const deleteCampaignOpponents = mutation({
+  args: {},
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    count: v.number(),
+  }),
+  handler: async (ctx) => {
+    // Check admin access
+    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    if (!adminAccess.hasAccess) {
+      throw new Error("Access denied: Super admin privileges required");
+    }
+
+    const opponents = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true)
+      )
+      .collect();
+
+    let deletedCount = 0;
+    for (const opponent of opponents) {
+      await ctx.db.delete(opponent._id);
+      deletedCount++;
+    }
+
+    return {
+      success: true,
+      message: `Successfully deleted ${deletedCount} campaign opponents`,
+      count: deletedCount,
+    };
+  },
+});
+
+/**
+ * Update a campaign opponent (super admin only)
+ */
+export const updateCampaignOpponent = mutation({
+  args: {
+    opponentId: v.id("wizards"),
+    updates: v.object({
+      name: v.optional(v.string()),
+      description: v.optional(v.string()),
+      difficulty: v.optional(
+        v.union(
+          v.literal("BEGINNER"),
+          v.literal("INTERMEDIATE"),
+          v.literal("ADVANCED")
+        )
+      ),
+      luckModifier: v.optional(v.number()),
+      spellStyle: v.optional(v.string()),
+      personalityTraits: v.optional(v.array(v.string())),
+      illustrationPrompt: v.optional(v.string()),
+    }),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // Check admin access
+    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    if (!adminAccess.hasAccess) {
+      throw new Error("Access denied: Super admin privileges required");
+    }
+
+    // Verify the opponent exists and is a campaign opponent
+    const opponent = await ctx.db.get(args.opponentId);
+    if (!opponent || !opponent.isCampaignOpponent) {
+      throw new Error("Campaign opponent not found");
+    }
+
+    // Update the opponent
+    await ctx.db.patch(args.opponentId, args.updates);
+
+    return {
+      success: true,
+      message: `Successfully updated ${opponent.name}`,
+    };
+  },
+});
+
+/**
+ * Create a new campaign opponent (super admin only)
+ */
+export const createCampaignOpponent = mutation({
+  args: {
+    opponentNumber: v.number(),
+    name: v.string(),
+    description: v.string(),
+    difficulty: v.union(
+      v.literal("BEGINNER"),
+      v.literal("INTERMEDIATE"),
+      v.literal("ADVANCED")
+    ),
+    luckModifier: v.number(),
+    spellStyle: v.string(),
+    personalityTraits: v.array(v.string()),
+    illustrationPrompt: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    opponentId: v.id("wizards"),
+  }),
+  handler: async (ctx, args) => {
+    // Check admin access
+    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    if (!adminAccess.hasAccess) {
+      throw new Error("Access denied: Super admin privileges required");
+    }
+
+    // Check if opponent number is already taken
+    const existingOpponent = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q
+          .eq("isCampaignOpponent", true)
+          .eq("opponentNumber", args.opponentNumber)
+      )
+      .unique();
+
+    if (existingOpponent) {
+      throw new Error(
+        `Opponent number ${args.opponentNumber} is already taken`
+      );
+    }
+
+    // Create the new opponent
+    const opponentId = await ctx.db.insert("wizards", {
+      owner: "campaign",
+      name: args.name,
+      description: args.description,
+      isAIPowered: true,
+      wins: 0,
+      losses: 0,
+      illustrationVersion: 1,
+      // Campaign-specific fields
+      isCampaignOpponent: true,
+      opponentNumber: args.opponentNumber,
+      personalityTraits: args.personalityTraits,
+      spellStyle: args.spellStyle,
+      difficulty: args.difficulty,
+      luckModifier: args.luckModifier,
+      illustrationPrompt: args.illustrationPrompt,
+    });
+
+    return {
+      success: true,
+      message: `Successfully created campaign opponent: ${args.name}`,
+      opponentId,
+    };
+  },
+});
+
+/**
  * Get a specific campaign opponent by number
  */
 export const getCampaignOpponent = query({

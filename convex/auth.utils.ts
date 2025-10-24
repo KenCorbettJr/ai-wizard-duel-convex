@@ -3,7 +3,7 @@ import { DataModel, Id } from "./_generated/dataModel";
 
 // Helper function to get authenticated user identity
 export async function getAuthenticatedUser(
-  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
 ) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -16,7 +16,7 @@ export async function getAuthenticatedUser(
 export async function verifyWizardOwnership(
   ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
   wizardId: Id<"wizards">,
-  userId: string,
+  userId: string
 ) {
   const wizard = await ctx.db.get(wizardId);
   if (!wizard) {
@@ -32,7 +32,7 @@ export async function verifyWizardOwnership(
 export async function verifyDuelParticipation(
   ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
   duelId: Id<"duels">,
-  userId: string,
+  userId: string
 ) {
   const duel = await ctx.db.get(duelId);
   if (!duel) {
@@ -46,7 +46,7 @@ export async function verifyDuelParticipation(
 
 // Helper function to verify super admin access
 export async function verifySuperAdmin(
-  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
 ) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -72,13 +72,13 @@ export async function verifySuperAdmin(
 
   if (!user) {
     throw new Error(
-      "User not found in database. Please contact an administrator.",
+      "User not found in database. Please contact an administrator."
     );
   }
 
   if (user.role !== "super_admin") {
     throw new Error(
-      `Access denied: Super admin privileges required. Current role: ${user.role}`,
+      `Access denied: Super admin privileges required. Current role: ${user.role}`
     );
   }
 
@@ -87,7 +87,7 @@ export async function verifySuperAdmin(
 
 // Check if current user has super admin access (non-throwing version)
 export async function checkSuperAdminAccess(
-  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
 ) {
   try {
     const identity = await ctx.auth.getUserIdentity();
@@ -125,7 +125,7 @@ export async function checkSuperAdminAccess(
 
 // Debug function to check current user's metadata
 export async function debugUserMetadata(
-  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
 ) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -146,5 +146,33 @@ export async function debugUserMetadata(
       ? { role: user.role, email: user.email, createdAt: user.createdAt }
       : null,
     environment: process.env.NODE_ENV,
+  };
+}
+
+// Helper function to promote a user to super admin (development only)
+export async function promoteToSuperAdmin(
+  ctx: GenericMutationCtx<DataModel>,
+  userEmail: string
+) {
+  // Only allow in development
+  if (process.env.NODE_ENV !== "development") {
+    throw new Error("This function is only available in development mode");
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_email", (q) => q.eq("email", userEmail))
+    .first();
+
+  if (!user) {
+    throw new Error(`User with email ${userEmail} not found`);
+  }
+
+  await ctx.db.patch(user._id, { role: "super_admin" });
+
+  return {
+    success: true,
+    message: `User ${userEmail} has been promoted to super admin`,
+    user: { email: user.email, role: "super_admin" },
   };
 }

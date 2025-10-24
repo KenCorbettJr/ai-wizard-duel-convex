@@ -20,6 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { CampaignErrorBoundary } from "@/components/CampaignErrorBoundary";
 import { CampaignLoadingState } from "@/components/CampaignLoadingState";
+import { CampaignOpponentFan } from "@/components/CampaignOpponentFan";
 import {
   Scroll,
   Wand2,
@@ -270,6 +271,27 @@ export default function CampaignPage() {
               Challenge 10 unique AI opponents to earn powerful relics
             </p>
           </div>
+
+          {/* Campaign Opponents Fan Display */}
+          {campaignOpponents && campaignOpponents.length > 0 && (
+            <div className="mb-12">
+              <CampaignOpponentFan
+                opponents={campaignOpponents}
+                selectedWizardProgress={
+                  selectedWizard?.progress
+                    ? {
+                        defeatedOpponents:
+                          selectedWizard.progress.defeatedOpponents,
+                        currentOpponent:
+                          selectedWizard.progress.currentOpponent,
+                        hasCompletionRelic:
+                          selectedWizard.progress.hasCompletionRelic,
+                      }
+                    : undefined
+                }
+              />
+            </div>
+          )}
 
           {/* Wizard Selection */}
           <div className="mb-8">

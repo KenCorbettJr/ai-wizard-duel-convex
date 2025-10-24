@@ -9,6 +9,7 @@
  */
 
 import type * as adService from "../adService.js";
+import type * as admin from "../admin.js";
 import type * as ai_getAI from "../ai/getAI.js";
 import type * as aiTextGeneration from "../aiTextGeneration.js";
 import type * as campaignAI from "../campaignAI.js";
@@ -54,6 +55,7 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   adService: typeof adService;
+  admin: typeof admin;
   "ai/getAI": typeof ai_getAI;
   aiTextGeneration: typeof aiTextGeneration;
   campaignAI: typeof campaignAI;

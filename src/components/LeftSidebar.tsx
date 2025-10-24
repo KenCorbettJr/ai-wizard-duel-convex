@@ -24,6 +24,8 @@ import {
   Coins,
   User,
   Scroll,
+  Settings,
+  Shield,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -153,9 +155,9 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
         requiresSuperAdmin: true,
         items: [
           {
-            href: "/admin/platform-stats",
-            label: "Platform Stats",
-            icon: BarChart3,
+            href: "/admin",
+            label: "Admin Dashboard",
+            icon: Shield,
             requiresAuth: true,
             requiresSuperAdmin: true,
           },
