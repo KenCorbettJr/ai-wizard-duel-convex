@@ -1,25 +1,36 @@
 import type { NextConfig } from "next";
 
 import { loadEnvConfig } from "@next/env";
+import { RemotePattern } from "next/dist/shared/lib/image-config";
 
 const projectDir = process.cwd();
 loadEnvConfig(projectDir);
 
-const remotePatterns = [];
+const remotePatterns: RemotePattern[] = [];
 
 if (process.env.ENV === "dev") {
-  remotePatterns.push(
-    new URL("https://doting-bloodhound-926.convex.cloud/api/storage/**")
-  );
+  remotePatterns.push({
+    protocol: "https",
+    hostname: "doting-bloodhound-926.convex.cloud",
+    port: "",
+    pathname: "/api/storage/**",
+  });
 } else if (process.env.ENV === "emulate") {
-  remotePatterns.push(new URL("http://127.0.0.1:3210/api/storage/**"));
+  // For emulation mode, we'll proxy through our own API route
+  remotePatterns.push({
+    protocol: "http",
+    hostname: "localhost",
+    port: "3000",
+    pathname: "/api/convex-image/**",
+  });
 }
 
 const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
-  turbopack: {},
+  cacheComponents: true,
+  reactCompiler: true,
 };
 
 export default nextConfig;

@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useConvexImage } from "@/hooks/useConvexImage";
 import Image from "next/image";
 import { memo } from "react";
 
@@ -20,7 +21,9 @@ export const ConvexImage = memo(function ConvexImage({
   height = 300,
   className,
 }: ConvexImageProps) {
-  const imageUrl = useQuery(api.wizards.getIllustrationUrl, { storageId });
+  const imageUrl = useConvexImage(api.wizards.getIllustrationUrl, {
+    storageId,
+  });
 
   if (!imageUrl) {
     return (

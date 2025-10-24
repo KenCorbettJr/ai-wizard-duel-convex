@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useConvexImage } from "@/hooks/useConvexImage";
 import {
   Card,
   CardContent,
@@ -51,7 +52,7 @@ function WizardLeaderboardCard({
   };
   period: "all" | "week" | "month";
 }) {
-  const illustrationUrl = useQuery(
+  const illustrationUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
     wizard.illustration ? { storageId: wizard.illustration } : "skip"
   );
