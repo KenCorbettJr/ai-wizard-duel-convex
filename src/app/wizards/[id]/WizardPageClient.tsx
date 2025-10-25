@@ -13,6 +13,7 @@ import { DuelListItem } from "@/components/DuelListItem";
 import { WizardStatistics } from "@/components/WizardStatistics";
 import { TrophyHall } from "@/components/TrophyHall";
 import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
+import { WizardCampaignProgress } from "@/components/WizardCampaignProgress";
 import {
   ArrowLeft,
   Trophy,
@@ -313,6 +314,11 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Campaign Progress */}
+        <div className="mb-8 max-w-2xl mx-auto">
+          <WizardCampaignProgress wizardId={wizardId} isOwner={!!isOwner} />
         </div>
 
         {/* Action Buttons */}
