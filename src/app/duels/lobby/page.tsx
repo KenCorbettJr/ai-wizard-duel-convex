@@ -35,7 +35,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { MagicVortex } from "@/components/MagicVortex";
+import MagicVortex from "@/components/MagicVortex";
 
 export default function DuelLobbyPage() {
   const { user } = useUser();

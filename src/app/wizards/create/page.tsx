@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function CreateWizardPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
@@ -38,8 +38,21 @@ export default function CreateWizardPage() {
   const profilePrompt = getProfileCompletionPrompt("create wizards");
 
   // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!user && isLoaded) {
+      router.push("/sign-in?redirect=/wizards/create");
+    }
+  }, [user, isLoaded, router]);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
   if (!user) {
-    router.push("/sign-in?redirect=/wizards/create");
     return null;
   }
 
