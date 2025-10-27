@@ -7,7 +7,7 @@ test("time-based leaderboard functionality", async () => {
   const t = convexTest(schema);
 
   // Create test users
-  const user1Id = await t.run(async (ctx) => {
+  await t.run(async (ctx) => {
     return await ctx.db.insert("users", {
       clerkId: "user1",
       role: "user",
@@ -26,7 +26,7 @@ test("time-based leaderboard functionality", async () => {
     });
   });
 
-  const user2Id = await t.run(async (ctx) => {
+  await t.run(async (ctx) => {
     return await ctx.db.insert("users", {
       clerkId: "user2",
       role: "user",
@@ -68,11 +68,10 @@ test("time-based leaderboard functionality", async () => {
 
   // Create test duels with different completion times
   const now = Date.now();
-  const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
 
   // Recent duel (this week)
-  const recentDuelId = await t.run(async (ctx) => {
+  await t.run(async (ctx) => {
     return await ctx.db.insert("duels", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
@@ -90,7 +89,7 @@ test("time-based leaderboard functionality", async () => {
   });
 
   // Old duel (last month)
-  const oldDuelId = await t.run(async (ctx) => {
+  await t.run(async (ctx) => {
     return await ctx.db.insert("duels", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],

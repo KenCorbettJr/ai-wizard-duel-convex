@@ -20,7 +20,7 @@ describe("Integration Tests", () => {
       });
     });
 
-    const wizard2Id = await t.run(async (ctx) => {
+    await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {
         owner: "test-player-2",
         name: "Saruman",
@@ -37,7 +37,7 @@ describe("Integration Tests", () => {
       {
         numberOfRounds: 3,
         wizards: [wizard1Id],
-      },
+      }
     );
 
     // Verify duel was created correctly
@@ -81,7 +81,7 @@ describe("Integration Tests", () => {
     // Verify the round was completed and duel state updated
     const updatedDuel = await withAuth(t, "test-player-1").query(
       api.duels.getDuel,
-      { duelId },
+      { duelId }
     );
     expect(updatedDuel?.points[wizard1Id]).toBe(15);
     expect(updatedDuel?.hitPoints[wizard1Id]).toBe(100);
@@ -116,7 +116,7 @@ describe("Integration Tests", () => {
 
     let wizard = await withAuth(t, "test-player-1").query(
       api.wizards.getWizard,
-      { wizardId },
+      { wizardId }
     );
     expect(wizard?.wins).toBe(6);
     expect(wizard?.losses).toBe(3);
@@ -147,7 +147,7 @@ describe("Integration Tests", () => {
           wins: 0,
           losses: 0,
           isAIPowered: false,
-        }),
+        })
       ),
       t.run(async (ctx) =>
         ctx.db.insert("wizards", {
@@ -157,11 +157,11 @@ describe("Integration Tests", () => {
           wins: 0,
           losses: 0,
           isAIPowered: false,
-        }),
+        })
       ),
     ]);
 
-    const player2Wizards = await Promise.all([
+    await Promise.all([
       t.run(async (ctx) =>
         ctx.db.insert("wizards", {
           owner: "test-player-2",
@@ -170,7 +170,7 @@ describe("Integration Tests", () => {
           wins: 0,
           losses: 0,
           isAIPowered: false,
-        }),
+        })
       ),
     ]);
 
@@ -180,7 +180,7 @@ describe("Integration Tests", () => {
       {
         numberOfRounds: 3,
         wizards: [player1Wizards[0]],
-      },
+      }
     );
 
     const duel2Id = await withAuth(t, "test-player-1").mutation(
@@ -188,13 +188,13 @@ describe("Integration Tests", () => {
       {
         numberOfRounds: 5,
         wizards: [player1Wizards[1]],
-      },
+      }
     );
 
     // Test querying duels by player
     const player1Duels = await withAuth(t, "test-player-1").query(
       api.duels.getPlayerDuels,
-      {},
+      {}
     );
     expect(player1Duels).toHaveLength(2);
     expect(player1Duels.map((d) => d._id)).toContain(duel1Id);
@@ -202,14 +202,14 @@ describe("Integration Tests", () => {
 
     const player2Duels = await withAuth(t, "test-player-2").query(
       api.duels.getPlayerDuels,
-      {},
+      {}
     );
     expect(player2Duels).toHaveLength(0);
 
     // Test querying wizards by user
     const player1WizardList = await withAuth(t, "test-player-1").query(
       api.wizards.getUserWizards,
-      {},
+      {}
     );
     expect(player1WizardList).toHaveLength(2);
     expect(player1WizardList.map((w) => w.name)).toContain("Wizard A");
@@ -217,7 +217,7 @@ describe("Integration Tests", () => {
 
     const player2WizardList = await withAuth(t, "test-player-2").query(
       api.wizards.getUserWizards,
-      {},
+      {}
     );
     expect(player2WizardList).toHaveLength(1);
     expect(player2WizardList[0].name).toBe("Wizard C");

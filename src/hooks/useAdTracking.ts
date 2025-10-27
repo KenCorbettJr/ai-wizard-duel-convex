@@ -27,7 +27,7 @@ export function useAdTracking() {
       options?: {
         revenue?: number;
         metadata?: Record<string, string>;
-      },
+      }
     ) => {
       if (!sessionId) {
         console.warn("Cannot track ad interaction: no session ID");
@@ -52,7 +52,7 @@ export function useAdTracking() {
         throw error;
       }
     },
-    [sessionId, user?.id, trackAdInteraction],
+    [sessionId, user, trackAdInteraction]
   );
 
   // Convenience methods for common interactions
@@ -60,21 +60,21 @@ export function useAdTracking() {
     (adType: AdType, placement: AdPlacement) => {
       return trackInteraction(adType, placement, "IMPRESSION");
     },
-    [trackInteraction],
+    [trackInteraction]
   );
 
   const trackClick = useCallback(
     (adType: AdType, placement: AdPlacement, revenue?: number) => {
       return trackInteraction(adType, placement, "CLICK", { revenue });
     },
-    [trackInteraction],
+    [trackInteraction]
   );
 
   const trackCompletion = useCallback(
     (adType: AdType, placement: AdPlacement, revenue?: number) => {
       return trackInteraction(adType, placement, "COMPLETION", { revenue });
     },
-    [trackInteraction],
+    [trackInteraction]
   );
 
   return {

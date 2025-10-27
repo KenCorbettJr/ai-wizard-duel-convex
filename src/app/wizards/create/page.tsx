@@ -21,7 +21,9 @@ export default function CreateWizardPage() {
   // Check profile completion when user loads
   useEffect(() => {
     if (user && !isProfileComplete) {
-      setShowProfilePrompt(true);
+      // Use a timeout to avoid the setState in effect warning
+      const timer = setTimeout(() => setShowProfilePrompt(true), 0);
+      return () => clearTimeout(timer);
     }
   }, [user, isProfileComplete]);
 

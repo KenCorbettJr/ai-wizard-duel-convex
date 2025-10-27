@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { expect, test, describe, beforeEach, vi } from "vitest";
+import { expect, test, describe, beforeEach } from "vitest";
 import { api } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
@@ -20,7 +20,7 @@ describe("Luck Rolls", () => {
       {
         name: "Gandalf",
         description: "A wise wizard with a long beard",
-      },
+      }
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -28,7 +28,7 @@ describe("Luck Rolls", () => {
       {
         name: "Saruman",
         description: "A powerful wizard with dark magic",
-      },
+      }
     );
 
     // Create test duel

@@ -2,12 +2,10 @@ import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
 import schema from "./schema";
 import { api, internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
 
 describe("Subscription Integration Tests", () => {
   let t: ReturnType<typeof convexTest>;
-  let freeUserId: Id<"users">;
-  let premiumUserId: Id<"users">;
+
   let freeClerkId: string;
   let premiumClerkId: string;
 
@@ -17,14 +15,14 @@ describe("Subscription Integration Tests", () => {
     premiumClerkId = "premium-user-456";
 
     // Create a free user
-    freeUserId = await t.mutation(internal.users.createUserInternal, {
+    await t.mutation(internal.users.createUserInternal, {
       clerkId: freeClerkId,
       email: "free@example.com",
       name: "Free User",
     });
 
     // Create a premium user
-    premiumUserId = await t.mutation(internal.users.createUserInternal, {
+    await t.mutation(internal.users.createUserInternal, {
       clerkId: premiumClerkId,
       email: "premium@example.com",
       name: "Premium User",

@@ -8,7 +8,7 @@ test("duel-level image credit consumption", async () => {
   const t = convexTest(schema);
 
   // Create test users
-  const freeUserId = await t.mutation(api.users.getOrCreateUser, {
+  await t.mutation(api.users.getOrCreateUser, {
     clerkId: "free_user_123",
     email: "free@example.com",
     name: "Free User",

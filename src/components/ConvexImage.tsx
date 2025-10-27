@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useConvexImage } from "@/hooks/useConvexImage";
 import Image from "next/image";

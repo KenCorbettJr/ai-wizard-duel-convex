@@ -20,11 +20,9 @@ import {
   X,
   Plus,
   Crown,
-  BarChart3,
   Coins,
   User,
   Scroll,
-  Settings,
   Shield,
 } from "lucide-react";
 
@@ -42,6 +40,122 @@ interface SidebarGroup {
   items: SidebarItem[];
   requiresSuperAdmin?: boolean;
 }
+
+interface SidebarContentProps {
+  pathname: string;
+  getSidebarGroups: () => SidebarGroup[];
+  setIsOpen: (open: boolean) => void;
+}
+
+const SidebarContent = ({
+  pathname,
+  getSidebarGroups,
+  setIsOpen,
+}: SidebarContentProps) => (
+  <div className="flex flex-col h-full">
+    <div className="p-6 border-b border-border">
+      <div className="flex items-center justify-between">
+        <Link href="/" onClick={() => setIsOpen(false)}>
+          <h1 className="text-xl font-bold text-foreground">AI Wizard Duel</h1>
+        </Link>
+        {/* Close button for mobile */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="md:hidden"
+          onClick={() => setIsOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+
+    <nav className="flex-1 p-4">
+      <div className="space-y-6">
+        {getSidebarGroups().map((group, groupIndex) => (
+          <div key={groupIndex}>
+            {group.title && (
+              <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {group.title}
+              </h3>
+            )}
+            <ul className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+
+                if (item.requiresAuth) {
+                  return (
+                    <SignedIn key={item.href}>
+                      <li>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="flex-1">{item.label}</span>
+                          {item.showStatus && <LobbyStatusIndicator />}
+                          {item.href === "/credits" && (
+                            <CreditDisplay showLabel={false} size="sm" />
+                          )}
+                        </Link>
+                      </li>
+                    </SignedIn>
+                  );
+                }
+
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="flex-1">{item.label}</span>
+                      {item.showStatus && <LobbyStatusIndicator />}
+                      {item.href === "/credits" && (
+                        <SignedIn>
+                          <CreditDisplay showLabel={false} size="sm" />
+                        </SignedIn>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </nav>
+
+    {/* Bottom section with theme toggle and user controls */}
+    <div className="p-4 border-t border-border">
+      <div className="flex items-center justify-between">
+        <ThemeToggle />
+        <SignedIn>
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton>
+            <Button size="sm">Sign In</Button>
+          </SignInButton>
+        </SignedOut>
+      </div>
+    </div>
+  </div>
+);
 
 const sidebarGroups: SidebarGroup[] = [
   // General navigation
@@ -168,114 +282,6 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
     return groups;
   };
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center justify-between">
-          <Link href="/" onClick={() => setIsOpen(false)}>
-            <h1 className="text-xl font-bold text-foreground">
-              AI Wizard Duel
-            </h1>
-          </Link>
-          {/* Close button for mobile */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
-            onClick={() => setIsOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <nav className="flex-1 p-4">
-        <div className="space-y-6">
-          {getSidebarGroups().map((group, groupIndex) => (
-            <div key={groupIndex}>
-              {group.title && (
-                <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {group.title}
-                </h3>
-              )}
-              <ul className="space-y-1">
-                {group.items.map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
-
-                  if (item.requiresAuth) {
-                    return (
-                      <SignedIn key={item.href}>
-                        <li>
-                          <Link
-                            href={item.href}
-                            onClick={() => setIsOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                              isActive
-                                ? "bg-primary text-primary-foreground"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                            )}
-                          >
-                            <Icon className="h-4 w-4" />
-                            <span className="flex-1">{item.label}</span>
-                            {item.showStatus && <LobbyStatusIndicator />}
-                            {item.href === "/credits" && (
-                              <CreditDisplay showLabel={false} size="sm" />
-                            )}
-                          </Link>
-                        </li>
-                      </SignedIn>
-                    );
-                  }
-
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="flex-1">{item.label}</span>
-                        {item.showStatus && <LobbyStatusIndicator />}
-                        {item.href === "/credits" && (
-                          <SignedIn>
-                            <CreditDisplay showLabel={false} size="sm" />
-                          </SignedIn>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </nav>
-
-      {/* Bottom section with theme toggle and user controls */}
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center justify-between">
-          <ThemeToggle />
-          <SignedIn>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton>
-              <Button size="sm">Sign In</Button>
-            </SignInButton>
-          </SignedOut>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
       {/* Mobile hamburger button - hide when sidebar is open */}
@@ -310,7 +316,11 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
           className
         )}
       >
-        <SidebarContent />
+        <SidebarContent
+          pathname={pathname}
+          getSidebarGroups={getSidebarGroups}
+          setIsOpen={setIsOpen}
+        />
       </aside>
     </>
   );

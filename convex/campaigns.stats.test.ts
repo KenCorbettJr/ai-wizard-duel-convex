@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { convexTest } from "convex-test";
+import { convexTest, ConvexTestingHelper } from "convex-test";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
 
 describe("Campaign Statistics", () => {
-  let t: any;
+  let t: ConvexTestingHelper<typeof schema>;
 
   beforeEach(async () => {
     t = convexTest(schema);

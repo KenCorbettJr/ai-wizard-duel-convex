@@ -12,7 +12,7 @@ export const createAnonymousSession = mutation({
     referrer: v.optional(v.string()),
   },
   returns: v.string(),
-  handler: async (ctx, args) => {
+  handler: async () => {
     // Generate a unique session ID
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);

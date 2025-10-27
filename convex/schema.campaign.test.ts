@@ -471,9 +471,11 @@ describe("Campaign Database Schema Tests", () => {
       });
 
       // Verify the duel exists and is marked as campaign battle
-      const linkedDuel = await t.query(api.duels.getDuel, {
-        duelId: battle?.duelId!,
-      });
+      const linkedDuel = battle?.duelId
+        ? await t.query(api.duels.getDuel, {
+            duelId: battle.duelId,
+          })
+        : null;
 
       expect(linkedDuel?.isCampaignBattle).toBe(true);
       expect(linkedDuel?.wizards).toContain(wizardId);

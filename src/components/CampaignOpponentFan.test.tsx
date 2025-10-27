@@ -1,10 +1,7 @@
 import { render } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { CampaignOpponentFan } from "./CampaignOpponentFan";
-import type { Doc } from "../../convex/_generated/dataModel";
-import { vi } from "date-fns/locale";
-import { vi } from "date-fns/locale";
-import { vi } from "date-fns/locale";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 // Mock tooltip components
 vi.mock("@/components/ui/tooltip", () => ({
@@ -28,6 +25,7 @@ vi.mock("@/components/ui/avatar", () => ({
     <div data-testid="avatar">{children}</div>
   ),
   AvatarImage: ({ alt }: { alt: string }) => (
+    // eslint-disable-next-line @next/next/no-img-element
     <img alt={alt} data-testid="avatar-image" />
   ),
   AvatarFallback: ({ children }: { children: React.ReactNode }) => (
@@ -53,7 +51,7 @@ vi.mock("@/components/ui/badge", () => ({
 describe("CampaignOpponentFan", () => {
   const mockOpponents: Doc<"wizards">[] = [
     {
-      _id: "opponent1" as any,
+      _id: "opponent1" as Id<"wizards">,
       _creationTime: Date.now(),
       owner: "campaign",
       name: "Test Opponent 1",
@@ -67,7 +65,7 @@ describe("CampaignOpponentFan", () => {
       isCampaignOpponent: true,
     },
     {
-      _id: "opponent2" as any,
+      _id: "opponent2" as Id<"wizards">,
       _creationTime: Date.now(),
       owner: "campaign",
       name: "Test Opponent 2",

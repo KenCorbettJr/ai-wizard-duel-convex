@@ -219,7 +219,7 @@ describe("SubscriptionService", () => {
           await t.mutation(api.imageCreditService.consumeImageCredit, {
             userId: testClerkId,
           });
-        } catch (e) {
+        } catch {
           // Expected to fail when credits run out
           break;
         }
@@ -311,7 +311,6 @@ describe("SubscriptionService", () => {
 
     test("should reset monthly usage when period expires", async () => {
       // Set usage reset date to past
-      const pastDate = Date.now() - 1000; // 1 second ago
       await t.mutation(internal.users.createUserInternal, {
         clerkId: "expired-user",
         email: "expired@example.com",

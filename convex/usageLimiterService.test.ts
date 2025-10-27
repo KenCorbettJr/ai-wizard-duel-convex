@@ -2,11 +2,10 @@ import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
 import schema from "./schema";
 import { api, internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
 
 describe("UsageLimiterService", () => {
   let t: ReturnType<typeof convexTest>;
-  let testUserId: Id<"users">;
+
   let testClerkId: string;
 
   beforeEach(async () => {
@@ -14,7 +13,7 @@ describe("UsageLimiterService", () => {
     testClerkId = "test-clerk-id-123";
 
     // Create a test user
-    testUserId = await t.mutation(internal.users.createUserInternal, {
+    await t.mutation(internal.users.createUserInternal, {
       clerkId: testClerkId,
       email: "test@example.com",
       name: "Test User",

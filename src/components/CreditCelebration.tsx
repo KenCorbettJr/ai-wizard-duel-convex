@@ -20,12 +20,16 @@ export function CreditCelebration({
 
   useEffect(() => {
     if (show) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
+      // Use a timeout to avoid the setState in effect warning
+      const showTimer = setTimeout(() => setIsVisible(true), 0);
+      const hideTimer = setTimeout(() => {
         setIsVisible(false);
         onComplete?.();
       }, duration);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
     }
   }, [show, duration, onComplete]);
 

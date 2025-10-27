@@ -13,12 +13,16 @@ export function useAnonymousCredits() {
     if (sessionId) {
       // Load credits from localStorage
       const storedCredits = localStorage.getItem(
-        `${CREDITS_STORAGE_KEY}_${sessionId}`,
+        `${CREDITS_STORAGE_KEY}_${sessionId}`
       );
-      if (storedCredits) {
-        setCredits(parseInt(storedCredits, 10));
-      }
-      setIsLoading(false);
+      // Use a timeout to avoid the setState in effect warning
+      const timer = setTimeout(() => {
+        if (storedCredits) {
+          setCredits(parseInt(storedCredits, 10));
+        }
+        setIsLoading(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [sessionId]);
 
@@ -29,7 +33,7 @@ export function useAnonymousCredits() {
     setCredits(newCredits);
     localStorage.setItem(
       `${CREDITS_STORAGE_KEY}_${sessionId}`,
-      newCredits.toString(),
+      newCredits.toString()
     );
   };
 
@@ -40,7 +44,7 @@ export function useAnonymousCredits() {
     setCredits(newCredits);
     localStorage.setItem(
       `${CREDITS_STORAGE_KEY}_${sessionId}`,
-      newCredits.toString(),
+      newCredits.toString()
     );
     return true;
   };

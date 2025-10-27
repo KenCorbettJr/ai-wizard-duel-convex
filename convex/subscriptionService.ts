@@ -41,7 +41,7 @@ export const hasFeatureAccess = query({
     ),
   },
   returns: v.boolean(),
-  handler: async (ctx, { clerkId, feature }) => {
+  handler: async (ctx, { clerkId }) => {
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))

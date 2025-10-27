@@ -430,7 +430,17 @@ export function validateDescriptionLength(description: string): {
 } {
   const length = description.length;
 
-  // Only warn about descriptions that are too long (over 300 characters)
+  // Check if description is too short (under 150 characters)
+  if (length < 150) {
+    return {
+      isValid: false,
+      length,
+      recommendation:
+        "Description should be at least 150 characters for better SEO and social media optimization",
+    };
+  }
+
+  // Check if description is too long (over 300 characters)
   if (length > 300) {
     return {
       isValid: false,

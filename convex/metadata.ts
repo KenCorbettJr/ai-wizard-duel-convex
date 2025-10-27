@@ -1,6 +1,5 @@
 import { query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
 
 // Get wizard data optimized for metadata generation
 export const getWizardForMetadata = query({
@@ -18,7 +17,7 @@ export const getWizardForMetadata = query({
       losses: v.optional(v.number()),
       winRate: v.number(),
       totalDuels: v.number(),
-    }),
+    })
   ),
   handler: async (ctx, { wizardId }) => {
     const wizard = await ctx.db.get(wizardId);
@@ -59,7 +58,7 @@ export const getDuelForMetadata = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED"),
+        v.literal("CANCELLED")
       ),
       currentRound: v.number(),
       numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
@@ -70,13 +69,13 @@ export const getDuelForMetadata = query({
           wins: v.optional(v.number()),
           losses: v.optional(v.number()),
           winRate: v.number(),
-        }),
+        })
       ),
       winners: v.optional(v.array(v.id("wizards"))),
       losers: v.optional(v.array(v.id("wizards"))),
       featuredIllustration: v.optional(v.string()),
       latestRoundIllustration: v.optional(v.string()),
-    }),
+    })
   ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -104,7 +103,7 @@ export const getDuelForMetadata = query({
           losses,
           winRate,
         };
-      }),
+      })
     );
 
     // Get the latest round illustration if available
@@ -156,7 +155,7 @@ export const getWizardForMetadataInternal = internalQuery({
       losses: v.optional(v.number()),
       winRate: v.number(),
       totalDuels: v.number(),
-    }),
+    })
   ),
   handler: async (ctx, { wizardId }) => {
     const wizard = await ctx.db.get(wizardId);
@@ -197,7 +196,7 @@ export const getDuelForMetadataInternal = internalQuery({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED"),
+        v.literal("CANCELLED")
       ),
       currentRound: v.number(),
       numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
@@ -208,13 +207,13 @@ export const getDuelForMetadataInternal = internalQuery({
           wins: v.optional(v.number()),
           losses: v.optional(v.number()),
           winRate: v.number(),
-        }),
+        })
       ),
       winners: v.optional(v.array(v.id("wizards"))),
       losers: v.optional(v.array(v.id("wizards"))),
       featuredIllustration: v.optional(v.string()),
       latestRoundIllustration: v.optional(v.string()),
-    }),
+    })
   ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -242,7 +241,7 @@ export const getDuelForMetadataInternal = internalQuery({
           losses,
           winRate,
         };
-      }),
+      })
     );
 
     // Get the latest round illustration if available

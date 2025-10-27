@@ -360,12 +360,24 @@ export const getUserUsageStatus = query({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
       .unique();
 
+    const currentDuels = subscription.monthlyUsage.duelsPlayed;
+    const now = Date.now();
+    const usageExpired = now > subscription.monthlyUsage.resetDate;
+
+    let canStartDuel = !!user;
+    if (user && !isPremium) {
+      // For free users, check if they've exceeded the daily limit
+      if (!usageExpired && currentDuels >= FREE_TIER_LIMITS.DUELS_PER_DAY) {
+        canStartDuel = false;
+      }
+    }
+
     const duelStatus = {
-      current: user?.monthlyUsage?.duelsPlayed || 0,
+      current: usageExpired ? 0 : currentDuels,
       limit: isPremium
         ? ("UNLIMITED" as const)
         : FREE_TIER_LIMITS.DUELS_PER_DAY,
-      canStart: !!user,
+      canStart: canStartDuel,
     };
 
     // Get image generation status inline to avoid circular reference

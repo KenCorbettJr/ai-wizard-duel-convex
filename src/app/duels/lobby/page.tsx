@@ -46,6 +46,7 @@ export default function DuelLobbyPage() {
   const [selectedDuelType, setSelectedDuelType] = useState<
     number | "TO_THE_DEATH"
   >(3);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   // Queries
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
@@ -65,6 +66,14 @@ export default function DuelLobbyPage() {
       router.push(`/duels/${userRecentDuel}`);
     }
   }, [userRecentDuel, userLobbyStatus, router]);
+
+  // Update current time every second for wait time calculations
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleJoinLobby = async () => {
     if (!selectedWizard) {
@@ -257,7 +266,7 @@ export default function DuelLobbyPage() {
                     <div>
                       <div className="font-medium">Wait Time</div>
                       <div className="text-sm text-muted-foreground">
-                        {formatWaitTime(Date.now() - userLobbyStatus.joinedAt)}
+                        {formatWaitTime(currentTime - userLobbyStatus.joinedAt)}
                       </div>
                     </div>
                   </div>
@@ -418,7 +427,7 @@ export default function DuelLobbyPage() {
                         <div className="text-right">
                           <div className="text-xs text-muted-foreground">
                             Waiting{" "}
-                            {formatWaitTime(Date.now() - entry.joinedAt)}
+                            {formatWaitTime(currentTime - entry.joinedAt)}
                           </div>
                           <Badge variant="secondary" className="text-xs">
                             <Clock className="h-3 w-3 mr-1" />

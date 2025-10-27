@@ -14,7 +14,7 @@ test("getOptimizedImageUrl returns null for invalid storage ID", async () => {
 });
 
 test("metadata functions exist and are callable", async () => {
-  const t = convexTest(schema);
+  convexTest(schema);
 
   // Test that the functions exist in the API
   expect(api.metadata.getWizardForMetadata).toBeDefined();

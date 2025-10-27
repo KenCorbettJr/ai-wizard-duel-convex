@@ -73,12 +73,18 @@ export function ImageCreditDisplay({
       previousCredits !== null &&
       credits > previousCredits
     ) {
-      setShowCelebration(true);
-      const timer = setTimeout(() => setShowCelebration(false), 3000);
-      return () => clearTimeout(timer);
+      // Use a timeout to avoid the setState in effect warning
+      const showTimer = setTimeout(() => setShowCelebration(true), 0);
+      const hideTimer = setTimeout(() => setShowCelebration(false), 3000);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
     }
     if (credits !== undefined) {
-      setPreviousCredits(credits);
+      // Use a timeout to avoid the setState in effect warning
+      const timer = setTimeout(() => setPreviousCredits(credits), 0);
+      return () => clearTimeout(timer);
     }
   }, [credits, previousCredits]);
 

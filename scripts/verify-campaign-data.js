@@ -1,5 +1,7 @@
 // Simple verification script for campaign opponents data
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const fs = require("fs");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require("path");
 
 // Read the campaign opponents file

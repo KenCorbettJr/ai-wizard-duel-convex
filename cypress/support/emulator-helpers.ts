@@ -49,7 +49,7 @@ export const mockAIServices = () => {
   }).as("aiRequest");
 };
 
-export const createTestWizard = (wizardData: any) => {
+export const createTestWizard = (wizardData: Record<string, unknown>) => {
   // Helper to create a test wizard via API
   return cy.request({
     method: "POST",
@@ -58,7 +58,7 @@ export const createTestWizard = (wizardData: any) => {
   });
 };
 
-export const createTestDuel = (duelData: any) => {
+export const createTestDuel = (duelData: Record<string, unknown>) => {
   // Helper to create a test duel via API
   return cy.request({
     method: "POST",

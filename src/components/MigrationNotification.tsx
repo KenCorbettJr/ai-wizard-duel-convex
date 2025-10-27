@@ -24,7 +24,9 @@ export function MigrationNotification({
       const timer = setTimeout(() => setIsVisible(true), 1000);
       return () => clearTimeout(timer);
     } else {
-      setIsVisible(false);
+      // Use a timeout to avoid the setState in effect warning
+      const timer = setTimeout(() => setIsVisible(false), 0);
+      return () => clearTimeout(timer);
     }
   }, [show]);
 

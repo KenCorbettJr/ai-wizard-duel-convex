@@ -12,7 +12,7 @@ interface MagicVortexProps {
   children: React.ReactNode;
 }
 
-export function MagicVortex({
+function MagicVortex({
   baseHue = 200,
   baseSpeed = 0.2,
   rangeSpeed = 1.5,
@@ -272,3 +272,5 @@ export function MagicVortex({
     </div>
   );
 }
+
+export default MagicVortex;

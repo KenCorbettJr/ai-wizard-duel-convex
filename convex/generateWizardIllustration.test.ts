@@ -5,7 +5,7 @@ import schema from "./schema";
 import { withAuth, generateTestId } from "./test_utils";
 
 // Mock AI text generation so tests don't hit external services
-const mockGenerateText = vi.fn(async (_prompt: string) => {
+const mockGenerateText = vi.fn(async () => {
   return "Mock enhanced illustration prompt for testing";
 });
 vi.mock("./aiTextGeneration", () => ({
@@ -70,7 +70,7 @@ describe("generateWizardIllustration", () => {
         name: "Flame Master Zara",
         description:
           "A powerful fire wizard with crimson robes and a phoenix familiar",
-      },
+      }
     );
 
     expect(result.success).toBe(true);
@@ -115,7 +115,7 @@ describe("generateWizardIllustration", () => {
           wizardId,
           name: wizard.name,
           description: wizard.description,
-        },
+        }
       );
 
       expect(result.success).toBe(true);
@@ -136,8 +136,8 @@ describe("generateWizardIllustration", () => {
           wizardId: invalidWizardId,
           name: "Test Wizard",
           description: "Test description",
-        },
-      ),
+        }
+      )
     ).rejects.toThrow();
   });
 });
