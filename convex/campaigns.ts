@@ -244,12 +244,80 @@ export const updateCampaignOpponent = mutation({
       throw new Error("Campaign opponent not found");
     }
 
+    // Check if name or description changed (triggers image regeneration)
+    const shouldRegenerateImage =
+      (args.updates.name && args.updates.name !== opponent.name) ||
+      (args.updates.description &&
+        args.updates.description !== opponent.description);
+
     // Update the opponent
     await ctx.db.patch(args.opponentId, args.updates);
 
+    // Trigger image regeneration if name or description changed
+    if (shouldRegenerateImage) {
+      const updatedName = args.updates.name || opponent.name;
+      const updatedDescription =
+        args.updates.description || opponent.description;
+
+      // Schedule image regeneration
+      await ctx.scheduler.runAfter(
+        100, // Small delay to ensure database transaction is committed
+        api.generateWizardIllustration.generateWizardIllustration,
+        {
+          wizardId: args.opponentId,
+          name: updatedName,
+          description: updatedDescription,
+          // No userId for campaign opponents - they don't consume user credits
+        }
+      );
+    }
+
     return {
       success: true,
-      message: `Successfully updated ${opponent.name}`,
+      message: `Successfully updated ${opponent.name}${shouldRegenerateImage ? " (image regeneration scheduled)" : ""}`,
+    };
+  },
+});
+
+/**
+ * Regenerate image for a campaign opponent (super admin only)
+ */
+export const regenerateCampaignOpponentImage = mutation({
+  args: {
+    opponentId: v.id("wizards"),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // Check admin access
+    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    if (!adminAccess.hasAccess) {
+      throw new Error("Access denied: Super admin privileges required");
+    }
+
+    // Verify the opponent exists and is a campaign opponent
+    const opponent = await ctx.db.get(args.opponentId);
+    if (!opponent || !opponent.isCampaignOpponent) {
+      throw new Error("Campaign opponent not found");
+    }
+
+    // Schedule image regeneration
+    await ctx.scheduler.runAfter(
+      100, // Small delay to ensure database transaction is committed
+      api.generateWizardIllustration.generateWizardIllustration,
+      {
+        wizardId: args.opponentId,
+        name: opponent.name,
+        description: opponent.description,
+        // No userId for campaign opponents - they don't consume user credits
+      }
+    );
+
+    return {
+      success: true,
+      message: `Image regeneration scheduled for ${opponent.name}`,
     };
   },
 });
@@ -319,9 +387,21 @@ export const createCampaignOpponent = mutation({
       illustrationPrompt: args.illustrationPrompt,
     });
 
+    // Schedule image generation for the new opponent
+    await ctx.scheduler.runAfter(
+      100, // Small delay to ensure database transaction is committed
+      api.generateWizardIllustration.generateWizardIllustration,
+      {
+        wizardId: opponentId,
+        name: args.name,
+        description: args.description,
+        // No userId for campaign opponents - they don't consume user credits
+      }
+    );
+
     return {
       success: true,
-      message: `Successfully created campaign opponent: ${args.name}`,
+      message: `Successfully created campaign opponent: ${args.name} (image generation scheduled)`,
       opponentId,
     };
   },
