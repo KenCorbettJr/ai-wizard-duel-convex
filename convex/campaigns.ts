@@ -1,8 +1,15 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import {
+  query,
+  mutation,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { CAMPAIGN_OPPONENTS_DATA } from "./campaignOpponents";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
+import { checkSuperAdminAccess } from "./auth.utils";
+import { getActiveCampaignSeasonHelper } from "./seasonHelpers";
 
 /**
  * Seed the campaign opponents as wizards with campaign-specific fields
@@ -115,7 +122,7 @@ export const seedCampaignOpponentsPublic = mutation({
   }),
   handler: async (ctx) => {
     // Check admin access
-    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    const adminAccess = await checkSuperAdminAccess(ctx);
     if (!adminAccess.hasAccess) {
       throw new Error("Access denied: Super admin privileges required");
     }
@@ -179,7 +186,7 @@ export const deleteCampaignOpponents = mutation({
   }),
   handler: async (ctx) => {
     // Check admin access
-    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    const adminAccess = await checkSuperAdminAccess(ctx);
     if (!adminAccess.hasAccess) {
       throw new Error("Access denied: Super admin privileges required");
     }
@@ -233,7 +240,7 @@ export const updateCampaignOpponent = mutation({
   }),
   handler: async (ctx, args) => {
     // Check admin access
-    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    const adminAccess = await checkSuperAdminAccess(ctx);
     if (!adminAccess.hasAccess) {
       throw new Error("Access denied: Super admin privileges required");
     }
@@ -292,7 +299,7 @@ export const regenerateCampaignOpponentImage = mutation({
   }),
   handler: async (ctx, args) => {
     // Check admin access
-    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    const adminAccess = await checkSuperAdminAccess(ctx);
     if (!adminAccess.hasAccess) {
       throw new Error("Access denied: Super admin privileges required");
     }
@@ -347,7 +354,7 @@ export const createCampaignOpponent = mutation({
   }),
   handler: async (ctx, args) => {
     // Check admin access
-    const adminAccess = await ctx.runQuery(api.duels.checkAdminAccess);
+    const adminAccess = await checkSuperAdminAccess(ctx);
     if (!adminAccess.hasAccess) {
       throw new Error("Access denied: Super admin privileges required");
     }
@@ -456,7 +463,7 @@ export const getCampaignOpponent = query({
 });
 
 /**
- * Get wizard's campaign progress
+ * Get wizard's campaign progress for the current season
  */
 export const getWizardCampaignProgress = query({
   args: { wizardId: v.id("wizards") },
@@ -466,6 +473,7 @@ export const getWizardCampaignProgress = query({
       _creationTime: v.number(),
       wizardId: v.id("wizards"),
       userId: v.string(),
+      seasonId: v.id("campaignSeasons"),
       currentOpponent: v.number(),
       defeatedOpponents: v.array(v.number()),
       hasCompletionRelic: v.boolean(),
@@ -475,9 +483,17 @@ export const getWizardCampaignProgress = query({
     v.null()
   ),
   handler: async (ctx, { wizardId }) => {
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      return null;
+    }
+
     const progress = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .withIndex("by_wizard_season", (q) =>
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+      )
       .unique();
 
     return progress || null;
@@ -485,7 +501,7 @@ export const getWizardCampaignProgress = query({
 });
 
 /**
- * Get all campaign progress for a user's wizards
+ * Get all campaign progress for a user's wizards in the current season
  */
 export const getUserCampaignProgress = query({
   args: { userId: v.string() },
@@ -495,6 +511,7 @@ export const getUserCampaignProgress = query({
       _creationTime: v.number(),
       wizardId: v.id("wizards"),
       userId: v.string(),
+      seasonId: v.id("campaignSeasons"),
       currentOpponent: v.number(),
       defeatedOpponents: v.array(v.number()),
       hasCompletionRelic: v.boolean(),
@@ -503,9 +520,16 @@ export const getUserCampaignProgress = query({
     })
   ),
   handler: async (ctx, { userId }) => {
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      return [];
+    }
+
     const progressList = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_season", (q) => q.eq("seasonId", activeSeason._id))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .collect();
 
     return progressList;
@@ -513,7 +537,7 @@ export const getUserCampaignProgress = query({
 });
 
 /**
- * Initialize campaign progress for a wizard
+ * Initialize campaign progress for a wizard in the current season
  */
 export const initializeWizardCampaignProgress = mutation({
   args: {
@@ -522,20 +546,29 @@ export const initializeWizardCampaignProgress = mutation({
   },
   returns: v.id("wizardCampaignProgress"),
   handler: async (ctx, { wizardId, userId }) => {
-    // Check if progress already exists
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      throw new Error("No active campaign season available");
+    }
+
+    // Check if progress already exists for this season
     const existingProgress = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .withIndex("by_wizard_season", (q) =>
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+      )
       .unique();
 
     if (existingProgress) {
       return existingProgress._id;
     }
 
-    // Create new campaign progress
+    // Create new campaign progress for the current season
     const progressId = await ctx.db.insert("wizardCampaignProgress", {
       wizardId,
       userId,
+      seasonId: activeSeason._id,
       currentOpponent: 1, // Start with first opponent
       defeatedOpponents: [],
       hasCompletionRelic: false,
@@ -557,14 +590,24 @@ export const defeatOpponent = mutation({
   },
   returns: v.null(),
   handler: async (ctx, { wizardId, opponentNumber, userId }) => {
-    // Get current progress
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      throw new Error("No active campaign season available");
+    }
+
+    // Get current progress for this season
     const progress = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .withIndex("by_wizard_season", (q) =>
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+      )
       .unique();
 
     if (!progress) {
-      throw new Error("No campaign progress found for this wizard");
+      throw new Error(
+        "No campaign progress found for this wizard in the current season"
+      );
     }
 
     // Verify user ownership if userId provided
@@ -620,17 +663,24 @@ export const createCampaignBattle = mutation({
   },
   returns: v.id("campaignBattles"),
   handler: async (ctx, { wizardId, userId, opponentNumber, duelId }) => {
-    // Check for existing battle with same wizard-opponent combination
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      throw new Error("No active campaign season available");
+    }
+
+    // Check for existing battle with same wizard-opponent combination in current season
     const existingBattle = await ctx.db
       .query("campaignBattles")
-      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .withIndex("by_season", (q) => q.eq("seasonId", activeSeason._id))
+      .filter((q) => q.eq(q.field("wizardId"), wizardId))
       .filter((q) => q.eq(q.field("opponentNumber"), opponentNumber))
       .filter((q) => q.neq(q.field("status"), "LOST")) // Allow retries after losses
       .first();
 
     if (existingBattle) {
       throw new Error(
-        `Battle already exists for wizard against opponent ${opponentNumber}`
+        `Battle already exists for wizard against opponent ${opponentNumber} in current season`
       );
     }
 
@@ -642,6 +692,7 @@ export const createCampaignBattle = mutation({
       duelId,
       status: "IN_PROGRESS",
       createdAt: Date.now(),
+      seasonId: activeSeason._id,
     });
 
     return battleId;
@@ -786,6 +837,25 @@ export const getCampaignOpponentWizard = query({
 });
 
 /**
+ * Internal version of getCampaignOpponentWizard to avoid circular dependencies
+ */
+export const getCampaignOpponentWizardInternal = internalQuery({
+  args: { opponentNumber: v.number() },
+  returns: v.union(v.id("wizards"), v.null()),
+  handler: async (ctx, { opponentNumber }) => {
+    // Get the campaign opponent wizard
+    const opponent = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber)
+      )
+      .unique();
+
+    return opponent?._id || null;
+  },
+});
+
+/**
  * Apply luck modifiers based on opponent difficulty level
  */
 export const calculateCampaignLuck = query({
@@ -856,17 +926,26 @@ export const startCampaignBattle = mutation({
       throw new Error("Invalid opponent number: must be between 1 and 10");
     }
 
-    // Get or create wizard campaign progress
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      throw new Error("No active campaign season available");
+    }
+
+    // Get or create wizard campaign progress for current season
     let progress = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .withIndex("by_wizard_season", (q) =>
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+      )
       .unique();
 
     if (!progress) {
-      // Initialize progress if it doesn't exist
+      // Initialize progress if it doesn't exist for this season
       const progressId = await ctx.db.insert("wizardCampaignProgress", {
         wizardId,
         userId: identity.subject,
+        seasonId: activeSeason._id,
         currentOpponent: 1,
         defeatedOpponents: [],
         hasCompletionRelic: false,
@@ -893,7 +972,7 @@ export const startCampaignBattle = mutation({
 
     // Get the campaign opponent wizard
     const aiWizardId = await ctx.runQuery(
-      api.campaigns.getCampaignOpponentWizard,
+      internal.campaigns.getCampaignOpponentWizardInternal,
       { opponentNumber }
     );
 
@@ -923,6 +1002,7 @@ export const startCampaignBattle = mutation({
       duelId,
       status: "IN_PROGRESS",
       createdAt: Date.now(),
+      seasonId: activeSeason._id,
     });
 
     return {
@@ -962,10 +1042,12 @@ export const completeCampaignBattleWithResult = mutation({
 
     // If won, update campaign progress
     if (won) {
-      // Get current progress
+      // Get current progress for the battle's season
       const progress = await ctx.db
         .query("wizardCampaignProgress")
-        .withIndex("by_wizard", (q) => q.eq("wizardId", battle.wizardId))
+        .withIndex("by_wizard_season", (q) =>
+          q.eq("wizardId", battle.wizardId).eq("seasonId", battle.seasonId!)
+        )
         .unique();
 
       if (progress) {
@@ -989,10 +1071,8 @@ export const completeCampaignBattleWithResult = mutation({
           relicAwarded = true;
           campaignCompleted = true;
 
-          // Award the relic by updating wizard's luck (handled in checkCampaignCompletion)
-          await ctx.runMutation(api.campaigns.checkCampaignCompletion, {
-            wizardId: battle.wizardId,
-          });
+          // The relic is already awarded by updating the progress above
+          // No additional action needed here
         }
       }
     }
@@ -1014,10 +1094,18 @@ export const checkCampaignCompletion = mutation({
     relicAwarded: v.boolean(),
   }),
   handler: async (ctx, { wizardId }) => {
-    // Get campaign progress
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      return { completed: false, relicAwarded: false };
+    }
+
+    // Get campaign progress for current season
     const progress = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .withIndex("by_wizard_season", (q) =>
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+      )
       .unique();
 
     if (!progress) {
@@ -1049,27 +1137,85 @@ export const checkCampaignCompletion = mutation({
 });
 
 /**
- * Get effective luck score for a wizard (includes relic bonus)
+ * Internal version of checkCampaignCompletion to avoid circular dependencies
+ */
+export const checkCampaignCompletionInternal = internalMutation({
+  args: { wizardId: v.id("wizards") },
+  returns: v.object({
+    completed: v.boolean(),
+    relicAwarded: v.boolean(),
+  }),
+  handler: async (ctx, { wizardId }) => {
+    // Get the active season
+    const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+    if (!activeSeason) {
+      return { completed: false, relicAwarded: false };
+    }
+
+    // Get campaign progress for current season
+    const progress = await ctx.db
+      .query("wizardCampaignProgress")
+      .withIndex("by_wizard_season", (q) =>
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+      )
+      .unique();
+
+    if (!progress) {
+      return { completed: false, relicAwarded: false };
+    }
+
+    // Check if all 10 opponents defeated
+    const allOpponentsDefeated =
+      progress.defeatedOpponents.length === 10 &&
+      progress.defeatedOpponents.includes(10);
+
+    if (allOpponentsDefeated && !progress.hasCompletionRelic) {
+      // Award the relic
+      await ctx.db.patch(progress._id, {
+        hasCompletionRelic: true,
+      });
+
+      // Note: The actual luck boost will be applied in the wizard's effective luck calculation
+      // This is handled in the frontend/query logic rather than modifying the base wizard stats
+
+      return { completed: true, relicAwarded: true };
+    }
+
+    return {
+      completed: allOpponentsDefeated,
+      relicAwarded: progress.hasCompletionRelic,
+    };
+  },
+});
+
+/**
+ * Get effective luck score for a wizard (includes relic bonuses from all completed seasons)
  */
 export const getWizardEffectiveLuck = query({
   args: { wizardId: v.id("wizards") },
   returns: v.number(),
   handler: async (ctx, { wizardId }) => {
-    // Get campaign progress to check for completion relic
-    const campaignProgress = await ctx.db
+    // Get all campaign progress for this wizard across all seasons
+    const allProgress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
-      .unique();
+      .collect();
 
-    const hasCompletionRelic = campaignProgress?.hasCompletionRelic || false;
+    // Calculate total luck bonus from all completed seasons
+    let totalLuckBonus = 0;
+    for (const progress of allProgress) {
+      if (progress.hasCompletionRelic) {
+        // Get the season to find the relic bonus
+        const season = await ctx.db.get(progress.seasonId);
+        if (season) {
+          totalLuckBonus += season.completionRelic.luckBonus;
+        }
+      }
+    }
 
     // Calculate effective luck score (base luck would be stored on wizard, defaulting to 10)
-    // For now, we'll assume base luck is 10 and add +1 if has relic, capped at 20
     const baseLuck = 10; // This could be a field on the wizard in the future
-    const effectiveLuckScore = Math.min(
-      20,
-      baseLuck + (hasCompletionRelic ? 1 : 0)
-    );
+    const effectiveLuckScore = Math.min(20, baseLuck + totalLuckBonus);
 
     return effectiveLuckScore;
   },
@@ -1086,19 +1232,26 @@ export const calculateBattleLuck = query({
   },
   returns: v.number(),
   handler: async (ctx, { wizardId, baseLuck = 10 }) => {
-    // Get campaign progress to check for completion relic
-    const campaignProgress = await ctx.db
+    // Get all campaign progress for this wizard across all seasons
+    const allProgress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
-      .unique();
+      .collect();
 
-    const hasCompletionRelic = campaignProgress?.hasCompletionRelic || false;
+    // Calculate total luck bonus from all completed seasons
+    let totalLuckBonus = 0;
+    for (const progress of allProgress) {
+      if (progress.hasCompletionRelic) {
+        // Get the season to find the relic bonus
+        const season = await ctx.db.get(progress.seasonId);
+        if (season) {
+          totalLuckBonus += season.completionRelic.luckBonus;
+        }
+      }
+    }
 
-    // Apply relic bonus and ensure it stays within valid range (1-20)
-    const effectiveLuck = Math.max(
-      1,
-      Math.min(20, baseLuck + (hasCompletionRelic ? 1 : 0))
-    );
+    // Apply relic bonuses and ensure it stays within valid range (1-20)
+    const effectiveLuck = Math.max(1, Math.min(20, baseLuck + totalLuckBonus));
 
     return effectiveLuck;
   },

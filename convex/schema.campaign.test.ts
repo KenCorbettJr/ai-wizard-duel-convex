@@ -9,6 +9,8 @@ describe("Campaign Database Schema Tests", () => {
 
   beforeEach(async () => {
     t = convexTest(schema);
+    // Create default season for tests
+    await t.mutation(internal.campaignSeasons.createDefaultSeasonInternal, {});
   });
 
   describe("campaign opponents as wizards", () => {

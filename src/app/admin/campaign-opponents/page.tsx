@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,11 @@ function OpponentImage({
     return (
       <div className="flex-shrink-0">
         <div className="relative group">
-          <img
+          <Image
             src={imageUrl}
             alt={opponent.name}
+            width={80}
+            height={80}
             className="w-20 h-20 rounded-lg object-cover border-2 border-purple-200 dark:border-purple-700"
           />
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">

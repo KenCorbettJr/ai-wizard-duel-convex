@@ -318,7 +318,11 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
 
         {/* Campaign Progress */}
         <div className="mb-8 max-w-2xl mx-auto">
-          <WizardCampaignProgress wizardId={wizardId} isOwner={!!isOwner} />
+          <WizardCampaignProgress
+            wizardId={wizardId}
+            isOwner={!!isOwner}
+            userId={user?.id}
+          />
         </div>
 
         {/* Action Buttons */}
