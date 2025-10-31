@@ -16,7 +16,14 @@ if (process.env.ENV === "dev") {
     pathname: "/api/storage/**",
   });
 } else if (process.env.ENV === "emulate") {
-  // For emulation mode, we'll proxy through our own API route
+  // For emulation mode, allow direct access to local Convex server
+  remotePatterns.push({
+    protocol: "http",
+    hostname: "127.0.0.1",
+    port: "3210",
+    pathname: "/api/storage/**",
+  });
+  // Also keep the proxy route as fallback
   remotePatterns.push({
     protocol: "http",
     hostname: "localhost",

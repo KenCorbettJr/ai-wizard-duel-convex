@@ -16,8 +16,8 @@ export const generateImageWithGemini = action({
         v.object({
           name: v.string(),
           description: v.string(),
-        }),
-      ),
+        })
+      )
     ), // Wizard descriptions for context in subsequent rounds
     useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
   },
@@ -30,7 +30,7 @@ export const generateImageWithGemini = action({
       wizardImages,
       wizardDescriptions,
       useGemini = false,
-    },
+    }
   ): Promise<ArrayBuffer> => {
     try {
       if (useGemini && process.env.GOOGLE_API_KEY) {
@@ -39,18 +39,24 @@ export const generateImageWithGemini = action({
           prompt,
           previousImage,
           wizardImages,
-          wizardDescriptions,
+          wizardDescriptions
         );
       } else {
         // Fallback to FAL
-        return await ctx.runAction(api.generateImage.generateImage, { prompt });
+        return await ctx.runAction(api.generateImage.generateImage, {
+          prompt,
+          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+        });
       }
     } catch (error) {
       console.error("Image generation failed:", error);
       // Fallback to FAL if Gemini fails
       if (useGemini) {
         console.log("Falling back to FAL after Gemini failure");
-        return await ctx.runAction(api.generateImage.generateImage, { prompt });
+        return await ctx.runAction(api.generateImage.generateImage, {
+          prompt,
+          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+        });
       }
       throw error;
     }
@@ -62,7 +68,7 @@ async function generateWithGeminiFlash(
   prompt: string,
   previousImage?: string,
   wizardImages?: string[],
-  wizardDescriptions?: Array<{ name: string; description: string }>,
+  wizardDescriptions?: Array<{ name: string; description: string }>
 ): Promise<ArrayBuffer> {
   // Check if we're in emulator mode
   if (isEmulatorMode()) {
@@ -142,10 +148,24 @@ async function generateWithGeminiFlash(
           const imageResponse = await fetch(contentItem.media.url);
           if (!imageResponse.ok) {
             throw new Error(
-              `Failed to fetch generated image: ${imageResponse.statusText}`,
+              `Failed to fetch generated image: ${imageResponse.statusText}`
             );
           }
-          return await imageResponse.arrayBuffer();
+          const imageBuffer = await imageResponse.arrayBuffer();
+
+          // Resize the image to reduce size
+          const resizedImageBuffer = await ctx.runAction(
+            api.imageResizeService.resizeImage,
+            {
+              imageBuffer,
+              width: 512,
+              height: 512,
+              quality: 85,
+              format: "png",
+            }
+          );
+
+          return resizedImageBuffer;
         }
 
         // Also check for base64 data in media (type assertion needed)
@@ -154,22 +174,48 @@ async function generateWithGeminiFlash(
           // If the image is provided as base64 data
           const base64Data = mediaItem.data.replace(
             /^data:image\/[^;]+;base64,/,
-            "",
+            ""
           );
           const imageBuffer = Buffer.from(base64Data, "base64");
-          return imageBuffer.buffer;
+
+          // Resize the image to reduce size
+          const resizedImageBuffer = await ctx.runAction(
+            api.imageResizeService.resizeImage,
+            {
+              imageBuffer: imageBuffer.buffer,
+              width: 512,
+              height: 512,
+              quality: 85,
+              format: "png",
+            }
+          );
+
+          return resizedImageBuffer;
         }
 
         // Check if it's inline base64 in text (type assertion needed)
         const textItem = contentItem as { text?: string };
         if (textItem.text) {
           const base64Match = textItem.text.match(
-            /data:image\/[^;]+;base64,([^"]+)/,
+            /data:image\/[^;]+;base64,([^"]+)/
           );
           if (base64Match) {
             const base64Data = base64Match[1];
             const imageBuffer = Buffer.from(base64Data, "base64");
-            return imageBuffer.buffer;
+
+            // Resize the image to reduce size
+            const resizedImageBuffer = await ctx.runAction(
+              api.imageResizeService.resizeImage,
+              {
+                imageBuffer: imageBuffer.buffer,
+                width: 512,
+                height: 512,
+                quality: 85,
+                format: "png",
+              }
+            );
+
+            return resizedImageBuffer;
           }
         }
       }
@@ -184,7 +230,7 @@ async function generateWithGeminiFlash(
         contentLength: response.message?.content?.length || 0,
         contentTypes:
           response.message?.content?.map((item: unknown) =>
-            Object.keys(item as object),
+            Object.keys(item as object)
           ) || [],
         usage: response.usage,
         // Log the actual content items for debugging
@@ -202,14 +248,14 @@ async function generateWithGeminiFlash(
               hasMediaData: !!media?.data,
             };
           }) || [],
-      },
+      }
     );
 
     throw new Error("No image found in Gemini response");
   } catch (error) {
     console.error("Gemini image generation failed:", error);
     throw new Error(
-      `Gemini image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Gemini image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }

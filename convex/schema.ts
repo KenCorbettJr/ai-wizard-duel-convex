@@ -305,16 +305,12 @@ export default defineSchema({
     .index("by_user_opponent", ["userId", "opponentNumber"])
     .index("by_season", ["seasonId"]),
 
-  // Campaign seasons - time-limited campaigns with different opponents and rewards
+  // Campaign seasons - campaigns with different opponents and rewards
   campaignSeasons: defineTable({
     name: v.string(), // e.g., "Season of Fire", "Winter's Challenge"
     description: v.string(),
-    startDate: v.number(), // Unix timestamp
-    endDate: v.number(), // Unix timestamp
     status: v.union(
-      v.literal("UPCOMING"), // Not yet started
       v.literal("ACTIVE"), // Currently running
-      v.literal("COMPLETED"), // Ended
       v.literal("ARCHIVED") // Old season, hidden from UI
     ),
     // Relic reward for completing this season
@@ -324,14 +320,13 @@ export default defineSchema({
       luckBonus: v.number(), // Luck bonus (usually +1)
       iconUrl: v.optional(v.string()), // Optional icon for the relic
     }),
-    // Season-specific opponent configuration
-    opponentSet: v.string(), // Identifier for which opponent set to use (e.g., "classic", "elemental", "shadow")
+    // Season-specific opponent configuration - direct opponent selection
+    opponents: v.array(v.id("wizards")), // Array of wizard IDs in the order they should be fought (1-10)
     maxParticipants: v.optional(v.number()), // Optional limit on participants
     isDefault: v.optional(v.boolean()), // Whether this is the default/fallback season
     createdAt: v.number(),
     createdBy: v.string(), // Admin who created the season
   })
     .index("by_status", ["status"])
-    .index("by_dates", ["startDate", "endDate"])
     .index("by_default", ["isDefault"]),
 });

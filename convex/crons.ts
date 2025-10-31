@@ -1,14 +1,8 @@
 import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Update campaign season statuses every hour
-crons.interval(
-  "update season statuses",
-  { hours: 1 },
-  internal.campaignSeasons.updateSeasonStatuses,
-  {}
-);
+// No active cron jobs currently
+// Season statuses are now managed manually through admin controls
 
 export default crons;

@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DragDropOpponentSelector } from "@/components/DragDropOpponentSelector";
 import { toast } from "sonner";
 import { AlertTriangle, Info } from "lucide-react";
 
@@ -41,16 +43,14 @@ interface Season {
   _id: Id<"campaignSeasons">;
   name: string;
   description: string;
-  startDate: number;
-  endDate: number;
-  status: "UPCOMING" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+  status: "ACTIVE" | "ARCHIVED";
   completionRelic: {
     name: string;
     description: string;
     luckBonus: number;
     iconUrl?: string;
   };
-  opponentSet: string;
+  opponents: Id<"wizards">[];
   maxParticipants?: number;
   isDefault?: boolean;
   participantCount: number;
@@ -67,19 +67,17 @@ export function SeasonEditForm({
   onClose,
   onSuccess,
 }: SeasonEditFormProps) {
-  const opponentSets = useQuery(api.seasonalOpponents.getAvailableOpponentSets);
+  const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
   const updateSeason = useMutation(api.campaignSeasons.updateCampaignSeason);
 
   const [formData, setFormData] = useState({
     name: season.name,
     description: season.description,
-    startDate: new Date(season.startDate).toISOString().slice(0, 16),
-    endDate: new Date(season.endDate).toISOString().slice(0, 16),
     status: season.status,
     relicName: season.completionRelic.name,
     relicDescription: season.completionRelic.description,
     luckBonus: season.completionRelic.luckBonus,
-    opponentSet: season.opponentSet,
+    opponents: season.opponents,
     maxParticipants: season.maxParticipants?.toString() || "",
     isDefault: season.isDefault || false,
   });
@@ -88,15 +86,14 @@ export function SeasonEditForm({
   const [pendingChanges, setPendingChanges] = useState<{
     name?: string;
     description?: string;
-    startDate?: number;
-    endDate?: number;
-    status?: "UPCOMING" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+    status?: "ACTIVE" | "ARCHIVED";
     completionRelic?: {
       name: string;
       description: string;
       luckBonus: number;
       iconUrl?: string;
     };
+    opponents?: Id<"wizards">[];
     maxParticipants?: number;
     isDefault?: boolean;
   } | null>(null);
@@ -107,8 +104,11 @@ export function SeasonEditForm({
 
   // Check if this is a critical change that affects participants
   const hasCriticalChanges = () => {
+    const opponentsChanged =
+      JSON.stringify(formData.opponents.sort()) !==
+      JSON.stringify(season.opponents.sort());
     return (
-      formData.opponentSet !== season.opponentSet ||
+      opponentsChanged ||
       formData.status !== season.status ||
       formData.luckBonus !== season.completionRelic.luckBonus
     );
@@ -117,20 +117,16 @@ export function SeasonEditForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate dates
-    const startDate = new Date(formData.startDate).getTime();
-    const endDate = new Date(formData.endDate).getTime();
-
-    if (startDate >= endDate) {
-      toast.error("Start date must be before end date");
-      return;
-    }
-
     // Validate luck bonus
     if (formData.luckBonus < 1 || formData.luckBonus > 5) {
       toast.error("Luck bonus must be between 1 and 5");
       return;
     }
+
+    // Check if opponents changed
+    const opponentsChanged =
+      JSON.stringify(formData.opponents.sort()) !==
+      JSON.stringify(season.opponents.sort());
 
     // Prepare updates object
     const updates = {
@@ -139,8 +135,6 @@ export function SeasonEditForm({
         formData.description !== season.description
           ? formData.description
           : undefined,
-      startDate: startDate !== season.startDate ? startDate : undefined,
-      endDate: endDate !== season.endDate ? endDate : undefined,
       status: formData.status !== season.status ? formData.status : undefined,
       completionRelic:
         formData.relicName !== season.completionRelic.name ||
@@ -153,6 +147,7 @@ export function SeasonEditForm({
               iconUrl: season.completionRelic.iconUrl,
             }
           : undefined,
+      opponents: opponentsChanged ? formData.opponents : undefined,
       maxParticipants: formData.maxParticipants
         ? parseInt(formData.maxParticipants)
         : formData.maxParticipants === ""
@@ -190,15 +185,14 @@ export function SeasonEditForm({
   const submitChanges = async (updates: {
     name?: string;
     description?: string;
-    startDate?: number;
-    endDate?: number;
-    status?: "UPCOMING" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+    status?: "ACTIVE" | "ARCHIVED";
     completionRelic?: {
       name: string;
       description: string;
       luckBonus: number;
       iconUrl?: string;
     };
+    opponents?: Id<"wizards">[];
     maxParticipants?: number;
     isDefault?: boolean;
   }) => {
@@ -277,18 +271,17 @@ export function SeasonEditForm({
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(
-                    value: "UPCOMING" | "ACTIVE" | "COMPLETED" | "ARCHIVED"
-                  ) => setFormData({ ...formData, status: value })}
+                  onValueChange={(value: "ACTIVE" | "ARCHIVED") =>
+                    setFormData({ ...formData, status: value })
+                  }
                   disabled={season.status === "ARCHIVED"}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="UPCOMING">Upcoming</SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -308,80 +301,44 @@ export function SeasonEditForm({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="datetime-local"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
-                  }
-                  required
-                  disabled={season.status === "ARCHIVED"}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                  required
-                  disabled={season.status === "ARCHIVED"}
-                />
-              </div>
+            <div>
+              <DragDropOpponentSelector
+                selectedOpponents={formData.opponents}
+                onOpponentsChange={(opponents) =>
+                  setFormData({ ...formData, opponents })
+                }
+                availableOpponents={campaignOpponents || []}
+                disabled={season.status === "ARCHIVED"}
+                maxOpponents={10}
+              />
+              {hasParticipants &&
+                JSON.stringify(formData.opponents.sort()) !==
+                  JSON.stringify(season.opponents.sort()) && (
+                  <Alert className="mt-3">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Changing opponents may affect ongoing campaigns
+                    </AlertDescription>
+                  </Alert>
+                )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="opponentSet">Opponent Set</Label>
-                <Select
-                  value={formData.opponentSet}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, opponentSet: value })
-                  }
-                  disabled={season.status === "ARCHIVED"}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {opponentSets?.map((set: { key: string; name: string }) => (
-                      <SelectItem key={set.key} value={set.key}>
-                        {set.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {hasParticipants &&
-                  formData.opponentSet !== season.opponentSet && (
-                    <p className="text-sm text-amber-600 mt-1">
-                      ⚠️ Changing opponent set may affect ongoing campaigns
-                    </p>
-                  )}
-              </div>
-              <div>
-                <Label htmlFor="maxParticipants">Max Participants</Label>
-                <Input
-                  id="maxParticipants"
-                  type="number"
-                  min="1"
-                  value={formData.maxParticipants}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      maxParticipants: e.target.value,
-                    })
-                  }
-                  placeholder="Leave empty for unlimited"
-                  disabled={season.status === "ARCHIVED"}
-                />
-              </div>
+            <div>
+              <Label htmlFor="maxParticipants">Max Participants</Label>
+              <Input
+                id="maxParticipants"
+                type="number"
+                min="1"
+                value={formData.maxParticipants}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    maxParticipants: e.target.value,
+                  })
+                }
+                placeholder="Leave empty for unlimited"
+                disabled={season.status === "ARCHIVED"}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -486,8 +443,9 @@ export function SeasonEditForm({
               This season has {season.participantCount} active participants. The
               changes you&apos;re making may affect their ongoing campaigns:
               <ul className="list-disc list-inside mt-2 space-y-1">
-                {formData.opponentSet !== season.opponentSet && (
-                  <li>Changing opponent set may disrupt campaign progress</li>
+                {JSON.stringify(formData.opponents.sort()) !==
+                  JSON.stringify(season.opponents.sort()) && (
+                  <li>Changing opponents may disrupt campaign progress</li>
                 )}
                 {formData.status !== season.status && (
                   <li>Changing status may affect season availability</li>

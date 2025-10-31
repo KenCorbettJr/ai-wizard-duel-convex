@@ -818,21 +818,28 @@ export const getUserOpponentBattles = query({
 });
 
 /**
- * Get the campaign opponent wizard for a battle
+ * Get the campaign opponent wizard for a battle in a specific season
  */
 export const getCampaignOpponentWizard = query({
-  args: { opponentNumber: v.number() },
+  args: {
+    seasonId: v.id("campaignSeasons"),
+    opponentNumber: v.number(),
+  },
   returns: v.union(v.id("wizards"), v.null()),
-  handler: async (ctx, { opponentNumber }) => {
-    // Get the campaign opponent wizard
-    const opponent = await ctx.db
-      .query("wizards")
-      .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber)
-      )
-      .unique();
+  handler: async (ctx, { seasonId, opponentNumber }) => {
+    // Get the season to access its opponents array
+    const season = await ctx.db.get(seasonId);
+    if (!season) {
+      return null;
+    }
 
-    return opponent?._id || null;
+    // Opponent numbers are 1-based, array is 0-based
+    const opponentIndex = opponentNumber - 1;
+    if (opponentIndex < 0 || opponentIndex >= season.opponents.length) {
+      return null;
+    }
+
+    return season.opponents[opponentIndex];
   },
 });
 
@@ -840,18 +847,25 @@ export const getCampaignOpponentWizard = query({
  * Internal version of getCampaignOpponentWizard to avoid circular dependencies
  */
 export const getCampaignOpponentWizardInternal = internalQuery({
-  args: { opponentNumber: v.number() },
+  args: {
+    seasonId: v.id("campaignSeasons"),
+    opponentNumber: v.number(),
+  },
   returns: v.union(v.id("wizards"), v.null()),
-  handler: async (ctx, { opponentNumber }) => {
-    // Get the campaign opponent wizard
-    const opponent = await ctx.db
-      .query("wizards")
-      .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber)
-      )
-      .unique();
+  handler: async (ctx, { seasonId, opponentNumber }) => {
+    // Get the season to access its opponents array
+    const season = await ctx.db.get(seasonId);
+    if (!season) {
+      return null;
+    }
 
-    return opponent?._id || null;
+    // Opponent numbers are 1-based, array is 0-based
+    const opponentIndex = opponentNumber - 1;
+    if (opponentIndex < 0 || opponentIndex >= season.opponents.length) {
+      return null;
+    }
+
+    return season.opponents[opponentIndex];
   },
 });
 
@@ -860,19 +874,26 @@ export const getCampaignOpponentWizardInternal = internalQuery({
  */
 export const calculateCampaignLuck = query({
   args: {
+    seasonId: v.id("campaignSeasons"),
     opponentNumber: v.number(),
     baseLuck: v.number(),
   },
   returns: v.number(),
-  handler: async (ctx, { opponentNumber, baseLuck }) => {
-    // Get the campaign opponent wizard
-    const opponent = await ctx.db
-      .query("wizards")
-      .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber)
-      )
-      .unique();
+  handler: async (ctx, { seasonId, opponentNumber, baseLuck }) => {
+    // Get the opponent wizard ID from the season
+    const opponentId = await ctx.runQuery(
+      api.campaigns.getCampaignOpponentWizard,
+      { seasonId, opponentNumber }
+    );
 
+    if (!opponentId) {
+      throw new Error(
+        `Campaign opponent ${opponentNumber} not found in season`
+      );
+    }
+
+    // Get the opponent wizard
+    const opponent = await ctx.db.get(opponentId);
     if (!opponent || !opponent.luckModifier) {
       throw new Error(`Campaign opponent ${opponentNumber} not found`);
     }
@@ -973,7 +994,7 @@ export const startCampaignBattle = mutation({
     // Get the campaign opponent wizard
     const aiWizardId = await ctx.runQuery(
       internal.campaigns.getCampaignOpponentWizardInternal,
-      { opponentNumber }
+      { seasonId: activeSeason._id, opponentNumber }
     );
 
     if (!aiWizardId) {

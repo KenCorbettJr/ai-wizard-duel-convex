@@ -36,7 +36,76 @@ describe("generateWizardIllustration", () => {
     vi.clearAllMocks();
 
     // Default mock Fal response & image bytes used by tests
-    const mockImageData = new Uint8Array([137, 80, 78, 71]); // small PNG-like header bytes
+    // Create a minimal valid PNG image (1x1 pixel transparent PNG)
+    const mockImageData = new Uint8Array([
+      0x89,
+      0x50,
+      0x4e,
+      0x47,
+      0x0d,
+      0x0a,
+      0x1a,
+      0x0a, // PNG signature
+      0x00,
+      0x00,
+      0x00,
+      0x0d,
+      0x49,
+      0x48,
+      0x44,
+      0x52, // IHDR chunk
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x01, // 1x1 dimensions
+      0x08,
+      0x06,
+      0x00,
+      0x00,
+      0x00,
+      0x1f,
+      0x15,
+      0xc4, // bit depth, color type, etc.
+      0x89,
+      0x00,
+      0x00,
+      0x00,
+      0x0b,
+      0x49,
+      0x44,
+      0x41, // IDAT chunk
+      0x54,
+      0x78,
+      0x9c,
+      0x62,
+      0x00,
+      0x02,
+      0x00,
+      0x00, // image data
+      0x05,
+      0x00,
+      0x01,
+      0x0d,
+      0x0a,
+      0x2d,
+      0xb4,
+      0x00, // checksum
+      0x00,
+      0x00,
+      0x00,
+      0x49,
+      0x45,
+      0x4e,
+      0x44,
+      0xae, // IEND chunk
+      0x42,
+      0x60,
+      0x82,
+    ]);
     const mockImageUrl = "https://example.com/image.png";
 
     // Provide a resolved value shape matching generateImage.ts expectations

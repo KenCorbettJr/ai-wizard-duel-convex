@@ -139,6 +139,7 @@ const adminNavItems: AdminNavItem[] = [
     label: "Campaign Seasons",
     icon: Crown,
   },
+
   {
     href: "/admin/campaign-opponents",
     label: "Campaign Opponents",

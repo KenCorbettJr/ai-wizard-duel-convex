@@ -11,16 +11,14 @@ export async function getActiveCampaignSeasonHelper(
   _creationTime: number;
   name: string;
   description: string;
-  startDate: number;
-  endDate: number;
-  status: "UPCOMING" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+  status: "ACTIVE" | "ARCHIVED";
   completionRelic: {
     name: string;
     description: string;
     luckBonus: number;
     iconUrl?: string;
   };
-  opponentSet: string;
+  opponents: Id<"wizards">[];
   maxParticipants?: number;
   isDefault?: boolean;
   createdAt: number;

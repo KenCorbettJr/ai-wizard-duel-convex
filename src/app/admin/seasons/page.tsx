@@ -10,16 +10,14 @@ type SeasonWithParticipantCount = {
   _creationTime: number;
   name: string;
   description: string;
-  startDate: number;
-  endDate: number;
-  status: "UPCOMING" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+  status: "ACTIVE" | "ARCHIVED";
   completionRelic: {
     name: string;
     description: string;
     luckBonus: number;
     iconUrl?: string;
   };
-  opponentSet: string;
+  opponents: Id<"wizards">[];
   maxParticipants?: number;
   isDefault?: boolean;
   createdAt: number;
@@ -46,19 +44,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SeasonEditForm } from "@/components/SeasonEditForm";
+import { DragDropOpponentSelector } from "@/components/DragDropOpponentSelector";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Edit, Archive } from "lucide-react";
 
 export default function AdminSeasonsPage() {
   const seasons = useQuery(api.campaignSeasons.getAllCampaignSeasons);
-  const opponentSets = useQuery(api.seasonalOpponents.getAvailableOpponentSets);
+  const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
   const createSeason = useMutation(api.campaignSeasons.createCampaignSeason);
   const archiveSeason = useMutation(api.campaignSeasons.archiveCampaignSeason);
   const createDefaultSeason = useMutation(
     api.campaignSeasons.createDefaultSeason
   );
-  // const runMigration = useMutation(api.migrations.runCampaignProgressMigration);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingSeason, setEditingSeason] =
@@ -66,36 +64,31 @@ export default function AdminSeasonsPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    startDate: "",
-    endDate: "",
     relicName: "",
     relicDescription: "",
     luckBonus: 1,
-    opponentSet: "classic",
+    opponents: [] as Id<"wizards">[],
     maxParticipants: "",
+    status: "ACTIVE" as "ACTIVE" | "ARCHIVED",
   });
 
   const handleCreateSeason = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const startDate = new Date(formData.startDate).getTime();
-      const endDate = new Date(formData.endDate).getTime();
-
       await createSeason({
         name: formData.name,
         description: formData.description,
-        startDate,
-        endDate,
         completionRelic: {
           name: formData.relicName,
           description: formData.relicDescription,
           luckBonus: formData.luckBonus,
         },
-        opponentSet: formData.opponentSet,
+        opponents: formData.opponents,
         maxParticipants: formData.maxParticipants
           ? parseInt(formData.maxParticipants)
           : undefined,
+        status: formData.status,
       });
 
       toast.success("Season created successfully!");
@@ -103,13 +96,12 @@ export default function AdminSeasonsPage() {
       setFormData({
         name: "",
         description: "",
-        startDate: "",
-        endDate: "",
         relicName: "",
         relicDescription: "",
         luckBonus: 1,
-        opponentSet: "classic",
+        opponents: [],
         maxParticipants: "",
+        status: "ACTIVE",
       });
     } catch (error) {
       toast.error("Failed to create season: " + (error as Error).message);
@@ -136,16 +128,6 @@ export default function AdminSeasonsPage() {
     }
   };
 
-  const handleRunMigration = async () => {
-    // try {
-    //   const result = (await runMigration({})) as { message: string };
-    //   toast.success(result.message);
-    // } catch (error) {
-    //   toast.error("Failed to run migration: " + (error as Error).message);
-    // }
-    toast.info("Migration functionality temporarily disabled");
-  };
-
   const handleEditSeason = (season: SeasonWithParticipantCount) => {
     setEditingSeason(season);
   };
@@ -163,15 +145,16 @@ export default function AdminSeasonsPage() {
     switch (status) {
       case "ACTIVE":
         return "bg-green-500";
-      case "UPCOMING":
-        return "bg-blue-500";
-      case "COMPLETED":
-        return "bg-gray-500";
       case "ARCHIVED":
-        return "bg-red-500";
+        return "bg-gray-500";
       default:
         return "bg-gray-400";
     }
+  };
+
+  const getOpponentName = (opponentId: Id<"wizards">) => {
+    const opponent = campaignOpponents?.find((o) => o._id === opponentId);
+    return opponent ? opponent.name : "Unknown Opponent";
   };
 
   return (
@@ -184,9 +167,6 @@ export default function AdminSeasonsPage() {
           </Button>
           <Button variant="outline" onClick={handleCreateDefaultSeason}>
             Create Default Season
-          </Button>
-          <Button variant="outline" onClick={handleRunMigration}>
-            Run Migration
           </Button>
         </div>
       </div>
@@ -212,7 +192,7 @@ export default function AdminSeasonsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateSeason} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="name">Season Name</Label>
                   <Input
@@ -226,24 +206,29 @@ export default function AdminSeasonsPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="opponentSet">Opponent Set</Label>
+                  <DragDropOpponentSelector
+                    selectedOpponents={formData.opponents}
+                    onOpponentsChange={(opponents) =>
+                      setFormData({ ...formData, opponents })
+                    }
+                    availableOpponents={campaignOpponents || []}
+                    maxOpponents={10}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
                   <Select
-                    value={formData.opponentSet}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, opponentSet: value })
+                    value={formData.status}
+                    onValueChange={(value: "ACTIVE" | "ARCHIVED") =>
+                      setFormData({ ...formData, status: value })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {opponentSets?.map(
-                        (set: { key: string; name: string }) => (
-                          <SelectItem key={set.key} value={set.key}>
-                            {set.name}
-                          </SelectItem>
-                        )
-                      )}
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="ARCHIVED">Archived</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -260,33 +245,6 @@ export default function AdminSeasonsPage() {
                   placeholder="Describe this season's theme and challenges..."
                   required
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="datetime-local"
-                    value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="datetime-local"
-                    value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
-                    required
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -396,21 +354,38 @@ export default function AdminSeasonsPage() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <strong>Start:</strong>{" "}
-                  {new Date(season.startDate).toLocaleString()}
-                </div>
-                <div>
-                  <strong>End:</strong>{" "}
-                  {new Date(season.endDate).toLocaleString()}
-                </div>
-                <div>
-                  <strong>Opponent Set:</strong> {season.opponentSet}
+                  <strong>Opponents:</strong>
+                  <Badge variant="secondary" className="ml-2">
+                    {season.opponents.length} selected
+                  </Badge>
                 </div>
                 <div>
                   <strong>Max Participants:</strong>{" "}
                   {season.maxParticipants || "Unlimited"}
                 </div>
               </div>
+
+              {season.opponents.length > 0 && (
+                <div className="mb-4">
+                  <strong>Battle Order:</strong>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {season.opponents.slice(0, 5).map((opponentId, index) => (
+                      <Badge
+                        key={opponentId}
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        {index + 1}. {getOpponentName(opponentId)}
+                      </Badge>
+                    ))}
+                    {season.opponents.length > 5 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{season.opponents.length - 5} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="mb-4">
                 <strong>Completion Relic:</strong> {season.completionRelic.name}{" "}
@@ -426,17 +401,15 @@ export default function AdminSeasonsPage() {
                   Created {formatDistanceToNow(season.createdAt)} ago
                 </div>
                 <div className="space-x-2">
-                  {season.status !== "ARCHIVED" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditSeason(season)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  )}
-                  {season.status === "COMPLETED" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditSeason(season)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  {season.status === "ACTIVE" && (
                     <Button
                       variant="outline"
                       size="sm"

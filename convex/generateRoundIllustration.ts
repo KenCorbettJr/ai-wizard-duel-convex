@@ -4,6 +4,7 @@ import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+import { getImageSizeConfig } from "./imageConfig";
 
 export const generateRoundIllustration = action({
   args: {
@@ -130,12 +131,38 @@ export const generateRoundIllustration = action({
         // Use FAL (original approach)
         imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
           prompt: illustrationPrompt,
+          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
         });
+      }
+
+      // Apply additional resizing specifically for duel round illustrations (skip during tests)
+      let finalImageBuffer = imageBuffer;
+      const duelConfig = getImageSizeConfig("DUEL_ROUND");
+
+      if (process.env.NODE_ENV !== "test") {
+        try {
+          finalImageBuffer = await ctx.runAction(
+            api.imageResizeService.resizeImage,
+            {
+              imageBuffer,
+              width: duelConfig.width,
+              height: duelConfig.height,
+              quality: duelConfig.quality,
+              format: duelConfig.format,
+            }
+          );
+        } catch (resizeError) {
+          console.warn(
+            "Duel round illustration resize failed, using original:",
+            resizeError
+          );
+          // Use original image if resize fails
+        }
       }
 
       // Store the image in Convex File Storage
       const storageId = await ctx.storage.store(
-        new Blob([imageBuffer], { type: "image/png" })
+        new Blob([finalImageBuffer], { type: `image/${duelConfig.format}` })
       );
 
       // Find the round to update

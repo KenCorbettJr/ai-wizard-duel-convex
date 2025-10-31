@@ -15,16 +15,15 @@ export const createCampaignSeason = mutation({
   args: {
     name: v.string(),
     description: v.string(),
-    startDate: v.number(),
-    endDate: v.number(),
     completionRelic: v.object({
       name: v.string(),
       description: v.string(),
       luckBonus: v.number(),
       iconUrl: v.optional(v.string()),
     }),
-    opponentSet: v.string(),
+    opponents: v.array(v.id("wizards")), // Array of opponent wizard IDs in order
     maxParticipants: v.optional(v.number()),
+    status: v.optional(v.union(v.literal("ACTIVE"), v.literal("ARCHIVED"))),
   },
   returns: v.object({
     success: v.boolean(),
@@ -43,31 +42,33 @@ export const createCampaignSeason = mutation({
       throw new Error("Not authenticated");
     }
 
-    // Validate dates
-    if (args.startDate >= args.endDate) {
-      throw new Error("Start date must be before end date");
+    // Validate opponents array
+    if (args.opponents.length === 0) {
+      throw new Error("At least one opponent must be selected");
     }
 
-    if (args.endDate <= Date.now()) {
-      throw new Error("End date must be in the future");
+    if (args.opponents.length > 10) {
+      throw new Error("Maximum of 10 opponents allowed per season");
     }
 
-    // Determine status based on dates
-    const now = Date.now();
-    let status: "UPCOMING" | "ACTIVE" = "UPCOMING";
-    if (args.startDate <= now && args.endDate > now) {
-      status = "ACTIVE";
+    // Verify all opponents exist and are campaign opponents
+    for (const opponentId of args.opponents) {
+      const opponent = await ctx.db.get(opponentId);
+      if (!opponent || !opponent.isCampaignOpponent) {
+        throw new Error(`Invalid opponent: ${opponentId}`);
+      }
     }
+
+    // Default to ACTIVE status if not specified
+    const status = args.status || "ACTIVE";
 
     // Create the season
     const seasonId = await ctx.db.insert("campaignSeasons", {
       name: args.name,
       description: args.description,
-      startDate: args.startDate,
-      endDate: args.endDate,
       status,
       completionRelic: args.completionRelic,
-      opponentSet: args.opponentSet,
+      opponents: args.opponents,
       maxParticipants: args.maxParticipants,
       createdAt: Date.now(),
       createdBy: identity.subject,
@@ -92,21 +93,14 @@ export const getActiveCampaignSeason = query({
       _creationTime: v.number(),
       name: v.string(),
       description: v.string(),
-      startDate: v.number(),
-      endDate: v.number(),
-      status: v.union(
-        v.literal("UPCOMING"),
-        v.literal("ACTIVE"),
-        v.literal("COMPLETED"),
-        v.literal("ARCHIVED")
-      ),
+      status: v.union(v.literal("ACTIVE"), v.literal("ARCHIVED")),
       completionRelic: v.object({
         name: v.string(),
         description: v.string(),
         luckBonus: v.number(),
         iconUrl: v.optional(v.string()),
       }),
-      opponentSet: v.string(),
+      opponents: v.array(v.id("wizards")),
       maxParticipants: v.optional(v.number()),
       isDefault: v.optional(v.boolean()),
       createdAt: v.number(),
@@ -146,21 +140,14 @@ export const getActiveCampaignSeasonInternal = internalQuery({
       _creationTime: v.number(),
       name: v.string(),
       description: v.string(),
-      startDate: v.number(),
-      endDate: v.number(),
-      status: v.union(
-        v.literal("UPCOMING"),
-        v.literal("ACTIVE"),
-        v.literal("COMPLETED"),
-        v.literal("ARCHIVED")
-      ),
+      status: v.union(v.literal("ACTIVE"), v.literal("ARCHIVED")),
       completionRelic: v.object({
         name: v.string(),
         description: v.string(),
         luckBonus: v.number(),
         iconUrl: v.optional(v.string()),
       }),
-      opponentSet: v.string(),
+      opponents: v.array(v.id("wizards")),
       maxParticipants: v.optional(v.number()),
       isDefault: v.optional(v.boolean()),
       createdAt: v.number(),
@@ -200,21 +187,14 @@ export const getAllCampaignSeasons = query({
       _creationTime: v.number(),
       name: v.string(),
       description: v.string(),
-      startDate: v.number(),
-      endDate: v.number(),
-      status: v.union(
-        v.literal("UPCOMING"),
-        v.literal("ACTIVE"),
-        v.literal("COMPLETED"),
-        v.literal("ARCHIVED")
-      ),
+      status: v.union(v.literal("ACTIVE"), v.literal("ARCHIVED")),
       completionRelic: v.object({
         name: v.string(),
         description: v.string(),
         luckBonus: v.number(),
         iconUrl: v.optional(v.string()),
       }),
-      opponentSet: v.string(),
+      opponents: v.array(v.id("wizards")),
       maxParticipants: v.optional(v.number()),
       isDefault: v.optional(v.boolean()),
       createdAt: v.number(),
@@ -255,45 +235,6 @@ export const getAllCampaignSeasons = query({
 });
 
 /**
- * Update season status (internal function for scheduled updates)
- */
-export const updateSeasonStatuses = internalMutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const now = Date.now();
-
-    // Get all seasons that might need status updates
-    const seasons = await ctx.db
-      .query("campaignSeasons")
-      .filter((q) => q.neq(q.field("status"), "ARCHIVED"))
-      .collect();
-
-    for (const season of seasons) {
-      let newStatus = season.status;
-
-      // Update status based on current time
-      if (
-        season.status === "UPCOMING" &&
-        season.startDate <= now &&
-        season.endDate > now
-      ) {
-        newStatus = "ACTIVE";
-      } else if (season.status === "ACTIVE" && season.endDate <= now) {
-        newStatus = "COMPLETED";
-      }
-
-      // Update if status changed
-      if (newStatus !== season.status) {
-        await ctx.db.patch(season._id, { status: newStatus });
-      }
-    }
-
-    return null;
-  },
-});
-
-/**
  * Manually update a season (super admin only)
  */
 export const updateCampaignSeason = mutation({
@@ -302,16 +243,7 @@ export const updateCampaignSeason = mutation({
     updates: v.object({
       name: v.optional(v.string()),
       description: v.optional(v.string()),
-      startDate: v.optional(v.number()),
-      endDate: v.optional(v.number()),
-      status: v.optional(
-        v.union(
-          v.literal("UPCOMING"),
-          v.literal("ACTIVE"),
-          v.literal("COMPLETED"),
-          v.literal("ARCHIVED")
-        )
-      ),
+      status: v.optional(v.union(v.literal("ACTIVE"), v.literal("ARCHIVED"))),
       completionRelic: v.optional(
         v.object({
           name: v.string(),
@@ -320,6 +252,7 @@ export const updateCampaignSeason = mutation({
           iconUrl: v.optional(v.string()),
         })
       ),
+      opponents: v.optional(v.array(v.id("wizards"))),
       maxParticipants: v.optional(v.number()),
       isDefault: v.optional(v.boolean()),
     }),
@@ -338,16 +271,6 @@ export const updateCampaignSeason = mutation({
     const season = await ctx.db.get(args.seasonId);
     if (!season) {
       throw new Error("Season not found");
-    }
-
-    // Validate date updates if provided
-    if (args.updates.startDate || args.updates.endDate) {
-      const startDate = args.updates.startDate || season.startDate;
-      const endDate = args.updates.endDate || season.endDate;
-
-      if (startDate >= endDate) {
-        throw new Error("Start date must be before end date");
-      }
     }
 
     // If setting as default, remove default from other seasons
@@ -372,7 +295,7 @@ export const updateCampaignSeason = mutation({
 });
 
 /**
- * Archive a completed season (super admin only)
+ * Archive a season (super admin only)
  */
 export const archiveCampaignSeason = mutation({
   args: {
@@ -392,10 +315,6 @@ export const archiveCampaignSeason = mutation({
     const season = await ctx.db.get(args.seasonId);
     if (!season) {
       throw new Error("Season not found");
-    }
-
-    if (season.status !== "COMPLETED") {
-      throw new Error("Can only archive completed seasons");
     }
 
     await ctx.db.patch(args.seasonId, { status: "ARCHIVED" });
@@ -418,8 +337,6 @@ export const getUserCurrentSeasonProgress = query({
         _id: v.id("campaignSeasons"),
         name: v.string(),
         description: v.string(),
-        startDate: v.number(),
-        endDate: v.number(),
         completionRelic: v.object({
           name: v.string(),
           description: v.string(),
@@ -438,7 +355,6 @@ export const getUserCurrentSeasonProgress = query({
           lastBattleAt: v.optional(v.number()),
         })
       ),
-      timeRemaining: v.number(),
     }),
     v.null()
   ),
@@ -454,19 +370,14 @@ export const getUserCurrentSeasonProgress = query({
       .filter((q) => q.eq(q.field("userId"), userId))
       .collect();
 
-    const timeRemaining = Math.max(0, activeSeason.endDate - Date.now());
-
     return {
       season: {
         _id: activeSeason._id,
         name: activeSeason.name,
         description: activeSeason.description,
-        startDate: activeSeason.startDate,
-        endDate: activeSeason.endDate,
         completionRelic: activeSeason.completionRelic,
       },
       progress,
-      timeRemaining,
     };
   },
 });
@@ -482,8 +393,6 @@ export const getUserSeasonHistory = query({
         _id: v.id("campaignSeasons"),
         name: v.string(),
         description: v.string(),
-        startDate: v.number(),
-        endDate: v.number(),
         completionRelic: v.object({
           name: v.string(),
           description: v.string(),
@@ -498,15 +407,15 @@ export const getUserSeasonHistory = query({
     })
   ),
   handler: async (ctx, { userId }) => {
-    // Get all completed seasons
-    const completedSeasons = await ctx.db
+    // Get all archived seasons
+    const archivedSeasons = await ctx.db
       .query("campaignSeasons")
-      .filter((q) => q.eq(q.field("status"), "COMPLETED"))
+      .withIndex("by_status", (q) => q.eq("status", "ARCHIVED"))
       .order("desc")
       .collect();
 
     const history = await Promise.all(
-      completedSeasons.map(async (season) => {
+      archivedSeasons.map(async (season) => {
         const progress = await ctx.db
           .query("wizardCampaignProgress")
           .withIndex("by_season", (q) => q.eq("seasonId", season._id))
@@ -528,8 +437,6 @@ export const getUserSeasonHistory = query({
             _id: season._id,
             name: season.name,
             description: season.description,
-            startDate: season.startDate,
-            endDate: season.endDate,
             completionRelic: season.completionRelic,
           },
           completedWizards,
@@ -576,13 +483,31 @@ export const createDefaultSeason = mutation({
       throw new Error("Default season already exists");
     }
 
+    // Get all campaign opponents to use as default
+    const campaignOpponents = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true)
+      )
+      .collect();
+
+    // Sort by opponent number and get their IDs
+    const sortedOpponents = campaignOpponents
+      .filter((opponent) => opponent.opponentNumber !== undefined)
+      .sort((a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0))
+      .map((opponent) => opponent._id);
+
+    if (sortedOpponents.length === 0) {
+      throw new Error(
+        "No campaign opponents found. Please create campaign opponents first."
+      );
+    }
+
     // Create a permanent default season
     const seasonId = await ctx.db.insert("campaignSeasons", {
       name: "Classic Campaign",
       description:
         "The original wizard campaign with classic opponents and the legendary Arcane Mastery relic.",
-      startDate: Date.now() - 86400000, // Started yesterday
-      endDate: Date.now() + 365 * 24 * 60 * 60 * 1000, // Ends in 1 year
       status: "ACTIVE",
       completionRelic: {
         name: "Arcane Mastery",
@@ -590,7 +515,7 @@ export const createDefaultSeason = mutation({
           "A mystical relic that enhances your magical prowess, granting +1 luck in all future battles.",
         luckBonus: 1,
       },
-      opponentSet: "classic",
+      opponents: sortedOpponents,
       isDefault: true,
       createdAt: Date.now(),
       createdBy: identity.subject,
@@ -629,13 +554,34 @@ export const createDefaultSeasonInternal = internalMutation({
       };
     }
 
+    // Get all campaign opponents to use as default
+    const campaignOpponents = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true)
+      )
+      .collect();
+
+    // Sort by opponent number and get their IDs
+    const sortedOpponents = campaignOpponents
+      .filter((opponent) => opponent.opponentNumber !== undefined)
+      .sort((a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0))
+      .map((opponent) => opponent._id);
+
+    if (sortedOpponents.length === 0) {
+      // Return success but indicate no opponents available
+      return {
+        success: true,
+        message: "Default season created but no opponents available",
+        seasonId: "" as any, // This will be handled by the caller
+      };
+    }
+
     // Create a permanent default season
     const seasonId = await ctx.db.insert("campaignSeasons", {
       name: "Classic Campaign",
       description:
         "The original wizard campaign with classic opponents and the legendary Arcane Mastery relic.",
-      startDate: Date.now() - 86400000, // Started yesterday
-      endDate: Date.now() + 365 * 24 * 60 * 60 * 1000, // Ends in 1 year
       status: "ACTIVE",
       completionRelic: {
         name: "Arcane Mastery",
@@ -643,7 +589,7 @@ export const createDefaultSeasonInternal = internalMutation({
           "A mystical relic that enhances your magical prowess, granting +1 luck in all future battles.",
         luckBonus: 1,
       },
-      opponentSet: "classic",
+      opponents: sortedOpponents,
       isDefault: true,
       createdAt: Date.now(),
       createdBy: "test-system",

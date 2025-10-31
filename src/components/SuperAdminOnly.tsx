@@ -4,13 +4,14 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Shield } from "lucide-react";
+import dynamic from "next/dynamic";
 
 interface SuperAdminOnlyProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
 
-export function SuperAdminOnly({ children, fallback }: SuperAdminOnlyProps) {
+function SuperAdminOnlyClient({ children, fallback }: SuperAdminOnlyProps) {
   // Check admin access using Convex query (more reliable than Clerk metadata)
   const adminAccess = useQuery(api.duels.checkAdminAccess);
 
@@ -62,3 +63,22 @@ export function SuperAdminOnly({ children, fallback }: SuperAdminOnlyProps) {
   // User has super admin access, render children
   return <>{children}</>;
 }
+
+// Export a dynamically imported version to prevent hydration issues
+export const SuperAdminOnly = dynamic(
+  () => Promise.resolve(SuperAdminOnlyClient),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardContent className="text-center py-12">
+          <Shield className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Checking Permissions</h3>
+          <p className="text-muted-foreground">
+            Please wait while we verify your access...
+          </p>
+        </CardContent>
+      </Card>
+    ),
+  }
+);

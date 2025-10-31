@@ -6,6 +6,7 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
+import { getImageSizeConfig } from "./imageConfig";
 
 export const generateWizardIllustration = action({
   args: {
@@ -86,12 +87,38 @@ export const generateWizardIllustration = action({
         // Use FAL for image generation
         imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
           prompt: enhancedPrompt,
+          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
         });
       }
 
-      // Store the image in Convex File Storage (Fal AI typically returns PNG)
+      // Apply additional resizing specifically for wizard illustrations (skip during tests)
+      let finalImageBuffer = imageBuffer;
+      const wizardConfig = getImageSizeConfig("WIZARD_ILLUSTRATION");
+
+      if (process.env.NODE_ENV !== "test") {
+        try {
+          finalImageBuffer = await ctx.runAction(
+            api.imageResizeService.resizeImage,
+            {
+              imageBuffer,
+              width: wizardConfig.width,
+              height: wizardConfig.height,
+              quality: wizardConfig.quality,
+              format: wizardConfig.format,
+            }
+          );
+        } catch (resizeError) {
+          console.warn(
+            "Wizard illustration resize failed, using original:",
+            resizeError
+          );
+          // Use original image if resize fails
+        }
+      }
+
+      // Store the resized image in Convex File Storage
       const storageId = await ctx.storage.store(
-        new Blob([imageBuffer], { type: "image/png" })
+        new Blob([finalImageBuffer], { type: `image/${wizardConfig.format}` })
       );
 
       // Update the wizard with the new illustration using internal mutation

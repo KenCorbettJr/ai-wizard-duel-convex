@@ -83,7 +83,7 @@ campaignSeasons: {
     luckBonus: number,
     iconUrl?: string
   },
-  opponentSet: string,
+  opponents: Id<"wizards">[],
   maxParticipants?: number,
   isDefault?: boolean
 }
@@ -118,15 +118,15 @@ await createCampaignSeason({
     description: "Grants the power of rebirth in battle",
     luckBonus: 2,
   },
-  opponentSet: "elemental",
+  opponents: [opponentId1, opponentId2, opponentId3], // Array of wizard IDs in battle order
 });
 ```
 
-### Adding New Opponent Sets
+### Creating Campaign Seasons
 
-1. Add opponent data to `seasonalOpponents.ts`
-2. Use `seedSeasonalOpponents()` to populate the database
-3. Reference the set key when creating seasons
+1. Create campaign opponents using the Campaign Opponents admin page
+2. Create a new season and select which opponents to include
+3. Specify the order opponents will be fought by selecting them in sequence
 
 ## Migration Guide
 
