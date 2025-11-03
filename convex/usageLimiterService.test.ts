@@ -9,7 +9,7 @@ describe("UsageLimiterService", () => {
   let testClerkId: string;
 
   beforeEach(async () => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
     testClerkId = "test-clerk-id-123";
 
     // Create a test user

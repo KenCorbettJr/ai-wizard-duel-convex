@@ -18,7 +18,7 @@ describe("Process Duel Round", () => {
   let duelId: Id<"duels">;
 
   beforeEach(async () => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
     vi.clearAllMocks();
 
     // Create test wizards

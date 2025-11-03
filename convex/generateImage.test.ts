@@ -19,7 +19,7 @@ describe("Generate Image", () => {
   let t: ReturnType<typeof convexTest>;
 
   beforeEach(() => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
     vi.clearAllMocks();
     // Mock the environment variable
     process.env.FAL_KEY = "test-fal-key";

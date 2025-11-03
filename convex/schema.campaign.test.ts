@@ -1,21 +1,24 @@
 import { convexTest } from "convex-test";
+import type { TestConvex } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
 
 describe("Campaign Database Schema Tests", () => {
-  let t: unknown;
+  let t: TestConvex<typeof schema>;
 
   beforeEach(async () => {
-    t = convexTest(schema);
-    // Create default season for tests
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
+    // Seed campaign opponents first
+    await t.mutation(internal.campaigns.seedCampaignOpponents, {});
+    // Then create default season for tests
     await t.mutation(internal.campaignSeasons.createDefaultSeasonInternal, {});
   });
 
   describe("campaign opponents as wizards", () => {
     test("should seed campaign opponents as wizards with all required fields", async () => {
-      await t.mutation(api.campaigns.seedCampaignOpponents);
+      // Opponents are already seeded in beforeEach
 
       const opponent = await t.query(api.campaigns.getCampaignOpponent, {
         opponentNumber: 1,
@@ -36,7 +39,7 @@ describe("Campaign Database Schema Tests", () => {
     });
 
     test("should retrieve all campaign opponents in order", async () => {
-      await t.mutation(api.campaigns.seedCampaignOpponents);
+      // Opponents are already seeded in beforeEach
 
       const allOpponents = await t.query(api.campaigns.getCampaignOpponents);
       expect(allOpponents).toHaveLength(10);
@@ -49,7 +52,7 @@ describe("Campaign Database Schema Tests", () => {
     });
 
     test("should validate difficulty levels and corresponding luck modifiers", async () => {
-      await t.mutation(api.campaigns.seedCampaignOpponents);
+      // Opponents are already seeded in beforeEach
 
       const beginnerOpponent = await t.query(
         api.campaigns.getCampaignOpponent,
@@ -81,7 +84,7 @@ describe("Campaign Database Schema Tests", () => {
     });
 
     test("should support array of personality traits", async () => {
-      await t.mutation(api.campaigns.seedCampaignOpponents);
+      // Opponents are already seeded in beforeEach
 
       const opponent = await t.query(api.campaigns.getCampaignOpponent, {
         opponentNumber: 5,
@@ -93,7 +96,7 @@ describe("Campaign Database Schema Tests", () => {
     });
 
     test("should retrieve opponents by index efficiently", async () => {
-      await t.mutation(api.campaigns.seedCampaignOpponents);
+      // Opponents are already seeded in beforeEach
 
       // Test index-based retrieval
       const opponent3 = await t.query(api.campaigns.getCampaignOpponent, {
@@ -512,8 +515,7 @@ describe("Campaign Database Schema Tests", () => {
 
   describe("Index Performance Tests", () => {
     test("campaign opponents by_campaign_opponent index should be efficient", async () => {
-      // Seed all 10 campaign opponents
-      await t.mutation(api.campaigns.seedCampaignOpponents);
+      // Opponents are already seeded in beforeEach
 
       // Test that we can efficiently retrieve specific opponents
       const startTime = Date.now();

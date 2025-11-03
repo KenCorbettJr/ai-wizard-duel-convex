@@ -1,18 +1,19 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { convexTest, ConvexTestingHelper } from "convex-test";
+import { convexTest } from "convex-test";
+import type { TestConvex } from "convex-test";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
 
 describe("Campaign Statistics", () => {
-  let t: ConvexTestingHelper<typeof schema>;
+  let t: TestConvex<typeof schema>;
 
   beforeEach(async () => {
-    t = convexTest(schema);
-    // Create default season for tests
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
+    // Seed campaign opponents for tests first
+    await t.mutation(internal.campaigns.seedCampaignOpponents, {});
+    // Then create default season for tests
     await t.mutation(internal.campaignSeasons.createDefaultSeasonInternal, {});
-    // Seed campaign opponents for tests
-    await t.mutation(api.campaigns.seedCampaignOpponents, {});
   });
 
   it("should calculate comprehensive campaign statistics", async () => {

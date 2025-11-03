@@ -4,7 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 
 test("ad service functionality", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Test shouldShowAds for anonymous user
   const shouldShowForAnonymous = await t.query(api.adService.shouldShowAds, {});
@@ -53,7 +53,7 @@ test("ad service functionality", async () => {
 });
 
 test("session service functionality", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Test session creation
   const sessionId = await t.mutation(
@@ -61,7 +61,7 @@ test("session service functionality", async () => {
     {
       userAgent: "test-agent",
       referrer: "https://example.com",
-    },
+    }
   );
   expect(sessionId).toMatch(/^anon_\d+_[a-z0-9]+$/);
 

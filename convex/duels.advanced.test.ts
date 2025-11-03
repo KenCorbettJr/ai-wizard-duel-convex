@@ -12,7 +12,7 @@ describe("Duels - Advanced Tests", () => {
   let wizard3Id: Id<"wizards">;
 
   beforeEach(async () => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test wizards
     wizard1Id = await withAuth(t, "test-user-1").mutation(
@@ -20,7 +20,7 @@ describe("Duels - Advanced Tests", () => {
       {
         name: "Gandalf",
         description: "A wise wizard",
-      },
+      }
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -28,7 +28,7 @@ describe("Duels - Advanced Tests", () => {
       {
         name: "Saruman",
         description: "A powerful wizard",
-      },
+      }
     );
 
     wizard3Id = await withAuth(t, "test-user-1").mutation(
@@ -36,7 +36,7 @@ describe("Duels - Advanced Tests", () => {
       {
         name: "Merlin",
         description: "An ancient wizard",
-      },
+      }
     );
 
     // Update stats using internal function
@@ -54,7 +54,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: "TO_THE_DEATH",
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
@@ -81,8 +81,8 @@ describe("Duels - Advanced Tests", () => {
 
       const duels = await Promise.all(
         duelIds.map((id) =>
-          withAuth(t, "test-user-1").query(api.duels.getDuel, { duelId: id }),
-        ),
+          withAuth(t, "test-user-1").query(api.duels.getDuel, { duelId: id })
+        )
       );
 
       const shortcodes = duels.map((d) => d?.shortcode);
@@ -101,7 +101,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id, wizard3Id],
-        },
+        }
       );
 
       const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
@@ -126,7 +126,7 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard",
           description: "A wizard owned by user 2",
-        },
+        }
       );
 
       const duelId = await withAuth(t, "test-user-1").mutation(
@@ -134,7 +134,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id],
-        },
+        }
       );
 
       await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
@@ -158,7 +158,7 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard",
           description: "A wizard for user 2",
-        },
+        }
       );
 
       const duelId = await withAuth(t, "test-user-1").mutation(
@@ -166,7 +166,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       // Change status to IN_PROGRESS
@@ -178,7 +178,7 @@ describe("Duels - Advanced Tests", () => {
         withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
           duelId,
           wizards: [user2WizardId],
-        }),
+        })
       ).rejects.toThrow("Duel is not accepting new players");
     });
 
@@ -188,14 +188,14 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id],
-        },
+        }
       );
 
       await expect(
         withAuth(t, "test-user-1").mutation(api.duels.joinDuel, {
           duelId,
           wizards: [wizard2Id],
-        }),
+        })
       ).rejects.toThrow("User is already in this duel");
     });
 
@@ -206,7 +206,7 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard 1",
           description: "First wizard owned by user 2",
-        },
+        }
       );
 
       const user2Wizard2 = await withAuth(t, "test-user-2").mutation(
@@ -214,7 +214,7 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard 2",
           description: "Second wizard owned by user 2",
-        },
+        }
       );
 
       const duelId = await withAuth(t, "test-user-1").mutation(
@@ -222,7 +222,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id],
-        },
+        }
       );
 
       await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
@@ -246,7 +246,7 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard",
           description: "A wizard owned by user 2",
-        },
+        }
       );
 
       const duelId = await withAuth(t, "test-user-1").mutation(
@@ -254,7 +254,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id],
-        },
+        }
       );
 
       await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
@@ -279,7 +279,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       // Start the duel manually
@@ -310,7 +310,7 @@ describe("Duels - Advanced Tests", () => {
 
       expect(round?.spells[wizard1Id]).toBeDefined();
       expect(round?.spells[wizard1Id]?.description).toBe(
-        "Fireball of destruction",
+        "Fireball of destruction"
       );
     });
 
@@ -320,7 +320,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       // Duel is still WAITING_FOR_PLAYERS
@@ -329,7 +329,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Premature spell",
-        }),
+        })
       ).rejects.toThrow("Duel is not in progress");
     });
 
@@ -339,7 +339,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       // Start the duel manually
@@ -363,7 +363,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Late spell",
-        }),
+        })
       ).rejects.toThrow("Round is not accepting spells");
     });
 
@@ -373,7 +373,7 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "Outside Wizard",
           description: "Not in this duel",
-        },
+        }
       );
 
       const duelId = await withAuth(t, "test-user-1").mutation(
@@ -381,7 +381,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       // Start the duel manually
@@ -405,7 +405,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: outsideWizard,
           spellDescription: "Unauthorized spell",
-        }),
+        })
       ).rejects.toThrow("Wizard is not participating in this duel");
     });
 
@@ -415,7 +415,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       // Start the duel manually
@@ -447,7 +447,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Second spell",
-        }),
+        })
       ).rejects.toThrow("Wizard has already cast a spell this round");
     });
   });
@@ -459,7 +459,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
@@ -478,7 +478,7 @@ describe("Duels - Advanced Tests", () => {
         {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
-        },
+        }
       );
 
       await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
@@ -491,7 +491,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Spell on cancelled duel",
-        }),
+        })
       ).rejects.toThrow("Duel is not in progress");
     });
   });

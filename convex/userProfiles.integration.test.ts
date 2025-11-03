@@ -7,7 +7,7 @@ import { withAuth, createTestUser } from "./test_utils";
 describe("User Profile Integration Tests", () => {
   describe("Complete User Onboarding Flow", () => {
     test("should complete full user onboarding with profile setup", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-onboarding";
 
       // Step 1: Create initial user record (simulates Clerk signup)
@@ -65,7 +65,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should prevent duplicate user ID during onboarding", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId1 = "test-user-1";
       const clerkId2 = "test-user-2";
 
@@ -107,7 +107,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should handle case-insensitive user ID uniqueness", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId1 = "test-user-case-1";
       const clerkId2 = "test-user-case-2";
 
@@ -149,7 +149,7 @@ describe("User Profile Integration Tests", () => {
 
   describe("Public Profile Page Rendering", () => {
     test("should render public profile with real wizard and duel data", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-profile-data";
 
       // Setup user with profile
@@ -244,7 +244,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should handle non-existent user profile gracefully", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
       // Try to get profile for non-existent user
       const profile = await t.query(api.userProfiles.getUserProfile, {
@@ -262,7 +262,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should handle user without completed profile setup", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-incomplete";
 
       // Create user but don't complete profile setup
@@ -292,7 +292,7 @@ describe("User Profile Integration Tests", () => {
 
   describe("User ID Availability and Assignment", () => {
     test("should validate user ID format requirements", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
       // Test too short
       const tooShort = await t.query(api.userProfiles.checkUserIdAvailability, {
@@ -343,7 +343,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should generate helpful suggestions for taken user IDs", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-suggestions";
 
       await createTestUser(t, clerkId);
@@ -372,7 +372,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should prevent user ID changes after initial setup", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-immutable";
 
       await createTestUser(t, clerkId);
@@ -409,7 +409,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should handle concurrent user ID assignment attempts", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId1 = "test-user-concurrent-1";
       const clerkId2 = "test-user-concurrent-2";
 
@@ -444,7 +444,7 @@ describe("User Profile Integration Tests", () => {
 
   describe("Profile Editing Workflow", () => {
     test("should allow updating display name after profile setup", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-edit";
 
       await createTestUser(t, clerkId);
@@ -480,7 +480,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should validate display name updates", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-validation";
 
       await createTestUser(t, clerkId);
@@ -529,7 +529,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should prevent profile editing before setup completion", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "test-user-incomplete-edit";
 
       await createTestUser(t, clerkId);
@@ -550,7 +550,7 @@ describe("User Profile Integration Tests", () => {
 
   describe("Authentication and Authorization", () => {
     test("should require authentication for profile operations", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
       // Try profile operations without authentication
       const statusResult = await t.query(
@@ -578,7 +578,7 @@ describe("User Profile Integration Tests", () => {
     });
 
     test("should handle missing user records gracefully", async () => {
-      const t = convexTest(schema);
+      const t = convexTest(schema, import.meta.glob("./**/*.*s"));
       const clerkId = "nonexistent-user";
 
       // Try operations with authenticated but non-existent user

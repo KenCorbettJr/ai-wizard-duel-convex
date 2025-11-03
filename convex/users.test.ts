@@ -4,7 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 
 test("user creation and retrieval", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Test creating a new user
   const userId = await t.mutation(api.users.getOrCreateUser, {
@@ -40,7 +40,7 @@ test("user creation and retrieval", async () => {
 });
 
 test("user creation with minimal info", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Test creating a user with just clerkId
   const userId = await t.mutation(api.users.getOrCreateUser, {
@@ -62,7 +62,7 @@ test("user creation with minimal info", async () => {
 });
 
 test("getUserImageCredits works after user creation", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a user
   await t.mutation(api.users.getOrCreateUser, {

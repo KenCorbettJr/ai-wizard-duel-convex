@@ -6,7 +6,7 @@ import { withAuth } from "./test_utils";
 
 describe("Wizards", () => {
   test("should create and get a wizard", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create wizard directly in database to avoid scheduled functions
     const wizardId = await t.run(async (ctx) => {
@@ -35,7 +35,7 @@ describe("Wizards", () => {
   });
 
   test("should get all wizards for a user", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create wizards directly in database
     const wizard1Id = await t.run(async (ctx) => {
@@ -74,7 +74,7 @@ describe("Wizards", () => {
 
     const userWizards = await withAuth(t, "test-user-1").query(
       api.wizards.getUserWizards,
-      {},
+      {}
     );
 
     expect(userWizards).toHaveLength(2);
@@ -83,7 +83,7 @@ describe("Wizards", () => {
   });
 
   test("should update wizard stats correctly", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     const wizardId = await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {
@@ -118,7 +118,7 @@ describe("Wizards", () => {
   });
 
   test("should delete a wizard", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     const wizardId = await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {

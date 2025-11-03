@@ -24,6 +24,7 @@ import type * as generateImage from "../generateImage.js";
 import type * as generateImageWithGemini from "../generateImageWithGemini.js";
 import type * as generateRoundIllustration from "../generateRoundIllustration.js";
 import type * as generateWizardIllustration from "../generateWizardIllustration.js";
+import type * as imageCompressionService from "../imageCompressionService.js";
 import type * as imageCreditService from "../imageCreditService.js";
 import type * as imageGenerationConfig from "../imageGenerationConfig.js";
 import type * as metadata from "../metadata.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   generateImageWithGemini: typeof generateImageWithGemini;
   generateRoundIllustration: typeof generateRoundIllustration;
   generateWizardIllustration: typeof generateWizardIllustration;
+  imageCompressionService: typeof imageCompressionService;
   imageCreditService: typeof imageCreditService;
   imageGenerationConfig: typeof imageGenerationConfig;
   metadata: typeof metadata;

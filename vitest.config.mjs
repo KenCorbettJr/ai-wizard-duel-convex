@@ -48,6 +48,11 @@ export default defineConfig({
           silent: false,
           reporter: ["verbose"],
           onConsoleLog: () => false,
+          server: {
+            deps: {
+              inline: ["parse5", "jsdom"],
+            },
+          },
         },
         resolve: {
           alias: {

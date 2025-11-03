@@ -6,7 +6,7 @@ import { withAuth } from "./test_utils";
 
 describe("Integration Tests", () => {
   test("should complete a full duel workflow", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create two wizards
     const wizard1Id = await t.run(async (ctx) => {
@@ -94,7 +94,7 @@ describe("Integration Tests", () => {
   });
 
   test("should handle wizard stats updates after duel completion", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create a wizard
     const wizardId = await t.run(async (ctx) => {
@@ -135,7 +135,7 @@ describe("Integration Tests", () => {
   });
 
   test("should handle multiple players and wizards", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create multiple wizards for different players
     const player1Wizards = await Promise.all([

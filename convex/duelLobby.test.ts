@@ -13,7 +13,7 @@ describe("Duel Lobby", () => {
   let wizardId2: Id<"wizards">;
 
   beforeEach(async () => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users
     userId1 = "user1";
@@ -49,14 +49,14 @@ describe("Duel Lobby", () => {
       {
         wizardId: wizardId1,
         duelType: 3,
-      },
+      }
     );
 
     expect(lobbyId).toBeDefined();
 
     const userStatus = await withAuth(t, userId1).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
     expect(userStatus).toBeTruthy();
     expect(userStatus?.status).toBe("WAITING");
@@ -74,7 +74,7 @@ describe("Duel Lobby", () => {
       withAuth(t, userId1).mutation(api.duelLobby.joinLobby, {
         wizardId: wizardId1,
         duelType: 5,
-      }),
+      })
     ).rejects.toThrow("Already in lobby");
   });
 
@@ -88,7 +88,7 @@ describe("Duel Lobby", () => {
 
     const userStatus = await withAuth(t, userId1).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
     expect(userStatus).toBeNull();
   });
@@ -100,7 +100,7 @@ describe("Duel Lobby", () => {
       {
         wizardId: wizardId1,
         duelType: 3,
-      },
+      }
     );
 
     // Second player joins with same duel type
@@ -109,7 +109,7 @@ describe("Duel Lobby", () => {
       {
         wizardId: wizardId2,
         duelType: 3,
-      },
+      }
     );
 
     // Trigger matchmaking manually since scheduler doesn't run in tests
@@ -118,11 +118,11 @@ describe("Duel Lobby", () => {
     // Check that both players are matched
     const user1Status = await withAuth(t, userId1).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
     const user2Status = await withAuth(t, userId2).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
 
     expect(user1Status?.status).toBe("MATCHED");
@@ -138,7 +138,7 @@ describe("Duel Lobby", () => {
       {
         wizardId: wizardId1,
         duelType: 3,
-      },
+      }
     );
 
     // Second player joins with 5 rounds
@@ -153,11 +153,11 @@ describe("Duel Lobby", () => {
     // Check that players are still waiting
     const user1Status = await withAuth(t, userId1).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
     const user2Status = await withAuth(t, userId2).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
 
     expect(user1Status?.status).toBe("WAITING");
@@ -190,7 +190,7 @@ describe("Duel Lobby", () => {
       {
         wizardId: wizardId1,
         duelType: 3,
-      },
+      }
     );
 
     // Second player joins
@@ -199,7 +199,7 @@ describe("Duel Lobby", () => {
       {
         wizardId: wizardId2,
         duelType: 3,
-      },
+      }
     );
 
     // Trigger matchmaking
@@ -214,11 +214,11 @@ describe("Duel Lobby", () => {
     // Check that lobby entries were removed (players are no longer in lobby)
     const user1Status = await withAuth(t, userId1).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
     const user2Status = await withAuth(t, userId2).query(
       api.duelLobby.getUserLobbyStatus,
-      {},
+      {}
     );
 
     expect(user1Status).toBeNull();
@@ -239,11 +239,11 @@ describe("Duel Lobby", () => {
     // Verify that users can get their recent duel for redirect
     const user1RecentDuel = await withAuth(t, userId1).query(
       api.duelLobby.getUserRecentDuel,
-      {},
+      {}
     );
     const user2RecentDuel = await withAuth(t, userId2).query(
       api.duelLobby.getUserRecentDuel,
-      {},
+      {}
     );
 
     expect(user1RecentDuel).toBe(duel._id);

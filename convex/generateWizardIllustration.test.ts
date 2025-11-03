@@ -27,7 +27,7 @@ describe("generateWizardIllustration", () => {
   let t: ReturnType<typeof convexTest>;
 
   beforeEach(() => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Ensure env is set as tests expect
     process.env.FAL_KEY = "test-fal-key";

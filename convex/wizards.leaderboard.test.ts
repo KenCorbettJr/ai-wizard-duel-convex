@@ -4,7 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 
 test("time-based leaderboard functionality", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create test users
   await t.run(async (ctx) => {

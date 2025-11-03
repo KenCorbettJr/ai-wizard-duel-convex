@@ -5,7 +5,7 @@ import { api } from "./_generated/api";
 import { withAuth, createTestUser } from "./test_utils";
 
 test("user ID availability checking", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Test valid user ID that's available
   const result1 = await t.query(api.userProfiles.checkUserIdAvailability, {
@@ -49,7 +49,7 @@ test("user ID availability checking", async () => {
 });
 
 test("user ID assignment", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
   const clerkId = "test_clerk_id";
 
   // Create a test user first
@@ -80,7 +80,7 @@ test("user ID assignment", async () => {
 });
 
 test("get user profile", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
   const clerkId = "test_clerk_id_2";
 
   // Create a test user
@@ -116,7 +116,7 @@ test("get user profile", async () => {
 });
 
 test("get user wizards", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
   const clerkId = "test_clerk_id_3";
 
   // Create a test user
@@ -142,7 +142,7 @@ test("get user wizards", async () => {
 });
 
 test("update user profile", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
   const clerkId = "test_clerk_id_4";
 
   // Create a test user

@@ -12,7 +12,7 @@ describe("Luck Rolls", () => {
   let duelId: Id<"duels">;
 
   beforeEach(async () => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test wizards
     wizard1Id = await withAuth(t, "test-user-1").mutation(

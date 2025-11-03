@@ -1,10 +1,5 @@
 import type { NextConfig } from "next";
-
-import { loadEnvConfig } from "@next/env";
 import { RemotePattern } from "next/dist/shared/lib/image-config";
-
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
 
 const remotePatterns: RemotePattern[] = [];
 

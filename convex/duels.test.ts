@@ -7,7 +7,7 @@ import { withAuth } from "./test_utils";
 
 describe("Duels", () => {
   test("should create a duel with correct initial values", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create wizards directly in database
     const wizard1Id = await t.run(async (ctx) => {
@@ -51,7 +51,7 @@ describe("Duels", () => {
   });
 
   test("should find duel by shortcode", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     const wizard1Id = await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {
@@ -85,7 +85,7 @@ describe("Duels", () => {
   });
 
   test("should get player duels", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     const wizard1Id = await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {
@@ -136,7 +136,7 @@ describe("Duels", () => {
   });
 
   test("should cancel a duel", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     const wizard1Id = await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {
@@ -166,7 +166,7 @@ describe("Duels", () => {
   });
 
   test("should get active duels", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     const wizard1Id = await t.run(async (ctx) => {
       return await ctx.db.insert("wizards", {
@@ -230,7 +230,7 @@ describe("Duels", () => {
   });
 });
 test("should get completed duels for a player", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create wizards
   const wizard1Id = await t.run(async (ctx) => {
@@ -288,7 +288,7 @@ test("should get completed duels for a player", async () => {
 });
 
 test("should allow unauthenticated users to view duels", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a wizard
   const wizard1Id = await t.run(async (ctx) => {
@@ -345,7 +345,7 @@ test("should allow unauthenticated users to view duels", async () => {
   expect(completedDuelAsUnauthenticated?.status).toBe("COMPLETED");
 });
 test("should create duel with image generation disabled", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a wizard
   const wizard1Id = await t.run(async (ctx) => {
@@ -379,7 +379,7 @@ test("should create duel with image generation disabled", async () => {
 });
 
 test("should create duel with image generation enabled by default", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a wizard
   const wizard1Id = await t.run(async (ctx) => {
@@ -412,7 +412,7 @@ test("should create duel with image generation enabled by default", async () => 
 });
 
 test("should allow undoing a spell while waiting for other wizards", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create two wizards for different users
   const wizard1Id = await t.run(async (ctx) => {
@@ -499,7 +499,7 @@ test("should allow undoing a spell while waiting for other wizards", async () =>
 });
 
 test("should not allow undoing a spell if wizard hasn't cast one", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create two wizards for different users
   const wizard1Id = await t.run(async (ctx) => {
@@ -559,7 +559,7 @@ test("should not allow undoing a spell if wizard hasn't cast one", async () => {
 });
 
 test("should not allow undoing a spell after round processing has started", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create two wizards for different users
   const wizard1Id = await t.run(async (ctx) => {

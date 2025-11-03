@@ -4,7 +4,7 @@ import schema from "./schema";
 import { api } from "./_generated/api";
 
 test("getOptimizedImageUrl returns null for invalid storage ID", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   const result = await t.query(api.metadata.getOptimizedImageUrl, {
     storageId: "invalid-storage-id",
@@ -14,7 +14,7 @@ test("getOptimizedImageUrl returns null for invalid storage ID", async () => {
 });
 
 test("metadata functions exist and are callable", async () => {
-  convexTest(schema);
+  convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Test that the functions exist in the API
   expect(api.metadata.getWizardForMetadata).toBeDefined();

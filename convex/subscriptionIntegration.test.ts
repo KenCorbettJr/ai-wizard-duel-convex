@@ -1,16 +1,17 @@
 import { convexTest } from "convex-test";
+import type { TestConvex } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
 import schema from "./schema";
 import { api, internal } from "./_generated/api";
 
 describe("Subscription Integration Tests", () => {
-  let t: ReturnType<typeof convexTest>;
+  let t: TestConvex<typeof schema>;
 
   let freeClerkId: string;
   let premiumClerkId: string;
 
   beforeEach(async () => {
-    t = convexTest(schema);
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
     freeClerkId = "free-user-123";
     premiumClerkId = "premium-user-456";
 
@@ -439,7 +440,7 @@ describe("Subscription Integration Tests", () => {
 
       // Verify tracking in subscription service
       const subscription = await t.query(
-        api.userSubscriptionQueries.getUserSubscription,
+        internal.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: freeClerkId,
         }
@@ -470,7 +471,7 @@ describe("Subscription Integration Tests", () => {
       const nonExistentUser = "non-existent-user-789";
 
       const subscription = await t.query(
-        api.userSubscriptionQueries.getUserSubscription,
+        internal.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: nonExistentUser,
         }

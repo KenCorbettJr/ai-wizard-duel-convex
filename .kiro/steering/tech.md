@@ -2,7 +2,7 @@
 
 ## Core Framework
 
-- **Next.js 15.5.4** with App Router and React 19
+- **Next.js 16.0.0** with App Router and React 19
 - **TypeScript** for type safety
 - **Tailwind CSS 4** for styling with custom animations
 - **Convex** for backend database and real-time functionality
@@ -28,7 +28,6 @@
 
 ```bash
 npm run dev          # Start Next.js + Convex dev servers
-npm run emulate      # Run with local Convex emulator
 npm run dashboard    # Open Convex dashboard
 ```
 

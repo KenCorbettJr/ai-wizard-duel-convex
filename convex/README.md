@@ -62,7 +62,7 @@ import schema from "./schema";
 
 describe("My Function", () => {
   test("should do something", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Test your function
     const result = await t.query(api.myFunction.myQuery, { arg: "value" });
@@ -122,7 +122,7 @@ import { vi } from "vitest";
 test("should schedule function", async () => {
   vi.useFakeTimers();
 
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Call function that schedules something
   await t.mutation(api.myFunction.scheduleTask, { delay: 5000 });

@@ -4,7 +4,7 @@ import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 test("image credit service functionality", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a test user first
   await t.mutation(api.users.getOrCreateUser, {
@@ -87,7 +87,7 @@ test("image credit service functionality", async () => {
 });
 
 test("premium user unlimited credits", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a premium user
   await t.mutation(api.users.getOrCreateUser, {
@@ -139,7 +139,7 @@ test("premium user unlimited credits", async () => {
 });
 
 test("ad reward processing", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a test user
   await t.mutation(api.users.getOrCreateUser, {
@@ -195,7 +195,7 @@ test("ad reward processing", async () => {
 });
 
 test("credit consumption when out of credits", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a user with no credits
   await t.mutation(api.users.getOrCreateUser, {

@@ -5,7 +5,7 @@ import schema from "./schema";
 
 describe("Text-Only Mode Functionality", () => {
   test("should check image credits before generating illustrations", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create a user with sufficient credits
     await t.mutation(internal.users.createUserInternal, {
@@ -20,7 +20,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.hasImageCreditsForDuel,
       {
         userId: "user456",
-      },
+      }
     );
 
     expect(hasCredits).toBe(true);
@@ -31,7 +31,7 @@ describe("Text-Only Mode Functionality", () => {
       {
         userId: "user456",
         metadata: { purpose: "test" },
-      },
+      }
     );
 
     expect(consumed).toBe(true);
@@ -41,14 +41,14 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.getUserImageCredits,
       {
         userId: "user456",
-      },
+      }
     );
 
     expect(remainingCredits).toBe(4);
   });
 
   test("should handle premium users with unlimited credits", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create a premium user
     await t.mutation(internal.users.createUserInternal, {
@@ -65,7 +65,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.hasImageCreditsForDuel,
       {
         userId: "premium123",
-      },
+      }
     );
 
     expect(hasCredits).toBe(true);
@@ -76,7 +76,7 @@ describe("Text-Only Mode Functionality", () => {
       {
         userId: "premium123",
         metadata: { purpose: "premium_test" },
-      },
+      }
     );
 
     expect(consumed).toBe(true);
@@ -86,7 +86,7 @@ describe("Text-Only Mode Functionality", () => {
       api.imageCreditService.getUserImageCredits,
       {
         userId: "premium123",
-      },
+      }
     );
 
     expect(remainingCredits).toBe(0); // Still 0 because premium users don't consume actual credits

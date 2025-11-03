@@ -8,5 +8,6 @@ A multiplayer wizard dueling game where players create magical wizards and engag
 - **Real-time Multiplayer**: Players can create duels, invite others via shortcodes, and spectate ongoing battles
 - **User Management**: Role-based access (user/admin/super_admin) with Clerk authentication
 - **Statistics & Leaderboards**: Track wins/losses and display wizard performance
+- **Single Player Campaign**: Users can battle AI powered wizards in a single player campaign, and earn special rewards.
 
 The application emphasizes creative spell-casting with AI-generated narratives and visual content to create an immersive magical dueling experience.

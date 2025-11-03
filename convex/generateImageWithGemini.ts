@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "./_generated/server";
+import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { getGemni25FlashImageAI } from "./ai/getAI";
@@ -64,7 +64,7 @@ export const generateImageWithGemini = action({
 });
 
 async function generateWithGeminiFlash(
-  ctx: { storage: { getUrl: (id: string) => Promise<string | null> } },
+  ctx: ActionCtx,
   prompt: string,
   previousImage?: string,
   wizardImages?: string[],
@@ -155,14 +155,8 @@ async function generateWithGeminiFlash(
 
           // Resize the image to reduce size
           const resizedImageBuffer = await ctx.runAction(
-            api.imageResizeService.resizeImage,
-            {
-              imageBuffer,
-              width: 512,
-              height: 512,
-              quality: 85,
-              format: "png",
-            }
+            api.imageCompressionService.compressImage,
+            { imageBuffer }
           );
 
           return resizedImageBuffer;
@@ -180,14 +174,8 @@ async function generateWithGeminiFlash(
 
           // Resize the image to reduce size
           const resizedImageBuffer = await ctx.runAction(
-            api.imageResizeService.resizeImage,
-            {
-              imageBuffer: imageBuffer.buffer,
-              width: 512,
-              height: 512,
-              quality: 85,
-              format: "png",
-            }
+            api.imageCompressionService.compressImage,
+            { imageBuffer: imageBuffer.buffer }
           );
 
           return resizedImageBuffer;
@@ -205,14 +193,8 @@ async function generateWithGeminiFlash(
 
             // Resize the image to reduce size
             const resizedImageBuffer = await ctx.runAction(
-              api.imageResizeService.resizeImage,
-              {
-                imageBuffer: imageBuffer.buffer,
-                width: 512,
-                height: 512,
-                quality: 85,
-                format: "png",
-              }
+              api.imageCompressionService.compressImage,
+              { imageBuffer: imageBuffer.buffer }
             );
 
             return resizedImageBuffer;

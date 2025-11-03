@@ -6,7 +6,7 @@ import { withAuth, withSuperAdminAuth } from "./test_utils";
 
 describe("Auth Utils", () => {
   test("verifySuperAdmin should allow super admin users", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create super admin user in database
     await t.run(async (ctx) => {
@@ -32,12 +32,12 @@ describe("Auth Utils", () => {
     await expect(
       withSuperAdminAuth(t).run(async (ctx) => {
         return await verifySuperAdmin(ctx);
-      }),
+      })
     ).resolves.toBeDefined();
   });
 
   test("verifySuperAdmin should reject regular users", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create regular user in database
     await t.run(async (ctx) => {
@@ -63,18 +63,18 @@ describe("Auth Utils", () => {
     await expect(
       withAuth(t, "regular-user").run(async (ctx) => {
         return await verifySuperAdmin(ctx);
-      }),
+      })
     ).rejects.toThrow("Access denied: Super admin privileges required");
   });
 
   test("verifySuperAdmin should reject unauthenticated users", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // This should throw
     await expect(
       t.run(async (ctx) => {
         return await verifySuperAdmin(ctx);
-      }),
+      })
     ).rejects.toThrow("Not authenticated");
   });
 });

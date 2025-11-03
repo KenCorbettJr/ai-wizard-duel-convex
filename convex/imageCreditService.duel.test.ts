@@ -5,7 +5,7 @@ import schema from "./schema";
 import { withAuth } from "./test_utils";
 
 test("duel-level image credit consumption", async () => {
-  const t = convexTest(schema);
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create test users
   await t.mutation(api.users.getOrCreateUser, {

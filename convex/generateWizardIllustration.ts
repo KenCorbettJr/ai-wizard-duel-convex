@@ -6,7 +6,6 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
-import { getImageSizeConfig } from "./imageConfig";
 
 export const generateWizardIllustration = action({
   args: {
@@ -93,23 +92,18 @@ export const generateWizardIllustration = action({
 
       // Apply additional resizing specifically for wizard illustrations (skip during tests)
       let finalImageBuffer = imageBuffer;
-      const wizardConfig = getImageSizeConfig("WIZARD_ILLUSTRATION");
 
       if (process.env.NODE_ENV !== "test") {
         try {
           finalImageBuffer = await ctx.runAction(
-            api.imageResizeService.resizeImage,
+            api.imageCompressionService.compressImage,
             {
               imageBuffer,
-              width: wizardConfig.width,
-              height: wizardConfig.height,
-              quality: wizardConfig.quality,
-              format: wizardConfig.format,
             }
           );
         } catch (resizeError) {
           console.warn(
-            "Wizard illustration resize failed, using original:",
+            "Wizard illustration compression failed, using original:",
             resizeError
           );
           // Use original image if resize fails
@@ -118,7 +112,7 @@ export const generateWizardIllustration = action({
 
       // Store the resized image in Convex File Storage
       const storageId = await ctx.storage.store(
-        new Blob([finalImageBuffer], { type: `image/${wizardConfig.format}` })
+        new Blob([finalImageBuffer], { type: "image/webp" })
       );
 
       // Update the wizard with the new illustration using internal mutation

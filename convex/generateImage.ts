@@ -69,13 +69,9 @@ export const generateImage = action({
       if (!skipResize) {
         try {
           const resizedImageBuffer = await ctx.runAction(
-            api.imageResizeService.resizeImage,
+            api.imageCompressionService.compressImage,
             {
               imageBuffer,
-              width: 512,
-              height: 512,
-              quality: 85,
-              format: "png",
             }
           );
           return resizedImageBuffer;

@@ -6,7 +6,7 @@ import { withAuth, withSuperAdminAuth, createTestUser } from "./test_utils";
 
 describe("Duel Admin Functions", () => {
   test("searchDuels should filter duels by status", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -85,7 +85,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("getDuelAnalytics should return comprehensive statistics", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -151,7 +151,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("getActiveDuelMonitoring should return active duels with monitoring data", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -228,7 +228,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("forceCancelDuel should cancel any duel with reason", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -282,7 +282,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("forceCancelDuel should not cancel completed duels", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -379,7 +379,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("searchDuels should support pagination", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -442,7 +442,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("searchDuels should filter by date range", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
@@ -502,7 +502,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("getPlayerDuelStats should return accurate statistics", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
@@ -566,7 +566,7 @@ describe("Duel Admin Functions", () => {
   });
 
   test("admin functions should reject non-super-admin users", async () => {
-    const t = convexTest(schema);
+    const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
     // Create test users in database
     await createTestUser(t, "test-user-1", "user");
