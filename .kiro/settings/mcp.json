@@ -1,17 +1,8 @@
 {
   "mcpServers": {
-    "playwright": {
+    "chrome-devtools": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ],
-      "disabled": false,
-      "autoApprove": [
-        "browser_navigate",
-        "browser_click",
-        "browser_wait_for",
-        "browser_console_messages"
-      ]
+      "args": ["chrome-devtools-mcp@latest"]
     }
   }
 }

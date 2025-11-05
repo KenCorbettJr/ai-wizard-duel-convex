@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -8,7 +7,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CheckCircle, Lock, Star, Zap, Shield, Crown } from "lucide-react";
+import { ConvexImage } from "@/components/ConvexImage";
 import type { Doc } from "../../convex/_generated/dataModel";
 
 interface CampaignOpponentFanProps {
@@ -77,7 +78,7 @@ export function CampaignOpponentFan({
     <TooltipProvider>
       <div className={`relative w-full overflow-hidden ${className}`}>
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-50 to-transparent dark:from-purple-950/20 dark:to-transparent rounded-lg" />
+        <div className="absolute inset-0 bg-linear-to-b from-purple-50 to-transparent dark:from-purple-950/20 dark:to-transparent rounded-lg" />
 
         {/* Fan container */}
         <div className="relative flex items-center justify-center py-8 px-4">
@@ -141,8 +142,8 @@ export function CampaignOpponentFan({
                           animationFillMode: "both",
                         }}
                       >
-                        {/* Card */}
-                        <div className="w-32 h-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden relative">
+                        {/* Card - Made larger to accommodate bigger images */}
+                        <div className="w-36 h-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden relative">
                           {/* Magical sparkle overlay for special states */}
                           {(status.isDefeated || status.isCurrent) && (
                             <div className="absolute inset-0 pointer-events-none">
@@ -158,7 +159,7 @@ export function CampaignOpponentFan({
                             </div>
                           )}
                           {/* Card header with opponent number */}
-                          <div className="relative h-8 bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
+                          <div className="relative h-8 bg-linear-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
                             <span className="text-white font-bold text-sm">
                               #{opponent.opponentNumber}
                             </span>
@@ -174,16 +175,22 @@ export function CampaignOpponentFan({
                             </div>
                           </div>
 
-                          {/* Avatar */}
-                          <div className="flex justify-center pt-2">
-                            <Avatar className="w-12 h-12">
-                              <AvatarImage
-                                src={opponent.illustrationURL || undefined}
-                                alt={opponent.name}
-                              />
-                              <AvatarFallback className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 text-sm">
-                                {opponent.name.charAt(0)}
-                              </AvatarFallback>
+                          {/* Avatar - Made larger and more prominent */}
+                          <div className="flex justify-center pt-1">
+                            <Avatar className="w-16 h-16 rounded-lg border-2 border-purple-200 dark:border-purple-700">
+                              {opponent.illustration ? (
+                                <ConvexImage
+                                  storageId={opponent.illustration}
+                                  alt={opponent.name}
+                                  width={64}
+                                  height={64}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <AvatarFallback className="bg-linear-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 text-purple-600 dark:text-purple-400 text-lg font-bold rounded-lg">
+                                  {opponent.name.charAt(0)}
+                                </AvatarFallback>
+                              )}
                             </Avatar>
                           </div>
 

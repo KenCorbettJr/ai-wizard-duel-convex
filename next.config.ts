@@ -11,14 +11,7 @@ if (process.env.ENV === "dev") {
     pathname: "/api/storage/**",
   });
 } else if (process.env.ENV === "emulate") {
-  // For emulation mode, allow direct access to local Convex server
-  remotePatterns.push({
-    protocol: "http",
-    hostname: "127.0.0.1",
-    port: "3210",
-    pathname: "/api/storage/**",
-  });
-  // Also keep the proxy route as fallback
+  // For emulation mode, use proxy route to avoid Next.js 16 private IP restrictions
   remotePatterns.push({
     protocol: "http",
     hostname: "localhost",

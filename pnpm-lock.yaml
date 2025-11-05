@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  parse5: ^7.1.2
-
 packageExtensionsChecksum: sha256-PM8ZxZ7LxprsUEJH5Wc2qgq9u2eZIb+mBTxvUx0tSaw=
 
 importers:
@@ -97,6 +94,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      optional:
+        specifier: ^0.1.4
+        version: 0.1.4
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -165,7 +165,7 @@ importers:
         specifier: ^25.0.0
         version: 25.0.1(parse5@7.3.0)
       parse5:
-        specifier: ^7.1.2
+        specifier: ^7.3.0
         version: 7.3.0
       prettier:
         specifier: ^3.6.2
@@ -4122,7 +4122,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       canvas: ^2.11.2
-      parse5: ^7.1.2
+      parse5: '*'
     peerDependenciesMeta:
       canvas:
         optional: true
@@ -4597,6 +4597,9 @@ packages:
   opentracing@0.14.7:
     resolution: {integrity: sha512-vz9iS7MJ5+Bp1URw8Khvdyw1H/hGvzHWlKQ7eRrQojSCDL1/SrWfrY9QebLw97n2deyRtzHRC3MkQfVNUCo91Q==}
     engines: {node: '>=0.10'}
+
+  optional@0.1.4:
+    resolution: {integrity: sha512-gtvrrCfkE08wKcgXaVwQVgwEQ8vel2dc5DDBn9RLQZ3YtmtkBss6A2HY6BnJH4N/4Ku97Ri/SF8sNWE2225WJw==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -10784,6 +10787,8 @@ snapshots:
       mimic-fn: 2.1.0
 
   opentracing@0.14.7: {}
+
+  optional@0.1.4: {}
 
   optionator@0.9.4:
     dependencies:

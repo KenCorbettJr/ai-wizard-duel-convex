@@ -28,6 +28,7 @@ import { Id, Doc } from "../../convex/_generated/dataModel";
 import Image from "next/image";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useConvexImage } from "@/hooks/useConvexImage";
 
 interface DragDropOpponentSelectorProps {
   selectedOpponents: Id<"wizards">[];
@@ -59,7 +60,7 @@ function SortableOpponentItem({
     isDragging,
   } = useSortable({ id: opponent._id });
 
-  const imageUrl = useQuery(
+  const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
     opponent.illustration ? { storageId: opponent.illustration } : "skip"
   );
@@ -178,7 +179,7 @@ function AvailableOpponentItem({
   onAdd,
   disabled,
 }: AvailableOpponentItemProps) {
-  const imageUrl = useQuery(
+  const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
     opponent.illustration ? { storageId: opponent.illustration } : "skip"
   );

@@ -49,6 +49,7 @@
     "lucide-react": "^0.546.0",
     "next": "16.0.0",
     "next-themes": "^0.4.6",
+    "optional": "^0.1.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "sharp": "^0.34.4",
@@ -83,22 +84,9 @@
   },
   "overrides": {
     "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
-    "parse5": "^7.1.2"
+    "@types/react-dom": "19.2.2"
   },
   "pnpm": {
-    "supportedArchitectures": {
-      "os": [
-        "darwin",
-        "linux",
-        "current"
-      ],
-      "cpu": [
-        "arm64",
-        "x64",
-        "wasm32"
-      ]
-    },
     "onlyBuiltDependencies": [
       "@clerk/shared",
       "@firebase/util",
@@ -115,9 +103,6 @@
           "parse5": "*"
         }
       }
-    },
-    "overrides": {
-      "parse5": "^7.1.2"
     }
   }
 }

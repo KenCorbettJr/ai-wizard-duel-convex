@@ -10,7 +10,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Lock, CheckCircle, Swords, Star, Zap, Shield } from "lucide-react";
+import { ConvexImage } from "@/components/ConvexImage";
 import type { Doc } from "../../convex/_generated/dataModel";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import type { Id } from "../../convex/_generated/dataModel";
 
 interface CampaignOpponentCardProps {
   opponent: Doc<"wizards">;
@@ -19,6 +25,7 @@ interface CampaignOpponentCardProps {
   isCurrent?: boolean;
   onSelectOpponent?: (opponentNumber: number) => void;
   className?: string;
+  wizardId?: string; // The player's wizard ID for starting battles
 }
 
 export function CampaignOpponentCard({
@@ -28,7 +35,11 @@ export function CampaignOpponentCard({
   isCurrent = false,
   onSelectOpponent,
   className = "",
+  wizardId,
 }: CampaignOpponentCardProps) {
+  const router = useRouter();
+  const [isStartingBattle, setIsStartingBattle] = useState(false);
+  const startCampaignBattle = useMutation(api.campaigns.startCampaignBattle);
   const getDifficultyConfig = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
@@ -118,6 +129,33 @@ export function CampaignOpponentCard({
     }
   };
 
+  const handleBattleNow = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (!wizardId || !opponent.opponentNumber) {
+      alert("Missing wizard or opponent information");
+      return;
+    }
+
+    setIsStartingBattle(true);
+    try {
+      const battleResult = await startCampaignBattle({
+        wizardId: wizardId as Id<"wizards">,
+        opponentNumber: opponent.opponentNumber,
+      });
+
+      // Navigate to the duel
+      router.push(`/duels/${battleResult.duelId}`);
+    } catch (error) {
+      console.error("Failed to start campaign battle:", error);
+      alert(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
+    } finally {
+      setIsStartingBattle(false);
+    }
+  };
+
   return (
     <TooltipProvider>
       <Card
@@ -183,6 +221,25 @@ export function CampaignOpponentCard({
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* Opponent Image */}
+          <div className="flex justify-center">
+            <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-purple-200 dark:border-purple-700">
+              {opponent.illustration ? (
+                <ConvexImage
+                  storageId={opponent.illustration}
+                  alt={opponent.name}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-linear-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 text-purple-600 dark:text-purple-400 text-xl font-bold flex items-center justify-center">
+                  {opponent.name.charAt(0)}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-3">
             {opponent.description}
@@ -245,9 +302,14 @@ export function CampaignOpponentCard({
                 Locked
               </div>
             ) : isCurrent ? (
-              <Button size="sm" className="w-full">
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={handleBattleNow}
+                disabled={isStartingBattle || !wizardId}
+              >
                 <Swords className="w-4 h-4 mr-2" />
-                Challenge Now
+                {isStartingBattle ? "Starting..." : "Battle Now"}
               </Button>
             ) : (
               <Button variant="outline" size="sm" className="w-full">

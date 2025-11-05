@@ -57,6 +57,7 @@ export const getPlayerDuels = query({
       textOnlyReason: v.optional(v.string()),
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
+      isCampaignBattle: v.optional(v.boolean()),
     })
   ),
   handler: async (ctx) => {
@@ -146,6 +147,7 @@ export const getDuelInternal = internalQuery({
       textOnlyReason: v.optional(v.string()),
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
+      isCampaignBattle: v.optional(v.boolean()),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),

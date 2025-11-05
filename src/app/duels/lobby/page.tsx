@@ -344,9 +344,9 @@ export default function DuelLobbyPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">1 Round (Quick)</SelectItem>
                         <SelectItem value="3">3 Rounds (Standard)</SelectItem>
                         <SelectItem value="5">5 Rounds (Extended)</SelectItem>
+                        <SelectItem value="10">10 Rounds (Epic)</SelectItem>
                         <SelectItem value="TO_THE_DEATH">
                           To the Death
                         </SelectItem>

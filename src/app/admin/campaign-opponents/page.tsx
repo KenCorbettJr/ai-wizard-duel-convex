@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { useConvexImage } from "@/hooks/useConvexImage";
 import {
   Settings,
   Database,
@@ -50,34 +51,72 @@ function OpponentImage({
   opponent: Doc<"wizards">;
   onRegenerateImage: () => void;
 }) {
-  const imageUrl = useQuery(
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
-    opponent.illustration ? { storageId: opponent.illustration } : "skip"
+    opponent.illustration
+      ? { storageId: opponent.illustration }
+      : ("skip" as any)
   );
 
   if (opponent.illustration && imageUrl) {
     return (
-      <div className="flex-shrink-0">
-        <div className="relative group">
-          <Image
-            src={imageUrl}
-            alt={opponent.name}
-            width={80}
-            height={80}
-            className="w-20 h-20 rounded-lg object-cover border-2 border-purple-200 dark:border-purple-700"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
-            <Button
-              size="sm"
-              variant="secondary"
-              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              onClick={onRegenerateImage}
-            >
-              <ImageIcon className="h-3 w-3" />
-            </Button>
+      <>
+        <div className="flex-shrink-0">
+          <div
+            className="relative group cursor-pointer"
+            onClick={() => setIsImageModalOpen(true)}
+          >
+            <Image
+              src={imageUrl}
+              alt={opponent.name}
+              width={80}
+              height={80}
+              className="w-20 h-20 rounded-lg object-cover border-2 border-purple-200 dark:border-purple-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 dark:bg-gray-800/90 rounded-full p-1">
+                <ImageIcon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Image Modal */}
+        <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                {opponent.name}
+              </DialogTitle>
+              <DialogDescription>
+                Campaign opponent illustration
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center">
+              <Image
+                src={imageUrl}
+                alt={opponent.name}
+                width={400}
+                height={400}
+                className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+            </div>
+            <DialogFooter className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={onRegenerateImage}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Regenerate Image
+              </Button>
+              <Button onClick={() => setIsImageModalOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -136,6 +175,9 @@ export default function CampaignOpponentsPage() {
   const createOpponent = useMutation(api.campaigns.createCampaignOpponent);
   const regenerateImage = useMutation(
     api.campaigns.regenerateCampaignOpponentImage
+  );
+  const generateAllIllustrations = useMutation(
+    api.campaigns.generateCampaignOpponentIllustrations
   );
 
   // Handle seeding opponents
@@ -224,6 +266,22 @@ export default function CampaignOpponentsPage() {
       }
     } catch (error) {
       toast.error("Failed to regenerate image: " + (error as Error).message);
+    }
+  };
+
+  // Handle generating all illustrations
+  const handleGenerateAllIllustrations = async () => {
+    try {
+      const result = await generateAllIllustrations({});
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error(
+        "Failed to generate illustrations: " + (error as Error).message
+      );
     }
   };
 
@@ -338,14 +396,25 @@ export default function CampaignOpponentsPage() {
               </Button>
 
               {campaignOpponents && campaignOpponents.length > 0 && (
-                <Button
-                  onClick={handleDeleteAllOpponents}
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete All
-                </Button>
+                <>
+                  <Button
+                    onClick={handleGenerateAllIllustrations}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    Generate All Images
+                  </Button>
+
+                  <Button
+                    onClick={handleDeleteAllOpponents}
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete All
+                  </Button>
+                </>
               )}
             </div>
           </div>

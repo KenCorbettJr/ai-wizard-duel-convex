@@ -138,13 +138,13 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
 
     setIsStarting(true);
     try {
-      const battleId = await startCampaignBattle({
+      const battleResult = await startCampaignBattle({
         wizardId: selectedWizardId,
         opponentNumber: opponentNum,
       });
 
-      // Navigate to the battle
-      router.push(`/duels/${battleId}`);
+      // Navigate to the battle using the duelId
+      router.push(`/duels/${battleResult.duelId}`);
     } catch (error) {
       console.error("Failed to start campaign battle:", error);
       setIsStarting(false);

@@ -1026,6 +1026,19 @@ export const startCampaignBattle = mutation({
       seasonId: activeSeason._id,
     });
 
+    // Schedule the duel introduction generation which will automatically start the duel
+    // Skip scheduling in test environment to avoid transaction escape errors
+    if (process.env.NODE_ENV !== "test") {
+      await ctx.scheduler.runAfter(
+        100, // Add small delay to ensure database transaction is committed
+        api.duelIntroduction.generateDuelIntroduction,
+        {
+          duelId,
+          userId: identity.subject, // Use the player for credit consumption
+        }
+      );
+    }
+
     return {
       duelId,
       campaignBattleId,
@@ -1473,6 +1486,76 @@ export const getRecentCampaignBattles = query({
         ? battle.completedAt - battle.createdAt
         : undefined,
     }));
+  },
+});
+
+/**
+ * Generate illustrations for all campaign opponents that don't have them (super admin only)
+ */
+export const generateCampaignOpponentIllustrations = mutation({
+  args: {},
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    scheduledCount: v.number(),
+  }),
+  handler: async (ctx) => {
+    // Check admin access
+    const adminAccess = await checkSuperAdminAccess(ctx);
+    if (!adminAccess.hasAccess) {
+      throw new Error("Access denied: Super admin privileges required");
+    }
+
+    // Get all campaign opponents
+    const opponents = await ctx.db
+      .query("wizards")
+      .withIndex("by_campaign_opponent", (q) =>
+        q.eq("isCampaignOpponent", true)
+      )
+      .collect();
+
+    if (opponents.length === 0) {
+      return {
+        success: false,
+        message: "No campaign opponents found",
+        scheduledCount: 0,
+      };
+    }
+
+    // Find opponents without illustrations
+    const opponentsNeedingIllustrations = opponents.filter(
+      (opponent) => !opponent.illustration
+    );
+
+    if (opponentsNeedingIllustrations.length === 0) {
+      return {
+        success: true,
+        message: "All campaign opponents already have illustrations",
+        scheduledCount: 0,
+      };
+    }
+
+    // Schedule illustration generation for each opponent
+    let scheduledCount = 0;
+    for (const opponent of opponentsNeedingIllustrations) {
+      await ctx.scheduler.runAfter(
+        100 + scheduledCount * 1000, // Stagger requests by 1 second each
+        api.generateWizardIllustration.generateWizardIllustration,
+        {
+          wizardId: opponent._id,
+          name: opponent.name,
+          description: opponent.description,
+          // No userId for campaign opponents - they don't consume user credits
+        }
+      );
+      scheduledCount++;
+    }
+
+    return {
+      success: true,
+      message: `Scheduled illustration generation for ${scheduledCount} campaign opponents`,
+      scheduledCount,
+    };
   },
 });
 

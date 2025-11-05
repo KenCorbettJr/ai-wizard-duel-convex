@@ -23,6 +23,14 @@ export const getUserWizards = query({
       losses: v.optional(v.number()),
       hasCompletionRelic: v.boolean(),
       effectiveLuckScore: v.number(),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx) => {
@@ -88,6 +96,14 @@ export const getWizard = query({
       losses: v.optional(v.number()),
       hasCompletionRelic: v.boolean(),
       effectiveLuckScore: v.number(),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx, { wizardId }) => {
@@ -532,6 +548,14 @@ export const getWizardLeaderboard = query({
       ownerDisplayName: v.optional(v.string()),
       hasCompletionRelic: v.boolean(),
       effectiveLuckScore: v.number(),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx, { limit = 50, minDuels = 1 }) => {
@@ -654,6 +678,14 @@ export const getWizardWithOwner = query({
       ownerDisplayName: v.optional(v.string()),
       hasCompletionRelic: v.boolean(),
       effectiveLuckScore: v.number(),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx, { wizardId }) => {
@@ -716,6 +748,14 @@ export const getAllWizardsWithOwners = query({
       losses: v.optional(v.number()),
       ownerUserId: v.optional(v.string()),
       ownerDisplayName: v.optional(v.string()),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx, { limit = 50 }) => {
@@ -774,6 +814,14 @@ export const getWizardLeaderboardByPeriod = query({
       periodTotalDuels: v.number(),
       hasCompletionRelic: v.boolean(),
       effectiveLuckScore: v.number(),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
     })
   ),
   handler: async (ctx, { period, limit = 50, minDuels = 1 }) => {
