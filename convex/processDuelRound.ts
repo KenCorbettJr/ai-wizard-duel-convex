@@ -15,17 +15,17 @@ const BattleRoundResponseSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A vivid, detailed description of the magical combat between the wizards, their spells, and how they interact. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time.",
+      "A vivid, detailed description of the magical combat between the wizards, their spells, and how they interact. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time."
     ),
   result: z
     .string()
     .describe(
-      "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
+      "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less."
     ),
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration capturing the most dramatic moment of the round from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and maintain consistency with previous rounds.",
+      "A very detailed prompt for a low poly art style illustration capturing the most dramatic moment of the round from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and maintain consistency with previous rounds."
     ),
   wizard1: z.object({
     pointsEarned: z
@@ -38,7 +38,7 @@ const BattleRoundResponseSchema = z.object({
       .min(-100)
       .max(100)
       .describe(
-        "Health change for wizard 1 (-100 to +100, negative means damage taken, positive means healing)",
+        "Health change for wizard 1 (-100 to +100, negative means damage taken, positive means healing)"
       ),
   }),
   wizard2: z.object({
@@ -52,7 +52,7 @@ const BattleRoundResponseSchema = z.object({
       .min(-100)
       .max(100)
       .describe(
-        "Health change for wizard 2 (-100 to +100, negative means damage taken, positive means healing)",
+        "Health change for wizard 2 (-100 to +100, negative means damage taken, positive means healing)"
       ),
   }),
 });
@@ -62,17 +62,17 @@ const DuelConclusionSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A comprehensive final narration that weaves together the entire duel story, highlighting key moments, character development, and the path to victory. This should feel like the climactic conclusion to an epic tale.",
+      "A comprehensive final narration that weaves together the entire duel story, highlighting key moments, character development, and the path to victory. This should feel like the climactic conclusion to an epic tale."
     ),
   result: z
     .string()
     .describe(
-      "A brief but impactful summary of the duel conclusion that captures the essence of the victory.",
+      "A brief but impactful summary of the duel conclusion that captures the essence of the victory."
     ),
   illustrationPrompt: z
     .string()
     .describe(
-      "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description.",
+      "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description."
     ),
 });
 
@@ -141,21 +141,21 @@ function validateBattleResponse(response: unknown): BattleRoundResponse | null {
       wizard1: {
         pointsEarned: Math.max(
           0,
-          Math.min(10, Math.floor(responseObj.wizard1.pointsEarned)),
+          Math.min(10, Math.floor(responseObj.wizard1.pointsEarned))
         ),
         healthChange: Math.max(
           -100,
-          Math.min(100, Math.floor(responseObj.wizard1.healthChange)),
+          Math.min(100, Math.floor(responseObj.wizard1.healthChange))
         ),
       },
       wizard2: {
         pointsEarned: Math.max(
           0,
-          Math.min(10, Math.floor(responseObj.wizard2.pointsEarned)),
+          Math.min(10, Math.floor(responseObj.wizard2.pointsEarned))
         ),
         healthChange: Math.max(
           -100,
-          Math.min(100, Math.floor(responseObj.wizard2.healthChange)),
+          Math.min(100, Math.floor(responseObj.wizard2.healthChange))
         ),
       },
     };
@@ -190,14 +190,14 @@ export const processDuelRound = action({
         throw new Error("Round not found");
       }
 
-      // Get wizard data
+      // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
       const wizards: Array<Wizard> = await Promise.all(
         duel.wizards.map(
           (wizardId: Id<"wizards">) =>
-            ctx.runQuery(api.wizards.getWizard, {
+            ctx.runQuery(internal.wizards.getWizardInternal, {
               wizardId,
-            }) as Promise<Wizard>,
-        ),
+            }) as Promise<Wizard>
+        )
       );
 
       if (wizards.length < 2 || wizards.some((w) => !w)) {
@@ -222,18 +222,18 @@ export const processDuelRound = action({
         wizard1,
         wizard2,
         wizard1ID,
-        wizard2ID,
+        wizard2ID
       );
 
       // Calculate bounded health changes
       const wizard1HealthUpdates = getBoundedHealthChange(
         battleResult.wizard1.healthChange,
-        duel.hitPoints[wizard1ID] || 100,
+        duel.hitPoints[wizard1ID] || 100
       );
 
       const wizard2HealthUpdates = getBoundedHealthChange(
         battleResult.wizard2.healthChange,
-        duel.hitPoints[wizard2ID] || 100,
+        duel.hitPoints[wizard2ID] || 100
       );
 
       // Get the luck rolls that were used in the battle generation
@@ -276,17 +276,17 @@ export const processDuelRound = action({
         if (!skipImageGeneration && firstPlayerId) {
           const hasCredits = await ctx.runQuery(
             api.imageCreditService.hasImageCreditsForDuel,
-            { userId: firstPlayerId },
+            { userId: firstPlayerId }
           );
           if (!hasCredits) {
             skipImageGeneration = true;
             console.log(
-              `User ${firstPlayerId} has insufficient credits for duel ${duelId} round ${round.roundNumber}, using text-only mode`,
+              `User ${firstPlayerId} has insufficient credits for duel ${duelId} round ${round.roundNumber}, using text-only mode`
             );
           }
         } else if (skipImageGeneration) {
           console.log(
-            `Duel ${duelId} round ${round.roundNumber} is in text-only mode by user preference`,
+            `Duel ${duelId} round ${round.roundNumber} is in text-only mode by user preference`
           );
         }
 
@@ -312,14 +312,14 @@ export const processDuelRound = action({
           wizard1,
           wizard2,
           wizard1ID,
-          wizard2ID,
+          wizard2ID
         );
       }
 
       return { success: true, roundId };
     } catch (error) {
       throw new Error(
-        `Failed to process duel round: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to process duel round: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   },
@@ -328,7 +328,7 @@ export const processDuelRound = action({
 // Helper function to calculate bounded health changes
 function getBoundedHealthChange(
   healthChange: number,
-  currentHealth: number,
+  currentHealth: number
 ): { healthChange: number; newHealth: number } {
   let newHealth = currentHealth + healthChange;
 
@@ -353,7 +353,7 @@ async function generateBattleRound(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
-  wizard2ID: Id<"wizards">,
+  wizard2ID: Id<"wizards">
 ): Promise<BattleRoundResponse> {
   // Get wizard actions
   const wizard1Action = round.spells?.[wizard1ID]?.description || "No action";
@@ -373,18 +373,18 @@ async function generateBattleRound(
   const previousRounds = allRounds
     .filter(
       (r: { roundNumber: number; status: string }) =>
-        r.roundNumber < round.roundNumber && r.status === "COMPLETED",
+        r.roundNumber < round.roundNumber && r.status === "COMPLETED"
     )
     .sort(
       (a: { roundNumber: number }, b: { roundNumber: number }) =>
-        a.roundNumber - b.roundNumber,
+        a.roundNumber - b.roundNumber
     );
 
   const systemPrompt = generateSystemPrompt(
     duel,
     wizard1,
     wizard2,
-    previousRounds,
+    previousRounds
   );
 
   const roundActions = generateRoundActions(
@@ -397,13 +397,13 @@ async function generateBattleRound(
     wizard1Luck,
     wizard2Luck,
     duel,
-    firstWizard,
+    firstWizard
   );
 
   const previousRoundsContext = generatePreviousRoundsContext(
     previousRounds,
     wizard1,
-    wizard2,
+    wizard2
   );
 
   const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}`;
@@ -418,7 +418,7 @@ async function generateBattleRound(
           wizard1,
           wizard2,
           wizard1Action,
-          wizard2Action,
+          wizard2Action
         ),
         wizard1Luck,
         wizard2Luck,
@@ -429,7 +429,7 @@ async function generateBattleRound(
       prompt,
       BattleRoundResponseSchema,
       systemPrompt,
-      { temperature: 1.5, maxTokens: 5000 },
+      { temperature: 1.5, maxTokens: 5000 }
     );
 
     // Validate the AI response structure
@@ -452,7 +452,7 @@ async function generateBattleRound(
         wizard1,
         wizard2,
         wizard1Action,
-        wizard2Action,
+        wizard2Action
       ),
       wizard1Luck,
       wizard2Luck,
@@ -463,7 +463,7 @@ async function generateBattleRound(
 function generatePreviousRoundsContext(
   previousRounds: Array<Doc<"duelRounds">>,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): string {
   if (previousRounds.length === 0) {
     return "=== Previous Rounds ===\nThis is the first round of combat. No previous rounds to reference.";
@@ -511,7 +511,7 @@ function generateSystemPrompt(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
-  previousRounds: unknown[] = [],
+  previousRounds: unknown[] = []
 ): string {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
@@ -634,12 +634,12 @@ function generateRoundActions(
   wizard1Luck: number,
   wizard2Luck: number,
   duel: Doc<"duels">,
-  firstWizard: number,
+  firstWizard: number
 ): string {
   function generateWizardAction(
     wizardId: Id<"wizards">,
     action: string,
-    luck: number,
+    luck: number
   ): string {
     const wizard = wizardId === wizard1ID ? wizard1 : wizard2;
     return `Actions for ${wizard.name}:
@@ -653,12 +653,12 @@ function generateRoundActions(
     generateWizardAction(
       firstWizard === 1 ? wizard1ID : wizard2ID,
       firstWizard === 1 ? wizard1Action : wizard2Action,
-      firstWizard === 1 ? wizard1Luck : wizard2Luck,
+      firstWizard === 1 ? wizard1Luck : wizard2Luck
     ),
     generateWizardAction(
       firstWizard === 1 ? wizard2ID : wizard1ID,
       firstWizard === 1 ? wizard2Action : wizard1Action,
-      firstWizard === 1 ? wizard2Luck : wizard1Luck,
+      firstWizard === 1 ? wizard2Luck : wizard1Luck
     ),
   ];
 
@@ -670,15 +670,15 @@ function generateMockBattleResult(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1Action: string,
-  wizard2Action: string,
+  wizard2Action: string
 ): BattleRoundResponse {
   // Check if we're in test mode and return test-compatible responses
   if (process.env.NODE_ENV === "test") {
     console.log(
-      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`,
+      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`
     );
     console.log(
-      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`,
+      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`
     );
 
     // Return responses that match test expectations
@@ -818,7 +818,7 @@ function generateFallbackBattleResult(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1Action: string,
-  wizard2Action: string,
+  wizard2Action: string
 ): BattleRoundResponse {
   const narration = `The magical energies crackle through the arena as both wizards unleash their powers simultaneously!
 
@@ -859,7 +859,7 @@ The crowd watches in awe as the magical energies settle, revealing the results o
 function generateDuelHistoryContext(
   completedRounds: Array<Doc<"duelRounds">>,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): string {
   if (completedRounds.length === 0) {
     return "=== DUEL HISTORY ===\nNo rounds completed.";
@@ -932,7 +932,7 @@ async function generateDuelConclusion(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
-  wizard2ID: Id<"wizards">,
+  wizard2ID: Id<"wizards">
 ): Promise<void> {
   try {
     const wizard1FinalPoints = duel.points[wizard1ID] || 0;
@@ -946,11 +946,11 @@ async function generateDuelConclusion(
       .filter((r: { status: string }) => r.status === "COMPLETED")
       .sort(
         (a: { roundNumber: number }, b: { roundNumber: number }) =>
-          a.roundNumber - b.roundNumber,
+          a.roundNumber - b.roundNumber
       );
 
     const introductionRound = completedRounds.find(
-      (round: { roundNumber: number }) => round.roundNumber === 0,
+      (round: { roundNumber: number }) => round.roundNumber === 0
     );
     const arenaDescription =
       introductionRound?.outcome?.illustrationPrompt ||
@@ -965,7 +965,7 @@ async function generateDuelConclusion(
     const duelHistory = generateDuelHistoryContext(
       completedRounds,
       wizard1,
-      wizard2,
+      wizard2
     );
 
     const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel. You have access to the complete history of this epic magical confrontation. Write a final narration that:
@@ -1007,21 +1007,21 @@ Write a final narration that brings together the entire story of this duel, high
     try {
       if (isEmulatorMode() || process.env.NODE_ENV === "test") {
         console.log(
-          "🎭 Using mock AI conclusion generation (emulator/test mode)",
+          "🎭 Using mock AI conclusion generation (emulator/test mode)"
         );
         parsedResponse = generateMockConclusion(
           duel,
           wizard1,
           wizard2,
           winner,
-          loser,
+          loser
         );
       } else {
         parsedResponse = await generateObject(
           prompt,
           DuelConclusionSchema,
           systemPrompt,
-          { temperature: 1.5, maxTokens: 5000 },
+          { temperature: 1.5, maxTokens: 5000 }
         );
       }
     } catch (error) {
@@ -1068,7 +1068,7 @@ function generateMockConclusion(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   winner: Doc<"wizards">,
-  loser: Doc<"wizards">,
+  loser: Doc<"wizards">
 ): DuelConclusionResponse {
   const winnerName = winner?.name || "Unknown";
   const loserName = loser?.name || "Unknown";
@@ -1095,7 +1095,7 @@ function generateMockConclusion(
 function generateFallbackConclusion(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): DuelConclusionResponse {
   const winnerId = duel.winners?.[0];
   const winner = winnerId === wizard1._id ? wizard1 : wizard2;

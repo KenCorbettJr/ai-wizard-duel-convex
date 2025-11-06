@@ -1,4 +1,9 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import {
+  query,
+  mutation,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { Wizard } from "@/types/wizard";
@@ -994,5 +999,74 @@ export const getWizardLeaderboardByPeriod = query({
 
     // Apply limit
     return wizardsWithOwners.slice(0, limit);
+  },
+});
+// Internal function to get wizard data without access control (for system operations)
+// This can handle both regular wizards and campaign opponents
+export const getWizardInternal = internalQuery({
+  args: { wizardId: v.id("wizards") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("wizards"),
+      _creationTime: v.number(),
+      owner: v.string(),
+      name: v.string(),
+      description: v.string(),
+      illustrationURL: v.optional(v.string()),
+      illustration: v.optional(v.string()),
+      illustrationGeneratedAt: v.optional(v.number()),
+      illustrationVersion: v.optional(v.number()),
+      illustrations: v.optional(v.array(v.string())),
+      isAIPowered: v.optional(v.boolean()),
+      wins: v.optional(v.number()),
+      losses: v.optional(v.number()),
+      hasCompletionRelic: v.boolean(),
+      effectiveLuckScore: v.number(),
+      // Campaign opponent fields
+      isCampaignOpponent: v.optional(v.boolean()),
+      opponentNumber: v.optional(v.number()),
+      personalityTraits: v.optional(v.array(v.string())),
+      spellStyle: v.optional(v.string()),
+      difficulty: v.optional(v.string()),
+      luckModifier: v.optional(v.number()),
+      illustrationPrompt: v.optional(v.string()),
+    })
+  ),
+  handler: async (ctx, { wizardId }) => {
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) {
+      return null;
+    }
+
+    // For campaign opponents, we don't need to check ownership or campaign progress
+    if (wizard.isCampaignOpponent) {
+      return {
+        ...wizard,
+        hasCompletionRelic: false, // Campaign opponents don't have relics
+        effectiveLuckScore: wizard.luckModifier || 10, // Use their luck modifier or default
+      };
+    }
+
+    // For regular wizards, get campaign progress to check for completion relic
+    const campaignProgress = await ctx.db
+      .query("wizardCampaignProgress")
+      .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
+      .unique();
+
+    const hasCompletionRelic = campaignProgress?.hasCompletionRelic || false;
+
+    // Calculate effective luck score (base luck would be stored on wizard, defaulting to 10)
+    const baseLuck = 10; // This could be a field on the wizard in the future
+    const effectiveLuckScore = Math.min(
+      20,
+      baseLuck + (hasCompletionRelic ? 1 : 0)
+    );
+
+    return {
+      ...wizard,
+      hasCompletionRelic,
+      effectiveLuckScore,
+    };
   },
 });

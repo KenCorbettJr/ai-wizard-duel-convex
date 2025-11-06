@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
@@ -527,6 +527,122 @@ describe("Duel Introduction", () => {
       expect(introRound?.status).toBe("COMPLETED");
       expect(firstRound?.type).toBe("SPELL_CASTING");
       expect(firstRound?.status).toBe("WAITING_FOR_SPELLS");
+    });
+  });
+
+  describe("Campaign Duel Support", () => {
+    test("should handle duels with campaign opponents", async () => {
+      // First, seed campaign opponents and create default season
+      await t.run(async (ctx) => {
+        await ctx.runMutation(api.campaigns.seedCampaignOpponents);
+        await ctx.runMutation(
+          internal.campaignSeasons.createDefaultSeasonInternal
+        );
+      });
+
+      // Start a campaign battle - this creates a duel with campaign opponent
+      const battleResult = await withAuth(t, "test-user-1").mutation(
+        api.campaigns.startCampaignBattle,
+        {
+          wizardId: wizard1Id,
+          opponentNumber: 1,
+        }
+      );
+
+      expect(battleResult.duelId).toBeDefined();
+      expect(battleResult.campaignBattleId).toBeDefined();
+      expect(battleResult.aiWizardId).toBeDefined();
+
+      // Generate introduction - this should not fail with campaign opponents
+      const result = await withAuth(t, "test-user-1").action(
+        api.duelIntroduction.generateDuelIntroduction,
+        {
+          duelId: battleResult.duelId,
+        }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.introRoundId).toBeDefined();
+
+      // Verify introduction round was created
+      const introRound = await t.run(async (ctx) => {
+        return await ctx.db.get(result.introRoundId);
+      });
+
+      expect(introRound?.roundNumber).toBe(0);
+      expect(introRound?.type).toBe("SPELL_CASTING");
+      expect(introRound?.status).toBe("COMPLETED");
+      expect(introRound?.outcome?.narrative).toContain("mock-string");
+      expect(introRound?.outcome?.result).toContain("mock-string");
+      expect(introRound?.outcome?.illustrationPrompt).toContain("mock-string");
+
+      // Verify duel was started
+      const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
+        duelId: battleResult.duelId,
+      });
+      expect(duel?.status).toBe("IN_PROGRESS");
+      expect(duel?.currentRound).toBe(1);
+      expect(duel?.isCampaignBattle).toBe(true);
+    });
+
+    test("should automatically generate campaign opponent actions", async () => {
+      // First, seed campaign opponents and create default season
+      await t.run(async (ctx) => {
+        await ctx.runMutation(api.campaigns.seedCampaignOpponents);
+        await ctx.runMutation(
+          internal.campaignSeasons.createDefaultSeasonInternal
+        );
+      });
+
+      // Start a campaign battle
+      const battleResult = await withAuth(t, "test-user-1").mutation(
+        api.campaigns.startCampaignBattle,
+        {
+          wizardId: wizard1Id,
+          opponentNumber: 1,
+        }
+      );
+
+      // Generate introduction to start the duel
+      await withAuth(t, "test-user-1").action(
+        api.duelIntroduction.generateDuelIntroduction,
+        {
+          duelId: battleResult.duelId,
+        }
+      );
+
+      // Cast a spell for the human player
+      await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+        duelId: battleResult.duelId,
+        wizardId: wizard1Id,
+        spellDescription: "Lightning bolt!",
+      });
+
+      // Manually trigger campaign opponent action generation (since we're in test mode)
+      const actionResult = await t.action(
+        internal.campaignOpponentAI.processCampaignOpponentActions,
+        {
+          duelId: battleResult.duelId,
+        }
+      );
+
+      expect(actionResult.actionsGenerated).toBe(1);
+      expect(actionResult.errors).toHaveLength(0);
+
+      // Verify the campaign opponent cast a spell
+      const rounds = await t.query(api.duels.getDuelRounds, {
+        duelId: battleResult.duelId,
+      });
+      const currentRound = rounds.find((r) => r.roundNumber === 1);
+
+      expect(currentRound?.spells).toBeDefined();
+      expect(Object.keys(currentRound?.spells || {})).toHaveLength(2); // Both wizards should have spells
+
+      // Verify the campaign opponent's spell exists
+      const campaignOpponentSpell =
+        currentRound?.spells?.[battleResult.aiWizardId];
+      expect(campaignOpponentSpell).toBeDefined();
+      expect(campaignOpponentSpell?.description).toBeTruthy();
     });
   });
 });

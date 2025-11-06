@@ -15,17 +15,17 @@ const IntroductionResponseSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A vivid, detailed introduction of the magical combat that is about to take place. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time.",
+      "A vivid, detailed introduction of the magical combat that is about to take place. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time."
     ),
   result: z
     .string()
     .describe(
-      "A brief summary of the introduction, this can be a little snarky or humorous if you like.",
+      "A brief summary of the introduction, this can be a little snarky or humorous if you like."
     ),
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration capturing the moment from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and dynamic lighting with magical particles.",
+      "A very detailed prompt for a low poly art style illustration capturing the moment from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and dynamic lighting with magical particles."
     ),
 });
 
@@ -40,7 +40,7 @@ export const generateDuelIntroduction = action({
   },
   handler: async (
     ctx,
-    { duelId, userId },
+    { duelId, userId }
   ): Promise<{
     success: boolean;
     introRoundId: Id<"duelRounds">;
@@ -55,11 +55,11 @@ export const generateDuelIntroduction = action({
         throw new Error("Duel not found");
       }
 
-      // Get wizard data
+      // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
       const wizards = await Promise.all(
         duel.wizards.map((wizardId: Id<"wizards">) =>
-          ctx.runQuery(api.wizards.getWizard, { wizardId }),
-        ),
+          ctx.runQuery(internal.wizards.getWizardInternal, { wizardId })
+        )
       );
 
       if (
@@ -81,7 +81,7 @@ export const generateDuelIntroduction = action({
       const introduction = await generateIntroductionText(
         duel,
         wizard1,
-        wizard2,
+        wizard2
       );
 
       // Create the introduction round (round 0)
@@ -94,7 +94,7 @@ export const generateDuelIntroduction = action({
             result: introduction.result,
             illustrationPrompt: introduction.illustrationPrompt,
           },
-        },
+        }
       );
 
       // Generate the illustration (with credit checking and user preference)
@@ -110,13 +110,13 @@ export const generateDuelIntroduction = action({
           if (userId) {
             const hasCredits = await ctx.runQuery(
               api.imageCreditService.hasImageCreditsForDuel,
-              { userId },
+              { userId }
             );
             if (!hasCredits) {
               skipImageGeneration = true;
               textOnlyMode = true;
               console.log(
-                `User ${userId} has insufficient credits for duel ${duelId} introduction, using text-only mode`,
+                `User ${userId} has insufficient credits for duel ${duelId} introduction, using text-only mode`
               );
             }
           }
@@ -131,7 +131,7 @@ export const generateDuelIntroduction = action({
               useGemini,
               userId,
               skipImageGeneration,
-            },
+            }
           );
         }
       }
@@ -151,7 +151,7 @@ export const generateDuelIntroduction = action({
       return { success: true, introRoundId, textOnlyMode };
     } catch (error) {
       throw new Error(
-        `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   },
@@ -161,7 +161,7 @@ export const generateDuelIntroduction = action({
 async function generateIntroductionText(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): Promise<IntroductionResponse> {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
@@ -197,7 +197,7 @@ The two wizards for this duel are:
       prompt,
       IntroductionResponseSchema,
       systemPrompt,
-      { temperature: 1.5 },
+      { temperature: 1.5 }
     );
   } catch (error) {
     console.error("AI text generation failed, using fallback:", error);
@@ -211,7 +211,7 @@ The two wizards for this duel are:
 function generateMockIntroduction(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): IntroductionResponse {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
@@ -270,7 +270,7 @@ Let the simulated magical combat commence!`;
 function generateFallbackIntroduction(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">,
+  wizard2: Doc<"wizards">
 ): IntroductionResponse {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"

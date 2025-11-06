@@ -2,7 +2,7 @@
 
 import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 export const generateRoundIllustration = action({
@@ -211,10 +211,10 @@ async function getAllWizardIllustrations(
   wizardIds: Id<"wizards">[]
 ): Promise<string[]> {
   try {
-    // Get wizard data
+    // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
     const wizards = await Promise.all(
       wizardIds.map((wizardId) =>
-        ctx.runQuery(api.wizards.getWizard, { wizardId })
+        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId })
       )
     );
 
@@ -246,10 +246,10 @@ async function getWizardDescriptions(
   wizardIds: Id<"wizards">[]
 ): Promise<Array<{ name: string; description: string }>> {
   try {
-    // Get wizard data
+    // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
     const wizards = await Promise.all(
       wizardIds.map((wizardId) =>
-        ctx.runQuery(api.wizards.getWizard, { wizardId })
+        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId })
       )
     );
 

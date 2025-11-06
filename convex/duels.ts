@@ -46,6 +46,7 @@ export const getPlayerDuels = query({
       ),
       currentRound: v.number(),
       createdAt: v.number(),
+      completedAt: v.optional(v.number()),
       points: v.record(v.string(), v.number()),
       hitPoints: v.record(v.string(), v.number()),
       needActionsFrom: v.array(v.id("wizards")),
@@ -136,6 +137,7 @@ export const getDuelInternal = internalQuery({
       ),
       currentRound: v.number(),
       createdAt: v.number(),
+      completedAt: v.optional(v.number()),
       points: v.record(v.string(), v.number()),
       hitPoints: v.record(v.string(), v.number()),
       needActionsFrom: v.array(v.id("wizards")),
@@ -523,6 +525,16 @@ export const castSpell = mutation({
           }
         );
       }
+    } else if (duel.isCampaignBattle) {
+      // For campaign battles, check if any remaining wizards are campaign opponents
+      // and generate their actions automatically
+      if (process.env.NODE_ENV !== "test") {
+        await ctx.scheduler.runAfter(
+          500, // Small delay to ensure database is updated
+          internal.campaignOpponentAI.processCampaignOpponentActions,
+          { duelId }
+        );
+      }
     }
 
     return currentRound._id;
@@ -710,6 +722,15 @@ export const completeRound = mutation({
         hitPoints: updatedHitPoints,
         needActionsFrom: duel.wizards, // All wizards need to act again
       });
+
+      // For campaign battles, automatically generate actions for campaign opponents
+      if (duel.isCampaignBattle && process.env.NODE_ENV !== "test") {
+        await ctx.scheduler.runAfter(
+          1000, // Small delay to ensure database is updated
+          internal.campaignOpponentAI.processCampaignOpponentActions,
+          { duelId: duel._id }
+        );
+      }
     }
 
     return roundId;
@@ -835,6 +856,7 @@ export const getActiveDuels = query({
       ),
       currentRound: v.number(),
       createdAt: v.number(),
+      completedAt: v.optional(v.number()),
       points: v.record(v.string(), v.number()),
       hitPoints: v.record(v.string(), v.number()),
       needActionsFrom: v.array(v.id("wizards")),
@@ -888,6 +910,7 @@ export const getWatchableDuels = query({
         ),
         currentRound: v.number(),
         createdAt: v.number(),
+        completedAt: v.optional(v.number()),
         points: v.record(v.string(), v.number()),
         hitPoints: v.record(v.string(), v.number()),
         needActionsFrom: v.array(v.id("wizards")),
@@ -1155,6 +1178,15 @@ export const startDuelAfterIntroduction = mutation({
       currentRound: 1,
       needActionsFrom: duel.wizards, // All wizards need to act
     });
+
+    // For campaign battles, automatically generate actions for campaign opponents
+    if (duel.isCampaignBattle && process.env.NODE_ENV !== "test") {
+      await ctx.scheduler.runAfter(
+        1000, // Small delay to ensure database is updated
+        internal.campaignOpponentAI.processCampaignOpponentActions,
+        { duelId }
+      );
+    }
 
     return duelId;
   },
@@ -1641,5 +1673,99 @@ export const createDuelInternal = internalMutation({
     });
 
     return duelId;
+  },
+});
+// Internal function to cast spell for campaign opponents (bypasses authentication)
+export const castSpellForCampaignOpponent = internalMutation({
+  args: {
+    duelId: v.id("duels"),
+    wizardId: v.id("wizards"),
+    spellDescription: v.string(),
+  },
+  returns: v.union(v.id("duelRounds"), v.null()),
+  handler: async (ctx, { duelId, wizardId, spellDescription }) => {
+    const duel = await ctx.db.get(duelId);
+    if (!duel) {
+      throw new Error("Duel not found");
+    }
+
+    if (duel.status !== "IN_PROGRESS") {
+      throw new Error("Duel is not in progress");
+    }
+
+    // Verify this is a campaign opponent
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard || !wizard.isCampaignOpponent) {
+      throw new Error("This function is only for campaign opponents");
+    }
+
+    // Get the current round
+    const currentRound = await ctx.db
+      .query("duelRounds")
+      .withIndex("by_duel", (q) => q.eq("duelId", duelId))
+      .filter((q) => q.eq(q.field("roundNumber"), duel.currentRound))
+      .first();
+
+    if (!currentRound) {
+      throw new Error("Current round not found");
+    }
+
+    if (currentRound.status !== "WAITING_FOR_SPELLS") {
+      throw new Error("Round is not accepting spells");
+    }
+
+    // Check if the wizard is participating in this duel
+    if (!duel.wizards.includes(wizardId)) {
+      throw new Error("Wizard is not participating in this duel");
+    }
+
+    // Check if the wizard has already cast a spell this round
+    if (currentRound.spells && currentRound.spells[wizardId]) {
+      throw new Error("Wizard has already cast a spell this round");
+    }
+
+    // Add the spell to the round
+    const currentSpells = currentRound.spells || {};
+    const updatedSpells = {
+      ...currentSpells,
+      [wizardId]: {
+        description: spellDescription,
+        castBy: wizardId,
+        timestamp: Date.now(),
+      },
+    };
+
+    await ctx.db.patch(currentRound._id, {
+      spells: updatedSpells,
+    });
+
+    // Remove wizard from needActionsFrom
+    const updatedNeedActions = duel.needActionsFrom.filter(
+      (id) => id !== wizardId
+    );
+    await ctx.db.patch(duelId, {
+      needActionsFrom: updatedNeedActions,
+    });
+
+    // If all wizards have cast spells, mark round as ready for processing and trigger processing
+    if (updatedNeedActions.length === 0) {
+      await ctx.db.patch(currentRound._id, {
+        status: "PROCESSING" as DuelRoundStatus,
+      });
+
+      // Schedule round processing
+      if (process.env.NODE_ENV !== "test") {
+        await ctx.scheduler.runAfter(
+          100,
+          api.processDuelRound.processDuelRound,
+          {
+            duelId,
+            roundId: currentRound._id,
+          }
+        );
+      }
+    }
+
+    return currentRound._id;
   },
 });

@@ -13,6 +13,7 @@ import type * as admin from "../admin.js";
 import type * as ai_getAI from "../ai/getAI.js";
 import type * as aiTextGeneration from "../aiTextGeneration.js";
 import type * as campaignAI from "../campaignAI.js";
+import type * as campaignOpponentAI from "../campaignOpponentAI.js";
 import type * as campaignOpponents from "../campaignOpponents.js";
 import type * as campaignSeasons from "../campaignSeasons.js";
 import type * as campaigns from "../campaigns.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   "ai/getAI": typeof ai_getAI;
   aiTextGeneration: typeof aiTextGeneration;
   campaignAI: typeof campaignAI;
+  campaignOpponentAI: typeof campaignOpponentAI;
   campaignOpponents: typeof campaignOpponents;
   campaignSeasons: typeof campaignSeasons;
   campaigns: typeof campaigns;
