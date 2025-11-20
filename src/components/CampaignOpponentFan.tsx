@@ -11,6 +11,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CheckCircle, Lock, Star, Zap, Shield, Crown } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import type { Doc } from "../../convex/_generated/dataModel";
+import useEmblaCarousel from "embla-carousel-react";
+import { useEffect, useState } from "react";
 
 interface CampaignOpponentFanProps {
   opponents: Doc<"wizards">[];
@@ -27,6 +29,12 @@ export function CampaignOpponentFan({
   selectedWizardProgress,
   className = "",
 }: CampaignOpponentFanProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: false,
+    align: "center",
+    containScroll: "trimSnaps",
+  });
+
   const getDifficultyConfig = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
@@ -74,150 +82,136 @@ export function CampaignOpponentFan({
     (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0)
   );
 
+  // Scroll to current opponent on mount
+  useEffect(() => {
+    if (emblaApi && selectedWizardProgress) {
+      const currentIndex = sortedOpponents.findIndex(
+        (op) => op.opponentNumber === selectedWizardProgress.currentOpponent
+      );
+      if (currentIndex !== -1) {
+        emblaApi.scrollTo(currentIndex);
+      }
+    }
+  }, [emblaApi, selectedWizardProgress, sortedOpponents]);
+
   return (
     <TooltipProvider>
-      <div className={`relative w-full overflow-hidden ${className}`}>
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-linear-to-b from-purple-50 to-transparent dark:from-purple-950/20 dark:to-transparent rounded-lg" />
+      <div className={`w-full flex flex-col items-center ${className}`}>
+        {/* Top Badge/Card - "Campaign Opponents" */}
+        <div className="z-20 mb-6 relative">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-purple-100 dark:border-purple-800 px-8 py-3 flex flex-col items-center justify-center min-w-[320px]">
+            <div className="flex items-center gap-3 mb-1">
+              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              <h2 className="text-xl font-bold text-purple-700 dark:text-purple-300">
+                Campaign Opponents
+              </h2>
+              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+            </div>
+            <p className="text-sm text-purple-500 dark:text-purple-400 font-medium">
+              10 Legendary Challengers Await
+            </p>
+          </div>
+        </div>
 
-        {/* Fan container */}
-        <div className="relative flex items-center justify-center py-8 px-4">
-          <div className="relative w-full max-w-6xl">
-            {/* Cards arranged in a fan */}
-            <div className="relative h-48 flex items-center justify-center">
-              {sortedOpponents.map((opponent, index) => {
-                if (!opponent.opponentNumber) return null;
+        {/* Embla Carousel Container */}
+        <div className="h-96 m-12"></div>
+        <div className="w-full overflow-hidden px-4 py-12 absolute left-0 right-0" ref={emblaRef}>
+          <div className="flex touch-pan-y touch-pinch-zoom -ml-4">
+            {sortedOpponents.map((opponent, index) => {
+              if (!opponent.opponentNumber) return null;
 
-                const status = getOpponentStatus(opponent.opponentNumber);
-                const difficultyConfig = getDifficultyConfig(
-                  opponent.difficulty || "BEGINNER"
-                );
-                const DifficultyIcon = difficultyConfig.icon;
+              const status = getOpponentStatus(opponent.opponentNumber);
+              const difficultyConfig = getDifficultyConfig(
+                opponent.difficulty || "BEGINNER"
+              );
+              const DifficultyIcon = difficultyConfig.icon;
 
-                // Calculate fan positioning
-                const totalCards = sortedOpponents.length;
-                const centerIndex = (totalCards - 1) / 2;
-                const offsetFromCenter = index - centerIndex;
+              // Card state styling
+              let cardClasses =
+                "transition-all duration-300 hover:scale-105 hover:-translate-y-2 relative group h-full";
+              let opacity = "opacity-100";
+              let borderClass = "border-transparent";
 
-                // Fan spread calculations
-                const maxRotation = 25; // degrees
-                const maxTranslateX = 120; // pixels
-                const maxTranslateY = 30; // pixels
+              if (status.isDefeated) {
+                borderClass = "border-green-400";
+              } else if (status.isCurrent) {
+                borderClass = "border-purple-500";
+              } else if (!status.isUnlocked) {
+                opacity = "opacity-50 grayscale";
+                borderClass = "border-gray-700";
+              }
 
-                const rotation = (offsetFromCenter / centerIndex) * maxRotation;
-                const translateX =
-                  (offsetFromCenter / centerIndex) * maxTranslateX;
-                const translateY =
-                  Math.abs(offsetFromCenter / centerIndex) * maxTranslateY;
-
-                // Z-index for layering (center cards on top)
-                const zIndex = totalCards - Math.abs(offsetFromCenter);
-
-                // Card state styling
-                let cardClasses =
-                  "transition-all duration-300 hover:scale-110 hover:z-50 animate-fan-card-entrance animate-fan-card-float";
-                let opacity = "opacity-100";
-
-                if (status.isDefeated) {
-                  cardClasses += " ring-2 ring-green-400 animate-fan-glow";
-                } else if (status.isCurrent) {
-                  cardClasses +=
-                    " ring-2 ring-blue-400 animate-pulse animate-fan-glow";
-                } else if (!status.isUnlocked) {
-                  opacity = "opacity-40 grayscale";
-                }
-
-                // Add entrance delay based on position
-                const entranceDelay = `${index * 0.1}s`;
-
-                return (
-                  <Tooltip key={opponent._id}>
+              return (
+                <div className="pl-4 flex-[0_0_auto] min-w-0" key={opponent._id}>
+                  <Tooltip>
                     <TooltipTrigger asChild>
-                      <div
-                        className={`absolute ${cardClasses} ${opacity}`}
-                        style={{
-                          transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`,
-                          zIndex,
-                          animationDelay: entranceDelay,
-                          animationFillMode: "both",
-                        }}
-                      >
-                        {/* Card - Made larger to accommodate bigger images */}
-                        <div className="w-36 h-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden relative">
-                          {/* Magical sparkle overlay for special states */}
-                          {(status.isDefeated || status.isCurrent) && (
-                            <div className="absolute inset-0 pointer-events-none">
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full animate-magical-sparkle opacity-60" />
-                              <div
-                                className="absolute bottom-2 left-2 w-1 h-1 bg-purple-400 rounded-full animate-magical-sparkle opacity-80"
-                                style={{ animationDelay: "0.5s" }}
+                      <div className={`${cardClasses} ${opacity}`}>
+                        {/* Card Container */}
+                        <div className={`w-64 h-96 rounded-2xl overflow-hidden relative shadow-xl bg-gray-900 border-2 ${borderClass}`}>
+
+                          {/* Full Background Image */}
+                          <div className="absolute inset-0">
+                            {opponent.illustration ? (
+                              <ConvexImage
+                                storageId={opponent.illustration}
+                                alt={opponent.name}
+                                width={400}
+                                height={600}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               />
-                              <div
-                                className="absolute top-3 left-1 w-1.5 h-1.5 bg-blue-400 rounded-full animate-magical-sparkle opacity-70"
-                                style={{ animationDelay: "1s" }}
-                              />
-                            </div>
-                          )}
-                          {/* Card header with opponent number */}
-                          <div className="relative h-8 bg-linear-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">
+                            ) : (
+                              <div className="w-full h-full bg-linear-to-br from-purple-900 to-gray-900 flex items-center justify-center">
+                                <span className="text-6xl">🧙‍♂️</span>
+                              </div>
+                            )}
+                            {/* Gradient Overlay for text readability */}
+                            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
+                          </div>
+
+                          {/* Top Status Badge */}
+                          <div className="absolute top-3 right-3 z-20">
+                            {status.isDefeated && (
+                              <div className="bg-green-500 text-white p-1.5 rounded-full shadow-lg">
+                                <CheckCircle className="w-5 h-5" />
+                              </div>
+                            )}
+                            {!status.isUnlocked && (
+                              <div className="bg-gray-800/80 backdrop-blur-sm text-gray-400 p-1.5 rounded-full">
+                                <Lock className="w-5 h-5" />
+                              </div>
+                            )}
+                            {status.isCurrent && (
+                              <div className="bg-purple-600 text-white p-1.5 rounded-full shadow-lg animate-pulse">
+                                <Zap className="w-5 h-5" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Opponent Number Badge */}
+                          <div className="absolute top-3 left-3 z-20">
+                            <div className="bg-black/60 backdrop-blur-md border border-white/20 text-white px-2.5 py-1 rounded-lg font-bold text-sm">
                               #{opponent.opponentNumber}
-                            </span>
-
-                            {/* Status indicators */}
-                            <div className="absolute right-1 top-1">
-                              {status.isDefeated && (
-                                <CheckCircle className="w-3 h-3 text-green-400" />
-                              )}
-                              {!status.isUnlocked && (
-                                <Lock className="w-3 h-3 text-gray-400" />
-                              )}
                             </div>
                           </div>
 
-                          {/* Avatar - Made larger and more prominent */}
-                          <div className="flex justify-center pt-1">
-                            <Avatar className="w-16 h-16 rounded-lg border-2 border-purple-200 dark:border-purple-700">
-                              {opponent.illustration ? (
-                                <ConvexImage
-                                  storageId={opponent.illustration}
-                                  alt={opponent.name}
-                                  width={64}
-                                  height={64}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <AvatarFallback className="bg-linear-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 text-purple-600 dark:text-purple-400 text-lg font-bold rounded-lg">
-                                  {opponent.name.charAt(0)}
-                                </AvatarFallback>
-                              )}
-                            </Avatar>
-                          </div>
-
-                          {/* Name */}
-                          <div className="px-2 pt-1">
-                            <h3 className="text-xs font-semibold text-center truncate">
+                          {/* Bottom Content */}
+                          <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
+                            <h3 className="text-white font-bold text-xl leading-tight mb-2 drop-shadow-md">
                               {opponent.name}
                             </h3>
-                          </div>
 
-                          {/* Difficulty badge */}
-                          <div className="flex justify-center pt-1">
-                            <div
-                              className={`${difficultyConfig.color} rounded-full p-1`}
-                            >
-                              <DifficultyIcon className="w-3 h-3 text-white" />
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <Badge className={`${difficultyConfig.color} text-white border-none`}>
+                                {opponent.difficulty}
+                              </Badge>
+                              {opponent.luckModifier && opponent.luckModifier > 0 && (
+                                <Badge variant="outline" className="text-yellow-300 border-yellow-300/50 bg-yellow-500/10">
+                                  +{opponent.luckModifier} Luck
+                                </Badge>
+                              )}
                             </div>
                           </div>
 
-                          {/* Bottom section */}
-                          <div className="absolute bottom-1 left-1 right-1 flex justify-center">
-                            {status.isDefeated &&
-                              selectedWizardProgress?.hasCompletionRelic &&
-                              index === sortedOpponents.length - 1 && (
-                                <Crown className="w-4 h-4 text-yellow-500" />
-                              )}
-                          </div>
                         </div>
                       </div>
                     </TooltipTrigger>
@@ -227,59 +221,19 @@ export function CampaignOpponentFan({
                         <div className="text-sm text-muted-foreground">
                           {opponent.description}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            className={`${getDifficultyConfig(opponent.difficulty || "BEGINNER").color} text-white`}
-                          >
-                            <DifficultyIcon className="w-3 h-3 mr-1" />
-                            {opponent.difficulty}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {opponent.luckModifier &&
-                              opponent.luckModifier > 0 &&
-                              "+"}
-                            {opponent.luckModifier || 0} Luck
-                          </Badge>
-                        </div>
                         <div className="text-xs">
                           <strong>Style:</strong> {opponent.spellStyle}
                         </div>
-                        {status.isDefeated && (
-                          <div className="text-green-600 dark:text-green-400 text-xs font-medium">
-                            ✓ Defeated
-                          </div>
-                        )}
-                        {status.isCurrent && !status.isDefeated && (
-                          <div className="text-blue-600 dark:text-blue-400 text-xs font-medium">
-                            → Current Challenge
-                          </div>
-                        )}
-                        {!status.isUnlocked && (
-                          <div className="text-gray-500 text-xs">🔒 Locked</div>
-                        )}
                       </div>
                     </TooltipContent>
                   </Tooltip>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Title overlay */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="text-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg px-4 py-2 border border-purple-200 dark:border-purple-700">
-            <h2 className="text-lg font-bold text-purple-700 dark:text-purple-300 flex items-center gap-2 justify-center">
-              <Star className="w-5 h-5 text-yellow-500" />
-              Campaign Opponents
-              <Star className="w-5 h-5 text-yellow-500" />
-            </h2>
-            <p className="text-sm text-purple-600 dark:text-purple-400">
-              10 Legendary Challengers Await
-            </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
     </TooltipProvider>
   );
 }
+
