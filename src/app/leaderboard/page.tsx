@@ -54,6 +54,7 @@ function WizardLeaderboardCard({
 }) {
   const illustrationUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
+    // @ts-expect-error - "skip" is a valid Convex query parameter
     wizard.illustration ? { storageId: wizard.illustration } : "skip"
   );
 

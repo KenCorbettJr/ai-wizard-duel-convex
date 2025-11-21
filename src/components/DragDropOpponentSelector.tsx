@@ -62,6 +62,7 @@ function SortableOpponentItem({
 
   const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
+    // @ts-expect-error - "skip" is a valid Convex query parameter
     opponent.illustration ? { storageId: opponent.illustration } : "skip"
   );
 
@@ -181,6 +182,7 @@ function AvailableOpponentItem({
 }: AvailableOpponentItemProps) {
   const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
+    // @ts-expect-error - "skip" is a valid Convex query parameter
     opponent.illustration ? { storageId: opponent.illustration } : "skip"
   );
 
