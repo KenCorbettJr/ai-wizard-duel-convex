@@ -32,7 +32,8 @@ export const getUserImageCredits = query({
       .first();
 
     if (!user) {
-      throw new Error("User not found");
+      // Return 0 for new users who haven't been initialized yet
+      return 0;
     }
 
     return user.imageCredits;

@@ -18,6 +18,14 @@ if (process.env.ENV === "dev") {
     port: "3000",
     pathname: "/api/convex-image/**",
   });
+} else {
+  // Production environment
+  remotePatterns.push({
+    protocol: "https",
+    hostname: "warmhearted-egret-307.convex.cloud",
+    port: "",
+    pathname: "/api/storage/**",
+  });
 }
 
 const nextConfig: NextConfig = {
