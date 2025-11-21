@@ -535,6 +535,210 @@ export const grantImageCredits = mutation({
 });
 
 /**
+ * Get detailed statistics for multiple users at once
+ * More efficient than calling getUserStatistics multiple times
+ */
+export const getBatchUserStatistics = query({
+  args: { userIds: v.array(v.string()) },
+  returns: v.record(
+    v.string(),
+    v.object({
+      totalWizards: v.number(),
+      multiplayerDuels: v.object({
+        total: v.number(),
+        wins: v.number(),
+        losses: v.number(),
+        inProgress: v.number(),
+      }),
+      campaignBattles: v.object({
+        total: v.number(),
+        wins: v.number(),
+        losses: v.number(),
+        currentProgress: v.number(),
+      }),
+      lastActivityAt: v.optional(v.number()),
+      activityLevel: v.union(
+        v.literal("inactive"),
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high")
+      ),
+    })
+  ),
+  handler: async (ctx, args) => {
+    // Verify admin access
+    await verifySuperAdmin(ctx);
+
+    const result: Record<
+      string,
+      {
+        totalWizards: number;
+        multiplayerDuels: {
+          total: number;
+          wins: number;
+          losses: number;
+          inProgress: number;
+        };
+        campaignBattles: {
+          total: number;
+          wins: number;
+          losses: number;
+          currentProgress: number;
+        };
+        lastActivityAt?: number;
+        activityLevel: "inactive" | "low" | "medium" | "high";
+      }
+    > = {};
+
+    // Process each user
+    for (const userId of args.userIds) {
+      // Get user to verify they exist
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
+        .first();
+
+      if (!user) {
+        continue; // Skip non-existent users
+      }
+
+      // Count wizards owned by this user
+      const wizards = await ctx.db
+        .query("wizards")
+        .withIndex("by_owner", (q) => q.eq("owner", userId))
+        .collect();
+      const totalWizards = wizards.length;
+
+      // Get wizard IDs for this user
+      const wizardIds = wizards.map((w) => w._id);
+
+      // Get all duels for this user
+      const allDuels = await ctx.db
+        .query("duels")
+        .withIndex("by_player")
+        .collect();
+
+      // Filter to only duels where this user is a player
+      const userDuels = allDuels.filter((d) => d.players.includes(userId));
+
+      const multiplayerDuels = userDuels.filter((d) => !d.isCampaignBattle);
+
+      let multiplayerWins = 0;
+      let multiplayerLosses = 0;
+      let multiplayerInProgress = 0;
+
+      for (const duel of multiplayerDuels) {
+        if (duel.status === "IN_PROGRESS") {
+          multiplayerInProgress++;
+        } else if (duel.status === "COMPLETED") {
+          // Check if any of user's wizards won
+          const userWizardIds = duel.wizards.filter((wId) =>
+            wizardIds.includes(wId)
+          );
+          const userWon = userWizardIds.some((wId) =>
+            duel.winners?.includes(wId)
+          );
+          const userLost = userWizardIds.some((wId) =>
+            duel.losers?.includes(wId)
+          );
+
+          if (userWon) {
+            multiplayerWins++;
+          } else if (userLost) {
+            multiplayerLosses++;
+          }
+        }
+      }
+
+      // Get campaign battles
+      const campaignBattles = await ctx.db
+        .query("campaignBattles")
+        .filter((q) => q.eq(q.field("userId"), userId))
+        .collect();
+
+      const campaignWins = campaignBattles.filter(
+        (b) => b.status === "WON"
+      ).length;
+      const campaignLosses = campaignBattles.filter(
+        (b) => b.status === "LOST"
+      ).length;
+
+      // Find highest opponent defeated
+      const defeatedOpponents = campaignBattles
+        .filter((b) => b.status === "WON")
+        .map((b) => b.opponentNumber);
+      const currentProgress =
+        defeatedOpponents.length > 0 ? Math.max(...defeatedOpponents) : 0;
+
+      // Calculate last activity
+      let lastActivityAt: number | undefined = user.createdAt;
+
+      // Check last wizard creation
+      if (wizards.length > 0) {
+        const lastWizardTime = Math.max(
+          ...wizards.map((w) => w.illustrationGeneratedAt || 0)
+        );
+        if (lastWizardTime > lastActivityAt) {
+          lastActivityAt = lastWizardTime;
+        }
+      }
+
+      // Check last duel activity
+      if (userDuels.length > 0) {
+        const lastDuelTime = Math.max(
+          ...userDuels.map((d) => d.completedAt || d.createdAt)
+        );
+        if (lastDuelTime > lastActivityAt) {
+          lastActivityAt = lastDuelTime;
+        }
+      }
+
+      // Calculate activity level
+      const now = Date.now();
+      const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+      const recentDuels = userDuels.filter(
+        (d) => d.createdAt > thirtyDaysAgo
+      ).length;
+
+      let activityLevel: "inactive" | "low" | "medium" | "high";
+
+      if (
+        lastActivityAt < thirtyDaysAgo ||
+        (totalWizards === 0 && userDuels.length === 0)
+      ) {
+        activityLevel = "inactive";
+      } else if (recentDuels <= 2 || totalWizards <= 2) {
+        activityLevel = "low";
+      } else if (recentDuels <= 10 || totalWizards <= 5) {
+        activityLevel = "medium";
+      } else {
+        activityLevel = "high";
+      }
+
+      result[userId] = {
+        totalWizards,
+        multiplayerDuels: {
+          total: multiplayerDuels.length,
+          wins: multiplayerWins,
+          losses: multiplayerLosses,
+          inProgress: multiplayerInProgress,
+        },
+        campaignBattles: {
+          total: campaignBattles.length,
+          wins: campaignWins,
+          losses: campaignLosses,
+          currentProgress,
+        },
+        lastActivityAt,
+        activityLevel,
+      };
+    }
+
+    return result;
+  },
+});
+
+/**
  * Get credit transaction history for a specific user
  * Returns paginated list of all credit transactions
  */

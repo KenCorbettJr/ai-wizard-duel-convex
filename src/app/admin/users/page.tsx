@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { api } from "@/../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,21 @@ function UserManagementPageContent() {
   // Debounce search query
   const debouncedSearch = useDebounce(searchQuery, 300);
 
+  // Create a stable query key to detect filter changes
+  const queryKey = useMemo(
+    () => `${debouncedSearch}-${sortBy}-${activityFilter}`,
+    [debouncedSearch, sortBy, activityFilter]
+  );
+
+  // Reset pagination when query key changes
+  const [lastQueryKey, setLastQueryKey] = useState(queryKey);
+  if (queryKey !== lastQueryKey) {
+    setLastQueryKey(queryKey);
+    if (paginationOpts.cursor !== null) {
+      setPaginationOpts({ numItems: 50, cursor: null });
+    }
+  }
+
   // Fetch users
   const usersResult = useQuery(api.adminUsers.listUsers, {
     paginationOpts,
@@ -75,21 +90,22 @@ function UserManagementPageContent() {
   // Fetch user statistics for all users in current page
   const users = usersResult?.page || [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userStatsQueries = users.map((user: any) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery(api.adminUsers.getUserStatistics, { userId: user.clerkId })
+  const userIds = users.map((user: any) => user.clerkId);
+
+  // Fetch batch statistics for all users at once
+  const batchStats = useQuery(
+    api.adminUsers.getBatchUserStatistics,
+    userIds.length > 0 ? { userIds } : "skip"
   );
 
-  // Build userStats map
+  // Build userStats map from batch results
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userStats = new Map<string, any>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  users.forEach((user: any, index: number) => {
-    const stats = userStatsQueries[index];
-    if (stats) {
-      userStats.set(user.clerkId, stats);
-    }
-  });
+  if (batchStats) {
+    Object.entries(batchStats).forEach(([userId, stats]) => {
+      userStats.set(userId, stats);
+    });
+  }
 
   // Handle pagination
   const handleNextPage = () => {
@@ -108,14 +124,6 @@ function UserManagementPageContent() {
     });
   };
 
-  // Reset pagination when filters change
-  useEffect(() => {
-    setPaginationOpts({
-      numItems: 50,
-      cursor: null,
-    });
-  }, [debouncedSearch, sortBy, activityFilter]);
-
   const isLoading = usersResult === undefined;
   const hasNextPage = usersResult && !usersResult.isDone;
   const hasPreviousPage = paginationOpts.cursor !== null;
@@ -131,7 +139,7 @@ function UserManagementPageContent() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12 md:ml-64">
+      <div className="w-full px-6 py-12">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">

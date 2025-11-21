@@ -202,12 +202,12 @@ export function UserListTable({
   return (
     <>
       {/* Desktop Table View - Hidden on mobile */}
-      <div className="hidden lg:block rounded-md border">
-        <Table>
+      <div className="hidden lg:block rounded-md border overflow-x-auto">
+        <Table className="min-w-[1200px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead>
+              <TableHead className="min-w-[200px]">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -218,8 +218,8 @@ export function UserListTable({
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead className="hidden xl:table-cell">Email</TableHead>
-              <TableHead>
+              <TableHead className="min-w-[180px]">Email</TableHead>
+              <TableHead className="min-w-[120px]">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -230,7 +230,7 @@ export function UserListTable({
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="min-w-[100px]">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -241,20 +241,14 @@ export function UserListTable({
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead className="text-center hidden xl:table-cell">
-                Wizards
+              <TableHead className="text-center w-20">Wizards</TableHead>
+              <TableHead className="text-center w-24">Duels</TableHead>
+              <TableHead className="text-center w-24">Campaign</TableHead>
+              <TableHead className="text-center w-20">Credits</TableHead>
+              <TableHead className="w-28">Subscription</TableHead>
+              <TableHead className="text-right min-w-[280px] sticky right-0 bg-background">
+                Actions
               </TableHead>
-              <TableHead className="text-center hidden xl:table-cell">
-                Duels
-              </TableHead>
-              <TableHead className="text-center hidden xl:table-cell">
-                Campaign
-              </TableHead>
-              <TableHead className="text-center">Credits</TableHead>
-              <TableHead className="hidden xl:table-cell">
-                Subscription
-              </TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -293,8 +287,8 @@ export function UserListTable({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <span className="text-sm text-muted-foreground">
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground truncate block max-w-[180px]">
                         {user.email || "N/A"}
                       </span>
                     </TableCell>
@@ -310,18 +304,18 @@ export function UserListTable({
                         <Badge variant="outline">Loading...</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-center hidden xl:table-cell">
+                    <TableCell className="text-center">
                       <span className="font-medium">
                         {stats?.totalWizards ?? "-"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center hidden xl:table-cell">
+                    <TableCell className="text-center">
                       {stats ? (
                         <div className="flex flex-col items-center">
                           <span className="font-medium">
                             {stats.multiplayerDuels.total}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {stats.multiplayerDuels.wins}W /{" "}
                             {stats.multiplayerDuels.losses}L
                           </span>
@@ -330,13 +324,13 @@ export function UserListTable({
                         <span>-</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center hidden xl:table-cell">
+                    <TableCell className="text-center">
                       {stats ? (
                         <div className="flex flex-col items-center">
                           <span className="font-medium">
                             {stats.campaignBattles.total}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
                             Progress: {stats.campaignBattles.currentProgress}
                           </span>
                         </div>
@@ -356,17 +350,12 @@ export function UserListTable({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell">
+                    <TableCell>
                       {getSubscriptionBadge(user.subscriptionTier)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right sticky right-0 bg-background">
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hidden xl:inline-flex"
-                          asChild
-                        >
+                        <Button variant="outline" size="sm" asChild>
                           <Link
                             href={`/users/${user.userId || user.clerkId}`}
                             target="_blank"
@@ -379,7 +368,6 @@ export function UserListTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="hidden xl:inline-flex"
                             onClick={() =>
                               onViewCreditHistory(
                                 user.clerkId,
@@ -402,15 +390,18 @@ export function UserListTable({
                             )
                           }
                         >
-                          <Coins className="h-4 w-4 lg:mr-1" />
-                          <span className="hidden lg:inline">Grant</span>
+                          <Coins className="h-4 w-4 mr-1" />
+                          Grant
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                   {isExpanded && stats && (
                     <TableRow key={`${user._id}-expanded`}>
-                      <TableCell colSpan={11} className="bg-muted/30 p-6">
+                      <TableCell
+                        colSpan={11}
+                        className="bg-muted/30 p-6 sticky left-0 right-0"
+                      >
                         <UserStatsCard
                           stats={stats}
                           userName={getUserDisplayName(user)}
