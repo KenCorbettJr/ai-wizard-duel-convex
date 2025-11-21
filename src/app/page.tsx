@@ -55,7 +55,7 @@ function LandingPage() {
         <div className="absolute inset-0 hero-gradient" />
         <div className="container mx-auto h-[95vh] relative z-10 flex items-end">
           <div className="text-center max-w-2xl mx-auto p-4 mt-96">
-            <h1 className="text-6xl font-bold mb-6 text-white">
+            <h1 className="text-6xl font-bold mb-6 text-white font-[family-name:var(--font-cinzel)]">
               AI Wizard Duel
             </h1>
             <p className="text-2xl text-white mb-4">
@@ -91,7 +91,7 @@ function LandingPage() {
       <section className="bg-background py-16 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6">
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
               Unique Gameplay Mechanics
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -121,7 +121,7 @@ function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">
+              <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
                 Only Limited By Your Imagination
               </h2>
               <p className="text-lg text-muted-foreground mb-6">
@@ -155,7 +155,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6">
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
               Master the Art of Magical Combat
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -189,7 +189,9 @@ function LandingPage() {
               description="Two wizards locked in an epic battle of light and shadow"
             />
             <div>
-              <h2 className="text-3xl font-bold mb-6">Epic Magical Battles</h2>
+              <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+                Epic Magical Battles
+              </h2>
               <p className="text-lg text-muted-foreground mb-6">
                 Every duel tells a unique story. Cast spells that interact in
                 unexpected ways, create magical chain reactions, and experience
@@ -216,7 +218,9 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6">Fun and Hilarious Duels</h2>
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+              Fun and Hilarious Duels
+            </h2>
             <p className="text-lg text-muted-foreground mb-8">
               AI Wizard Duel isn&apos;t just about strategy and creativity;
               it&apos;s also about having fun! The unpredictable nature of
@@ -245,7 +249,7 @@ function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <Coins className="w-12 h-12 mb-4 text-yellow-500 inline-block" />
-            <h2 className="text-3xl font-bold mb-6">
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
               Bring Your Spells to Life
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -285,7 +289,9 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6">Choose Your Path</h2>
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+              Choose Your Path
+            </h2>
             <p className="text-lg text-muted-foreground">
               Start free and upgrade when you&apos;re ready to unleash your full
               magical potential.
@@ -324,7 +330,9 @@ function LandingPage() {
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6">How It Works</h2>
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+              How It Works
+            </h2>
             <p className="text-lg text-muted-foreground">
               Get started in minutes and begin your magical journey
             </p>
@@ -334,7 +342,9 @@ function LandingPage() {
               <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl font-bold text-purple-600">1</span>
               </div>
-              <h3 className="text-xl font-semibold">Sign Up Free</h3>
+              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+                Sign Up Free
+              </h3>
               <p className="text-muted-foreground">
                 Create your account and get 10 free image credits to start
               </p>
@@ -343,7 +353,9 @@ function LandingPage() {
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl font-bold text-blue-600">2</span>
               </div>
-              <h3 className="text-xl font-semibold">Create Your Wizard</h3>
+              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+                Create Your Wizard
+              </h3>
               <p className="text-muted-foreground">
                 Design your magical character with AI-generated artwork
               </p>
@@ -352,7 +364,9 @@ function LandingPage() {
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl font-bold text-green-600">3</span>
               </div>
-              <h3 className="text-xl font-semibold">Cast Spells</h3>
+              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+                Cast Spells
+              </h3>
               <p className="text-muted-foreground">
                 Enter duels and cast creative spells against other wizards
               </p>
@@ -361,7 +375,9 @@ function LandingPage() {
               <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl font-bold text-yellow-600">4</span>
               </div>
-              <h3 className="text-xl font-semibold">Watch Magic Unfold</h3>
+              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+                Watch Magic Unfold
+              </h3>
               <p className="text-muted-foreground">
                 See your spells come to life with AI-generated stories and
                 images
@@ -375,7 +391,9 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6">What Players Are Saying</h2>
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+              What Players Are Saying
+            </h2>
             <p className="text-lg text-muted-foreground">
               Join thousands of wizards already casting spells and having epic
               duels
@@ -463,7 +481,9 @@ function LandingPage() {
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
           <Trophy className="w-12 h-12 mb-4 text-primary inline-block" />
-          <h2 className="text-3xl font-bold mb-6">Leaderboard</h2>
+          <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            Leaderboard
+          </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             See who&apos;s mastering the arcane arts! Our leaderboard tracks the
             most successful wizards. Climb the ranks, earn recognition, and
@@ -484,7 +504,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6">
+            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
               Frequently Asked Questions
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -577,7 +597,7 @@ function LandingPage() {
       {/* Call to Action */}
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">
+          <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
             Begin Your Magical Journey
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">

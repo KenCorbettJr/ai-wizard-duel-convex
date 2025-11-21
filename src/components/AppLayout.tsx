@@ -25,12 +25,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="min-h-screen">
           <LeftSidebar />
 
-          {/* Main content area with left margin for desktop sidebar */}
-          <div className="md:ml-64">
-            {/* Show navbar only on mobile for hamburger menu space */}
-            <Navbar className="md:hidden pl-16" />
-            {children}
-          </div>
+          {/* Main content area with left margin for desktop sidebar and top padding for mobile navbar */}
+          <div className="md:ml-64 pt-[57px] md:pt-0">{children}</div>
         </div>
       )}
     </>

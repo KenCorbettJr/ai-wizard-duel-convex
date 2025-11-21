@@ -32,7 +32,7 @@ export default function DuelsPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <div className="container mx-auto px-6 py-12">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
+          <h2 className="text-3xl font-bold text-foreground mb-2 font-[family-name:var(--font-cinzel)]">
             Magical Duels
           </h2>
           <p className="text-muted-foreground">
@@ -160,7 +160,7 @@ export default function DuelsPage() {
 
         <div className="grid lg:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-2xl font-bold text-foreground mb-4">
+            <h3 className="text-2xl font-bold text-foreground mb-4 font-[family-name:var(--font-cinzel)]">
               Your Duels
             </h3>
             {playerDuels === undefined ? (
@@ -205,7 +205,7 @@ export default function DuelsPage() {
           </div>
 
           <div>
-            <h3 className="text-2xl font-bold text-foreground mb-4">
+            <h3 className="text-2xl font-bold text-foreground mb-4 font-[family-name:var(--font-cinzel)]">
               Available Duels
             </h3>
             {activeDuels === undefined ? (

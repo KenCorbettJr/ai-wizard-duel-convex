@@ -58,7 +58,9 @@ export default function MyWizardsPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">My Wizards</h1>
+              <h1 className="text-4xl font-bold mb-2 font-[family-name:var(--font-cinzel)]">
+                My Wizards
+              </h1>
               <p className="text-muted-foreground">
                 Manage your magical champions and view their achievements
               </p>
@@ -153,7 +155,7 @@ export default function MyWizardsPage() {
                         <Scroll className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-foreground">
+                        <h3 className="text-lg font-semibold text-foreground font-[family-name:var(--font-cinzel)]">
                           Ready for Campaign Mode?
                         </h3>
                         <p className="text-muted-foreground">
@@ -193,7 +195,7 @@ export default function MyWizardsPage() {
                 <div className="mb-6">
                   <Wand2 className="h-20 w-20 mx-auto text-purple-600 mb-4" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-3">
+                <h2 className="text-2xl font-semibold mb-3 font-[family-name:var(--font-cinzel)]">
                   Discover Magical Wizards!
                 </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
@@ -221,7 +223,9 @@ export default function MyWizardsPage() {
               <div className="mb-6">
                 <Wand2 className="h-20 w-20 mx-auto text-purple-600 mb-4" />
               </div>
-              <h2 className="text-2xl font-semibold mb-3">No wizards yet!</h2>
+              <h2 className="text-2xl font-semibold mb-3 font-[family-name:var(--font-cinzel)]">
+                No wizards yet!
+              </h2>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Create your first wizard to start your magical journey. Each
                 wizard has unique abilities and can participate in epic duels.

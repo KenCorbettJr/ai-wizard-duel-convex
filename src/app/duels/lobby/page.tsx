@@ -109,7 +109,7 @@ export default function DuelLobbyPage() {
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto text-purple-600 mb-4" />
-              <h2 className="text-xl font-semibold mb-2 text-white">
+              <h2 className="text-xl font-semibold mb-2 text-white font-[family-name:var(--font-cinzel)]">
                 Match Found!
               </h2>
               <p className="text-gray-300">Redirecting you to your duel...</p>
@@ -160,7 +160,7 @@ export default function DuelLobbyPage() {
             </Link>
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex items-center gap-3">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex items-center gap-3 font-[family-name:var(--font-cinzel)]">
               <Users className="h-8 w-8 text-purple-600" />
               Duel Lobby
             </h1>

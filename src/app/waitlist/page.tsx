@@ -25,7 +25,7 @@ export default function WaitlistPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-purple-600 to-blue-600 rounded-full mb-6">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-4xl font-bold mb-4">
+            <h1 className="text-4xl font-bold mb-4 font-[family-name:var(--font-cinzel)]">
               Join the AI Wizard Duel Waitlist
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -85,7 +85,7 @@ export default function WaitlistPage() {
 
           {/* What to Expect Section */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-center mb-8">
+            <h2 className="text-2xl font-bold text-center mb-8 font-[family-name:var(--font-cinzel)]">
               What to Expect
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -146,7 +146,7 @@ export default function WaitlistPage() {
 
           {/* Features Preview */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-center mb-8">
+            <h2 className="text-2xl font-bold text-center mb-8 font-[family-name:var(--font-cinzel)]">
               What You&apos;ll Get Access To
             </h2>
             <Card>
@@ -157,7 +157,7 @@ export default function WaitlistPage() {
                       <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">
+                      <h3 className="font-semibold mb-1 font-[family-name:var(--font-cinzel)]">
                         Create Custom Wizards
                       </h3>
                       <p className="text-sm text-muted-foreground">
@@ -172,7 +172,7 @@ export default function WaitlistPage() {
                       <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">
+                      <h3 className="font-semibold mb-1 font-[family-name:var(--font-cinzel)]">
                         Cast Creative Spells
                       </h3>
                       <p className="text-sm text-muted-foreground">
@@ -187,7 +187,9 @@ export default function WaitlistPage() {
                       <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">AI-Powered Battles</h3>
+                      <h3 className="font-semibold mb-1 font-[family-name:var(--font-cinzel)]">
+                        AI-Powered Battles
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         Watch as AI weaves your spells into epic narratives with
                         stunning visuals.
@@ -200,7 +202,7 @@ export default function WaitlistPage() {
                       <Sparkles className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">
+                      <h3 className="font-semibold mb-1 font-[family-name:var(--font-cinzel)]">
                         Multiplayer & Campaign
                       </h3>
                       <p className="text-sm text-muted-foreground">
@@ -216,7 +218,7 @@ export default function WaitlistPage() {
 
           {/* FAQ Section */}
           <div>
-            <h2 className="text-2xl font-bold text-center mb-8">
+            <h2 className="text-2xl font-bold text-center mb-8 font-[family-name:var(--font-cinzel)]">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">

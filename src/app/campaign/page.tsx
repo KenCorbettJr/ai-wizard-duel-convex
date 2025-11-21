@@ -155,7 +155,7 @@ export default function CampaignPage() {
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-[family-name:var(--font-cinzel)]">
                 Campaign Mode
               </h1>
             </div>
@@ -219,7 +219,7 @@ export default function CampaignPage() {
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-[family-name:var(--font-cinzel)]">
                 Campaign Mode
               </h1>
             </div>
@@ -284,7 +284,7 @@ export default function CampaignPage() {
             <CampaignOpponentFan opponents={campaignOpponents} />
             <div className="flex items-center justify-center gap-3 mb-4">
               <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-[family-name:var(--font-cinzel)]">
                 Single Player Campaign
               </h1>
             </div>
@@ -295,7 +295,7 @@ export default function CampaignPage() {
 
             {/* Wizard Cards */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-2">
+              <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-2 font-[family-name:var(--font-cinzel)]">
                 <Wand2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 Your Campaign Wizards
               </h2>

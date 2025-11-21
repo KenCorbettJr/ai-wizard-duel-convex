@@ -61,7 +61,9 @@ const SidebarContent = ({
     <div className="p-6 border-b border-border">
       <div className="flex items-center justify-between">
         <Link href="/" onClick={() => setIsOpen(false)}>
-          <h1 className="text-xl font-bold text-foreground">AI Wizard Duel</h1>
+          <h1 className="text-xl font-bold text-foreground font-[family-name:var(--font-cinzel)]">
+            AI Wizard Duel
+          </h1>
         </Link>
         {/* Close button for mobile */}
         <Button
@@ -315,17 +317,25 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
 
   return (
     <>
-      {/* Mobile hamburger button - hide when sidebar is open */}
-      {!isOpen && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="md:hidden fixed top-6 left-4 z-50"
-          onClick={toggleSidebar}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      )}
+      {/* Mobile navbar - always visible on mobile */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+        <div className="flex items-center justify-between p-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSidebar}
+            className="mr-2"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Link href="/" onClick={() => setIsOpen(false)}>
+            <h1 className="text-lg font-bold text-foreground font-[family-name:var(--font-cinzel)]">
+              AI Wizard Duel
+            </h1>
+          </Link>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+      </div>
 
       {/* Mobile overlay */}
       {isOpen && (
@@ -338,8 +348,12 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full bg-background border-r border-border z-40 transition-transform duration-300 ease-in-out",
+          "fixed left-0 h-full bg-background border-r border-border z-40 transition-transform duration-300 ease-in-out",
           "w-64",
+          // Desktop: always visible, starts at top
+          "md:top-0",
+          // Mobile: starts below navbar, slide in/out
+          "top-[57px] md:top-0",
           // Desktop: always visible
           "md:translate-x-0",
           // Mobile: slide in/out

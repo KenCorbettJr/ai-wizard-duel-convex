@@ -266,7 +266,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <div className="container mx-auto px-6 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
+          <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3 font-[family-name:var(--font-cinzel)]">
             <Trophy className="h-8 w-8 text-yellow-500" />
             Wizard Leaderboard
           </h1>
@@ -370,7 +370,9 @@ export default function LeaderboardPage() {
           <Card>
             <CardContent className="text-center py-12">
               <Zap className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Wizards Found</h3>
+              <h3 className="text-xl font-semibold mb-2 font-[family-name:var(--font-cinzel)]">
+                No Wizards Found
+              </h3>
               <p className="text-muted-foreground">
                 No wizards meet the current filter criteria for{" "}
                 {period === "all" ? "all time" : `this ${period}`}. Try lowering

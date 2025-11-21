@@ -20,7 +20,9 @@ export function CreditsPageClient() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-3xl font-bold mb-4">Image Credits</h1>
+          <h1 className="text-3xl font-bold mb-4 font-[family-name:var(--font-cinzel)]">
+            Image Credits
+          </h1>
           <p className="text-muted-foreground mb-8">
             Please sign in to view and manage your image generation credits.
           </p>
@@ -34,7 +36,7 @@ export function CreditsPageClient() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold flex items-center justify-center gap-3">
+          <h1 className="text-3xl font-bold flex items-center justify-center gap-3 font-[family-name:var(--font-cinzel)]">
             <Coins className="h-8 w-8 text-yellow-500" />
             Image Credits
           </h1>
@@ -64,7 +66,7 @@ export function CreditsPageClient() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
                   Unlimited Image Generation
                 </h4>
                 <p className="text-sm text-purple-700 dark:text-purple-300">
@@ -72,7 +74,7 @@ export function CreditsPageClient() {
                 </p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
                   Advanced Wizard Customization
                 </h4>
                 <p className="text-sm text-purple-700 dark:text-purple-300">
@@ -80,7 +82,7 @@ export function CreditsPageClient() {
                 </p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
                   Priority AI Processing
                 </h4>
                 <p className="text-sm text-purple-700 dark:text-purple-300">
@@ -88,7 +90,7 @@ export function CreditsPageClient() {
                 </p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
                   Ad-Free Experience
                 </h4>
                 <p className="text-sm text-purple-700 dark:text-purple-300">

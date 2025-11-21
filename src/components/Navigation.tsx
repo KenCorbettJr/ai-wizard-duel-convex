@@ -17,7 +17,9 @@ export function Navigation({
   return (
     <nav className="flex items-center justify-between p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
       <Link href="/">
-        <h1 className="text-2xl font-bold">AI Wizard Duel</h1>
+        <h1 className="text-2xl font-bold font-[family-name:var(--font-cinzel)]">
+          AI Wizard Duel
+        </h1>
       </Link>
       <div className="flex items-center gap-4">
         <ThemeToggle />

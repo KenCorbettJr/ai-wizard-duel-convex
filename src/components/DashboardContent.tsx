@@ -246,7 +246,7 @@ export default function DashboardContent() {
             <div className="mb-6 sm:mb-8">
               <div className="flex flex-col gap-4 mb-6">
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-[family-name:var(--font-cinzel)]">
                     Wizard Dashboard
                   </h2>
                   <p className="text-muted-foreground text-sm sm:text-base">
@@ -338,7 +338,7 @@ export default function DashboardContent() {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col gap-4 mb-6">
                   <div>
-                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-orange-700 dark:text-orange-300 font-[family-name:var(--font-cinzel)]">
                       <Swords className="h-5 w-5 sm:h-6 sm:w-6" />
                       Duels
                     </h3>
@@ -411,7 +411,7 @@ export default function DashboardContent() {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <div>
-                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-purple-700 dark:text-purple-300 font-[family-name:var(--font-cinzel)]">
                       <Wand2 className="h-5 w-5 sm:h-6 sm:w-6" />
                       Your Wizards
                     </h3>
@@ -456,7 +456,7 @@ export default function DashboardContent() {
                       <div className="mb-4">
                         <Wand2 className="h-16 w-16 mx-auto text-purple-600" />
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">
+                      <h3 className="text-xl font-semibold mb-2 font-[family-name:var(--font-cinzel)]">
                         No wizards yet!
                       </h3>
                       <p className="text-muted-foreground mb-4">
