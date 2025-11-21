@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Crown,
+  Users,
 } from "lucide-react";
 
 interface AdminNavItem {
@@ -40,7 +41,7 @@ const AdminSidebarContent = ({
     <div className="p-6 border-b border-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600">
+          <div className="p-2 rounded-lg bg-linear-to-br from-purple-600 to-pink-600">
             <Crown className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -133,6 +134,11 @@ const adminNavItems: AdminNavItem[] = [
     href: "/admin/platform-stats",
     label: "Platform Stats",
     icon: BarChart3,
+  },
+  {
+    href: "/admin/users",
+    label: "User Management",
+    icon: Users,
   },
   {
     href: "/admin/seasons",

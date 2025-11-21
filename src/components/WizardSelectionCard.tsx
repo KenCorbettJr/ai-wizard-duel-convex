@@ -4,11 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConvexImage } from "./ConvexImage";
 import { CheckCircle, Circle, Lock } from "lucide-react";
+import { Crown } from "@/components/ui/crown-icon";
 import type { Doc } from "../../convex/_generated/dataModel";
 import Image from "next/image";
 
 interface WizardWithProgress {
-  wizard: Doc<"wizards">;
+  wizard: Doc<"wizards"> & { ownerSubscriptionTier?: "FREE" | "PREMIUM" };
   progress?: Doc<"wizardCampaignProgress">;
   effectiveLuckScore?: number;
 }
@@ -48,11 +49,12 @@ export function WizardSelectionCard({
   if (variant === "detailed" && showCampaignProgress) {
     return (
       <Card
-        className={`cursor-pointer transition-all hover:shadow-md ${
-          isSelected
+        className={`cursor-pointer transition-all hover:shadow-md ${isSelected
             ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950"
-            : "hover:border-muted-foreground"
-        }`}
+            : wizard.ownerSubscriptionTier === "PREMIUM"
+              ? "border-2 border-purple-500/70 dark:border-purple-400/70 shadow-purple-500/20"
+              : "hover:border-muted-foreground"
+          }`}
         onClick={handleClick}
       >
         <CardContent className="p-4 space-y-4">
@@ -86,7 +88,18 @@ export function WizardSelectionCard({
             {/* Wizard Details */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-semibold text-lg">{wizard.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-lg">{wizard.name}</h3>
+                  {wizard.ownerSubscriptionTier === "PREMIUM" && (
+                    <Badge
+                      variant="default"
+                      className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold text-[10px] h-5 px-1.5"
+                    >
+                      <Crown className="h-2.5 w-2.5" />
+                      Premium
+                    </Badge>
+                  )}
+                </div>
                 <Badge variant="outline">{defeatedCount}/10 Opponents</Badge>
               </div>
               <p className="text-sm text-muted-foreground truncate mb-2">
@@ -136,14 +149,13 @@ export function WizardSelectionCard({
                     key={opponentNumber}
                     className={`
                       w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                      ${
-                        isDefeated
-                          ? "bg-green-500 text-white"
-                          : isCurrent
-                            ? "bg-blue-500 text-white ring-2 ring-blue-300"
-                            : isLocked
-                              ? "bg-gray-200 text-gray-400 dark:bg-gray-700"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      ${isDefeated
+                        ? "bg-green-500 text-white"
+                        : isCurrent
+                          ? "bg-blue-500 text-white ring-2 ring-blue-300"
+                          : isLocked
+                            ? "bg-gray-200 text-gray-400 dark:bg-gray-700"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                       }
                     `}
                     title={
@@ -185,11 +197,12 @@ export function WizardSelectionCard({
   // Compact variant (for duels and simple selection)
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-md ${
-        isSelected
+      className={`cursor-pointer transition-all hover:shadow-md ${isSelected
           ? "ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/50"
-          : "hover:border-muted-foreground"
-      }`}
+          : wizard.ownerSubscriptionTier === "PREMIUM"
+            ? "border-2 border-purple-500/70 dark:border-purple-400/70 shadow-purple-500/20"
+            : "hover:border-muted-foreground"
+        }`}
       onClick={handleClick}
     >
       <CardContent className="p-3">
@@ -221,7 +234,12 @@ export function WizardSelectionCard({
 
           {/* Wizard Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="font-medium text-foreground">{wizard.name}</h4>
+            <div className="flex items-center gap-1.5">
+              <h4 className="font-medium text-foreground">{wizard.name}</h4>
+              {wizard.ownerSubscriptionTier === "PREMIUM" && (
+                <Crown className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+              )}
+            </div>
             <p className="text-sm text-muted-foreground truncate">
               {wizard.description}
             </p>

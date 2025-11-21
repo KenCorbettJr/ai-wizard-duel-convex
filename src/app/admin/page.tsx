@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Crown,
 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 const adminFeatures = [
   {
@@ -23,6 +25,14 @@ const adminFeatures = [
     icon: BarChart3,
     color: "text-blue-600 dark:text-blue-400",
     bgColor: "bg-blue-50 dark:bg-blue-950",
+  },
+  {
+    title: "User Management",
+    description: "View and manage users, grant credits, and monitor activity",
+    href: "/admin/users",
+    icon: Users,
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-50 dark:bg-green-950",
   },
   {
     title: "Campaign Opponents",
@@ -52,6 +62,8 @@ const adminFeatures = [
 ];
 
 export default function AdminDashboardPage() {
+  const platformStats = useQuery(api.adminUsers.getPlatformStats);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
       <div className="container mx-auto px-6 py-12">
@@ -142,16 +154,18 @@ export default function AdminDashboardPage() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Active Users
+                    Total Users
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-green-600" />
-                    <span className="text-2xl font-bold">--</span>
+                    <span className="text-2xl font-bold">
+                      {platformStats?.totalUsers ?? "--"}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Last 24 hours
+                    {platformStats?.activeUsers24h ?? "--"} active in last 24h
                   </p>
                 </CardContent>
               </Card>
@@ -165,10 +179,12 @@ export default function AdminDashboardPage() {
                 <CardContent>
                   <div className="flex items-center gap-2">
                     <Swords className="h-5 w-5 text-blue-600" />
-                    <span className="text-2xl font-bold">--</span>
+                    <span className="text-2xl font-bold">
+                      {platformStats?.activeDuels ?? "--"}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Currently ongoing
+                    {platformStats?.totalDuels ?? "--"} total duels
                   </p>
                 </CardContent>
               </Card>

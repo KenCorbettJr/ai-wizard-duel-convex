@@ -7,6 +7,7 @@ import { ClerkProvider } from "@/providers/ClerkProvider";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,6 +61,7 @@ export default function RootLayout({
               >
                 <AppLayout>{children}</AppLayout>
               </Suspense>
+              <Toaster richColors position="top-right" />
             </ConvexClientProvider>
           </ClerkProvider>
         </ThemeProvider>

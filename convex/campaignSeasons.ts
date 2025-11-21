@@ -347,7 +347,10 @@ export const getUserCurrentSeasonProgress = query({
       progress: v.array(
         v.object({
           _id: v.id("wizardCampaignProgress"),
+          _creationTime: v.number(),
           wizardId: v.id("wizards"),
+          userId: v.string(),
+          seasonId: v.id("campaignSeasons"),
           currentOpponent: v.number(),
           defeatedOpponents: v.array(v.number()),
           hasCompletionRelic: v.boolean(),
@@ -569,12 +572,9 @@ export const createDefaultSeasonInternal = internalMutation({
       .map((opponent) => opponent._id);
 
     if (sortedOpponents.length === 0) {
-      // Return success but indicate no opponents available
-      return {
-        success: true,
-        message: "Default season created but no opponents available",
-        seasonId: "" as any, // This will be handled by the caller
-      };
+      throw new Error(
+        "No campaign opponents found. Please create campaign opponents first."
+      );
     }
 
     // Create a permanent default season

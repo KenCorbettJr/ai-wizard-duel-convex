@@ -22,6 +22,7 @@ interface WizardCardProps {
     ownerDisplayName?: string;
     hasCompletionRelic?: boolean;
     effectiveLuckScore?: number;
+    ownerSubscriptionTier?: "FREE" | "PREMIUM";
   };
   points?: number;
   hitPoints?: number;
@@ -47,6 +48,9 @@ export const WizardCard = memo(function WizardCard({
   const getBorderClasses = () => {
     if (isWinner) {
       return "border-4 border-yellow-400 dark:border-yellow-300 ring-4 ring-yellow-400/30 dark:ring-yellow-300/30 shadow-yellow-400/20 dark:shadow-yellow-300/20";
+    }
+    if (wizard.ownerSubscriptionTier === "PREMIUM") {
+      return "border-2 border-purple-500/70 dark:border-purple-400/70 ring-2 ring-purple-500/20 dark:ring-purple-400/20 shadow-purple-500/20 dark:shadow-purple-400/20";
     }
     if (isUserWizard) {
       return "border-2 border-blue-500/70 dark:border-blue-400/70 ring-2 ring-blue-500/20 dark:ring-blue-400/20";
@@ -83,6 +87,15 @@ export const WizardCard = memo(function WizardCard({
               >
                 <Award className="h-3 w-3" />
                 Relic
+              </Badge>
+            )}
+            {wizard.ownerSubscriptionTier === "PREMIUM" && !isWinner && (
+              <Badge
+                variant="default"
+                className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
+              >
+                <Crown className="h-3 w-3" />
+                Premium
               </Badge>
             )}
             {isWinner && (
@@ -151,13 +164,12 @@ export const WizardCard = memo(function WizardCard({
               </div>
               <Progress
                 value={(hitPoints / maxHitPoints) * 100}
-                className={`h-2 ${
-                  hitPoints / maxHitPoints > 0.6
+                className={`h-2 ${hitPoints / maxHitPoints > 0.6
                     ? "[&>div]:bg-green-500"
                     : hitPoints / maxHitPoints > 0.3
                       ? "[&>div]:bg-yellow-500"
                       : "[&>div]:bg-red-500"
-                }`}
+                  }`}
               />
             </div>
           )}
