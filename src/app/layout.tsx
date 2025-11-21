@@ -26,6 +26,21 @@ export const metadata: Metadata = {
   },
   description:
     "Where Wizards Clash and Legends Rise! Create magical spells, duel other wizards, and experience epic battles brought to life by AI.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AI Wizard Duel",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  themeColor: "#9333ea",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
