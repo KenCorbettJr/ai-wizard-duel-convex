@@ -32,6 +32,7 @@ import type * as imageGenerationConfig from "../imageGenerationConfig.js";
 import type * as metadata from "../metadata.js";
 import type * as mocks_mockServices from "../mocks/mockServices.js";
 import type * as processDuelRound from "../processDuelRound.js";
+import type * as promoteUser from "../promoteUser.js";
 import type * as seasonHelpers from "../seasonHelpers.js";
 import type * as sessionService from "../sessionService.js";
 import type * as subscriptionService from "../subscriptionService.js";
@@ -84,6 +85,7 @@ declare const fullApi: ApiFromModules<{
   metadata: typeof metadata;
   "mocks/mockServices": typeof mocks_mockServices;
   processDuelRound: typeof processDuelRound;
+  promoteUser: typeof promoteUser;
   seasonHelpers: typeof seasonHelpers;
   sessionService: typeof sessionService;
   subscriptionService: typeof subscriptionService;

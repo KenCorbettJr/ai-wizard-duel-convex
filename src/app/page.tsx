@@ -62,15 +62,15 @@ function LandingPage() {
               Where Wizards Clash and Legends Rise!
             </p>
             <SignedOut>
-              <SignInButton>
+              <Link href="/waitlist">
                 <Button
                   size="lg"
                   className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
                 >
                   <Zap className="w-5 h-5 mr-2" />
-                  Start Dueling
+                  Join Waitlist
                 </Button>
-              </SignInButton>
+              </Link>
             </SignedOut>
             <SignedIn>
               <Link href="/">
@@ -592,15 +592,15 @@ function LandingPage() {
               </Button>
             </Link>
             <SignedOut>
-              <SignInButton>
+              <Link href="/waitlist">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
                 >
                   <Zap className="w-5 h-5 mr-2" />
-                  Start Dueling
+                  Join Waitlist
                 </Button>
-              </SignInButton>
+              </Link>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard">

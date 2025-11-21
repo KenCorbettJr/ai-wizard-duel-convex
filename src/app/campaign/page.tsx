@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
+import { WaitlistGuard } from "@/components/WaitlistGuard";
 import { CampaignErrorBoundary } from "@/components/CampaignErrorBoundary";
 import { CampaignLoadingState } from "@/components/CampaignLoadingState";
 import { CampaignOpponentFan } from "@/components/CampaignOpponentFan";
@@ -48,82 +49,84 @@ function CampaignWizardCard({
   const hasRelic = progress?.hasCompletionRelic || false;
 
   return (
-    <Link href={`/campaign/wizard/${wizard._id}`} className="block">
-      <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] border-border/50 dark:border-border/30">
-        {/* Large Wizard Image */}
-        <div className="relative">
-          {wizard.illustration && (
-            <div className="h-64 w-full overflow-hidden">
-              <ConvexImage
-                storageId={wizard.illustration}
-                alt={wizard.name}
-                width={400}
-                height={256}
-                className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
-              />
-            </div>
-          )}
+    <WaitlistGuard>
+      <Link href={`/campaign/wizard/${wizard._id}`} className="block">
+        <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] border-border/50 dark:border-border/30">
+          {/* Large Wizard Image */}
+          <div className="relative">
+            {wizard.illustration && (
+              <div className="h-64 w-full overflow-hidden">
+                <ConvexImage
+                  storageId={wizard.illustration}
+                  alt={wizard.name}
+                  width={400}
+                  height={256}
+                  className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
+                />
+              </div>
+            )}
 
-          {/* Status Badges */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
-            {hasRelic && (
-              <Badge
-                variant="default"
-                className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
-                title={`Campaign Relic (+1 Luck, Effective Luck: ${(wizard as EnhancedWizard).effectiveLuckScore || 11})`}
-              >
-                <Award className="h-3 w-3" />
-                Relic
-              </Badge>
-            )}
-            {isCompleted && (
-              <Badge
-                variant="default"
-                className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm font-bold"
-              >
-                <Crown className="h-3 w-3" />
-                Complete
-              </Badge>
-            )}
+            {/* Status Badges */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2">
+              {hasRelic && (
+                <Badge
+                  variant="default"
+                  className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
+                  title={`Campaign Relic (+1 Luck, Effective Luck: ${(wizard as EnhancedWizard).effectiveLuckScore || 11})`}
+                >
+                  <Award className="h-3 w-3" />
+                  Relic
+                </Badge>
+              )}
+              {isCompleted && (
+                <Badge
+                  variant="default"
+                  className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm font-bold"
+                >
+                  <Crown className="h-3 w-3" />
+                  Complete
+                </Badge>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Wizard Info */}
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl text-foreground dark:text-foreground/95 mb-2">
-            {wizard.name}
-          </CardTitle>
+          {/* Wizard Info */}
+          <CardHeader className="pb-3">
+            <CardTitle className="text-xl text-foreground dark:text-foreground/95 mb-2">
+              {wizard.name}
+            </CardTitle>
 
-          {/* Campaign Statistics */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Progress:</span>
-              <span className="font-medium text-foreground">
-                {defeatedOpponents}/10 opponents
-              </span>
-            </div>
-
-            {!isCompleted && (
+            {/* Campaign Statistics */}
+            <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Next opponent:</span>
+                <span className="text-muted-foreground">Progress:</span>
                 <span className="font-medium text-foreground">
-                  #{currentOpponent}
+                  {defeatedOpponents}/10 opponents
                 </span>
               </div>
-            )}
 
-            {hasRelic && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Luck bonus:</span>
-                <span className="font-medium text-purple-600 dark:text-purple-400">
-                  +1 (Relic)
-                </span>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-      </Card>
-    </Link>
+              {!isCompleted && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Next opponent:</span>
+                  <span className="font-medium text-foreground">
+                    #{currentOpponent}
+                  </span>
+                </div>
+              )}
+
+              {hasRelic && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Luck bonus:</span>
+                  <span className="font-medium text-purple-600 dark:text-purple-400">
+                    +1 (Relic)
+                  </span>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+        </Card>
+      </Link>
+    </WaitlistGuard>
   );
 }
 
@@ -243,17 +246,19 @@ export default function CampaignPage() {
                 opponents. Each wizard progresses individually through the
                 campaign.
               </p>
-              <div className="flex justify-center gap-4">
-                <Link href="/wizards/create">
-                  <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Wizard
-                  </Button>
-                </Link>
-                <Link href="/wizards">
-                  <Button variant="outline">View Wizards</Button>
-                </Link>
-              </div>
+              <WaitlistGuard>
+                <div className="flex justify-center gap-4">
+                  <Link href="/wizards/create">
+                    <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Wizard
+                    </Button>
+                  </Link>
+                  <Link href="/wizards">
+                    <Button variant="outline">View Wizards</Button>
+                  </Link>
+                </div>
+              </WaitlistGuard>
             </CardContent>
           </Card>
         </div>

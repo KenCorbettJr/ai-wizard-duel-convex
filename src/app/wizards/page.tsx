@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import { Doc } from "../../../convex/_generated/dataModel";
 import { WizardCard } from "@/components/WizardCard";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
+import { WaitlistGuard } from "@/components/WaitlistGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdDisplay } from "@/components/AdDisplay";
@@ -63,14 +64,16 @@ export default function MyWizardsPage() {
               </p>
             </div>
             {user && (
-              <Button
-                onClick={handleCreateWizard}
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-5 w-5" />
-                Create New Wizard
-              </Button>
+              <WaitlistGuard>
+                <Button
+                  onClick={handleCreateWizard}
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  Create New Wizard
+                </Button>
+              </WaitlistGuard>
             )}
           </div>
 
@@ -223,14 +226,16 @@ export default function MyWizardsPage() {
                 Create your first wizard to start your magical journey. Each
                 wizard has unique abilities and can participate in epic duels.
               </p>
-              <Button
-                onClick={handleCreateWizard}
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <Wand2 className="h-5 w-5" />
-                Create Your First Wizard
-              </Button>
+              <WaitlistGuard>
+                <Button
+                  onClick={handleCreateWizard}
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <Wand2 className="h-5 w-5" />
+                  Create Your First Wizard
+                </Button>
+              </WaitlistGuard>
             </CardContent>
           </Card>
         ) : (

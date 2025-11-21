@@ -17,6 +17,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { MigrationNotification } from "@/components/MigrationNotification";
+import { WaitlistGuard } from "@/components/WaitlistGuard";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -357,35 +358,44 @@ export default function DashboardContent() {
                         <span className="sm:hidden">All</span>
                       </Button>
                     </Link>
-                    <Link href="/duels/lobby" className="flex-1 sm:flex-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
+                    <WaitlistGuard>
+                      <Link href="/duels/lobby" className="flex-1 sm:flex-none">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Quick Match</span>
+                          <span className="sm:hidden">Lobby</span>
+                        </Button>
+                      </Link>
+                    </WaitlistGuard>
+                    <WaitlistGuard>
+                      <Link href="/duels/join" className="flex-1 sm:flex-none">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Join Code</span>
+                          <span className="sm:hidden">Join</span>
+                        </Button>
+                      </Link>
+                    </WaitlistGuard>
+                    <WaitlistGuard>
+                      <Link
+                        href="/duels/create"
+                        className="flex-1 sm:flex-none"
                       >
-                        <Users className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Quick Match</span>
-                        <span className="sm:hidden">Lobby</span>
-                      </Button>
-                    </Link>
-                    <Link href="/duels/join" className="flex-1 sm:flex-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Join Code</span>
-                        <span className="sm:hidden">Join</span>
-                      </Button>
-                    </Link>
-                    <Link href="/duels/create" className="flex-1 sm:flex-none">
-                      <Button size="sm" className="w-full sm:w-auto">
-                        <Swords className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Create Duel</span>
-                        <span className="sm:hidden">Create</span>
-                      </Button>
-                    </Link>
+                        <Button size="sm" className="w-full sm:w-auto">
+                          <Swords className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">Create Duel</span>
+                          <span className="sm:hidden">Create</span>
+                        </Button>
+                      </Link>
+                    </WaitlistGuard>
                   </div>
                 </div>
 
@@ -420,14 +430,16 @@ export default function DashboardContent() {
                         View All
                       </Button>
                     </Link>
-                    <Button
-                      size="sm"
-                      onClick={handleCreateWizard}
-                      className="flex-1 sm:flex-none w-full sm:w-auto"
-                    >
-                      <Wand2 className="h-4 w-4 mr-2" />
-                      Create Wizard
-                    </Button>
+                    <WaitlistGuard>
+                      <Button
+                        size="sm"
+                        onClick={handleCreateWizard}
+                        className="flex-1 sm:flex-none w-full sm:w-auto"
+                      >
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Create Wizard
+                      </Button>
+                    </WaitlistGuard>
                   </div>
                 </div>
 

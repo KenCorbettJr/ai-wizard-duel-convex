@@ -739,6 +739,96 @@ export const getBatchUserStatistics = query({
 });
 
 /**
+ * Update a user's role
+ * Admin-only function to change user permissions
+ */
+export const updateUserRole = mutation({
+  args: {
+    targetUserId: v.string(),
+    newRole: v.union(
+      v.literal("user"),
+      v.literal("admin"),
+      v.literal("super_admin")
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // Verify admin access
+    await verifySuperAdmin(ctx);
+
+    // Find target user by Clerk ID
+    const targetUser = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.targetUserId))
+      .first();
+
+    if (!targetUser) {
+      throw new Error("Target user not found");
+    }
+
+    // Update user's role
+    await ctx.db.patch(targetUser._id, {
+      role: args.newRole,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: `User role updated to ${args.newRole}`,
+    };
+  },
+});
+
+/**
+ * Update a user's role by email
+ * Admin-only function to change user permissions using email
+ */
+export const updateUserRoleByEmail = mutation({
+  args: {
+    email: v.string(),
+    newRole: v.union(
+      v.literal("user"),
+      v.literal("admin"),
+      v.literal("super_admin")
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // Allow this to work in development without admin check
+    if (process.env.NODE_ENV !== "development") {
+      await verifySuperAdmin(ctx);
+    }
+
+    // Find target user by email
+    const targetUser = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+
+    if (!targetUser) {
+      throw new Error(`User with email ${args.email} not found`);
+    }
+
+    // Update user's role
+    await ctx.db.patch(targetUser._id, {
+      role: args.newRole,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: `User ${args.email} role updated to ${args.newRole}`,
+    };
+  },
+});
+
+/**
  * Get credit transaction history for a specific user
  * Returns paginated list of all credit transactions
  */

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
+import { WaitlistGuard } from "@/components/WaitlistGuard";
 import { AdDisplay } from "@/components/AdDisplay";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { Swords, Users, Search, Shield } from "lucide-react";
@@ -24,7 +25,7 @@ export default function DuelsPage() {
   const activeDuels = useQuery(api.duels.getActiveDuels);
   const playerDuels = useQuery(
     api.duels.getPlayerDuels,
-    user?.id ? {} : "skip",
+    user?.id ? {} : "skip"
   );
 
   return (
@@ -67,9 +68,11 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               {user ? (
-                <Link href="/duels/lobby">
-                  <Button className="w-full">Join Lobby</Button>
-                </Link>
+                <WaitlistGuard>
+                  <Link href="/duels/lobby">
+                    <Button className="w-full">Join Lobby</Button>
+                  </Link>
+                </WaitlistGuard>
               ) : (
                 <Button disabled className="w-full">
                   Sign up to join
@@ -90,11 +93,13 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               {user ? (
-                <Link href="/duels/create">
-                  <Button variant="outline" className="w-full">
-                    Create Duel
-                  </Button>
-                </Link>
+                <WaitlistGuard>
+                  <Link href="/duels/create">
+                    <Button variant="outline" className="w-full">
+                      Create Duel
+                    </Button>
+                  </Link>
+                </WaitlistGuard>
               ) : (
                 <Button disabled variant="outline" className="w-full">
                   Sign up to create
@@ -115,11 +120,13 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               {user ? (
-                <Link href="/duels/join">
-                  <Button variant="outline" className="w-full">
-                    Join by Code
-                  </Button>
-                </Link>
+                <WaitlistGuard>
+                  <Link href="/duels/join">
+                    <Button variant="outline" className="w-full">
+                      Join by Code
+                    </Button>
+                  </Link>
+                </WaitlistGuard>
               ) : (
                 <Button disabled variant="outline" className="w-full">
                   Sign up to join
@@ -173,17 +180,19 @@ export default function DuelsPage() {
                   <p className="text-muted-foreground mb-4">
                     Create or join a duel to start your magical battles.
                   </p>
-                  <div className="flex gap-2 justify-center flex-wrap">
-                    <Link href="/duels/lobby">
-                      <Button>Quick Match</Button>
-                    </Link>
-                    <Link href="/duels/create">
-                      <Button variant="outline">Create Duel</Button>
-                    </Link>
-                    <Link href="/duels/join">
-                      <Button variant="outline">Join by Code</Button>
-                    </Link>
-                  </div>
+                  <WaitlistGuard>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      <Link href="/duels/lobby">
+                        <Button>Quick Match</Button>
+                      </Link>
+                      <Link href="/duels/create">
+                        <Button variant="outline">Create Duel</Button>
+                      </Link>
+                      <Link href="/duels/join">
+                        <Button variant="outline">Join by Code</Button>
+                      </Link>
+                    </div>
+                  </WaitlistGuard>
                 </CardContent>
               </Card>
             ) : (
@@ -207,7 +216,7 @@ export default function DuelsPage() {
                 </p>
               </div>
             ) : activeDuels.filter(
-                (duel) => !duel.players.includes(user?.id || ""),
+                (duel) => !duel.players.includes(user?.id || "")
               ).length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
@@ -220,14 +229,16 @@ export default function DuelsPage() {
                   <p className="text-muted-foreground mb-4">
                     Be the first to create a new duel!
                   </p>
-                  <div className="flex gap-2 justify-center">
-                    <Link href="/duels/lobby">
-                      <Button>Quick Match</Button>
-                    </Link>
-                    <Link href="/duels/create">
-                      <Button variant="outline">Create Duel</Button>
-                    </Link>
-                  </div>
+                  <WaitlistGuard>
+                    <div className="flex gap-2 justify-center">
+                      <Link href="/duels/lobby">
+                        <Button>Quick Match</Button>
+                      </Link>
+                      <Link href="/duels/create">
+                        <Button variant="outline">Create Duel</Button>
+                      </Link>
+                    </div>
+                  </WaitlistGuard>
                 </CardContent>
               </Card>
             ) : (

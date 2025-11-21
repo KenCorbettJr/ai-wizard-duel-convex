@@ -5,10 +5,12 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { useWaitlistStatus } from "@/hooks/useWaitlistStatus";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -24,6 +26,7 @@ import {
   User,
   Scroll,
   Shield,
+  Clock,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -45,12 +48,14 @@ interface SidebarContentProps {
   pathname: string;
   getSidebarGroups: () => SidebarGroup[];
   setIsOpen: (open: boolean) => void;
+  isWaitlistPending: boolean;
 }
 
 const SidebarContent = ({
   pathname,
   getSidebarGroups,
   setIsOpen,
+  isWaitlistPending,
 }: SidebarContentProps) => (
   <div className="flex flex-col h-full">
     <div className="p-6 border-b border-border">
@@ -68,6 +73,20 @@ const SidebarContent = ({
           <X className="h-4 w-4" />
         </Button>
       </div>
+      {/* Waitlist Status Badge */}
+      {isWaitlistPending && (
+        <div className="mt-3">
+          <Link href="/waitlist" onClick={() => setIsOpen(false)}>
+            <Badge
+              variant="outline"
+              className="w-full justify-center py-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 cursor-pointer"
+            >
+              <Clock className="h-3 w-3 mr-1" />
+              Waitlist Pending
+            </Badge>
+          </Link>
+        </div>
+      )}
     </div>
 
     <nav className="flex-1 p-4">
@@ -83,6 +102,17 @@ const SidebarContent = ({
               {group.items.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
+
+                // Hide protected items for waitlist pending users
+                const isProtectedRoute =
+                  item.requiresAuth &&
+                  (item.href.startsWith("/wizards") ||
+                    item.href.startsWith("/duels") ||
+                    item.href.startsWith("/campaign"));
+
+                if (isProtectedRoute && isWaitlistPending) {
+                  return null;
+                }
 
                 if (item.requiresAuth) {
                   return (
@@ -255,6 +285,7 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { isSuperAdmin } = useSuperAdmin();
+  const { isPending: isWaitlistPending } = useWaitlistStatus();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -320,6 +351,7 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
           pathname={pathname}
           getSidebarGroups={getSidebarGroups}
           setIsOpen={setIsOpen}
+          isWaitlistPending={isWaitlistPending}
         />
       </aside>
     </>
