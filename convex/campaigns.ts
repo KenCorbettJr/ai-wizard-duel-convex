@@ -1119,6 +1119,84 @@ export const completeCampaignBattleWithResult = mutation({
 });
 
 /**
+ * Internal mutation to complete a campaign battle when a duel ends
+ */
+export const completeCampaignBattleInternal = internalMutation({
+  args: {
+    duelId: v.id("duels"),
+    winners: v.array(v.id("wizards")),
+    losers: v.array(v.id("wizards")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { duelId, winners }) => {
+    // Find the campaign battle associated with this duel
+    const battle = await ctx.db
+      .query("campaignBattles")
+      .filter((q) => q.eq(q.field("duelId"), duelId))
+      .first();
+
+    if (!battle) {
+      console.log("No campaign battle found for duel:", duelId);
+      return null;
+    }
+
+    // Determine if the player's wizard won
+    const playerWizardWon = winners.includes(battle.wizardId);
+
+    // Update battle status
+    await ctx.db.patch(battle._id, {
+      status: playerWizardWon ? "WON" : "LOST",
+      completedAt: Date.now(),
+    });
+
+    // If won, update campaign progress
+    if (playerWizardWon) {
+      // Get the season ID - use battle's seasonId or get active season
+      let seasonId = battle.seasonId;
+      if (!seasonId) {
+        const activeSeason = await getActiveCampaignSeasonHelper(ctx);
+        if (!activeSeason) {
+          console.log("No active season found for campaign battle completion");
+          return null;
+        }
+        seasonId = activeSeason._id;
+      }
+
+      // Get current progress for the battle's season
+      const progress = await ctx.db
+        .query("wizardCampaignProgress")
+        .withIndex("by_wizard_season", (q) =>
+          q.eq("wizardId", battle.wizardId).eq("seasonId", seasonId)
+        )
+        .unique();
+
+      if (progress) {
+        // Check if opponent already defeated (shouldn't happen, but be safe)
+        if (!progress.defeatedOpponents.includes(battle.opponentNumber)) {
+          // Update progress
+          const newDefeatedOpponents = [
+            ...progress.defeatedOpponents,
+            battle.opponentNumber,
+          ];
+          const newCurrentOpponent =
+            battle.opponentNumber === 10 ? 11 : battle.opponentNumber + 1;
+          const hasCompletionRelic = battle.opponentNumber === 10;
+
+          await ctx.db.patch(progress._id, {
+            currentOpponent: newCurrentOpponent,
+            defeatedOpponents: newDefeatedOpponents,
+            hasCompletionRelic,
+            lastBattleAt: Date.now(),
+          });
+        }
+      }
+    }
+
+    return null;
+  },
+});
+
+/**
  * Check if wizard completed campaign and award relic
  */
 export const checkCampaignCompletion = mutation({

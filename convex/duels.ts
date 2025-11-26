@@ -705,6 +705,18 @@ export const completeRound = mutation({
           });
         }
       }
+
+      // Handle campaign battle completion
+      if (duel.isCampaignBattle) {
+        await ctx.runMutation(
+          internal.campaigns.completeCampaignBattleInternal,
+          {
+            duelId: duel._id,
+            winners: shouldEndDuel.winners || [],
+            losers: shouldEndDuel.losers || [],
+          }
+        );
+      }
     } else {
       // Start next round
       const nextRoundNumber = duel.currentRound + 1;

@@ -29,10 +29,15 @@ export const getOrCreateUser = mutation({
       return existingUser._id;
     }
 
-    // Create new user with default role and monetization defaults
+    // Create new user with role from Clerk metadata or default to "user"
+    const identity = await ctx.auth.getUserIdentity();
+    const clerkRole = (identity?.publicMetadata as { role?: string })?.role;
+    const role =
+      clerkRole === "super_admin" || clerkRole === "admin" ? clerkRole : "user";
+
     const userId = await ctx.db.insert("users", {
       clerkId,
-      role: "user",
+      role,
       email,
       name,
       subscriptionTier: "FREE",
