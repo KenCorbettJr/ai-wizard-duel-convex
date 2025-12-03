@@ -1,4 +1,4 @@
 {
-  "buildCommand": "pnpm run build",
-  "installCommand": "pnpm install --no-frozen-lockfile"
+  "buildCommand": "npx convex deploy --cmd 'pnpm run build'",
+  "installCommand": "pnpm install"
 }
