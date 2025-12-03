@@ -39,6 +39,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "2mb",
     },
   },
+  outputFileTracingIncludes: {
+    "/": ["./middleware.ts"],
+  },
 };
 
 export default nextConfig;

@@ -1,8 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-// Define protected routes that require waitlist approval
 const isProtectedRoute = createRouteMatcher([
   "/wizards(.*)",
   "/duels(.*)",
@@ -13,7 +11,6 @@ const isProtectedRoute = createRouteMatcher([
   "/credits(.*)",
 ]);
 
-// Define public routes that don't require authentication or waitlist approval
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -23,22 +20,18 @@ const isPublicRoute = createRouteMatcher([
   "/join(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
+export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
 
-  // Allow public routes without any checks
   if (isPublicRoute(req)) {
     return NextResponse.next();
   }
 
-  // For protected routes, check authentication and waitlist approval
   if (isProtectedRoute(req)) {
-    // If not authenticated, Clerk will handle the redirect to sign-in
     if (!userId) {
       return NextResponse.next();
     }
 
-    // Bypass waitlist checks in development mode if not explicitly enabled
     if (
       process.env.NODE_ENV === "development" &&
       process.env.NEXT_PUBLIC_WAITLIST_ENABLED !== "true"
@@ -46,7 +39,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       return NextResponse.next();
     }
 
-    // Get user metadata from session claims
     const publicMetadata = sessionClaims?.publicMetadata as
       | {
           role?: string;
@@ -54,7 +46,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
         }
       | undefined;
 
-    // Admins and super admins are automatically approved
     if (
       publicMetadata?.role === "admin" ||
       publicMetadata?.role === "super_admin"
@@ -62,11 +53,9 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       return NextResponse.next();
     }
 
-    // Check if user is approved on the waitlist
     const isApproved = publicMetadata?.waitlistApproved === true;
 
     if (!isApproved) {
-      // Redirect unapproved users to the waitlist page
       const waitlistUrl = new URL("/waitlist", req.url);
       return NextResponse.redirect(waitlistUrl);
     }
