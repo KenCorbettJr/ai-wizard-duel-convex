@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   reactCompiler: true,
+  outputFileTracingRoot: undefined,
+  outputFileTracingIncludes: {
+    "/": ["./middleware.ts"],
+  },
 };
 
 export default nextConfig;
