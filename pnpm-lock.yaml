@@ -4,8 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-packageExtensionsChecksum: sha256-PM8ZxZ7LxprsUEJH5Wc2qgq9u2eZIb+mBTxvUx0tSaw=
-
 importers:
 
   .:
@@ -172,7 +170,7 @@ importers:
         version: 4.3.0
       jsdom:
         specifier: ^27.2.0
-        version: 27.2.0(parse5@8.0.0)
+        version: 27.2.0
       parse5:
         specifier: ^8.0.0
         version: 8.0.0
@@ -193,7 +191,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.0.15
-        version: 4.0.15(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@24.10.1)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.2.0(parse5@8.0.0))(lightningcss@1.30.2)(yaml@2.8.2)
+        version: 4.0.15(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@24.10.1)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.2)(yaml@2.8.2)
 
 packages:
 
@@ -4225,7 +4223,6 @@ packages:
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       canvas: ^3.0.0
-      parse5: '*'
     peerDependenciesMeta:
       canvas:
         optional: true
@@ -8637,7 +8634,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.15(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@24.10.1)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.2.0(parse5@8.0.0))(lightningcss@1.30.2)(yaml@2.8.2)
+      vitest: 4.0.15(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@24.10.1)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.2)(yaml@2.8.2)
 
   '@vitest/utils@4.0.15':
     dependencies:
@@ -10539,7 +10536,7 @@ snapshots:
 
   jsbn@0.1.1: {}
 
-  jsdom@27.2.0(parse5@8.0.0):
+  jsdom@27.2.0:
     dependencies:
       '@acemir/cssom': 0.9.24
       '@asamuzakjp/dom-selector': 6.7.5
@@ -12080,7 +12077,7 @@ snapshots:
       lightningcss: 1.30.2
       yaml: 2.8.2
 
-  vitest@4.0.15(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@24.10.1)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.2.0(parse5@8.0.0))(lightningcss@1.30.2)(yaml@2.8.2):
+  vitest@4.0.15(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@24.10.1)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.2)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.15
       '@vitest/mocker': 4.0.15(vite@7.2.6(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
@@ -12107,7 +12104,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@types/node': 24.10.1
       '@vitest/ui': 4.0.15(vitest@4.0.15)
-      jsdom: 27.2.0(parse5@8.0.0)
+      jsdom: 27.2.0
     transitivePeerDependencies:
       - jiti
       - less

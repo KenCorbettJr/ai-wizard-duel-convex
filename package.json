@@ -91,16 +91,6 @@
     "@types/react-dom": "19.2.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "@clerk/shared",
-      "@firebase/util",
-      "cypress",
-      "esbuild",
-      "lightningcss",
-      "protobufjs",
-      "sharp",
-      "unrs-resolver"
-    ],
     "packageExtensions": {
       "jsdom": {
         "peerDependencies": {
