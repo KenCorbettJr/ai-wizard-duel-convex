@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   reactCompiler: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+  },
 };
 
 export default nextConfig;
