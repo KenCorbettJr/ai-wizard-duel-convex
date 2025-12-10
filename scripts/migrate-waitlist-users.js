@@ -12,7 +12,7 @@
  * - @clerk/backend package must be installed
  */
 
-const { Clerk } = require("@clerk/backend");
+import { Clerk } from "@clerk/backend";
 
 // Validate environment variables
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;

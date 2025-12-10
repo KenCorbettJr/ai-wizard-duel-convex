@@ -1,7 +1,36 @@
 import { render } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { CampaignOpponentFan } from "./CampaignOpponentFan";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
+
+// Mock IntersectionObserver for embla-carousel
+beforeAll(() => {
+  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+});
+
+// Mock embla-carousel-react
+vi.mock("embla-carousel-react", () => ({
+  default: () => [
+    vi.fn(), // emblaRef
+    {
+      scrollTo: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+    }, // emblaApi
+  ],
+}));
+
+// Mock ConvexImage component
+vi.mock("@/components/ConvexImage", () => ({
+  ConvexImage: ({ alt, className }: { alt: string; className?: string }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt={alt} className={className} data-testid="convex-image" />
+  ),
+}));
 
 // Mock tooltip components
 vi.mock("@/components/ui/tooltip", () => ({
@@ -63,6 +92,7 @@ describe("CampaignOpponentFan", () => {
       personalityTraits: ["nervous", "eager"],
       illustrationPrompt: "test prompt",
       isCampaignOpponent: true,
+      illustration: "test-storage-id-1",
     },
     {
       _id: "opponent2" as Id<"wizards">,
@@ -77,6 +107,7 @@ describe("CampaignOpponentFan", () => {
       personalityTraits: ["confident", "strategic"],
       illustrationPrompt: "test prompt 2",
       isCampaignOpponent: true,
+      illustration: "test-storage-id-2",
     },
   ];
 
@@ -98,12 +129,13 @@ describe("CampaignOpponentFan", () => {
   });
 
   it("renders all opponents", () => {
-    const { getAllByTestId } = render(
+    const { container } = render(
       <CampaignOpponentFan opponents={mockOpponents} />
     );
 
-    const avatars = getAllByTestId("avatar");
-    expect(avatars).toHaveLength(2);
+    // Look for opponent cards by their container class
+    const opponentCards = container.querySelectorAll(".w-64.h-96");
+    expect(opponentCards).toHaveLength(2);
   });
 
   it("displays opponent numbers correctly", () => {
@@ -120,8 +152,9 @@ describe("CampaignOpponentFan", () => {
       <CampaignOpponentFan opponents={mockOpponents} />
     );
 
-    expect(getAllByText("Test Opponent 1")).toHaveLength(2); // Card + tooltip
-    expect(getAllByText("Test Opponent 2")).toHaveLength(2); // Card + tooltip
+    // Names appear in both the card and tooltip
+    expect(getAllByText("Test Opponent 1")).toHaveLength(2);
+    expect(getAllByText("Test Opponent 2")).toHaveLength(2);
   });
 
   it("applies custom className", () => {
@@ -129,7 +162,9 @@ describe("CampaignOpponentFan", () => {
       <CampaignOpponentFan opponents={mockOpponents} className="custom-class" />
     );
 
-    const mainDiv = container.querySelector(".relative.w-full.overflow-hidden");
+    const mainDiv = container.querySelector(
+      ".w-full.flex.flex-col.items-center"
+    );
     expect(mainDiv).toHaveClass("custom-class");
   });
 
@@ -137,9 +172,9 @@ describe("CampaignOpponentFan", () => {
     const { container } = render(<CampaignOpponentFan opponents={[]} />);
 
     expect(container).toBeInTheDocument();
-    expect(
-      container.querySelector('[data-testid="avatar"]')
-    ).not.toBeInTheDocument();
+    // Should not have any opponent cards
+    const opponentCards = container.querySelectorAll(".w-64.h-96");
+    expect(opponentCards).toHaveLength(0);
   });
 
   it("shows progress indicators when wizard progress is provided", () => {
@@ -166,12 +201,12 @@ describe("CampaignOpponentFan", () => {
       { ...mockOpponents[0], opponentNumber: 1 },
     ];
 
-    const { container } = render(
+    const { getByText } = render(
       <CampaignOpponentFan opponents={unsortedOpponents} />
     );
 
-    // Check that the first card shows #1 and the second shows #3
-    const opponentNumbers = container.querySelectorAll('[class*="absolute"]');
-    expect(opponentNumbers.length).toBeGreaterThan(0);
+    // Check that both opponent numbers are displayed
+    expect(getByText("#1")).toBeInTheDocument();
+    expect(getByText("#3")).toBeInTheDocument();
   });
 });
