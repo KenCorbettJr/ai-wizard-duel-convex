@@ -2,5 +2,10 @@
   "buildCommand": "npx convex deploy --cmd 'pnpm run build'",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "functions": {
+    "middleware.ts": {
+      "runtime": "edge"
+    }
+  }
 }
