@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton, PricingTable } from "@clerk/nextjs";
+import { Show, SignInButton, PricingTable } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,12 +32,12 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      <SignedOut>
+      <Show when="signed-out">
         <LandingPage />
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         <DashboardContent />
-      </SignedIn>
+      </Show>
     </>
   );
 }
@@ -61,7 +61,7 @@ function LandingPage() {
             <p className="text-2xl text-white mb-4">
               Where Wizards Clash and Legends Rise!
             </p>
-            <SignedOut>
+            <Show when="signed-out">
               <Link href="/waitlist">
                 <Button
                   size="lg"
@@ -71,8 +71,8 @@ function LandingPage() {
                   Join Waitlist
                 </Button>
               </Link>
-            </SignedOut>
-            <SignedIn>
+            </Show>
+            <Show when="signed-in">
               <Link href="/">
                 <Button
                   size="lg"
@@ -82,7 +82,7 @@ function LandingPage() {
                   Start Dueling
                 </Button>
               </Link>
-            </SignedIn>
+            </Show>
           </div>
         </div>
       </section>
@@ -611,7 +611,7 @@ function LandingPage() {
                 Watch Duels
               </Button>
             </Link>
-            <SignedOut>
+            <Show when="signed-out">
               <Link href="/waitlist">
                 <Button
                   size="lg"
@@ -621,8 +621,8 @@ function LandingPage() {
                   Join Waitlist
                 </Button>
               </Link>
-            </SignedOut>
-            <SignedIn>
+            </Show>
+            <Show when="signed-in">
               <Link href="/dashboard">
                 <Button
                   size="lg"
@@ -632,7 +632,7 @@ function LandingPage() {
                   Go to Dashboard
                 </Button>
               </Link>
-            </SignedIn>
+            </Show>
           </div>
         </div>
       </section>
