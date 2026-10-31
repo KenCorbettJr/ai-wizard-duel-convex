@@ -43,7 +43,9 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # pnpm 10 generated pnpm-lock.yaml; its packageExtensionsChecksum
+          # differs from pnpm 9, so --frozen-lockfile requires pnpm 10 here.
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
