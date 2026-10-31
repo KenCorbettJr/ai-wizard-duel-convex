@@ -4,7 +4,7 @@
 // Custom command to wait for Convex to be ready
 Cypress.Commands.add("waitForConvex", () => {
   cy.request({
-    url: `${Cypress.env("CONVEX_URL")}/version`,
+    url: `${Cypress.expose("CONVEX_URL")}/version`,
     timeout: 30000,
     retryOnStatusCodeFailure: true,
     retryOnNetworkFailure: true,
