@@ -96,15 +96,22 @@ describe("Property-Based Tests: Approved User Full Access", () => {
           >["user"],
           });
 
-          // For any content and fallback combination
+          // For any content and fallback combination. Wrap the fallback in a
+          // sentinel element so the "fallback is hidden" check is precise: an
+          // arbitrary short fallback string can coincidentally appear in the
+          // rendered children, which would make a container.textContent check
+          // a false negative.
+          const fallbackId = `fallback-${Math.random().toString(36).slice(2)}`;
           const { container } = render(
-            <WaitlistGuard fallback={fallback}>{children}</WaitlistGuard>
+            <WaitlistGuard
+              fallback={<div data-testid={fallbackId}>{fallback}</div>}
+            >
+              {children}
+            </WaitlistGuard>
           );
 
-          // The fallback should never be rendered for approved users
-          if (fallback && typeof fallback === "string") {
-            expect(container.textContent).not.toContain(fallback);
-          }
+          // The fallback should never be rendered for approved users.
+          expect(screen.queryByTestId(fallbackId)).not.toBeInTheDocument();
 
           // Children should be rendered
           if (typeof children === "string") {
@@ -384,13 +391,21 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
           user: null,
         });
 
-        // For any content with unauthenticated user
-        const { container } = render(<WaitlistGuard>{content}</WaitlistGuard>);
+        // For any content with unauthenticated user. Wrap the generated
+        // content in a sentinel element so the "content is hidden" check does
+        // not rely on substring-matching the rendered text: an arbitrary short
+        // string (e.g. " " or ".") can coincidentally appear in the fallback
+        // UI copy, which would make a container.textContent check a false
+        // negative. Asserting the sentinel is absent is precise.
+        const sentinelId = `protected-${Math.random().toString(36).slice(2)}`;
+        render(
+          <WaitlistGuard>
+            <div data-testid={sentinelId}>{content}</div>
+          </WaitlistGuard>
+        );
 
-        // Content should NOT be visible
-        if (typeof content === "string") {
-          expect(container.textContent).not.toContain(content);
-        }
+        // Content should NOT be visible for an unauthenticated user.
+        expect(screen.queryByTestId(sentinelId)).not.toBeInTheDocument();
 
         // Should show authentication or waitlist message
         const hasAuthMessage = screen.queryByText(/sign in/i) !== null;
