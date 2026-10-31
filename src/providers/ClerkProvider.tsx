@@ -7,6 +7,7 @@ function ClerkProviderContent({ children }: { children: ReactNode }) {
   return (
     <ClerkProviderBase
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+      afterSignOutUrl="/"
     >
       {children}
     </ClerkProviderBase>

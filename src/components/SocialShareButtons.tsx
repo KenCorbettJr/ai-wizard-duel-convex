@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Share2, Twitter, Facebook, Copy } from "lucide-react";
+import { Share2, MessageCircle, ThumbsUp, Copy } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -96,7 +96,7 @@ export function SocialShareButtons({
           className="flex items-center gap-2"
           title="Share on Twitter"
         >
-          <Twitter className="w-4 h-4" />
+          <MessageCircle className="w-4 h-4" />
           <span className="hidden sm:inline">Twitter</span>
         </Button>
 
@@ -107,7 +107,7 @@ export function SocialShareButtons({
           className="flex items-center gap-2"
           title="Share on Facebook"
         >
-          <Facebook className="w-4 h-4" />
+          <ThumbsUp className="w-4 h-4" />
           <span className="hidden sm:inline">Facebook</span>
         </Button>
 

@@ -6,7 +6,9 @@ import { withSuperAdminAuth, withAuth } from "./test_utils";
 import { Id } from "./_generated/dataModel";
 
 // Helper to create super admin user for tests
-async function createSuperAdminUser(t: any) {
+async function createSuperAdminUser(t: {
+  run: (fn: (ctx: unknown) => Promise<void>) => Promise<void>;
+}) {
   await t.run(async (ctx: unknown) => {
     await ctx.db.insert("users", {
       clerkId: "super-admin-user",

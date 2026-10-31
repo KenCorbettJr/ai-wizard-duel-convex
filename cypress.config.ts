@@ -1,6 +1,15 @@
 import { defineConfig } from "cypress";
 
 export default defineConfig({
+  // Cypress 16 removed Cypress.env(). These are public, non-sensitive config
+  // values (a local emulator URL and a test-only Clerk publishable key), so
+  // they move to a top-level `expose` block and are read synchronously via
+  // Cypress.expose(key) in tests/support. Secrets would use cy.env() instead.
+  expose: {
+    CONVEX_URL: "http://localhost:3210",
+    CLERK_PUBLISHABLE_KEY:
+      "pk_test_Z2VudWluZS1wb2xsaXdvZy04OS5jbGVyay5hY2NvdW50cy5kZXYk",
+  },
   e2e: {
     baseUrl: "http://localhost:3000",
     viewportWidth: 1280,
@@ -12,12 +21,6 @@ export default defineConfig({
     responseTimeout: 10000,
     setupNodeEvents() {
       // implement node event listeners here
-    },
-    env: {
-      // Environment-specific configuration
-      CONVEX_URL: "http://localhost:3210",
-      CLERK_PUBLISHABLE_KEY:
-        "pk_test_Z2VudWluZS1wb2xsaXdvZy04OS5jbGVyay5hY2NvdW50cy5kZXYk",
     },
     specPattern: "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/e2e.ts",
