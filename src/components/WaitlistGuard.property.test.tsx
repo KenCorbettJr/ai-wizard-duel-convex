@@ -49,7 +49,9 @@ describe("Property-Based Tests: Approved User Full Access", () => {
           isPending: false,
           isLoading: false,
           status: "approved",
-          user: { id: "user_test" } as any,
+          user: { id: "user_test" } as unknown as ReturnType<
+            typeof useWaitlistStatusModule.useWaitlistStatus
+          >["user"],
         });
 
         // For any content wrapped in WaitlistGuard
@@ -89,7 +91,9 @@ describe("Property-Based Tests: Approved User Full Access", () => {
             isPending: false,
             isLoading: false,
             status: "approved",
-            user: { id: "user_test" } as any,
+            user: { id: "user_test" } as unknown as ReturnType<
+            typeof useWaitlistStatusModule.useWaitlistStatus
+          >["user"],
           });
 
           // For any content and fallback combination
@@ -143,7 +147,9 @@ describe("Property-Based Tests: Approved User Full Access", () => {
           isPending: false,
           isLoading: false,
           status: "approved",
-          user: { id: "user_test" } as any,
+          user: { id: "user_test" } as unknown as ReturnType<
+            typeof useWaitlistStatusModule.useWaitlistStatus
+          >["user"],
         });
 
         rerender(<WaitlistGuard>{content}</WaitlistGuard>);
@@ -215,7 +221,9 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
           isPending: false,
           isLoading: false,
           status: "approved",
-          user: { id: "user_test" } as any,
+          user: { id: "user_test" } as unknown as ReturnType<
+            typeof useWaitlistStatusModule.useWaitlistStatus
+          >["user"],
         });
 
         // For any UI scenario - use unique test IDs
@@ -276,7 +284,9 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
             isPending: false,
             isLoading: false,
             status: "approved",
-            user: { id: "user_test" } as any,
+            user: { id: "user_test" } as unknown as ReturnType<
+            typeof useWaitlistStatusModule.useWaitlistStatus
+          >["user"],
           });
 
           // For any array of content items - use unique test IDs

@@ -127,7 +127,7 @@ export function CampaignOpponentFan({
               const DifficultyIcon = difficultyConfig.icon;
 
               // Card state styling
-              let cardClasses =
+              const cardClasses =
                 "transition-all duration-300 hover:scale-105 hover:-translate-y-2 relative group h-full";
               let opacity = "opacity-100";
               let borderClass = "border-transparent";

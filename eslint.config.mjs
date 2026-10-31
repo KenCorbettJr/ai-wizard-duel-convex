@@ -17,6 +17,13 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    // Plain CommonJS Node CLI scripts legitimately use require().
+    files: ["scripts/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
