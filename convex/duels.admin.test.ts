@@ -216,7 +216,10 @@ describe("Duel Admin Functions", () => {
 
     expect(waitingDuel1).toBeDefined();
     expect(waitingDuel1?.duel.status).toBe("WAITING_FOR_PLAYERS");
-    expect(waitingDuel1?.waitingTime).toBeGreaterThan(0);
+    // waitingTime is Date.now() - duel.createdAt; it can be 0 when the query
+    // runs in the same millisecond the duel was created, so assert it is a
+    // defined, non-negative number rather than strictly > 0.
+    expect(waitingDuel1?.waitingTime).toBeGreaterThanOrEqual(0);
 
     expect(waitingDuel2).toBeDefined();
     expect(waitingDuel2?.duel.status).toBe("WAITING_FOR_PLAYERS");
