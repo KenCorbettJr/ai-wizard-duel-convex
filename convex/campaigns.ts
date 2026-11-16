@@ -744,6 +744,7 @@ export const getCampaignBattle = query({
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
+      seasonId: v.optional(v.id("campaignSeasons")),
     }),
     v.null()
   ),
@@ -772,6 +773,7 @@ export const getWizardCampaignBattles = query({
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
+      seasonId: v.optional(v.id("campaignSeasons")),
     })
   ),
   handler: async (ctx, { wizardId }) => {
@@ -805,6 +807,7 @@ export const getUserOpponentBattles = query({
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
+      seasonId: v.optional(v.id("campaignSeasons")),
     })
   ),
   handler: async (ctx, { userId, opponentNumber }) => {
@@ -1524,6 +1527,7 @@ export const getRecentCampaignBattles = query({
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
+      seasonId: v.optional(v.id("campaignSeasons")),
       duration: v.optional(v.number()),
     })
   ),

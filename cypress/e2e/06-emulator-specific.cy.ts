@@ -5,7 +5,7 @@ describe("Emulator Mode Specific Tests", () => {
 
   it("should connect to local Convex backend", () => {
     // Verify we're connecting to the emulator
-    cy.request(`${Cypress.env("CONVEX_URL")}/version`).then((response) => {
+    cy.request(`${Cypress.expose("CONVEX_URL")}/version`).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body).to.have.property("version");
     });

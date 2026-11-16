@@ -56,7 +56,7 @@ function OpponentImage({
     api.wizards.getIllustrationUrl,
     opponent.illustration
       ? { storageId: opponent.illustration }
-      : ("skip" as any)
+      : ("skip" as unknown as { storageId: Id<"_storage"> })
   );
 
   if (opponent.illustration && imageUrl) {

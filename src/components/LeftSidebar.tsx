@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -118,7 +118,7 @@ const SidebarContent = ({
 
                 if (item.requiresAuth) {
                   return (
-                    <SignedIn key={item.href}>
+                    <Show when="signed-in" key={item.href}>
                       <li>
                         <Link
                           href={item.href}
@@ -138,7 +138,7 @@ const SidebarContent = ({
                           )}
                         </Link>
                       </li>
-                    </SignedIn>
+                    </Show>
                   );
                 }
 
@@ -158,9 +158,9 @@ const SidebarContent = ({
                       <span className="flex-1">{item.label}</span>
                       {item.showStatus && <LobbyStatusIndicator />}
                       {item.href === "/credits" && (
-                        <SignedIn>
+                        <Show when="signed-in">
                           <CreditDisplay showLabel={false} size="sm" />
-                        </SignedIn>
+                        </Show>
                       )}
                     </Link>
                   </li>
@@ -176,14 +176,14 @@ const SidebarContent = ({
     <div className="p-4 border-t border-border">
       <div className="flex items-center justify-between">
         <ThemeToggle />
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-        <SignedOut>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
+        <Show when="signed-out">
           <SignInButton>
             <Button size="sm">Sign In</Button>
           </SignInButton>
-        </SignedOut>
+        </Show>
       </div>
     </div>
   </div>

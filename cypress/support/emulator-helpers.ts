@@ -23,7 +23,7 @@ export const clearTestData = () => {
 export const waitForEmulatorReady = () => {
   // Wait for emulator services to be ready
   cy.request({
-    url: `${Cypress.env("CONVEX_URL")}/version`,
+    url: `${Cypress.expose("CONVEX_URL")}/version`,
     timeout: 30000,
     retryOnStatusCodeFailure: true,
     retryOnNetworkFailure: true,
@@ -53,7 +53,7 @@ export const createTestWizard = (wizardData: Record<string, unknown>) => {
   // Helper to create a test wizard via API
   return cy.request({
     method: "POST",
-    url: `${Cypress.env("CONVEX_URL")}/api/wizards`,
+    url: `${Cypress.expose("CONVEX_URL")}/api/wizards`,
     body: wizardData,
   });
 };
@@ -62,7 +62,7 @@ export const createTestDuel = (duelData: Record<string, unknown>) => {
   // Helper to create a test duel via API
   return cy.request({
     method: "POST",
-    url: `${Cypress.env("CONVEX_URL")}/api/duels`,
+    url: `${Cypress.expose("CONVEX_URL")}/api/duels`,
     body: duelData,
   });
 };

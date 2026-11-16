@@ -222,7 +222,9 @@ describe("Property-Based Tests: Permission Verification Completeness", () => {
         ({ hasMetadata, metadata }) => {
           const user: User = {
             id: "user_test",
-            publicMetadata: hasMetadata ? metadata : (null as any),
+            publicMetadata: hasMetadata
+              ? metadata
+              : (null as unknown as User["publicMetadata"]),
           } as User;
 
           // For any user with potentially missing metadata
@@ -248,7 +250,7 @@ describe("Property-Based Tests: Permission Verification Completeness", () => {
 
 // Custom matcher for vitest
 expect.extend({
-  toBeOneOf(received: any, expected: unknown[]) {
+  toBeOneOf(received: unknown, expected: unknown[]) {
     const pass = expected.includes(received);
     return {
       pass,

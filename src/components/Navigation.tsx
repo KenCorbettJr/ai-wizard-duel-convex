@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -28,19 +28,19 @@ export function Navigation({
             Welcome, {userName || "Wizard"}!
           </span>
         )}
-        <SignedIn>
+        <Show when="signed-in">
           {showDashboard && (
             <Link href="/">
               <Button variant="outline">Dashboard</Button>
             </Link>
           )}
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-        <SignedOut>
+          <UserButton />
+        </Show>
+        <Show when="signed-out">
           <SignInButton>
             <Button>Sign In</Button>
           </SignInButton>
-        </SignedOut>
+        </Show>
       </div>
     </nav>
   );
