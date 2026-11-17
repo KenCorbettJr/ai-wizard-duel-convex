@@ -19,7 +19,7 @@ export function UserInitializer() {
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
   const profileStatus = useQuery(
     api.userProfiles.getCurrentUserProfileStatus,
-    isLoaded && user ? {} : "skip"
+    isLoaded && user ? {} : "skip",
   );
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function UserInitializer() {
         // Preserve the current path for join pages
         if (isOnJoinPage) {
           router.push(
-            `/profile/setup?redirect_url=${encodeURIComponent(pathname)}`
+            `/profile/setup?redirect_url=${encodeURIComponent(pathname)}`,
           );
         } else {
           router.push("/profile/setup");
@@ -58,7 +58,7 @@ export function UserInitializer() {
       if (profileStatus.hasProfile && isOnProfileSetup) {
         // Check for redirect URL in query params
         const urlParams = new URLSearchParams(
-          typeof window !== "undefined" ? window.location.search : ""
+          typeof window !== "undefined" ? window.location.search : "",
         );
         const redirectUrl = urlParams.get("redirect_url");
         if (redirectUrl) {

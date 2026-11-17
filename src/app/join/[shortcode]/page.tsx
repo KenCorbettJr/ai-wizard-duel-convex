@@ -29,13 +29,13 @@ import {
   Sparkles,
   UserPlus,
   AlertCircle,
-  Loader2,
   XCircle,
   Hash,
   Star,
   Heart,
   LogIn,
 } from "lucide-react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface JoinShortcodePageProps {
   params: Promise<{
@@ -47,7 +47,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null
+    null,
   );
   const [isJoining, setIsJoining] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -65,7 +65,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
     api.wizards.getWizard,
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
 
   const joinDuel = useMutation(api.duels.joinDuel);
@@ -116,26 +116,15 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   // Loading state - only show loading if Clerk is still loading
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="relative mb-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
-            <div
-              className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto"
-              style={{
-                animationDirection: "reverse",
-                animationDuration: "1.5s",
-              }}
-            ></div>
-          </div>
-          <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
+          <RuneSpinner size="lg" hideLabel label="Loading…" className="mb-6" />
+          <div className="bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
-              <p className="text-foreground dark:text-foreground/95 font-medium">
-                Loading...
-              </p>
+              <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+              <p className="text-foreground font-medium">Loading...</p>
             </div>
-            <p className="text-muted-foreground dark:text-muted-foreground/80 text-sm">
+            <p className="text-muted-foreground text-sm">
               Preparing to join duel
             </p>
           </div>
@@ -147,34 +136,32 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   // Duel not found
   if (duel === null) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-        <div className="container mx-auto px-6 py-12">
+      <div className="min-h-screen">
+        <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
           <div className="max-w-2xl mx-auto text-center">
-            <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+            <Card className="bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2 text-destructive dark:text-red-400">
+                <CardTitle className="flex items-center justify-center gap-2 text-destructive">
                   <XCircle className="h-5 w-5" />
                   Duel Not Found
                 </CardTitle>
-                <CardDescription className="dark:text-muted-foreground/80">
+                <CardDescription>
                   The shortcode &quot;
-                  <span className="font-mono font-semibold text-purple-600 dark:text-purple-400">
+                  <span className="font-mono font-semibold text-primary">
                     {shortcode.toUpperCase()}
                   </span>
                   &quot; doesn&apos;t match any active duels.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground dark:text-muted-foreground/80 mb-6">
+                <p className="text-muted-foreground mb-6">
                   The duel may have been completed, cancelled, or the shortcode
                   might be incorrect.
                 </p>
                 <div className="flex gap-3 justify-center">
-                  <Link href="/">
-                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
+                  <Button asChild>
+                    <Link href="/">Go to Dashboard</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -187,28 +174,15 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   // Still loading duel
   if (duel === undefined) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="relative mb-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
-            <div
-              className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto"
-              style={{
-                animationDirection: "reverse",
-                animationDuration: "1.5s",
-              }}
-            ></div>
-          </div>
-          <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
+          <RuneSpinner size="lg" hideLabel label="Loading…" className="mb-6" />
+          <div className="bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Hash className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
-              <p className="text-foreground dark:text-foreground/95 font-medium">
-                Loading duel...
-              </p>
+              <Hash className="h-4 w-4 text-primary animate-pulse" />
+              <p className="text-foreground font-medium">Loading duel...</p>
             </div>
-            <p className="text-muted-foreground dark:text-muted-foreground/80 text-sm">
-              Verifying shortcode
-            </p>
+            <p className="text-muted-foreground text-sm">Verifying shortcode</p>
           </div>
         </div>
       </div>
@@ -226,13 +200,13 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
   const challengerWizard = wizard1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-      <div className="container mx-auto px-6 py-8">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section - Challenger Wizard */}
           {challengerWizard && canJoinDuel && (
             <div className="mb-8">
-              <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-2xl dark:shadow-3xl">
+              <Card className="overflow-hidden bg-card/90 backdrop-blur-sm border-border/50 shadow-2xl dark:shadow-3xl">
                 <div className="relative">
                   {challengerWizard.illustration && (
                     <div className="h-80 md:h-120 w-full overflow-hidden">
@@ -243,13 +217,13 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                         height={400}
                         className="w-full h-full object-cover object-top"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent"></div>
                     </div>
                   )}
 
                   {/* Challenge Badge */}
                   <div className="absolute top-6 left-6">
-                    <Badge className="bg-red-500/90 dark:bg-red-600/90 text-white border-red-400/50 dark:border-red-500/50 backdrop-blur-sm text-sm px-3 py-1.5 flex items-center gap-2">
+                    <Badge className="bg-destructive/90 text-white border-destructive/50 backdrop-blur-sm text-sm px-3 py-1.5 flex items-center gap-2">
                       <Swords className="h-4 w-4" />
                       Challenge Issued
                     </Badge>
@@ -260,7 +234,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                     {duel?.points && (
                       <Badge
                         variant="secondary"
-                        className="bg-yellow-100/90 dark:bg-yellow-900/60 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm flex items-center gap-1"
+                        className="bg-warning/90 text-warning-foreground border-warning/50 backdrop-blur-sm flex items-center gap-1"
                       >
                         <Star className="h-3 w-3" />
                         {duel.points[challengerWizard._id] || 0}
@@ -269,7 +243,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                     {duel?.hitPoints && (
                       <Badge
                         variant="destructive"
-                        className="bg-red-100/90 dark:bg-red-900/60 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm flex items-center gap-1"
+                        className="bg-destructive/90 text-destructive-foreground border-destructive/50 backdrop-blur-sm flex items-center gap-1"
                       >
                         <Heart className="h-3 w-3" />
                         {duel.hitPoints[challengerWizard._id] || 100}
@@ -282,13 +256,13 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                     <div className="flex items-end justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h1 className="text-3xl md:text-4xl font-bold">
+                          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-wide">
                             {challengerWizard.name}
                           </h1>
                           {challengerWizard.wins || challengerWizard.losses ? (
                             <Badge
                               variant="outline"
-                              className="bg-green-100/90 dark:bg-green-900/60 text-green-800 dark:text-green-200 border-green-200/50 dark:border-green-700/30 backdrop-blur-sm flex items-center gap-1"
+                              className="bg-success/90 text-success-foreground border-success/50 backdrop-blur-sm flex items-center gap-1"
                             >
                               <Trophy className="h-3 w-3" />
                               {challengerWizard.wins || 0}W -{" "}
@@ -297,7 +271,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                           ) : (
                             <Badge
                               variant="secondary"
-                              className="bg-blue-100/90 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30 backdrop-blur-sm flex items-center gap-1"
+                              className="bg-info/90 text-info-foreground border-info/50 backdrop-blur-sm flex items-center gap-1"
                             >
                               <Sparkles className="h-3 w-3" />
                               New Challenger
@@ -315,17 +289,17 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
 
               {/* Challenge Call to Action */}
               <div className="mt-6 text-center">
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400 bg-clip-text text-transparent mb-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-gold-gradient font-display mb-2">
                   You Have Been Challenged!
                 </h2>
-                <p className="text-muted-foreground dark:text-muted-foreground/80 text-lg">
+                <p className="text-muted-foreground text-lg">
                   {challengerWizard.name} awaits your response to this magical
                   duel
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground dark:text-muted-foreground/80">
+                <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground">
                   <Hash className="h-4 w-4" />
                   <span>Duel Code:</span>
-                  <span className="font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100/50 dark:bg-purple-900/30 px-2 py-1 rounded border border-purple-200/50 dark:border-purple-700/30">
+                  <span className="font-mono font-bold text-primary bg-primary/50 px-2 py-1 rounded border border-primary/50">
                     {duel.shortcode}
                   </span>
                 </div>
@@ -337,16 +311,16 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
           {(!canJoinDuel || !challengerWizard) && (
             <div className="mb-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <Swords className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                <Swords className="h-8 w-8 text-primary" />
+                <h2 className="text-3xl font-bold text-gold-gradient font-display">
                   Join Duel
                 </h2>
-                <Swords className="h-8 w-8 text-purple-600 dark:text-purple-400 scale-x-[-1]" />
+                <Swords className="h-8 w-8 text-primary scale-x-[-1]" />
               </div>
-              <div className="flex items-center justify-center gap-2 text-muted-foreground dark:text-muted-foreground/80">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Hash className="h-4 w-4" />
                 <span>Shortcode:</span>
-                <span className="font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-100/50 dark:bg-purple-900/30 px-2 py-1 rounded border border-purple-200/50 dark:border-purple-700/30">
+                <span className="font-mono font-bold text-primary bg-primary/50 px-2 py-1 rounded border border-primary/50">
                   {duel.shortcode}
                 </span>
               </div>
@@ -355,20 +329,20 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
 
           <div className="max-w-2xl mx-auto">
             {!canJoinDuel ? (
-              <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+              <Card className="bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                    <AlertCircle className="h-5 w-5 text-orange-500 dark:text-orange-400" />
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <AlertCircle className="h-5 w-5 text-warning" />
                     Duel Status
                   </CardTitle>
-                  <CardDescription className="dark:text-muted-foreground/80">
+                  <CardDescription>
                     This duel is no longer accepting new players
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-background/50 dark:bg-background/30 rounded-lg border border-border/30 dark:border-border/20">
-                      <span className="text-muted-foreground dark:text-muted-foreground/80 flex items-center gap-2">
+                    <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border/30">
+                      <span className="text-muted-foreground flex items-center gap-2">
                         <Sparkles className="h-4 w-4" />
                         Status:
                       </span>
@@ -378,40 +352,38 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                         }
                         className={
                           duel.status === "COMPLETED"
-                            ? "bg-blue-100/80 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30"
-                            : "bg-green-100/80 dark:bg-green-900/50 text-green-800 dark:text-green-200 border-green-200/50 dark:border-green-700/30"
+                            ? "bg-info/80 text-info-foreground border-info/50"
+                            : "bg-success/80 text-success-foreground border-success/50"
                         }
                       >
                         {duel.status.replace("_", " ")}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-background/50 dark:bg-background/30 rounded-lg border border-border/30 dark:border-border/20">
-                      <span className="text-muted-foreground dark:text-muted-foreground/80 flex items-center gap-2">
+                    <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border/30">
+                      <span className="text-muted-foreground flex items-center gap-2">
                         <Swords className="h-4 w-4" />
                         Type:
                       </span>
-                      <span className="font-medium text-foreground dark:text-foreground/95">
+                      <span className="font-medium text-foreground">
                         {typeof duel.numberOfRounds === "number"
                           ? `${duel.numberOfRounds} Round Duel`
                           : "Duel to the Death"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-background/50 dark:bg-background/30 rounded-lg border border-border/30 dark:border-border/20">
-                      <span className="text-muted-foreground dark:text-muted-foreground/80 flex items-center gap-2">
+                    <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border/30">
+                      <span className="text-muted-foreground flex items-center gap-2">
                         <Users className="h-4 w-4" />
                         Players:
                       </span>
-                      <span className="font-medium text-foreground dark:text-foreground/95">
+                      <span className="font-medium text-foreground">
                         {duel.players.length}
                       </span>
                     </div>
                   </div>
                   <div className="mt-6 flex gap-3">
-                    <Link href="/">
-                      <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                        Go to Dashboard
-                      </Button>
-                    </Link>
+                    <Button asChild>
+                      <Link href="/">Go to Dashboard</Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -419,47 +391,47 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
               <>
                 {/* Duel Information - Compact Version */}
                 {canJoinDuel && (
-                  <Card className="mb-6 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+                  <Card className="mb-6 bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                        <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <CardTitle className="flex items-center gap-2 text-foreground">
+                        <Sparkles className="h-5 w-5 text-primary" />
                         Duel Details
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center p-3 bg-background/50 dark:bg-background/30 rounded-lg border border-border/30 dark:border-border/20">
+                        <div className="text-center p-3 bg-background/50 rounded-lg border border-border/30">
                           <div className="flex items-center justify-center gap-2 mb-1">
-                            <Swords className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                            <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground/80">
+                            <Swords className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium text-muted-foreground">
                               Type
                             </span>
                           </div>
-                          <span className="font-semibold text-foreground dark:text-foreground/95">
+                          <span className="font-semibold text-foreground">
                             {typeof duel.numberOfRounds === "number"
                               ? `${duel.numberOfRounds} Rounds`
                               : "To the Death"}
                           </span>
                         </div>
-                        <div className="text-center p-3 bg-background/50 dark:bg-background/30 rounded-lg border border-border/30 dark:border-border/20">
+                        <div className="text-center p-3 bg-background/50 rounded-lg border border-border/30">
                           <div className="flex items-center justify-center gap-2 mb-1">
-                            <Users className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                            <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground/80">
+                            <Users className="h-4 w-4 text-info" />
+                            <span className="text-sm font-medium text-muted-foreground">
                               Players
                             </span>
                           </div>
-                          <span className="font-semibold text-foreground dark:text-foreground/95">
+                          <span className="font-semibold text-foreground">
                             {duel.players.length}/2
                           </span>
                         </div>
-                        <div className="text-center p-3 bg-background/50 dark:bg-background/30 rounded-lg border border-border/30 dark:border-border/20">
+                        <div className="text-center p-3 bg-background/50 rounded-lg border border-border/30">
                           <div className="flex items-center justify-center gap-2 mb-1">
-                            <Calendar className="h-4 w-4 text-green-500 dark:text-green-400" />
-                            <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground/80">
+                            <Calendar className="h-4 w-4 text-success" />
+                            <span className="text-sm font-medium text-muted-foreground">
                               Created
                             </span>
                           </div>
-                          <span className="font-semibold text-foreground dark:text-foreground/95">
+                          <span className="font-semibold text-foreground">
                             {new Date(duel.createdAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -469,78 +441,76 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                 )}
 
                 {!user ? (
-                  <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+                  <Card className="bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                        <LogIn className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <CardTitle className="flex items-center gap-2 text-foreground">
+                        <LogIn className="h-5 w-5 text-primary" />
                         Sign In to Join Duel
                       </CardTitle>
-                      <CardDescription className="dark:text-muted-foreground/80">
+                      <CardDescription>
                         Create an account or sign in to participate in this epic
                         duel
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground dark:text-muted-foreground/80 mb-6">
+                      <p className="text-muted-foreground mb-6">
                         Join the magical world of wizard dueling! Create your
                         account to build wizards and challenge other players.
                       </p>
                       <div className="flex gap-3">
-                        <Link
-                          href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}
-                        >
-                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
+                        <Button asChild>
+                          <Link
+                            href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}
+                          >
                             <LogIn className="h-4 w-4 mr-2" />
                             Sign In
-                          </Button>
-                        </Link>
-                        <Link
-                          href={`/sign-up?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}
+                          </Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="border-primary/30 text-primary hover:bg-primary/8"
                         >
-                          <Button
-                            variant="outline"
-                            className="border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/50"
+                          <Link
+                            href={`/sign-up?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}
                           >
                             <UserPlus className="h-4 w-4 mr-2" />
                             Create Account
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
                 ) : !wizards || wizards.length === 0 ? (
-                  <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+                  <Card className="bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                        <UserPlus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <CardTitle className="flex items-center gap-2 text-foreground">
+                        <UserPlus className="h-5 w-5 text-primary" />
                         Create Your First Wizard
                       </CardTitle>
-                      <CardDescription className="dark:text-muted-foreground/80">
+                      <CardDescription>
                         You need at least one wizard to join a duel
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground dark:text-muted-foreground/80 mb-6">
+                      <p className="text-muted-foreground mb-6">
                         Create your magical wizard to participate in this epic
                         duel!
                       </p>
-                      <Button
-                        onClick={handleCreateWizard}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                      >
+                      <Button onClick={handleCreateWizard}>
                         <Sparkles className="h-4 w-4 mr-2" />
                         Create Wizard
                       </Button>
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+                  <Card className="bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                        <UserPlus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <CardTitle className="flex items-center gap-2 text-foreground">
+                        <UserPlus className="h-5 w-5 text-primary" />
                         Select Your Wizard
                       </CardTitle>
-                      <CardDescription className="dark:text-muted-foreground/80">
+                      <CardDescription>
                         Choose which wizard will represent you in this duel
                       </CardDescription>
                     </CardHeader>
@@ -551,14 +521,14 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                             key={wizard._id}
                             className={`p-3 border rounded-lg cursor-pointer transition-all ${
                               selectedWizard === wizard._id
-                                ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                                ? "border-primary bg-primary/8"
                                 : "border-border hover:border-muted-foreground"
                             }`}
                             onClick={() => handleWizardSelect(wizard._id)}
                           >
                             <div className="flex items-center gap-3">
                               {/* Wizard Image */}
-                              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                                 {wizard.illustration ? (
                                   <ConvexImage
                                     storageId={wizard.illustration}
@@ -576,7 +546,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                                  <div className="w-full h-full bg-arcane flex items-center justify-center text-white font-bold text-lg">
                                     {wizard.name.charAt(0).toUpperCase()}
                                   </div>
                                 )}
@@ -602,7 +572,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                                   <Badge variant="secondary">New</Badge>
                                 )}
                                 {selectedWizard === wizard._id && (
-                                  <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                                     <span className="text-white text-xs">
                                       ✓
                                     </span>
@@ -615,7 +585,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                       </div>
 
                       {!selectedWizard && (
-                        <div className="flex items-center gap-2 text-sm text-destructive dark:text-red-400 mt-2 p-3 bg-red-50/50 dark:bg-red-950/20 rounded-lg border border-red-200/50 dark:border-red-800/30">
+                        <div className="flex items-center gap-2 text-sm text-destructive mt-2 p-3 bg-destructive/50 rounded-lg border border-destructive/50">
                           <AlertCircle className="h-4 w-4" />
                           Please select a wizard
                         </div>
@@ -625,11 +595,15 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                         <Button
                           onClick={handleJoinDuel}
                           disabled={!selectedWizard || isJoining}
-                          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isJoining ? (
                             <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              <RuneSpinner
+                                size="xs"
+                                label="Working…"
+                                className="mr-2"
+                              />
                               Joining Duel...
                             </>
                           ) : (
@@ -643,7 +617,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                           variant="outline"
                           onClick={handleCreateWizard}
                           disabled={isJoining}
-                          className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30 disabled:opacity-50"
+                          className="border-border/50 hover:bg-accent/50 dark:hover:bg-accent/30 disabled:opacity-50"
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
                           Create New Wizard
@@ -673,28 +647,15 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="relative mb-6">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
-          <div
-            className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto"
-            style={{
-              animationDirection: "reverse",
-              animationDuration: "1.5s",
-            }}
-          ></div>
-        </div>
-        <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
+        <RuneSpinner size="lg" hideLabel label="Loading…" className="mb-6" />
+        <div className="bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl px-6 py-4 shadow-lg dark:shadow-xl">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
-            <p className="text-foreground dark:text-foreground/95 font-medium">
-              Loading duel...
-            </p>
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <p className="text-foreground font-medium">Loading duel...</p>
           </div>
-          <p className="text-muted-foreground dark:text-muted-foreground/80 text-sm">
-            Preparing to join
-          </p>
+          <p className="text-muted-foreground text-sm">Preparing to join</p>
         </div>
       </div>
     </div>

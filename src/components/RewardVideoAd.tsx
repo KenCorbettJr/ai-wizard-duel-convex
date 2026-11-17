@@ -7,7 +7,8 @@ import { api } from "../../convex/_generated/api";
 import { useAnonymousSession } from "../hooks/useAnonymousSession";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Play, Gift, Loader2, X, Coins } from "lucide-react";
+import { Play, Gift, X, Coins } from "lucide-react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface RewardVideoAdProps {
   onAdCompleted: () => void;
@@ -97,12 +98,12 @@ export function RewardVideoAd({
   if (hasWatched && rewardResult) {
     const isSuccess = rewardResult.success;
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <Card
           className={`max-w-md mx-4 transform transition-all duration-500 scale-100 ${
             isSuccess
-              ? "bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 border-green-200 dark:border-green-800 shadow-lg shadow-green-200/50 dark:shadow-green-900/50"
-              : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 border-red-200 dark:border-red-800"
+              ? "bg-linear-to-br from-success/20 via-success/20 to-success/5 border-success/40 shadow-lg shadow-success/50"
+              : "bg-linear-to-r from-destructive/20 to-warning/20 border-destructive/40"
           }`}
         >
           <CardHeader className="relative">
@@ -129,26 +130,26 @@ export function RewardVideoAd({
             <div className="mb-4">
               {isSuccess ? (
                 <div className="relative">
-                  <Gift className="h-16 w-16 mx-auto text-green-600 dark:text-green-400 animate-pulse" />
+                  <Gift className="h-16 w-16 mx-auto text-success animate-pulse" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 border-4 border-green-300 dark:border-green-600 rounded-full animate-ping opacity-20"></div>
+                    <div className="w-20 h-20 border-4 border-success/40 rounded-full animate-ping opacity-20"></div>
                   </div>
                 </div>
               ) : (
-                <X className="h-12 w-12 mx-auto text-red-600 dark:text-red-400" />
+                <X className="h-12 w-12 mx-auto text-destructive" />
               )}
             </div>
 
             {isSuccess && (
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-green-200 dark:border-green-700 shimmer-effect">
-                <div className="flex items-center justify-center gap-3 text-lg font-bold text-green-600 dark:text-green-400">
+              <div className="bg-card p-4 rounded-lg border-2 border-success/40 shimmer-effect">
+                <div className="flex items-center justify-center gap-3 text-lg font-bold text-success">
                   <Coins className="h-6 w-6 animate-spin" />
                   <span className="animate-credit-pulse">
                     +{rewardResult.creditsAwarded} Image Credit
                     {rewardResult.creditsAwarded !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                <p className="text-sm text-success mt-2">
                   Added to your account instantly!
                 </p>
               </div>
@@ -156,9 +157,7 @@ export function RewardVideoAd({
 
             <p
               className={`text-sm ${
-                isSuccess
-                  ? "text-green-700 dark:text-green-300"
-                  : "text-red-600 dark:text-red-400"
+                isSuccess ? "text-success" : "text-destructive"
               }`}
             >
               {rewardResult.message}
@@ -166,11 +165,7 @@ export function RewardVideoAd({
 
             <Button
               onClick={handleClose}
-              className={`w-full ${
-                isSuccess
-                  ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                  : ""
-              }`}
+              className={`w-full ${isSuccess ? "" : ""}`}
             >
               {isSuccess ? "Awesome! Continue" : "Try Again Later"}
             </Button>
@@ -182,8 +177,8 @@ export function RewardVideoAd({
 
   // Show ad watching interface
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="max-w-md mx-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200 dark:border-purple-800">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <Card className="max-w-md mx-4 bg-arcane-soft border-primary/30">
         <CardHeader className="relative">
           <Button
             variant="ghost"
@@ -200,7 +195,7 @@ export function RewardVideoAd({
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-dashed border-purple-300 dark:border-purple-600">
+          <div className="bg-card p-6 rounded-lg border-2 border-dashed border-primary/50">
             <div className="text-4xl mb-2">🎬</div>
             <h3 className="text-lg font-semibold mb-2">Watch & Earn</h3>
             <p className="text-sm text-muted-foreground mb-4">
@@ -208,7 +203,7 @@ export function RewardVideoAd({
               credit!
             </p>
 
-            <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400 mb-4">
+            <div className="flex items-center justify-center gap-2 text-sm text-success mb-4">
               <Gift className="h-4 w-4" />
               <span>+1 Image Credit</span>
             </div>
@@ -216,11 +211,11 @@ export function RewardVideoAd({
             <Button
               onClick={handleWatchVideo}
               disabled={isWatching || !user}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full"
             >
               {isWatching ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
                   Watching Video...
                 </>
               ) : (

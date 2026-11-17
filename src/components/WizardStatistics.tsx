@@ -201,7 +201,7 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-muted rounded-full h-2">
                     <div
-                      className="bg-green-500 h-2 rounded-full"
+                      className="bg-success h-2 rounded-full"
                       style={{
                         width: `${wins + losses > 0 ? (wins / (wins + losses)) * 100 : 0}%`,
                       }}
@@ -217,7 +217,7 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-muted rounded-full h-2">
                     <div
-                      className="bg-red-500 h-2 rounded-full"
+                      className="bg-destructive h-2 rounded-full"
                       style={{
                         width: `${wins + losses > 0 ? (losses / (wins + losses)) * 100 : 0}%`,
                       }}
@@ -246,7 +246,7 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-muted rounded-full h-2">
                     <div
-                      className="bg-blue-500 h-2 rounded-full"
+                      className="bg-info h-2 rounded-full"
                       style={{
                         width: `${totalDuels > 0 ? (completedDuels.length / totalDuels) * 100 : 0}%`,
                       }}
@@ -262,7 +262,7 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-muted rounded-full h-2">
                     <div
-                      className="bg-yellow-500 h-2 rounded-full"
+                      className="bg-warning h-2 rounded-full"
                       style={{
                         width: `${totalDuels > 0 ? (activeDuels.length / totalDuels) * 100 : 0}%`,
                       }}
@@ -278,7 +278,7 @@ export function WizardStatistics({ wizardId }: WizardStatisticsProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-muted rounded-full h-2">
                     <div
-                      className="bg-gray-500 h-2 rounded-full"
+                      className="bg-muted-foreground/60 h-2 rounded-full"
                       style={{
                         width: `${totalDuels > 0 ? (cancelledDuels.length / totalDuels) * 100 : 0}%`,
                       }}

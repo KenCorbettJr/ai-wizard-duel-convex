@@ -1,4 +1,5 @@
-import { Show, SignInButton, PricingTable } from "@clerk/nextjs";
+import { Show } from "@clerk/nextjs";
+import { MountedPricingTable } from "@/components/MountedPricingTable";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import {
   Coins,
   Gift,
   Crown,
+  Laugh,
 } from "lucide-react";
 import type { Metadata } from "next";
 import DashboardContent from "@/components/DashboardContent";
@@ -51,37 +53,41 @@ function LandingPage() {
       </div>
 
       {/* Hero Section */}
-      <section className="hero bg-gradient-to-b from-background to-secondary/30 dark:from-background dark:to-secondary relative">
+      <section className="hero bg-linear-to-b from-background to-secondary/30 dark:from-background dark:to-secondary relative">
         <div className="absolute inset-0 hero-gradient" />
         <div className="container mx-auto h-[95vh] relative z-10 flex items-end">
-          <div className="text-center max-w-2xl mx-auto p-4 mt-96">
-            <h1 className="text-6xl font-bold mb-6 text-white font-[family-name:var(--font-cinzel)]">
+          <div className="text-center max-w-2xl mx-auto p-4 mt-[40vh]">
+            <h1 className="mb-6 text-5xl font-bold text-white font-display sm:text-6xl">
               AI Wizard Duel
             </h1>
             <p className="text-2xl text-white mb-4">
               Where Wizards Clash and Legends Rise!
             </p>
             <Show when="signed-out">
-              <Link href="/waitlist">
-                <Button
-                  size="lg"
-                  className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
-                >
-                  <Zap className="w-5 h-5 mr-2" />
+              <Button
+                asChild
+                size="lg"
+                variant="gold"
+                className="mb-12 text-lg"
+              >
+                <Link href="/waitlist">
+                  <Zap aria-hidden="true" />
                   Join Waitlist
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </Show>
             <Show when="signed-in">
-              <Link href="/">
-                <Button
-                  size="lg"
-                  className="text-lg drop-shadow-xl mb-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
-                >
-                  <Zap className="w-5 h-5 mr-2" />
+              <Button
+                asChild
+                size="lg"
+                variant="gold"
+                className="mb-12 text-lg"
+              >
+                <Link href="/">
+                  <Zap aria-hidden="true" />
                   Start Dueling
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </Show>
           </div>
         </div>
@@ -91,7 +97,7 @@ function LandingPage() {
       <section className="bg-background py-16 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               Unique Gameplay Mechanics
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -121,7 +127,7 @@ function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+              <h2 className="text-3xl font-bold mb-6 font-display">
                 Only Limited By Your Imagination
               </h2>
               <p className="text-lg text-muted-foreground mb-6">
@@ -130,7 +136,7 @@ function LandingPage() {
                 magic. Whatever you decide, our AI brings your creative spells
                 to life weaving them into an epic tale.
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
                 <FeatureCard
                   icon={Brain}
                   title="Creative Freedom"
@@ -155,7 +161,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               Master the Art of Magical Combat
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -181,7 +187,7 @@ function LandingPage() {
       </section>
 
       {/* Epic Battles */}
-      <section className="bg-secondary/30 dark:bg-secondary py-16">
+      <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <DuelExample
@@ -189,7 +195,7 @@ function LandingPage() {
               description="Two wizards locked in an epic battle of light and shadow"
             />
             <div>
-              <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+              <h2 className="text-3xl font-bold mb-6 font-display">
                 Epic Magical Battles
               </h2>
               <p className="text-lg text-muted-foreground mb-6">
@@ -197,7 +203,7 @@ function LandingPage() {
                 unexpected ways, create magical chain reactions, and experience
                 battles that unfold like chapters in a fantasy novel.
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
                 <FeatureCard
                   icon={Sparkles}
                   title="Magical Synergies"
@@ -218,7 +224,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               Fun and Hilarious Duels
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -230,7 +236,7 @@ function LandingPage() {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FeatureCard
-                emoji="😂"
+                icon={Laugh}
                 title="Unpredictable Outcomes"
                 description="Because anything can happen in a wizard duel, the results are often hilariously entertaining!"
               />
@@ -248,8 +254,8 @@ function LandingPage() {
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <Coins className="w-12 h-12 mb-4 text-yellow-500 inline-block" />
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <Coins className="w-12 h-12 mb-4 text-gold inline-block" />
+            <h2 className="text-3xl font-bold mb-6 font-display">
               Bring Your Spells to Life
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
@@ -258,7 +264,7 @@ function LandingPage() {
               illustrations for your spells and wizards.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
             <FeatureCard
               icon={Gift}
               title="Free Credits"
@@ -289,7 +295,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               Choose Your Path
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -305,23 +311,7 @@ function LandingPage() {
               1. Free Wizard - $0/month with basic features
               2. Premium Wizard - $9.99/month with unlimited features
             */}
-            <PricingTable
-              appearance={{
-                elements: {
-                  pricingTable: "bg-transparent",
-                  pricingTableCard:
-                    "border border-border bg-card text-card-foreground shadow-sm rounded-lg",
-                  pricingTableCardHeader: "text-center p-6",
-                  pricingTableCardTitle: "text-2xl font-bold",
-                  pricingTableCardPrice: "text-3xl font-bold mt-2",
-                  pricingTableCardDescription: "text-muted-foreground mt-1",
-                  pricingTableCardFeatures: "space-y-3 p-6",
-                  pricingTableCardFeature: "flex items-center gap-3",
-                  pricingTableCardButton:
-                    "w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200",
-                },
-              }}
-            />
+            <MountedPricingTable />
           </div>
         </div>
       </section>
@@ -330,7 +320,7 @@ function LandingPage() {
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               How It Works
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -339,10 +329,12 @@ function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-purple-600">1</span>
+              <div className="w-16 h-16 bg-arcane rounded-full flex items-center justify-center mx-auto shadow-lg shadow-primary/30 ring-2 ring-gold/50">
+                <span className="text-2xl font-bold font-display text-white">
+                  1
+                </span>
               </div>
-              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+              <h3 className="text-xl font-semibold font-display">
                 Sign Up Free
               </h3>
               <p className="text-muted-foreground">
@@ -350,10 +342,12 @@ function LandingPage() {
               </p>
             </div>
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-blue-600">2</span>
+              <div className="w-16 h-16 bg-arcane rounded-full flex items-center justify-center mx-auto shadow-lg shadow-primary/30 ring-2 ring-gold/50">
+                <span className="text-2xl font-bold font-display text-white">
+                  2
+                </span>
               </div>
-              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+              <h3 className="text-xl font-semibold font-display">
                 Create Your Wizard
               </h3>
               <p className="text-muted-foreground">
@@ -361,10 +355,12 @@ function LandingPage() {
               </p>
             </div>
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-green-600">3</span>
+              <div className="w-16 h-16 bg-arcane rounded-full flex items-center justify-center mx-auto shadow-lg shadow-primary/30 ring-2 ring-gold/50">
+                <span className="text-2xl font-bold font-display text-white">
+                  3
+                </span>
               </div>
-              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+              <h3 className="text-xl font-semibold font-display">
                 Cast Spells
               </h3>
               <p className="text-muted-foreground">
@@ -372,10 +368,12 @@ function LandingPage() {
               </p>
             </div>
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-yellow-600">4</span>
+              <div className="w-16 h-16 bg-arcane rounded-full flex items-center justify-center mx-auto shadow-lg shadow-primary/30 ring-2 ring-gold/50">
+                <span className="text-2xl font-bold font-display text-white">
+                  4
+                </span>
               </div>
-              <h3 className="text-xl font-semibold font-[family-name:var(--font-cinzel)]">
+              <h3 className="text-xl font-semibold font-display">
                 Watch Magic Unfold
               </h3>
               <p className="text-muted-foreground">
@@ -391,7 +389,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               What Players Are Saying
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -403,7 +401,13 @@ function LandingPage() {
             <Card className="bg-background">
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div className="flex text-yellow-400">{"★".repeat(5)}</div>
+                  <div
+                    className="flex text-warning"
+                    aria-label="5 out of 5 stars"
+                    role="img"
+                  >
+                    {"★".repeat(5)}
+                  </div>
                   <p className="text-muted-foreground italic">
                     &ldquo;The creativity this game unleashes is incredible!
                     I&apos;ve never had so much fun coming up with magical
@@ -411,7 +415,7 @@ function LandingPage() {
                     fantasy movie.&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-10 h-10 bg-arcane rounded-full flex items-center justify-center text-white font-bold">
                       M
                     </div>
                     <div>
@@ -428,14 +432,20 @@ function LandingPage() {
             <Card className="bg-background">
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div className="flex text-yellow-400">{"★".repeat(5)}</div>
+                  <div
+                    className="flex text-warning"
+                    aria-label="5 out of 5 stars"
+                    role="img"
+                  >
+                    {"★".repeat(5)}
+                  </div>
                   <p className="text-muted-foreground italic">
                     &ldquo;Way better than rock-paper-scissors! My friends and I
                     use this to settle everything now. The simultaneous spell
                     casting keeps everyone on their toes. So much fun!&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-10 h-10 bg-arcane rounded-full flex items-center justify-center text-white font-bold">
                       S
                     </div>
                     <div>
@@ -452,7 +462,13 @@ function LandingPage() {
             <Card className="bg-background">
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div className="flex text-yellow-400">{"★".repeat(5)}</div>
+                  <div
+                    className="flex text-warning"
+                    aria-label="5 out of 5 stars"
+                    role="img"
+                  >
+                    {"★".repeat(5)}
+                  </div>
                   <p className="text-muted-foreground italic">
                     &ldquo;The free tier is generous enough to really enjoy the
                     game, but Premium is totally worth it for unlimited image
@@ -460,7 +476,7 @@ function LandingPage() {
                     artwork!&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-red-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-10 h-10 bg-arcane rounded-full flex items-center justify-center text-white font-bold">
                       A
                     </div>
                     <div>
@@ -481,9 +497,7 @@ function LandingPage() {
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
           <Trophy className="w-12 h-12 mb-4 text-primary inline-block" />
-          <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
-            Leaderboard
-          </h2>
+          <h2 className="text-3xl font-bold mb-6 font-display">Leaderboard</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             See who&apos;s mastering the arcane arts! Our leaderboard tracks the
             most successful wizards. Climb the ranks, earn recognition, and
@@ -491,11 +505,9 @@ function LandingPage() {
             magical realm.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/leaderboard">
-              <Button variant="outline" size="lg">
-                Check Out Leaderboard
-              </Button>
-            </Link>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/leaderboard">Check Out Leaderboard</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -504,7 +516,7 @@ function LandingPage() {
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+            <h2 className="text-3xl font-bold mb-6 font-display">
               Frequently Asked Questions
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -597,7 +609,7 @@ function LandingPage() {
       {/* Call to Action */}
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6 font-[family-name:var(--font-cinzel)]">
+          <h2 className="text-3xl font-bold mb-6 font-display">
             Begin Your Magical Journey
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -606,32 +618,24 @@ function LandingPage() {
             the boundaries of imagination.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/duels/watch">
-              <Button variant="outline" size="lg">
-                Watch Duels
-              </Button>
-            </Link>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/duels/watch">Watch Duels</Link>
+            </Button>
             <Show when="signed-out">
-              <Link href="/waitlist">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
-                >
-                  <Zap className="w-5 h-5 mr-2" />
+              <Button asChild size="lg">
+                <Link href="/waitlist">
+                  <Zap aria-hidden="true" />
                   Join Waitlist
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </Show>
             <Show when="signed-in">
-              <Link href="/dashboard">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 transform hover:scale-105 transition-all duration-200"
-                >
-                  <Zap className="w-5 h-5 mr-2" />
+              <Button asChild size="lg">
+                <Link href="/dashboard">
+                  <Zap aria-hidden="true" />
                   Go to Dashboard
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </Show>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
 import { Toaster } from "sonner";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,7 +50,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   themeColor: "#9333ea",
 };
 
@@ -75,12 +75,18 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+          >
+            Skip to main content
+          </a>
           <ClerkProvider>
             <ConvexClientProvider>
               <Suspense
                 fallback={
                   <div className="min-h-screen flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                    <RuneSpinner size="lg" />
                   </div>
                 }
               >

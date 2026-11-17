@@ -51,21 +51,18 @@ export function MigrationPrompt({
 
   return (
     <Card
-      className={`border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 ${className}`}
+      className={`border-primary/30 bg-linear-to-br from-primary/15 to-gold/20 ${className}`}
     >
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-            <User className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <div className="p-2 bg-primary/12 rounded-lg">
+            <User className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg">{content.title}</CardTitle>
             <CardDescription>{content.description}</CardDescription>
           </div>
-          <Badge
-            variant="secondary"
-            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-          >
+          <Badge variant="secondary" className="bg-success/15 text-success">
             <Gift className="h-3 w-3 mr-1" />
             Free Setup
           </Badge>
@@ -75,36 +72,36 @@ export function MigrationPrompt({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-3">
-            <h4 className="font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
+            <h4 className="font-medium text-primary flex items-center gap-2">
               <Star className="h-4 w-4" />
               What you&apos;ll get:
             </h4>
-            <ul className="text-sm space-y-2 text-purple-700 dark:text-purple-300">
+            <ul className="text-sm space-y-2 text-primary">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                 Unique handle like @{"{username}"}
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                 Public profile to showcase wizards
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                 Recognition in the community
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                 Easy sharing of achievements
               </li>
             </ul>
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
+            <h4 className="font-medium text-primary flex items-center gap-2">
               <Users className="h-4 w-4" />
               Join thousands of wizards:
             </h4>
-            <div className="text-sm text-purple-700 dark:text-purple-300 space-y-1">
+            <div className="text-sm text-primary space-y-1">
               <p>✨ Create unlimited wizards</p>
               <p>🎮 Participate in epic duels</p>
               <p>🏆 Build your magical reputation</p>
@@ -113,16 +110,16 @@ export function MigrationPrompt({
           </div>
         </div>
 
-        <div className="pt-4 border-t border-purple-200 dark:border-purple-800">
+        <div className="pt-4 border-t border-primary/30">
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href="/profile/setup" className="flex-1">
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
+            <Button asChild className="flex-1 w-full">
+              <Link href="/profile/setup">
                 Complete Profile Setup
                 <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <div className="text-center sm:text-left">
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+              <p className="text-xs text-primary mt-2">
                 Takes less than 2 minutes • Free forever
               </p>
             </div>

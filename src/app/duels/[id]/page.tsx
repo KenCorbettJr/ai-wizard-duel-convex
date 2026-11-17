@@ -70,13 +70,14 @@ export async function generateMetadata({
 }
 
 import { Suspense } from "react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 function LoadingFallback() {
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
+          <RuneSpinner size="md" label="Loading…" />
           <p className="text-muted-foreground">Loading duel...</p>
         </div>
       </div>

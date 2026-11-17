@@ -50,11 +50,11 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
   // Use safe queries that handle invalid IDs gracefully
   const wizard = useQuery(
     api.wizards.getWizardWithOwner,
-    wizardId ? { wizardId } : "skip"
+    wizardId ? { wizardId } : "skip",
   );
   const wizardDuels = useQuery(
     api.duels.getWizardDuelsSafe,
-    wizardId ? { wizardId } : "skip"
+    wizardId ? { wizardId } : "skip",
   );
 
   if (
@@ -62,7 +62,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
     wizardId !== null
   ) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-muted rounded mb-6"></div>
@@ -76,9 +76,9 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
     const isInvalidId = wizardId === null;
 
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">
+          <h1 className="font-display text-3xl font-bold tracking-wide mb-4">
             {isInvalidId ? "Invalid Wizard ID" : "Wizard Not Found"}
           </h1>
           <p className="text-muted-foreground mb-6">
@@ -113,7 +113,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
   const activeDuels =
     wizardDuels?.filter(
       (duel) =>
-        duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS"
+        duel.status === "IN_PROGRESS" || duel.status === "WAITING_FOR_PLAYERS",
     ) || [];
 
   const isOwner = user && wizard && user.id === wizard.owner;
@@ -125,7 +125,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
 
   if (isEditing && wizard) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <EditWizardForm
           wizard={wizard}
           onClose={() => setIsEditing(false)}
@@ -148,7 +148,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
           variant="ghost"
           size="sm"
           onClick={() => router.back()}
-          className="hover:bg-white/20"
+          className="hover:bg-accent"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
@@ -156,7 +156,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
       </div>
 
       {/* Hero Image Section */}
-      <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] mb-8 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
+      <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] mb-8 bg-linear-to-br from-muted to-muted/30 overflow-hidden">
         {/* Dynamic blurred background when wizard has an image */}
         {(wizard.illustration || wizard.illustrationURL) && (
           <div className="absolute inset-0 w-full h-full">
@@ -202,10 +202,10 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
               />
             ) : null}
             {/* Subtle gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-20" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-20" />
           </div>
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center">
+          <div className="w-full h-full bg-arcane flex items-center justify-center">
             <Zap className="w-24 h-24 text-white" />
           </div>
         )}
@@ -227,7 +227,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
               {wizard.isAIPowered && (
                 <Badge
                   variant="secondary"
-                  className="text-sm bg-white/90 text-gray-800 shadow-lg"
+                  className="text-sm bg-card/90 text-foreground shadow-lg"
                 >
                   🤖 AI Powered
                 </Badge>
@@ -262,55 +262,43 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8 max-w-5xl mx-auto">
-          <div className="bg-green-50 dark:bg-green-950/30 p-6 rounded-lg text-center border border-green-200 dark:border-green-800">
-            <Trophy className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+          <div className="bg-success/10 p-6 rounded-lg text-center border border-success/40">
+            <Trophy className="w-8 h-8 text-success mx-auto mb-3" />
+            <div className="text-3xl font-bold text-success">
               {wizard.wins || 0}
             </div>
-            <div className="text-sm text-green-600 dark:text-green-400">
-              Wins
-            </div>
+            <div className="text-sm text-success">Wins</div>
           </div>
 
-          <div className="bg-red-50 dark:bg-red-950/30 p-6 rounded-lg text-center border border-red-200 dark:border-red-800">
-            <Skull className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-red-700 dark:text-red-300">
+          <div className="bg-destructive/10 p-6 rounded-lg text-center border border-destructive/40">
+            <Skull className="w-8 h-8 text-destructive mx-auto mb-3" />
+            <div className="text-3xl font-bold text-destructive">
               {wizard.losses || 0}
             </div>
-            <div className="text-sm text-red-600 dark:text-red-400">Losses</div>
+            <div className="text-sm text-destructive">Losses</div>
           </div>
 
-          <div className="bg-blue-50 dark:bg-blue-950/30 p-6 rounded-lg text-center border border-blue-200 dark:border-blue-800">
-            <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
-              {winRate}%
-            </div>
-            <div className="text-sm text-blue-600 dark:text-blue-400">
-              Win Rate
-            </div>
+          <div className="bg-info/10 p-6 rounded-lg text-center border border-info/40">
+            <TrendingUp className="w-8 h-8 text-info mx-auto mb-3" />
+            <div className="text-3xl font-bold text-info">{winRate}%</div>
+            <div className="text-sm text-info">Win Rate</div>
           </div>
 
-          <div className="bg-purple-50 dark:bg-purple-950/30 p-6 rounded-lg text-center border border-purple-200 dark:border-purple-800">
-            <Users className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
-              {totalDuels}
-            </div>
-            <div className="text-sm text-purple-600 dark:text-purple-400">
-              Total Duels
-            </div>
+          <div className="bg-primary/8 p-6 rounded-lg text-center border border-primary/30">
+            <Users className="w-8 h-8 text-primary mx-auto mb-3" />
+            <div className="text-3xl font-bold text-primary">{totalDuels}</div>
+            <div className="text-sm text-primary">Total Duels</div>
           </div>
 
-          <div className="bg-amber-50 dark:bg-amber-950/30 p-6 rounded-lg text-center border border-amber-200 dark:border-amber-800">
-            <Zap className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-3" />
-            <div className="text-3xl font-bold text-amber-700 dark:text-amber-300">
+          <div className="bg-warning/10 p-6 rounded-lg text-center border border-warning/40">
+            <Zap className="w-8 h-8 text-warning mx-auto mb-3" />
+            <div className="text-3xl font-bold text-warning">
               {wizard.effectiveLuckScore || 10}
             </div>
-            <div className="text-sm text-amber-600 dark:text-amber-400">
+            <div className="text-sm text-warning">
               Luck Score
               {wizard.hasCompletionRelic && (
-                <span className="block text-xs text-amber-500 dark:text-amber-300">
-                  (+1 Relic)
-                </span>
+                <span className="block text-xs text-warning">(+1 Relic)</span>
               )}
             </div>
           </div>
@@ -338,24 +326,29 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
             </Button>
           )}
           {isOwner && (
-            <Link href={`/campaign/wizard/${wizardId}`}>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-3"
+            >
+              <Link href={`/campaign/wizard/${wizardId}`}>
                 <Scroll className="w-5 h-5 mr-2" />
                 Campaign
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
-          <Link href={`/duels/create?wizardId=${wizardId}`}>
-            <Button size="lg" className="text-lg px-8 py-3">
+          <Button asChild size="lg" className="text-lg px-8 py-3">
+            <Link href={`/duels/create?wizardId=${wizardId}`}>
               <Swords className="w-5 h-5 mr-2" />
               {isOwner ? "Start New Duel" : "Challenge to Duel"}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         {/* Detailed Statistics */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-foreground mb-6">
+          <h2 className="font-display text-2xl font-bold text-foreground mb-6">
             Statistics
           </h2>
           <WizardStatistics wizardId={wizardId} showDetailedHistory={false} />
@@ -368,7 +361,9 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
 
         {/* Duel History */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-foreground">Duel History</h2>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Duel History
+          </h2>
 
           {activeDuels.length > 0 && (
             <div>
@@ -406,9 +401,11 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
                 <p className="text-muted-foreground mb-4">
                   This wizard hasn&apos;t participated in any duels.
                 </p>
-                <Link href={`/duels/create?wizardId=${wizardId}`}>
-                  <Button>Start First Duel</Button>
-                </Link>
+                <Button asChild>
+                  <Link href={`/duels/create?wizardId=${wizardId}`}>
+                    Start First Duel
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           )}

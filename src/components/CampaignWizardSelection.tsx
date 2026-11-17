@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardSelectionCard } from "./WizardSelectionCard";
-import { ArrowLeft, Swords, Target } from "lucide-react";
+import { ArrowLeft, Swords, Target, Wand2 } from "lucide-react";
 import type { Doc } from "../../convex/_generated/dataModel";
+import { PageHeader } from "@/components/PageHeader";
 
 interface WizardWithProgress {
   wizard: Doc<"wizards">;
@@ -49,13 +50,13 @@ export function CampaignWizardSelection({
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-success/15 text-success";
       case "INTERMEDIATE":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+        return "bg-warning/15 text-warning";
       case "ADVANCED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-destructive/15 text-destructive";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-muted text-foreground";
     }
   };
 
@@ -74,10 +75,12 @@ export function CampaignWizardSelection({
           Back to Campaign
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Select Your Wizard</h1>
-          <p className="text-muted-foreground">
-            Choose a wizard to battle {selectedOpponent.name}
-          </p>
+          <PageHeader
+            className="mb-0"
+            title="Select Your Wizard"
+            description={`Choose a wizard to battle {selectedOpponent.name}`}
+            icon={<Wand2 className="h-6 w-6" aria-hidden="true" />}
+          />
         </div>
       </div>
 
@@ -92,7 +95,7 @@ export function CampaignWizardSelection({
             <div className="flex items-center gap-2">
               <Badge
                 className={getDifficultyColor(
-                  selectedOpponent.difficulty || "BEGINNER"
+                  selectedOpponent.difficulty || "BEGINNER",
                 )}
               >
                 {selectedOpponent.difficulty}
@@ -127,16 +130,18 @@ export function CampaignWizardSelection({
 
       {/* Wizard Selection */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Choose Your Wizard</h2>
+        <h2 className="font-display text-xl font-semibold">
+          Choose Your Wizard
+        </h2>
 
         {eligibleWizards.length === 0 ? (
-          <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950">
+          <Card className="border-warning/40 bg-warning/10">
             <CardContent className="py-8 text-center">
-              <Target className="w-12 h-12 mx-auto mb-4 text-amber-600 dark:text-amber-400" />
-              <p className="text-amber-700 dark:text-amber-300 font-medium mb-2">
+              <Target className="w-12 h-12 mx-auto mb-4 text-warning" />
+              <p className="text-warning font-medium mb-2">
                 No wizards are eligible to battle {selectedOpponent.name}.
               </p>
-              <p className="text-sm text-amber-600 dark:text-amber-400">
+              <p className="text-sm text-warning">
                 Make sure you have wizards that haven&apos;t completed the
                 campaign and are ready to face opponent #
                 {selectedOpponent.opponentNumber}.
@@ -167,11 +172,11 @@ export function CampaignWizardSelection({
 
       {/* Battle Button */}
       {selectedWizard && (
-        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:border-blue-800 dark:from-blue-950 dark:to-indigo-950 animate-campaign-glow">
+        <Card className="border-info/40 bg-linear-to-r from-info/20 to-info/5 animate-campaign-glow">
           <CardContent className="py-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <h3 className="font-semibold text-lg bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                <h3 className="font-semibold text-lg text-foreground">
                   ⚔️ Ready to Battle!
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -181,7 +186,7 @@ export function CampaignWizardSelection({
                   vs{" "}
                   <span className="font-medium">{selectedOpponent.name}</span>
                 </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
+                <p className="text-xs text-info">
                   Opponent #{selectedOpponent.opponentNumber} •{" "}
                   {selectedOpponent.difficulty}
                 </p>
@@ -190,7 +195,7 @@ export function CampaignWizardSelection({
                 onClick={onStartBattle}
                 disabled={isStartingBattle}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg campaign-card-hover"
+                className="shadow-lg campaign-card-hover"
               >
                 <Swords className="w-4 h-4 mr-2" />
                 {isStartingBattle ? "Starting Battle..." : "Start Battle"}

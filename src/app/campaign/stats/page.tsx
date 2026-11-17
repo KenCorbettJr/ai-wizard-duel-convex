@@ -7,7 +7,8 @@ import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { CampaignStats } from "@/components/CampaignStats";
 import { CampaignBattleHistory } from "@/components/CampaignBattleHistory";
 import { CampaignErrorBoundary } from "@/components/CampaignErrorBoundary";
-import { ArrowLeft, Trophy, Scroll } from "lucide-react";
+import { ArrowLeft, Trophy } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function CampaignStatsPage() {
   const { user } = useUser();
@@ -15,7 +16,7 @@ export default function CampaignStatsPage() {
   // Show registration prompt for anonymous users
   if (!user) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <RegistrationPrompt context="premium_features" />
         </div>
@@ -25,29 +26,26 @@ export default function CampaignStatsPage() {
 
   return (
     <CampaignErrorBoundary>
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8 animate-fade-in">
-            <Link href="/campaign">
-              <Button variant="ghost" className="mb-4 campaign-card-hover">
+            <Button
+              asChild
+              variant="ghost"
+              className="mb-4 campaign-card-hover"
+            >
+              <Link href="/campaign">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Campaign
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Trophy className="h-12 w-12 text-yellow-600 dark:text-yellow-400 animate-magical-sparkle" />
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                  Campaign Statistics
-                </h1>
-                <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              </div>
-              <p className="text-xl text-muted-foreground">
-                Track your progress through the magical campaign
-              </p>
-            </div>
+            <PageHeader
+              title="Campaign Statistics"
+              description="Track your progress through the magical campaign"
+              icon={<Trophy className="h-6 w-6" aria-hidden="true" />}
+            />
           </div>
 
           {/* Campaign Statistics Component */}
@@ -67,19 +65,16 @@ export default function CampaignStatsPage() {
 
           {/* Quick Actions */}
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4 animate-fade-in">
-            <Link href="/campaign">
-              <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 campaign-card-hover shadow-lg">
-                Continue Campaign
-              </Button>
-            </Link>
-            <Link href="/wizards/create">
-              <Button
-                variant="outline"
-                className="border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/30 campaign-card-hover"
-              >
-                Create New Wizard
-              </Button>
-            </Link>
+            <Button asChild className=" campaign-card-hover shadow-lg">
+              <Link href="/campaign">Continue Campaign</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-primary/30 hover:bg-primary/8 campaign-card-hover"
+            >
+              <Link href="/wizards/create">Create New Wizard</Link>
+            </Button>
           </div>
         </div>
       </div>

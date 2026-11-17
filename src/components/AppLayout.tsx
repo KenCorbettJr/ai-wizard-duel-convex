@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { LeftSidebar } from "./LeftSidebar";
-import { Navbar } from "./Navbar";
 import { UserInitializer } from "./UserInitializer";
 
 interface AppLayoutProps {
@@ -20,13 +19,15 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Don't show sidebar on home page */}
       {isHomePage ? (
-        <>{children}</>
+        <main id="main-content">{children}</main>
       ) : (
         <div className="min-h-screen">
           <LeftSidebar />
 
           {/* Main content area with left margin for desktop sidebar and top padding for mobile navbar */}
-          <div className="md:ml-64 pt-[57px] md:pt-0">{children}</div>
+          <main id="main-content" className="md:ml-64 pt-[57px] md:pt-0">
+            {children}
+          </main>
         </div>
       )}
     </>

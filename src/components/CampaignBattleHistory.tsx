@@ -31,12 +31,12 @@ export function CampaignBattleHistory({
   // Get battle history based on provided filters
   const wizardBattles = useQuery(
     api.campaigns.getWizardCampaignBattles,
-    wizardId ? { wizardId } : "skip"
+    wizardId ? { wizardId } : "skip",
   );
 
   const opponentBattles = useQuery(
     api.campaigns.getUserOpponentBattles,
-    userId && opponentNumber ? { userId, opponentNumber } : "skip"
+    userId && opponentNumber ? { userId, opponentNumber } : "skip",
   );
 
   // Get campaign opponents for display names
@@ -45,7 +45,7 @@ export function CampaignBattleHistory({
   // Get wizard details if showing wizard names
   const wizards = useQuery(
     api.wizards.getUserWizards,
-    showWizardName ? {} : "skip"
+    showWizardName ? {} : "skip",
   );
 
   // Determine which battles to show
@@ -57,7 +57,7 @@ export function CampaignBattleHistory({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sword className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Sword className="h-5 w-5 text-primary" />
             Battle History
           </CardTitle>
         </CardHeader>
@@ -83,7 +83,7 @@ export function CampaignBattleHistory({
   // Helper function to get opponent name
   const getOpponentName = (opponentNumber: number) => {
     const opponent = campaignOpponents?.find(
-      (o) => o.opponentNumber === opponentNumber
+      (o) => o.opponentNumber === opponentNumber,
     );
     return opponent?.name || `Opponent #${opponentNumber}`;
   };
@@ -126,7 +126,7 @@ export function CampaignBattleHistory({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sword className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <Sword className="h-5 w-5 text-primary" />
           Battle History
         </CardTitle>
         <CardDescription>
@@ -157,14 +157,14 @@ export function CampaignBattleHistory({
                   <div className="flex items-center gap-3">
                     {showWizardName && (
                       <div className="flex items-center gap-2">
-                        <Wand2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        <Wand2 className="h-4 w-4 text-primary" />
                         <span className="font-medium text-sm">
                           {getWizardName(battle.wizardId)}
                         </span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <Target className="h-4 w-4 text-info" />
                       <span className="text-sm">
                         vs {getOpponentName(battle.opponentNumber)}
                       </span>
@@ -173,19 +173,19 @@ export function CampaignBattleHistory({
 
                   <div className="flex items-center gap-2">
                     {battle.status === "WON" && (
-                      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
+                      <Badge className="bg-success/15 text-success">
                         <Trophy className="h-3 w-3 mr-1" />
                         Victory
                       </Badge>
                     )}
                     {battle.status === "LOST" && (
-                      <Badge className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
+                      <Badge className="bg-destructive/15 text-destructive">
                         <X className="h-3 w-3 mr-1" />
                         Defeat
                       </Badge>
                     )}
                     {battle.status === "IN_PROGRESS" && (
-                      <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
+                      <Badge className="bg-info/15 text-info">
                         <Clock className="h-3 w-3 mr-1" />
                         In Progress
                       </Badge>
@@ -217,7 +217,7 @@ export function CampaignBattleHistory({
                   <div className="mt-2 text-xs text-muted-foreground">
                     Duration:{" "}
                     {Math.round(
-                      (battle.completedAt - battle.createdAt) / (1000 * 60)
+                      (battle.completedAt - battle.createdAt) / (1000 * 60),
                     )}{" "}
                     minutes
                   </div>

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { DuelListItem } from "@/components/DuelListItem";
 import { Search, Filter, X } from "lucide-react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface DuelFilters {
   status?: "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -263,7 +264,7 @@ export function DuelSearchFilter({
         <CardContent>
           {!searchResults ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+              <RuneSpinner size="md" label="Loading…" />
               <p className="text-muted-foreground">Loading search results...</p>
             </div>
           ) : searchResults.duels.length === 0 ? (

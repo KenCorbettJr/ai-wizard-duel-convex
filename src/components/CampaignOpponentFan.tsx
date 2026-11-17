@@ -39,22 +39,22 @@ export function CampaignOpponentFan({
     switch (difficulty) {
       case "BEGINNER":
         return {
-          color: "bg-green-500",
+          color: "bg-success",
           icon: Shield,
         };
       case "INTERMEDIATE":
         return {
-          color: "bg-yellow-500",
+          color: "bg-warning",
           icon: Star,
         };
       case "ADVANCED":
         return {
-          color: "bg-red-500",
+          color: "bg-destructive",
           icon: Zap,
         };
       default:
         return {
-          color: "bg-gray-500",
+          color: "bg-muted-foreground/60",
           icon: Star,
         };
     }
@@ -79,14 +79,14 @@ export function CampaignOpponentFan({
 
   // Sort opponents by opponent number
   const sortedOpponents = [...opponents].sort(
-    (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0)
+    (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0),
   );
 
   // Scroll to current opponent on mount
   useEffect(() => {
     if (emblaApi && selectedWizardProgress) {
       const currentIndex = sortedOpponents.findIndex(
-        (op) => op.opponentNumber === selectedWizardProgress.currentOpponent
+        (op) => op.opponentNumber === selectedWizardProgress.currentOpponent,
       );
       if (currentIndex !== -1) {
         emblaApi.scrollTo(currentIndex);
@@ -99,15 +99,15 @@ export function CampaignOpponentFan({
       <div className={`w-full flex flex-col items-center ${className}`}>
         {/* Top Badge/Card - "Campaign Opponents" */}
         <div className="z-20 mb-6 relative">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-purple-100 dark:border-purple-800 px-8 py-3 flex flex-col items-center justify-center min-w-[320px]">
+          <div className="bg-card rounded-xl shadow-lg border border-primary/30 px-8 py-3 flex flex-col items-center justify-center min-w-[320px]">
             <div className="flex items-center gap-3 mb-1">
-              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-              <h2 className="text-xl font-bold text-purple-700 dark:text-purple-300">
+              <Star className="w-5 h-5 text-gold fill-warning" />
+              <h2 className="text-xl font-bold text-primary">
                 Campaign Opponents
               </h2>
-              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              <Star className="w-5 h-5 text-gold fill-warning" />
             </div>
-            <p className="text-sm text-purple-500 dark:text-purple-400 font-medium">
+            <p className="text-sm text-primary font-medium">
               10 Legendary Challengers Await
             </p>
           </div>
@@ -115,14 +115,17 @@ export function CampaignOpponentFan({
 
         {/* Embla Carousel Container */}
         <div className="h-96 m-12"></div>
-        <div className="w-full overflow-hidden px-4 py-12 absolute left-0 right-0" ref={emblaRef}>
+        <div
+          className="w-full overflow-hidden px-4 py-12 absolute left-0 right-0"
+          ref={emblaRef}
+        >
           <div className="flex touch-pan-y touch-pinch-zoom -ml-4">
             {sortedOpponents.map((opponent, index) => {
               if (!opponent.opponentNumber) return null;
 
               const status = getOpponentStatus(opponent.opponentNumber);
               const difficultyConfig = getDifficultyConfig(
-                opponent.difficulty || "BEGINNER"
+                opponent.difficulty || "BEGINNER",
               );
               const DifficultyIcon = difficultyConfig.icon;
 
@@ -133,22 +136,26 @@ export function CampaignOpponentFan({
               let borderClass = "border-transparent";
 
               if (status.isDefeated) {
-                borderClass = "border-green-400";
+                borderClass = "border-success/40";
               } else if (status.isCurrent) {
-                borderClass = "border-purple-500";
+                borderClass = "border-primary";
               } else if (!status.isUnlocked) {
                 opacity = "opacity-50 grayscale";
-                borderClass = "border-gray-700";
+                borderClass = "border-border";
               }
 
               return (
-                <div className="pl-4 flex-[0_0_auto] min-w-0" key={opponent._id}>
+                <div
+                  className="pl-4 flex-[0_0_auto] min-w-0"
+                  key={opponent._id}
+                >
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className={`${cardClasses} ${opacity}`}>
                         {/* Card Container */}
-                        <div className={`w-64 h-96 rounded-2xl overflow-hidden relative shadow-xl bg-gray-900 border-2 ${borderClass}`}>
-
+                        <div
+                          className={`w-64 h-96 rounded-2xl overflow-hidden relative shadow-xl bg-card border-2 ${borderClass}`}
+                        >
                           {/* Full Background Image */}
                           <div className="absolute inset-0">
                             {opponent.illustration ? (
@@ -160,7 +167,7 @@ export function CampaignOpponentFan({
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               />
                             ) : (
-                              <div className="w-full h-full bg-linear-to-br from-purple-900 to-gray-900 flex items-center justify-center">
+                              <div className="w-full h-full bg-linear-to-br from-primary to-card flex items-center justify-center">
                                 <span className="text-6xl">🧙‍♂️</span>
                               </div>
                             )}
@@ -171,17 +178,17 @@ export function CampaignOpponentFan({
                           {/* Top Status Badge */}
                           <div className="absolute top-3 right-3 z-20">
                             {status.isDefeated && (
-                              <div className="bg-green-500 text-white p-1.5 rounded-full shadow-lg">
+                              <div className="bg-success text-success-foreground p-1.5 rounded-full shadow-lg">
                                 <CheckCircle className="w-5 h-5" />
                               </div>
                             )}
                             {!status.isUnlocked && (
-                              <div className="bg-gray-800/80 backdrop-blur-sm text-gray-400 p-1.5 rounded-full">
+                              <div className="bg-background/80 backdrop-blur-sm text-muted-foreground p-1.5 rounded-full">
                                 <Lock className="w-5 h-5" />
                               </div>
                             )}
                             {status.isCurrent && (
-                              <div className="bg-purple-600 text-white p-1.5 rounded-full shadow-lg animate-pulse">
+                              <div className="bg-primary text-white p-1.5 rounded-full shadow-lg animate-pulse">
                                 <Zap className="w-5 h-5" />
                               </div>
                             )}
@@ -201,17 +208,22 @@ export function CampaignOpponentFan({
                             </h3>
 
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              <Badge className={`${difficultyConfig.color} text-white border-none`}>
+                              <Badge
+                                className={`${difficultyConfig.color} text-white border-none`}
+                              >
                                 {opponent.difficulty}
                               </Badge>
-                              {opponent.luckModifier && opponent.luckModifier > 0 && (
-                                <Badge variant="outline" className="text-yellow-300 border-yellow-300/50 bg-yellow-500/10">
-                                  +{opponent.luckModifier} Luck
-                                </Badge>
-                              )}
+                              {opponent.luckModifier &&
+                                opponent.luckModifier > 0 && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-warning border-warning/50 bg-warning/10"
+                                  >
+                                    +{opponent.luckModifier} Luck
+                                  </Badge>
+                                )}
                             </div>
                           </div>
-
                         </div>
                       </div>
                     </TooltipTrigger>
@@ -236,4 +248,3 @@ export function CampaignOpponentFan({
     </TooltipProvider>
   );
 }
-

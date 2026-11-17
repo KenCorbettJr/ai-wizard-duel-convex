@@ -59,7 +59,7 @@ export function SocialShareButtons({
     if (description) {
       twitterUrl.searchParams.set(
         "text",
-        `${title}\n\n${description}\n\n${url}`
+        `${title}\n\n${description}\n\n${url}`,
       );
     }
     window.open(twitterUrl.toString(), "_blank", "noopener,noreferrer");

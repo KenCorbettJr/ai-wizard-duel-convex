@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -27,7 +28,6 @@ import {
   Swords,
   Clock,
   Trophy,
-  Loader2,
   UserCheck,
   Wand2,
   ArrowLeft,
@@ -36,12 +36,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import MagicVortex from "@/components/MagicVortex";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function DuelLobbyPage() {
   const { user } = useUser();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null
+    null,
   );
   const [selectedDuelType, setSelectedDuelType] = useState<
     number | "TO_THE_DEATH"
@@ -77,7 +79,7 @@ export default function DuelLobbyPage() {
 
   const handleJoinLobby = async () => {
     if (!selectedWizard) {
-      alert("Please select a wizard");
+      toast.error("Choose a wizard to send into the lobby");
       return;
     }
 
@@ -88,7 +90,9 @@ export default function DuelLobbyPage() {
       });
       // Success feedback will be shown via the lobby status update
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to join lobby");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to join lobby",
+      );
     }
   };
 
@@ -97,7 +101,9 @@ export default function DuelLobbyPage() {
       await leaveLobby();
       // Success feedback will be shown via the lobby status update
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to leave lobby");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to leave lobby",
+      );
     }
   };
 
@@ -105,14 +111,16 @@ export default function DuelLobbyPage() {
   if (userRecentDuel && !userLobbyStatus) {
     return (
       <MagicVortex className="min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
+        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
-              <Loader2 className="h-12 w-12 animate-spin mx-auto text-purple-600 mb-4" />
-              <h2 className="text-xl font-semibold mb-2 text-white font-[family-name:var(--font-cinzel)]">
+              <RuneSpinner size="md" label="Loading…" />
+              <h2 className="text-xl font-semibold mb-2 text-foreground font-display">
                 Match Found!
               </h2>
-              <p className="text-gray-300">Redirecting you to your duel...</p>
+              <p className="text-muted-foreground">
+                Redirecting you to your duel...
+              </p>
             </div>
           </div>
         </div>
@@ -145,34 +153,29 @@ export default function DuelLobbyPage() {
       rangeSpeed={1.2}
       baseRadius={0.8}
       rangeRadius={1.5}
-      backgroundColor="rgba(15, 23, 42, 0.95)"
       className="min-h-screen"
     >
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Link href="/duels">
-              <Button variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/duels">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Duels
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 flex items-center gap-3 font-[family-name:var(--font-cinzel)]">
-              <Users className="h-8 w-8 text-purple-600" />
-              Duel Lobby
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Find opponents and engage in magical combat
-            </p>
-          </div>
+          <PageHeader
+            title="Duel Lobby"
+            description="Find opponents and engage in magical combat"
+            icon={<Users className="h-6 w-6" aria-hidden="true" />}
+          />
         </div>
 
         {/* Lobby Stats */}
         {lobbyStats && (
-          <Card className="mb-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+          <Card className="mb-6 bg-card/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
@@ -182,19 +185,19 @@ export default function DuelLobbyPage() {
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-info">
                     {lobbyStats.totalWaiting}
                   </div>
                   <div className="text-sm text-muted-foreground">Waiting</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
+                  <div className="text-2xl font-bold text-warning">
                     {lobbyStats.totalMatched}
                   </div>
                   <div className="text-sm text-muted-foreground">Matched</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-2xl font-bold text-primary">
                     {lobbyStats.averageWaitTime}s
                   </div>
                   <div className="text-sm text-muted-foreground">Avg Wait</div>
@@ -206,7 +209,7 @@ export default function DuelLobbyPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Join Lobby Section */}
-          <Card className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+          <Card className="bg-card/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Swords className="h-5 w-5" />
@@ -283,7 +286,7 @@ export default function DuelLobbyPage() {
 
                   {userLobbyStatus.status === "MATCHED" && (
                     <div className="text-center py-4">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-2" />
+                      <RuneSpinner size="md" label="Loading…" />
                       <p className="text-sm text-muted-foreground">
                         Creating your duel...
                       </p>
@@ -336,7 +339,7 @@ export default function DuelLobbyPage() {
                         setSelectedDuelType(
                           value === "TO_THE_DEATH"
                             ? "TO_THE_DEATH"
-                            : parseInt(value)
+                            : parseInt(value),
                         )
                       }
                     >
@@ -368,12 +371,12 @@ export default function DuelLobbyPage() {
                       <p className="text-sm text-muted-foreground mb-2">
                         You need a wizard to join the lobby
                       </p>
-                      <Link href="/wizards">
-                        <Button variant="outline" size="sm">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/wizards">
                           <Wand2 className="h-4 w-4 mr-2" />
                           Create Wizard
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -382,7 +385,7 @@ export default function DuelLobbyPage() {
           </Card>
 
           {/* Current Lobby */}
-          <Card className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+          <Card className="bg-card/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -393,7 +396,7 @@ export default function DuelLobbyPage() {
             <CardContent>
               {!lobbyEntries ? (
                 <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-2" />
+                  <RuneSpinner size="md" label="Loading…" />
                   <p className="text-sm text-muted-foreground">
                     Loading lobby...
                   </p>
@@ -412,8 +415,8 @@ export default function DuelLobbyPage() {
                     <div key={entry._id}>
                       <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                            <Wand2 className="h-4 w-4 text-purple-600" />
+                          <div className="w-8 h-8 bg-primary/12 rounded-full flex items-center justify-center">
+                            <Wand2 className="h-4 w-4 text-primary" />
                           </div>
                           <div>
                             <div className="font-medium text-sm">

@@ -1,5 +1,6 @@
 "use client";
 
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,13 +20,7 @@ import { Id, Doc } from "../../convex/_generated/dataModel";
 import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
-import {
-  Loader2,
-  Image as ImageIcon,
-  Type,
-  AlertTriangle,
-  Info,
-} from "lucide-react";
+import { Image as ImageIcon, Type, AlertTriangle, Info } from "lucide-react";
 
 interface CreateDuelFormProps {
   onClose: () => void;
@@ -41,10 +36,10 @@ export function CreateDuelForm({
   const { user } = useUser();
   const router = useRouter();
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    preSelectedWizardId || null
+    preSelectedWizardId || null,
   );
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(
-    3
+    3,
   );
   const [enableImageGeneration, setEnableImageGeneration] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -59,13 +54,13 @@ export function CreateDuelForm({
   // Check if user has credits for image generation
   const hasImageCredits = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Get user info to check if premium
   const userInfo = useQuery(
     api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
+    user?.id ? { clerkId: user.id } : "skip",
   );
 
   const createDuel = useMutation(api.duels.createDuel);
@@ -157,10 +152,7 @@ export function CreateDuelForm({
         <form onSubmit={handleSubmit} className="space-y-6">
           {isCreating && (
             <div className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Creating your duel...</span>
-              </div>
+              <RuneSpinner size="md" label="Creating your duel…" />
             </div>
           )}
           <div>
@@ -195,9 +187,9 @@ export function CreateDuelForm({
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
                     {enableImageGeneration ? (
-                      <ImageIcon className="h-5 w-5 text-purple-500" />
+                      <ImageIcon className="h-5 w-5 text-primary" />
                     ) : (
-                      <Type className="h-5 w-5 text-gray-500" />
+                      <Type className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -230,28 +222,28 @@ export function CreateDuelForm({
               {enableImageGeneration && (
                 <div className="space-y-3">
                   {isPremium ? (
-                    <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 rounded-lg">
-                      <Info className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      <span className="text-sm text-purple-700 dark:text-purple-300">
+                    <div className="flex items-center gap-2 p-3 bg-primary/8 border border-primary/30 rounded-lg">
+                      <Info className="h-4 w-4 text-primary" />
+                      <span className="text-sm text-primary">
                         Premium: Unlimited image generation included
                       </span>
                     </div>
                   ) : hasImageCredits ? (
-                    <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
-                      <Info className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <span className="text-sm text-green-700 dark:text-green-300">
+                    <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/40 rounded-lg">
+                      <Info className="h-4 w-4 text-success" />
+                      <span className="text-sm text-success">
                         This duel will use 1 of your image credits
                       </span>
                     </div>
                   ) : (
-                    <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <div className="p-3 bg-warning/10 border border-warning/40 rounded-lg">
                       <div className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                        <AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
                         <div className="space-y-2">
-                          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                          <p className="text-sm text-warning font-medium">
                             No image credits available
                           </p>
-                          <p className="text-sm text-amber-600 dark:text-amber-400">
+                          <p className="text-sm text-warning">
                             Your duel will automatically switch to text-only
                             mode. You can earn credits by watching ads or
                             upgrading to Premium.
@@ -274,10 +266,11 @@ export function CreateDuelForm({
                 <button
                   key={rounds}
                   type="button"
-                  className={`p-3 border rounded-lg text-center transition-all ${
+                  aria-pressed={numberOfRounds === rounds}
+                  className={`p-3 border rounded-lg text-center transition-all min-h-11 focus-visible:ring-2 focus-visible:ring-ring ${
                     numberOfRounds === rounds
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
-                      : "border-border hover:border-muted-foreground"
+                      ? "border-primary bg-primary/10 ring-1 ring-gold/60"
+                      : "border-border hover:border-primary/50"
                   }`}
                   onClick={() => setNumberOfRounds(rounds)}
                 >
@@ -295,10 +288,11 @@ export function CreateDuelForm({
               ))}
               <button
                 type="button"
-                className={`p-3 border rounded-lg text-center transition-all ${
+                aria-pressed={numberOfRounds === "TO_THE_DEATH"}
+                className={`p-3 border rounded-lg text-center transition-all min-h-11 focus-visible:ring-2 focus-visible:ring-ring ${
                   numberOfRounds === "TO_THE_DEATH"
-                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
-                    : "border-border hover:border-muted-foreground"
+                    ? "border-primary bg-primary/10 ring-1 ring-gold/60"
+                    : "border-border hover:border-primary/50"
                 }`}
                 onClick={() => setNumberOfRounds("TO_THE_DEATH")}
               >
@@ -324,7 +318,7 @@ export function CreateDuelForm({
             >
               {isCreating ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
                   Creating Duel...
                 </>
               ) : (

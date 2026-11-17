@@ -32,7 +32,7 @@ export function SuperAdminExample() {
       {/* Example 2: Usage with custom fallback */}
       <SuperAdminOnly
         fallback={
-          <Card className="border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950">
+          <Card className="border-border bg-muted">
             <CardContent className="text-center py-8">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
               <p className="text-muted-foreground">
@@ -60,15 +60,15 @@ export function SuperAdminExample() {
 
       {/* Example 3: Usage with null fallback (completely hidden) */}
       <SuperAdminOnly fallback={null}>
-        <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+        <Card className="border-destructive/40 bg-destructive/10">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+            <CardTitle className="flex items-center gap-2 text-destructive">
               <Database className="h-5 w-5" />
               Database Operations
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-red-700 dark:text-red-300 mb-4">
+            <p className="text-destructive mb-4">
               Dangerous database operations that can affect the entire system.
             </p>
             <Button variant="destructive">Execute Database Migration</Button>

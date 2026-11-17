@@ -39,19 +39,19 @@ export class CampaignErrorBoundary extends Component<Props, State> {
       return (
         <div className="container mx-auto px-6 py-12">
           <div className="max-w-2xl mx-auto">
-            <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950">
+            <Card className="border-destructive/40 bg-destructive/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-red-700 dark:text-red-300">
+                <CardTitle className="flex items-center gap-3 text-destructive">
                   <AlertTriangle className="h-6 w-6" />
                   Campaign Error
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-red-600 dark:text-red-400">
+                <div className="text-destructive">
                   <p className="font-medium mb-2">
                     Something went wrong with the campaign system.
                   </p>
-                  <p className="text-sm text-red-500 dark:text-red-400">
+                  <p className="text-sm text-destructive">
                     {this.state.error?.message ||
                       "An unexpected error occurred"}
                   </p>
@@ -64,7 +64,7 @@ export class CampaignErrorBoundary extends Component<Props, State> {
                       window.location.reload();
                     }}
                     variant="outline"
-                    className="border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900"
+                    className="border-destructive/40 hover:bg-destructive/15"
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Try Again
@@ -78,7 +78,7 @@ export class CampaignErrorBoundary extends Component<Props, State> {
                   </Button>
                 </div>
 
-                <div className="text-xs text-muted-foreground pt-4 border-t border-red-200 dark:border-red-800">
+                <div className="text-xs text-muted-foreground pt-4 border-t border-destructive/40">
                   <p>
                     If this problem persists, please try refreshing the page or
                     contact support.

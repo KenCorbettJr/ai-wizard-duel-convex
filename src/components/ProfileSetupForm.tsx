@@ -139,27 +139,29 @@ export function ProfileSetupForm({
               className={
                 validationError ||
                 (availabilityResult && !availabilityResult.available)
-                  ? "border-red-500"
+                  ? "border-destructive"
                   : availabilityResult?.available
-                    ? "border-green-500"
+                    ? "border-success"
                     : ""
               }
             />
             <div className="min-h-[20px] text-sm">
               {isCheckingAvailability && (
-                <span className="text-gray-500">Checking availability...</span>
+                <span className="text-muted-foreground">
+                  Checking availability...
+                </span>
               )}
               {validationError && (
-                <span className="text-red-500">{validationError}</span>
+                <span className="text-destructive">{validationError}</span>
               )}
               {!validationError &&
                 availabilityResult &&
                 !isCheckingAvailability && (
                   <>
                     {availabilityResult.available ? (
-                      <span className="text-green-600">✓ Available</span>
+                      <span className="text-success">✓ Available</span>
                     ) : (
-                      <span className="text-red-500">
+                      <span className="text-destructive">
                         ✗ Not available
                         {availabilityResult.suggestion && (
                           <span className="block">
@@ -171,7 +173,7 @@ export function ProfileSetupForm({
                   </>
                 )}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               3-20 characters, letters, numbers, underscores, and hyphens only
             </p>
           </div>
@@ -185,7 +187,7 @@ export function ProfileSetupForm({
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your display name"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               This is how others will see your name
             </p>
           </div>

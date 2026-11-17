@@ -80,25 +80,19 @@ export function RegistrationPrompt({
   const content = getContextContent();
 
   return (
-    <Card
-      className={`p-6 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200 dark:border-purple-800 ${className}`}
-    >
+    <Card className={`p-6 bg-arcane-soft border-primary/30 ${className}`}>
       <div className="text-center space-y-4">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          {content.title}
-        </h3>
+        <h3 className="text-xl font-bold text-foreground">{content.title}</h3>
 
-        <p className="text-gray-600 dark:text-gray-400">
-          {content.description}
-        </p>
+        <p className="text-foreground">{content.description}</p>
 
         <div className="space-y-2">
           {content.benefits.map((benefit, index) => (
             <div
               key={index}
-              className="flex items-center justify-center space-x-2 text-sm text-gray-700 dark:text-gray-300"
+              className="flex items-center justify-center space-x-2 text-sm text-foreground"
             >
-              <span className="text-green-500">✓</span>
+              <span className="text-success">✓</span>
               <span>{benefit}</span>
             </div>
           ))}
@@ -106,22 +100,20 @@ export function RegistrationPrompt({
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
           <SignUpButton mode="modal">
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2">
-              Sign Up Free
-            </Button>
+            <Button className=" text-white px-6 py-2">Sign Up Free</Button>
           </SignUpButton>
 
           <SignInButton mode="modal">
             <Button
               variant="outline"
-              className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-300 dark:hover:bg-purple-950"
+              className="border-primary/50 text-primary hover:bg-primary/8"
             >
               Sign In
             </Button>
           </SignInButton>
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Free forever • No credit card required • Join thousands of wizards
         </p>
       </div>

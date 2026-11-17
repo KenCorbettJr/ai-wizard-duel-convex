@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,28 +45,25 @@ export function CampaignOpponentCard({
     switch (difficulty) {
       case "BEGINNER":
         return {
-          color:
-            "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          color: "bg-success/15 text-success",
           icon: Shield,
           description: "Easier opponent with reduced luck",
         };
       case "INTERMEDIATE":
         return {
-          color:
-            "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+          color: "bg-warning/15 text-warning",
           icon: Star,
           description: "Balanced opponent with standard luck",
         };
       case "ADVANCED":
         return {
-          color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+          color: "bg-destructive/15 text-destructive",
           icon: Zap,
           description: "Challenging opponent with increased luck",
         };
       default:
         return {
-          color:
-            "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+          color: "bg-muted text-foreground",
           icon: Star,
           description: "Unknown difficulty",
         };
@@ -74,17 +72,17 @@ export function CampaignOpponentCard({
 
   const getLuckModifierDisplay = (modifier: number) => {
     if (modifier > 0)
-      return { text: `+${modifier}`, color: "text-red-600 dark:text-red-400" };
+      return { text: `+${modifier}`, color: "text-destructive" };
     if (modifier < 0)
       return {
         text: `${modifier}`,
-        color: "text-green-600 dark:text-green-400",
+        color: "text-success",
       };
-    return { text: "±0", color: "text-gray-600 dark:text-gray-400" };
+    return { text: "±0", color: "text-foreground" };
   };
 
   const difficultyConfig = getDifficultyConfig(
-    opponent.difficulty || "BEGINNER"
+    opponent.difficulty || "BEGINNER",
   );
   const DifficultyIcon = difficultyConfig.icon;
   const luckDisplay = getLuckModifierDisplay(opponent.luckModifier || 0);
@@ -92,8 +90,7 @@ export function CampaignOpponentCard({
   const getCardState = () => {
     if (isDefeated) {
       return {
-        className:
-          "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950 animate-fade-in",
+        className: "border-success/40 bg-success/10 animate-fade-in",
         cursor: "cursor-default",
         opacity: "opacity-75",
       };
@@ -101,7 +98,7 @@ export function CampaignOpponentCard({
     if (isCurrent && isUnlocked) {
       return {
         className:
-          "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 ring-2 ring-blue-300 animate-campaign-glow campaign-card-hover",
+          "border-info/40 bg-info/10 ring-2 ring-info/40 animate-campaign-glow campaign-card-hover",
         cursor: "cursor-pointer",
         opacity: "opacity-100",
       };
@@ -109,13 +106,13 @@ export function CampaignOpponentCard({
     if (isUnlocked) {
       return {
         className:
-          "border-purple-200 hover:border-purple-300 dark:border-purple-700 dark:hover:border-purple-600 campaign-card-hover animate-campaign-unlock",
+          "border-primary/30 hover:border-primary/50 campaign-card-hover animate-campaign-unlock",
         cursor: "cursor-pointer",
         opacity: "opacity-100",
       };
     }
     return {
-      className: "border-gray-200 dark:border-gray-700 grayscale",
+      className: "border-border grayscale",
       cursor: "cursor-not-allowed",
       opacity: "opacity-50",
     };
@@ -133,7 +130,7 @@ export function CampaignOpponentCard({
     e.stopPropagation(); // Prevent card click
 
     if (!wizardId || !opponent.opponentNumber) {
-      alert("Missing wizard or opponent information");
+      toast.error("Missing wizard or opponent information");
       return;
     }
 
@@ -148,8 +145,8 @@ export function CampaignOpponentCard({
       router.push(`/duels/${battleResult.duelId}`);
     } catch (error) {
       console.error("Failed to start campaign battle:", error);
-      alert(
-        error instanceof Error ? error.message : "An unexpected error occurred"
+      toast.error(
+        error instanceof Error ? error.message : "An unexpected error occurred",
       );
     } finally {
       setIsStartingBattle(false);
@@ -163,6 +160,16 @@ export function CampaignOpponentCard({
           transition-all duration-200 ${cardState.className} ${cardState.cursor} ${cardState.opacity} ${className}
         `}
         onClick={handleClick}
+        role="button"
+        tabIndex={isUnlocked ? 0 : -1}
+        aria-disabled={!isUnlocked}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
       >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
@@ -171,10 +178,10 @@ export function CampaignOpponentCard({
                 <span className="text-sm font-medium text-muted-foreground">
                   #{opponent.opponentNumber}
                 </span>
-                {isDefeated && (
-                  <CheckCircle className="w-4 h-4 text-green-600" />
+                {isDefeated && <CheckCircle className="w-4 h-4 text-success" />}
+                {!isUnlocked && (
+                  <Lock className="w-4 h-4 text-muted-foreground" />
                 )}
-                {!isUnlocked && <Lock className="w-4 h-4 text-gray-400" />}
               </div>
               <CardTitle className="text-lg leading-tight">
                 {opponent.name}
@@ -223,7 +230,7 @@ export function CampaignOpponentCard({
         <CardContent className="space-y-4">
           {/* Opponent Image */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-purple-200 dark:border-purple-700">
+            <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-primary/30">
               {opponent.illustration ? (
                 <ConvexImage
                   storageId={opponent.illustration}
@@ -233,7 +240,7 @@ export function CampaignOpponentCard({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-linear-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 text-purple-600 dark:text-purple-400 text-xl font-bold flex items-center justify-center">
+                <div className="w-full h-full bg-linear-to-br from-primary/15 to-gold/60 text-primary text-xl font-bold flex items-center justify-center">
                   {opponent.name.charAt(0)}
                 </div>
               )}
@@ -292,12 +299,12 @@ export function CampaignOpponentCard({
           {/* Action Button */}
           <div className="pt-2">
             {isDefeated ? (
-              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-medium">
+              <div className="flex items-center gap-2 text-success text-sm font-medium">
                 <CheckCircle className="w-4 h-4" />
                 Defeated
               </div>
             ) : !isUnlocked ? (
-              <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Lock className="w-4 h-4" />
                 Locked
               </div>

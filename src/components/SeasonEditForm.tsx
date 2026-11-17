@@ -161,7 +161,7 @@ export function SeasonEditForm({
 
     // Remove undefined values
     const cleanUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, value]) => value !== undefined)
+      Object.entries(updates).filter(([, value]) => value !== undefined),
     );
 
     // If no changes, just close
@@ -374,7 +374,7 @@ export function SeasonEditForm({
                 />
                 {hasParticipants &&
                   formData.luckBonus !== season.completionRelic.luckBonus && (
-                    <p className="text-sm text-amber-600 mt-1">
+                    <p className="text-sm text-warning mt-1">
                       ⚠️ Changing luck bonus may affect existing player relics
                     </p>
                   )}
@@ -409,7 +409,7 @@ export function SeasonEditForm({
               />
               <Label htmlFor="isDefault">Set as default season</Label>
               {formData.isDefault && !season.isDefault && (
-                <p className="text-sm text-blue-600">
+                <p className="text-sm text-info">
                   This will remove default status from other seasons
                 </p>
               )}

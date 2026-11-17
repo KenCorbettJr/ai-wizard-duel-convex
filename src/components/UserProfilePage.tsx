@@ -29,7 +29,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
   const userWizards = useQuery(api.userProfiles.getUserWizards, { userId });
   const currentUserStatus = useQuery(
     api.userProfiles.getCurrentUserProfileStatus,
-    {}
+    {},
   );
 
   // Check if this is the current user's own profile
@@ -41,7 +41,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-8">
           {/* Profile header skeleton */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-8">
+          <div className="bg-arcane-soft rounded-lg p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="w-24 h-24 bg-muted rounded-full animate-pulse" />
               <div className="flex-1 space-y-4">
@@ -95,7 +95,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
             <Users className="w-16 h-16 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-wide">
               User Not Found
             </h1>
             <p className="text-muted-foreground text-lg">
@@ -117,30 +117,31 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-8">
           {/* Profile Header */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-8">
+          <div className="bg-arcane-soft rounded-lg p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Avatar placeholder */}
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 bg-arcane rounded-full flex items-center justify-center">
                 <Sparkles className="w-12 h-12 text-white" />
               </div>
 
               <div className="flex-1 space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <h1 className="text-4xl font-bold text-foreground">
+                    <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-wide">
                       {userProfile.displayName || userProfile.userId}
                     </h1>
                     {isOwnProfile && (
-                      <Link href="/profile/edit">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
-                        >
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Link href="/profile/edit">
                           <Settings className="w-4 h-4" />
                           Edit Profile
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -227,7 +228,7 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-3xl font-bold text-success">
                   {userProfile.wins}
                 </div>
               </CardContent>

@@ -30,19 +30,19 @@ export function CreditExhaustionNotification({
   // Check if user can earn credits from ads
   const adCooldown = useQuery(
     api.imageCreditService.canEarnCreditFromAd,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Check if user has credits for duels
   const hasCreditsForDuel = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Get user info to check if premium
   const userInfo = useQuery(
     api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip"
+    user?.id ? { clerkId: user.id } : "skip",
   );
 
   const isPremium =
@@ -78,13 +78,13 @@ export function CreditExhaustionNotification({
 
   const content = (
     <div className="flex items-start gap-3">
-      <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+      <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
       <div className="space-y-3 flex-1">
         <div>
-          <h4 className="font-semibold text-red-800 dark:text-red-200 mb-1">
+          <h4 className="font-semibold text-destructive mb-1">
             Out of Image Credits!
           </h4>
-          <p className="text-sm text-red-700 dark:text-red-300">
+          <p className="text-sm text-destructive">
             Your duels will continue in text-only mode until you get more
             credits.
           </p>
@@ -96,17 +96,13 @@ export function CreditExhaustionNotification({
               onClick={handleWatchAd}
               size="sm"
               variant="outline"
-              className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
             >
               <Play className="h-4 w-4 mr-2" />
               Watch Ad (+1 Credit)
             </Button>
           )}
-          <Button
-            onClick={handleUpgrade}
-            size="sm"
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-          >
+          <Button onClick={handleUpgrade} size="sm">
             <Crown className="h-4 w-4 mr-2" />
             Upgrade to Premium
           </Button>
@@ -118,7 +114,7 @@ export function CreditExhaustionNotification({
           variant="ghost"
           size="sm"
           onClick={onDismiss}
-          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+          className="text-destructive hover:text-destructive"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -130,7 +126,7 @@ export function CreditExhaustionNotification({
     return (
       <>
         <div
-          className={`bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 border-l-4 border-red-500 p-4 ${className}`}
+          className={`bg-linear-to-r from-destructive/20 to-warning/20 border-l-4 border-destructive p-4 ${className}`}
         >
           {content}
         </div>
@@ -148,8 +144,8 @@ export function CreditExhaustionNotification({
   if (variant === "modal") {
     return (
       <>
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="max-w-md mx-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 border-red-200 dark:border-red-800">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="max-w-md mx-4 bg-linear-to-r from-destructive/20 to-warning/20 border-destructive/40">
             <CardContent className="p-6">{content}</CardContent>
           </Card>
         </div>
@@ -168,7 +164,7 @@ export function CreditExhaustionNotification({
   return (
     <>
       <Card
-        className={`bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950 border-red-200 dark:border-red-800 ${className}`}
+        className={`bg-linear-to-r from-destructive/20 to-warning/20 border-destructive/40 ${className}`}
       >
         <CardContent className="p-4">{content}</CardContent>
       </Card>

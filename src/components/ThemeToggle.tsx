@@ -17,7 +17,12 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon">
+      <Button
+        variant="outline"
+        size="icon"
+        className="size-11"
+        aria-label="Toggle theme"
+      >
         <Sun className="h-[1.2rem] w-[1.2rem]" />
         <span className="sr-only">Toggle theme</span>
       </Button>
@@ -28,6 +33,8 @@ export function ThemeToggle() {
     <Button
       variant="outline"
       size="icon"
+      className="size-11"
+      aria-label={`Switch to ${resolvedTheme === "light" ? "dark" : "light"} theme`}
       onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
       data-test-id="theme-toggle"
     >

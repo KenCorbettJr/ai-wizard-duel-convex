@@ -41,11 +41,11 @@ const AdminSidebarContent = ({
     <div className="p-6 border-b border-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-linear-to-br from-purple-600 to-pink-600">
+          <div className="p-2 rounded-lg bg-linear-to-br from-primary to-gold">
             <Crown className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">Admin Panel</h1>
+            <p className="text-lg font-bold text-foreground">Admin Panel</p>
             <p className="text-xs text-muted-foreground">Super Administrator</p>
           </div>
         </div>
@@ -82,13 +82,13 @@ const AdminSidebarContent = ({
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
             >
               <Icon className="h-4 w-4" />
               <span className="flex-1">{item.label}</span>
               {item.developmentOnly && (
-                <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">
+                <span className="px-1.5 py-0.5 text-xs bg-muted rounded">
                   DEV
                 </span>
               )}
@@ -100,25 +100,25 @@ const AdminSidebarContent = ({
 
     {/* Return to User Experience */}
     <div className="p-4 border-t border-border space-y-3">
-      <Link href="/">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start"
-          onClick={() => setIsOpen(false)}
-        >
+      <Button
+        asChild
+        variant="outline"
+        size="sm"
+        className="w-full justify-start"
+      >
+        <Link href="/" onClick={() => setIsOpen(false)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to User Experience
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <div className="flex items-center justify-between">
         <ThemeToggle />
-        <Link href="/">
-          <Button variant="ghost" size="sm">
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/">
             <Home className="h-4 w-4" />
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </div>
   </div>
@@ -200,7 +200,7 @@ export function AdminNavigation() {
           // Desktop: always visible
           "md:translate-x-0",
           // Mobile: slide in/out
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
         <AdminSidebarContent pathname={pathname} setIsOpen={setIsOpen} />

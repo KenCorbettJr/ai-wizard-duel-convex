@@ -69,23 +69,23 @@ export function CampaignStats({
   // Calculate statistics
   const totalWizards = userWizards.length;
   const completedCampaigns = campaignProgress.filter(
-    (p: Doc<"wizardCampaignProgress">) => p.hasCompletionRelic
+    (p: Doc<"wizardCampaignProgress">) => p.hasCompletionRelic,
   ).length;
   const activeCampaigns = campaignProgress.filter(
     (p: Doc<"wizardCampaignProgress">) =>
-      !p.hasCompletionRelic && p.currentOpponent <= 10
+      !p.hasCompletionRelic && p.currentOpponent <= 10,
   ).length;
   const totalBattlesWon = campaignProgress.reduce(
     (sum: number, p: Doc<"wizardCampaignProgress">) =>
       sum + p.defeatedOpponents.length,
-    0
+    0,
   );
   const averageProgress =
     totalWizards > 0
       ? campaignProgress.reduce(
           (sum: number, p: Doc<"wizardCampaignProgress">) =>
             sum + Math.min(p.currentOpponent - 1, 10),
-          0
+          0,
         ) / totalWizards
       : 0;
 
@@ -94,7 +94,7 @@ export function CampaignStats({
     .filter((p: Doc<"wizardCampaignProgress">) => p.lastBattleAt)
     .sort(
       (a: Doc<"wizardCampaignProgress">, b: Doc<"wizardCampaignProgress">) =>
-        (b.lastBattleAt || 0) - (a.lastBattleAt || 0)
+        (b.lastBattleAt || 0) - (a.lastBattleAt || 0),
     )[0];
 
   // Calculate completion percentage and milestones
@@ -123,7 +123,7 @@ export function CampaignStats({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <Wand2 className="h-4 w-4 text-primary" />
               <div>
                 <div className="text-sm font-medium">{totalWizards}</div>
                 <div className="text-xs text-muted-foreground">Wizards</div>
@@ -135,7 +135,7 @@ export function CampaignStats({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Crown className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+              <Crown className="h-4 w-4 text-warning" />
               <div>
                 <div className="text-sm font-medium">{completedCampaigns}</div>
                 <div className="text-xs text-muted-foreground">Completed</div>
@@ -147,7 +147,7 @@ export function CampaignStats({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <Sparkles className="h-4 w-4 text-info" />
               <div>
                 <div className="text-sm font-medium">{activeCampaigns}</div>
                 <div className="text-xs text-muted-foreground">Active</div>
@@ -159,7 +159,7 @@ export function CampaignStats({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <Trophy className="h-4 w-4 text-success" />
               <div>
                 <div className="text-sm font-medium">{totalBattlesWon}</div>
                 <div className="text-xs text-muted-foreground">Victories</div>
@@ -183,7 +183,7 @@ export function CampaignStats({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <Wand2 className="h-5 w-5 text-primary" />
               <span className="text-2xl font-bold">{totalWizards}</span>
             </div>
           </CardContent>
@@ -197,7 +197,7 @@ export function CampaignStats({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <Crown className="h-5 w-5 text-warning" />
               <span className="text-2xl font-bold">{completedCampaigns}</span>
             </div>
           </CardContent>
@@ -211,7 +211,7 @@ export function CampaignStats({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <Sparkles className="h-5 w-5 text-info" />
               <span className="text-2xl font-bold">{activeCampaigns}</span>
             </div>
           </CardContent>
@@ -225,7 +225,7 @@ export function CampaignStats({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <Trophy className="h-5 w-5 text-success" />
               <span className="text-2xl font-bold">{totalBattlesWon}</span>
             </div>
           </CardContent>
@@ -237,7 +237,7 @@ export function CampaignStats({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <TrendingUp className="h-5 w-5 text-primary" />
               Overall Progress
             </CardTitle>
             <CardDescription>
@@ -267,7 +267,7 @@ export function CampaignStats({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <Calendar className="h-5 w-5 text-info" />
                 Recent Activity
               </CardTitle>
               <CardDescription>Your latest campaign battle</CardDescription>
@@ -280,7 +280,7 @@ export function CampaignStats({
                     <span className="font-medium">Last Battle:</span>
                     <span>
                       {new Date(
-                        mostRecentBattle.lastBattleAt!
+                        mostRecentBattle.lastBattleAt!,
                       ).toLocaleDateString()}
                     </span>
                   </div>
@@ -293,7 +293,7 @@ export function CampaignStats({
                     </span>
                   </div>
                   {mostRecentBattle.hasCompletionRelic && (
-                    <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
+                    <Badge className="bg-warning/15 text-warning">
                       <Crown className="h-3 w-3 mr-1" />
                       Campaign Completed
                     </Badge>
@@ -313,7 +313,7 @@ export function CampaignStats({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <Zap className="h-5 w-5 text-warning" />
             Milestone Progress
           </CardTitle>
           <CardDescription>
@@ -343,7 +343,7 @@ export function CampaignStats({
               {achievedMilestones.map((milestone) => (
                 <Badge
                   key={milestone.name}
-                  className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                  className="bg-success/15 text-success"
                 >
                   <Trophy className="h-3 w-3 mr-1" />
                   {milestone.name}
@@ -365,7 +365,7 @@ export function CampaignStats({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <Target className="h-5 w-5 text-primary" />
               Wizard Progress Details
             </CardTitle>
             <CardDescription>
@@ -386,7 +386,7 @@ export function CampaignStats({
                 {userWizards.map((wizard: Doc<"wizards">) => {
                   const progress = campaignProgress.find(
                     (p: Doc<"wizardCampaignProgress">) =>
-                      p.wizardId === wizard._id
+                      p.wizardId === wizard._id,
                   );
                   const defeatedCount = progress?.defeatedOpponents.length || 0;
                   const progressPercent = (defeatedCount / 10) * 100;
@@ -395,7 +395,7 @@ export function CampaignStats({
                     <div key={wizard._id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                          <Wand2 className="h-5 w-5 text-primary" />
                           <div>
                             <h4 className="font-semibold">{wizard.name}</h4>
                             <p className="text-sm text-muted-foreground">
@@ -405,7 +405,7 @@ export function CampaignStats({
                         </div>
                         <div className="flex items-center gap-2">
                           {progress?.hasCompletionRelic && (
-                            <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
+                            <Badge className="bg-warning/15 text-warning">
                               <Crown className="h-3 w-3 mr-1" />
                               Relic Earned
                             </Badge>

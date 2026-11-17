@@ -63,7 +63,7 @@ function SortableOpponentItem({
   const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
     // @ts-expect-error - "skip" is a valid Convex query parameter
-    opponent.illustration ? { storageId: opponent.illustration } : "skip"
+    opponent.illustration ? { storageId: opponent.illustration } : "skip",
   );
 
   const style = {
@@ -75,13 +75,13 @@ function SortableOpponentItem({
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-success/15 text-success";
       case "INTERMEDIATE":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+        return "bg-warning/15 text-warning";
       case "ADVANCED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-destructive/15 text-destructive";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-muted text-foreground";
     }
   };
 
@@ -99,17 +99,18 @@ function SortableOpponentItem({
               type="button"
               {...attributes}
               {...listeners}
-              className={`cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors touch-none ${
+              aria-label="Drag to reorder"
+              className={`cursor-grab active:cursor-grabbing min-h-11 min-w-11 inline-flex items-center justify-center rounded hover:bg-accent transition-colors touch-none ${
                 disabled ? "cursor-not-allowed opacity-50" : ""
               }`}
               disabled={disabled}
             >
-              <GripVertical className="h-4 w-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" />
+              <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
             </button>
 
             {/* Battle Order Number */}
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-              <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/12 flex items-center justify-center">
+              <span className="text-xs font-bold text-primary">
                 {index + 1}
               </span>
             </div>
@@ -122,11 +123,11 @@ function SortableOpponentItem({
                   alt={opponent.name}
                   width={32}
                   height={32}
-                  className="w-8 h-8 rounded-md object-cover border border-purple-200 dark:border-purple-700"
+                  className="w-8 h-8 rounded-md object-cover border border-primary/30"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-600">
-                  <span className="text-xs text-gray-500">
+                <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center border border-dashed border-border">
+                  <span className="text-xs text-muted-foreground">
                     #{opponent.opponentNumber}
                   </span>
                 </div>
@@ -141,7 +142,7 @@ function SortableOpponentItem({
                 </h4>
                 <Badge
                   className={`text-xs ${getDifficultyColor(
-                    opponent.difficulty || "BEGINNER"
+                    opponent.difficulty || "BEGINNER",
                   )}`}
                 >
                   {opponent.difficulty}
@@ -158,7 +159,7 @@ function SortableOpponentItem({
               variant="ghost"
               onClick={onRemove}
               disabled={disabled}
-              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 h-6 w-6 p-0"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
             >
               <X className="h-3 w-3" />
             </Button>
@@ -183,19 +184,19 @@ function AvailableOpponentItem({
   const imageUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
     // @ts-expect-error - "skip" is a valid Convex query parameter
-    opponent.illustration ? { storageId: opponent.illustration } : "skip"
+    opponent.illustration ? { storageId: opponent.illustration } : "skip",
   );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-success/15 text-success";
       case "INTERMEDIATE":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+        return "bg-warning/15 text-warning";
       case "ADVANCED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-destructive/15 text-destructive";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-muted text-foreground";
     }
   };
 
@@ -211,11 +212,11 @@ function AvailableOpponentItem({
                 alt={opponent.name}
                 width={32}
                 height={32}
-                className="w-8 h-8 rounded-md object-cover border border-purple-200 dark:border-purple-700"
+                className="w-8 h-8 rounded-md object-cover border border-primary/30"
               />
             ) : (
-              <div className="w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-600">
-                <span className="text-xs text-gray-500">
+              <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center border border-dashed border-border">
+                <span className="text-xs text-muted-foreground">
                   #{opponent.opponentNumber}
                 </span>
               </div>
@@ -230,7 +231,7 @@ function AvailableOpponentItem({
               </h4>
               <Badge
                 className={`text-xs ${getDifficultyColor(
-                  opponent.difficulty || "BEGINNER"
+                  opponent.difficulty || "BEGINNER",
                 )}`}
               >
                 {opponent.difficulty}
@@ -247,7 +248,7 @@ function AvailableOpponentItem({
             variant="ghost"
             onClick={onAdd}
             disabled={disabled}
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950 h-6 w-6 p-0"
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-success hover:text-success hover:bg-success/10 h-6 w-6 p-0"
           >
             <Plus className="h-3 w-3" />
           </Button>
@@ -273,7 +274,7 @@ export function DragDropOpponentSelector({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Get selected opponent objects in order
@@ -285,7 +286,7 @@ export function DragDropOpponentSelector({
 
   // Get available opponents (not selected)
   const unselectedOpponents = availableOpponents.filter(
-    (op) => !selectedOpponents.includes(op._id)
+    (op) => !selectedOpponents.includes(op._id),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -368,11 +369,11 @@ export function DragDropOpponentSelector({
                 <div className="opacity-80">
                   {(() => {
                     const activeOpponent = selectedOpponentObjects.find(
-                      (op) => op._id === activeId
+                      (op) => op._id === activeId,
                     );
                     if (activeOpponent) {
                       const index = selectedOpponents.findIndex(
-                        (id) => id === activeId
+                        (id) => id === activeId,
                       );
                       return (
                         <SortableOpponentItem

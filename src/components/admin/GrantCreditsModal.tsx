@@ -15,9 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Coins, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Coins, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 /**
  * Modal component for granting image credits to users
@@ -160,7 +161,7 @@ export function GrantCreditsModal({
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-yellow-500" />
+            <Coins className="h-5 w-5 text-gold" />
             Grant Image Credits
           </DialogTitle>
           <DialogDescription>
@@ -178,15 +179,15 @@ export function GrantCreditsModal({
                     Current Balance
                   </p>
                   <p className="text-2xl font-bold flex items-center gap-2">
-                    <Coins className="h-5 w-5 text-yellow-500" />
+                    <Coins className="h-5 w-5 text-gold" />
                     {currentBalance}
                   </p>
                 </div>
                 {amount && (
                   <div className="sm:text-right">
                     <p className="text-sm text-muted-foreground">New Balance</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400 flex items-center gap-2 sm:justify-end">
-                      <Coins className="h-5 w-5 text-yellow-500" />
+                    <p className="text-2xl font-bold text-success flex items-center gap-2 sm:justify-end">
+                      <Coins className="h-5 w-5 text-gold" />
                       {previewBalance}
                     </p>
                   </div>
@@ -249,9 +250,9 @@ export function GrantCreditsModal({
 
             {/* Success Alert */}
             {success && (
-              <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
-                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <AlertDescription className="text-green-600 dark:text-green-400">
+              <Alert className="border-success bg-success/10">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <AlertDescription className="text-success">
                   Credits granted successfully!
                 </AlertDescription>
               </Alert>
@@ -275,7 +276,7 @@ export function GrantCreditsModal({
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
                   Granting...
                 </>
               ) : success ? (

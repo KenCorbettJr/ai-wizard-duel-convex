@@ -7,6 +7,8 @@ import { DuelListItem } from "@/components/DuelListItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye } from "lucide-react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function WatchDuelsPage() {
   const [offset, setOffset] = useState(0);
@@ -26,29 +28,30 @@ export default function WatchDuelsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Eye className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-            <h1 className="text-4xl font-bold text-foreground">Watch Duels</h1>
-          </div>
-          <p className="text-lg text-muted-foreground">
+          <PageHeader
+            className="mb-0"
+            title="Watch Duels"
+            icon={<Eye className="h-6 w-6" aria-hidden="true" />}
+            description="
             Witness epic magical battles from wizards across the platform. Watch
             active duels in progress and explore completed battles to see how
             they unfolded.
-          </p>
+          "
+          />
         </div>
 
         {/* Duels List */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-6">
+          <h2 className="font-display text-2xl font-bold text-foreground mb-6">
             Recent Duels
           </h2>
 
           {duels === undefined ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto"></div>
+              <RuneSpinner size="md" label="Loading…" />
               <p className="text-muted-foreground mt-4">Loading duels...</p>
             </div>
           ) : duels.length === 0 ? (

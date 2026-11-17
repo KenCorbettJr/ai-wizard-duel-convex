@@ -14,8 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
-import { Trophy, Medal, Award, Star, Zap, Crown } from "lucide-react";
+import { Trophy, Medal, Award, Star, Crown } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Show, SignInButton } from "@clerk/nextjs";
 import {
   Select,
   SelectContent,
@@ -55,7 +60,7 @@ function WizardLeaderboardCard({
   const illustrationUrl = useConvexImage(
     api.wizards.getIllustrationUrl,
     // @ts-expect-error - "skip" is a valid Convex query parameter
-    wizard.illustration ? { storageId: wizard.illustration } : "skip"
+    wizard.illustration ? { storageId: wizard.illustration } : "skip",
   );
 
   const getRankIcon = (rank: number, period: "all" | "week" | "month") => {
@@ -64,19 +69,19 @@ function WizardLeaderboardCard({
       case 1:
         return (
           <Crown
-            className={`h-6 w-6 ${isTimePeriod ? "text-yellow-400 animate-pulse" : "text-yellow-500"}`}
+            className={`h-6 w-6 ${isTimePeriod ? "text-gold animate-rune-pulse" : "text-gold"}`}
           />
         );
       case 2:
         return (
           <Trophy
-            className={`h-6 w-6 ${isTimePeriod ? "text-gray-300" : "text-gray-400"}`}
+            className={`h-6 w-6 ${isTimePeriod ? "text-muted-foreground" : "text-muted-foreground"}`}
           />
         );
       case 3:
         return (
           <Medal
-            className={`h-6 w-6 ${isTimePeriod ? "text-amber-500" : "text-amber-600"}`}
+            className={`h-6 w-6 ${isTimePeriod ? "text-warning" : "text-warning"}`}
           />
         );
       default:
@@ -87,11 +92,11 @@ function WizardLeaderboardCard({
   const getRankBadgeVariant = (rank: number) => {
     switch (rank) {
       case 1:
-        return "default" as const;
+        return "legendary" as const;
       case 2:
         return "secondary" as const;
       case 3:
-        return "outline" as const;
+        return "gold" as const;
       default:
         return "outline" as const;
     }
@@ -101,29 +106,21 @@ function WizardLeaderboardCard({
     return `${(winRate * 100).toFixed(1)}%`;
   };
 
-  const getCardStyling = (rank: number, period: "all" | "week" | "month") => {
-    const isTimePeriod = period !== "all";
-    if (rank <= 3) {
-      const baseRing = "ring-2";
-      if (isTimePeriod) {
-        switch (rank) {
-          case 1:
-            return `${baseRing} ring-yellow-300 dark:ring-yellow-600 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950 dark:to-amber-950`;
-          case 2:
-            return `${baseRing} ring-gray-300 dark:ring-gray-600 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950 dark:to-slate-950`;
-          case 3:
-            return `${baseRing} ring-amber-300 dark:ring-amber-600 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950`;
-        }
-      }
-      return `${baseRing} ring-yellow-200 dark:ring-yellow-800`;
+  const getCardStyling = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return "ring-2 ring-gold/70 bg-gold/10";
+      case 2:
+        return "ring-2 ring-primary/40 bg-primary/5";
+      case 3:
+        return "ring-2 ring-warning/40 bg-warning/5";
+      default:
+        return "";
     }
-    return "";
   };
 
   return (
-    <Card
-      className={`transition-all hover:shadow-lg ${getCardStyling(wizard.rank, period)}`}
-    >
+    <Card className={`sparkle-hover ${getCardStyling(wizard.rank)}`}>
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
           {/* Rank */}
@@ -133,7 +130,7 @@ function WizardLeaderboardCard({
               #{wizard.rank}
             </Badge>
             {period !== "all" && wizard.rank === 1 && (
-              <div className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mt-1">
+              <div className="text-xs text-gold-foreground font-medium mt-1">
                 {period === "week" ? "Week" : "Month"} Champion
               </div>
             )}
@@ -152,7 +149,7 @@ function WizardLeaderboardCard({
             <div className="flex items-center gap-2 mb-1">
               <Link
                 href={`/wizards/${wizard._id}`}
-                className="text-xl font-bold text-foreground hover:text-primary transition-colors truncate"
+                className="font-display text-xl font-bold text-foreground hover:text-primary transition-colors truncate"
               >
                 {wizard.name}
               </Link>
@@ -187,9 +184,9 @@ function WizardLeaderboardCard({
           {/* Stats */}
           <div className="flex flex-col sm:flex-row gap-4 text-center">
             <div className="min-w-[80px]">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-2xl font-bold text-success">
                 {formatWinRate(
-                  period === "all" ? wizard.winRate : wizard.periodWinRate
+                  period === "all" ? wizard.winRate : wizard.periodWinRate,
                 )}
               </div>
               <div className="text-xs text-muted-foreground">
@@ -246,181 +243,135 @@ export default function LeaderboardPage() {
     minDuels,
   });
 
-  if (leaderboard === undefined) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-        <div className="container mx-auto px-6 py-12">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const periods = [
+    { value: "all", label: "All Time", icon: Trophy },
+    { value: "month", label: "This Month", icon: Medal },
+    { value: "week", label: "This Week", icon: Crown },
+  ] as const;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3 font-[family-name:var(--font-cinzel)]">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            Wizard Leaderboard
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            The most powerful wizards ranked by their win rate and battle
-            prowess
-          </p>
+    <div className="container mx-auto px-4 pt-10 pb-8 sm:px-6 sm:py-12">
+      <PageHeader
+        title="Wizard Leaderboard"
+        description="The most powerful wizards, ranked by win rate and battle prowess."
+        icon={<Trophy className="h-6 w-6" aria-hidden="true" />}
+      />
+
+      {/* Toolbar: period tabs + filters in one compact row */}
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div
+          role="group"
+          aria-label="Time period"
+          className="flex flex-wrap gap-2"
+        >
+          {periods.map(({ value, label, icon: Icon }) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant={period === value ? "default" : "outline"}
+              aria-pressed={period === value}
+              onClick={() => setPeriod(value)}
+            >
+              <Icon aria-hidden="true" />
+              {label}
+            </Button>
+          ))}
         </div>
 
-        {/* Time Period Selection */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setPeriod("all")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                period === "all"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Select
+            value={minDuels.toString()}
+            onValueChange={(value) => setMinDuels(parseInt(value))}
+          >
+            <SelectTrigger aria-label="Minimum duels" className="sm:w-44">
+              <SelectValue>{`${minDuels}+ Duels`}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1+ Duels</SelectItem>
+              <SelectItem value="3">3+ Duels</SelectItem>
+              <SelectItem value="5">5+ Duels</SelectItem>
+              <SelectItem value="10">10+ Duels</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={limit.toString()}
+            onValueChange={(value) => setLimit(parseInt(value))}
+          >
+            <SelectTrigger
+              aria-label="Number of wizards to show"
+              className="sm:w-36"
             >
-              <Trophy className="h-4 w-4" />
-              All Time
-            </button>
-            <button
-              onClick={() => setPeriod("month")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                period === "month"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
-            >
-              <Medal className="h-4 w-4" />
-              This Month
-            </button>
-            <button
-              onClick={() => setPeriod("week")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                period === "week"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
-            >
-              <Crown className="h-4 w-4" />
-              This Week
-            </button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <Card className="flex-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Minimum Duels</CardTitle>
-              <CardDescription>
-                Only show wizards with at least this many duels
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Select
-                value={minDuels.toString()}
-                onValueChange={(value) => setMinDuels(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1+ Duels</SelectItem>
-                  <SelectItem value="3">3+ Duels</SelectItem>
-                  <SelectItem value="5">5+ Duels</SelectItem>
-                  <SelectItem value="10">10+ Duels</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          <Card className="flex-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Results Limit</CardTitle>
-              <CardDescription>Number of wizards to display</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Select
-                value={limit.toString()}
-                onValueChange={(value) => setLimit(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">Top 25</SelectItem>
-                  <SelectItem value="50">Top 50</SelectItem>
-                  <SelectItem value="100">Top 100</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Leaderboard */}
-        {!leaderboard || leaderboard.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Zap className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2 font-[family-name:var(--font-cinzel)]">
-                No Wizards Found
-              </h3>
-              <p className="text-muted-foreground">
-                No wizards meet the current filter criteria for{" "}
-                {period === "all" ? "all time" : `this ${period}`}. Try lowering
-                the minimum duels requirement.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {leaderboard.map((wizard) => (
-              <WizardLeaderboardCard
-                key={wizard._id}
-                wizard={wizard}
-                period={period}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="mt-12">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                Ready to Compete?
-              </CardTitle>
-              <CardDescription>
-                Create your own wizard and climb the leaderboard
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <Link href="/wizards">
-                  <button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                    My Wizards
-                  </button>
-                </Link>
-                <Link href="/duels/create">
-                  <button className="w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                    Start Duel
-                  </button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              <SelectValue>{`Top ${limit}`}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">Top 25</SelectItem>
+              <SelectItem value="50">Top 50</SelectItem>
+              <SelectItem value="100">Top 100</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+
+      {leaderboard === undefined ? (
+        <RuneSpinner
+          size="lg"
+          label="Consulting the rankings…"
+          className="py-20"
+        />
+      ) : leaderboard.length === 0 ? (
+        <EmptyState
+          icon={<Crown className="size-7" aria-hidden="true" />}
+          title="No wizard has earned their stripes yet"
+          description={`Nobody has met these requirements ${
+            period === "all" ? "of all time" : `this ${period}`
+          }. Lower the minimum duels, or be the first to claim the throne.`}
+          action={
+            <Button asChild>
+              <Link href="/duels/create">Start a duel</Link>
+            </Button>
+          }
+        />
+      ) : (
+        <ol className="space-y-4">
+          {leaderboard.map((wizard) => (
+            <li key={wizard._id}>
+              <WizardLeaderboardCard wizard={wizard} period={period} />
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <section className="mt-12">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-gold" aria-hidden="true" />
+              Ready to Compete?
+            </CardTitle>
+            <CardDescription>
+              Create your own wizard and climb the leaderboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Show when="signed-in">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Button asChild>
+                  <Link href="/wizards">My Wizards</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/duels/create">Start Duel</Link>
+                </Button>
+              </div>
+            </Show>
+            <Show when="signed-out">
+              <SignInButton>
+                <Button>Sign in to compete</Button>
+              </SignInButton>
+            </Show>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

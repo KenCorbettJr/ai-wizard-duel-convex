@@ -8,9 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import { CampaignOpponentCard } from "./CampaignOpponentCard";
 import { CampaignWizardSelection } from "./CampaignWizardSelection";
 import { CampaignRelicBadge } from "./CampaignRelicBadge";
-import { Trophy, Users, Target } from "lucide-react";
+import { Trophy, Users, Target, Scroll } from "lucide-react";
 import Link from "next/link";
 import type { Doc } from "../../convex/_generated/dataModel";
+import { PageHeader } from "@/components/PageHeader";
 
 interface WizardWithProgress {
   wizard: Doc<"wizards">;
@@ -44,16 +45,16 @@ export function CampaignProgression({
   // Calculate overall progress statistics
   const totalWizards = userWizards.length;
   const completedWizards = userWizards.filter(
-    (w) => (w.progress?.defeatedOpponents.length || 0) === 10
+    (w) => (w.progress?.defeatedOpponents.length || 0) === 10,
   ).length;
   const totalRelics = userWizards.filter(
-    (w) => w.progress?.hasCompletionRelic
+    (w) => w.progress?.hasCompletionRelic,
   ).length;
 
   // Calculate average progress
   const totalProgress = userWizards.reduce(
     (sum, w) => sum + (w.progress?.defeatedOpponents.length || 0),
-    0
+    0,
   );
   const averageProgress =
     totalWizards > 0 ? (totalProgress / (totalWizards * 10)) * 100 : 0;
@@ -63,13 +64,13 @@ export function CampaignProgression({
     const wizardProgresses = userWizards.map((w) => w.progress).filter(Boolean);
 
     const defeatedBy = wizardProgresses.filter((p) =>
-      p!.defeatedOpponents.includes(opponentNumber)
+      p!.defeatedOpponents.includes(opponentNumber),
     ).length;
 
     const canBattleWith = wizardProgresses.filter(
       (p) =>
         p!.currentOpponent === opponentNumber &&
-        (p!.defeatedOpponents.length || 0) < 10
+        (p!.defeatedOpponents.length || 0) < 10,
     ).length;
 
     const isUnlocked = canBattleWith > 0 || defeatedBy > 0;
@@ -103,7 +104,7 @@ export function CampaignProgression({
 
   const selectedOpponent = selectedOpponentNumber
     ? campaignOpponents.find(
-        (op) => op.opponentNumber === selectedOpponentNumber
+        (op) => op.opponentNumber === selectedOpponentNumber,
       )
     : null;
 
@@ -125,20 +126,20 @@ export function CampaignProgression({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Campaign Mode</h1>
-        <p className="text-muted-foreground">
-          Challenge 10 unique AI wizards in sequential battles. Complete the
-          campaign to earn a permanent luck relic!
-        </p>
-      </div>
+      <PageHeader
+        className="mb-0"
+        title="Campaign Mode"
+        description="Challenge 10 unique AI wizards in sequential battles. Complete the
+          campaign to earn a permanent luck relic!"
+        icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
+      />
 
       {/* Overall Progress Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <Users className="w-8 h-8 text-blue-500" />
+              <Users className="w-8 h-8 text-info" />
               <div>
                 <div className="text-2xl font-bold">{totalWizards}</div>
                 <div className="text-sm text-muted-foreground">
@@ -152,7 +153,7 @@ export function CampaignProgression({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <Trophy className="w-8 h-8 text-green-500" />
+              <Trophy className="w-8 h-8 text-success" />
               <div>
                 <div className="text-2xl font-bold">{completedWizards}</div>
                 <div className="text-sm text-muted-foreground">Completed</div>
@@ -164,7 +165,7 @@ export function CampaignProgression({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <Target className="w-8 h-8 text-amber-500" />
+              <Target className="w-8 h-8 text-warning" />
               <div>
                 <div className="text-2xl font-bold">{totalRelics}</div>
                 <div className="text-sm text-muted-foreground">
@@ -191,19 +192,16 @@ export function CampaignProgression({
       {/* Campaign Opponents Grid */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-semibold text-gold-gradient font-display">
             Campaign Opponents
           </h2>
           <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="text-sm border-purple-200 dark:border-purple-800"
-            >
+            <Badge variant="outline" className="text-sm border-primary/30">
               Linear Progression Required
             </Badge>
             <Badge
               variant="secondary"
-              className="text-sm bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
+              className="text-sm bg-primary/12 text-primary"
             >
               {campaignOpponents.length} Opponents
             </Badge>

@@ -23,7 +23,7 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-500" />
+            <Trophy className="w-5 h-5 text-gold" />
             Trophy Hall
           </CardTitle>
         </CardHeader>
@@ -45,7 +45,7 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-500" />
+            <Trophy className="w-5 h-5 text-gold" />
             Trophy Hall
           </CardTitle>
         </CardHeader>
@@ -66,7 +66,7 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-500" />
+          <Trophy className="w-5 h-5 text-gold" />
           Trophy Hall
           <Badge variant="secondary" className="ml-2">
             {defeatedWizards.length}{" "}
@@ -83,7 +83,7 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
             return (
               <div
                 key={wizard._id}
-                className="group relative aspect-square rounded-lg overflow-hidden border-2 border-yellow-200 dark:border-yellow-800 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 hover:scale-105 transition-transform cursor-pointer"
+                className="group relative aspect-square rounded-lg overflow-hidden border-2 border-warning/40 bg-linear-to-br from-warning/20 to-gold/10 hover:scale-105 transition-transform cursor-pointer"
                 title={`Defeated ${wizard.name} on ${defeatedDate}`}
               >
                 {wizard.illustration || wizard.illustrationURL ? (
@@ -108,13 +108,13 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                    <Zap className="w-6 h-6 text-warning" />
                   </div>
                 )}
 
                 {/* Trophy overlay */}
                 <div className="absolute top-1 right-1">
-                  <Trophy className="w-3 h-3 text-yellow-500 drop-shadow-sm" />
+                  <Trophy className="w-3 h-3 text-gold drop-shadow-sm" />
                 </div>
 
                 {/* Tooltip on hover */}

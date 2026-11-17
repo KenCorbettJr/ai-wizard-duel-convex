@@ -60,19 +60,24 @@ const SidebarContent = ({
   <div className="flex flex-col h-full">
     <div className="p-6 border-b border-border">
       <div className="flex items-center justify-between">
-        <Link href="/" onClick={() => setIsOpen(false)}>
-          <h1 className="text-xl font-bold text-foreground font-[family-name:var(--font-cinzel)]">
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center"
+          onClick={() => setIsOpen(false)}
+        >
+          <span className="block whitespace-nowrap text-lg font-bold tracking-wide font-display text-gold-gradient">
             AI Wizard Duel
-          </h1>
+          </span>
         </Link>
         {/* Close button for mobile */}
         <Button
           variant="ghost"
           size="sm"
-          className="md:hidden"
+          className="md:hidden min-w-11"
+          aria-label="Close navigation menu"
           onClick={() => setIsOpen(false)}
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
       {/* Waitlist Status Badge */}
@@ -80,8 +85,8 @@ const SidebarContent = ({
         <div className="mt-3">
           <Link href="/waitlist" onClick={() => setIsOpen(false)}>
             <Badge
-              variant="outline"
-              className="w-full justify-center py-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 cursor-pointer"
+              variant="warning"
+              className="w-full justify-center py-2 border-warning/50 bg-warning/15 text-warning hover:bg-warning/25 cursor-pointer"
             >
               <Clock className="h-3 w-3 mr-1" />
               Waitlist Pending
@@ -91,14 +96,14 @@ const SidebarContent = ({
       )}
     </div>
 
-    <nav className="flex-1 p-4">
+    <nav aria-label="Main" className="flex-1 overflow-y-auto p-4">
       <div className="space-y-6">
         {getSidebarGroups().map((group, groupIndex) => (
           <div key={groupIndex}>
             {group.title && (
-              <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {group.title}
-              </h3>
+              </p>
             )}
             <ul className="space-y-1">
               {group.items.map((item) => {
@@ -122,15 +127,19 @@ const SidebarContent = ({
                       <li>
                         <Link
                           href={item.href}
+                          aria-current={isActive ? "page" : undefined}
                           onClick={() => setIsOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-11",
                             isActive
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                              ? "bg-primary/15 text-foreground shadow-[inset_3px_0_0_var(--gold)]"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent",
                           )}
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon
+                            className={cn("h-4 w-4", isActive && "text-gold")}
+                            aria-hidden="true"
+                          />
                           <span className="flex-1">{item.label}</span>
                           {item.showStatus && <LobbyStatusIndicator />}
                           {item.href === "/credits" && (
@@ -146,15 +155,19 @@ const SidebarContent = ({
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      aria-current={isActive ? "page" : undefined}
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-11",
                         isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                          ? "bg-primary/15 text-foreground shadow-[inset_3px_0_0_var(--gold)]"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent",
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon
+                        className={cn("h-4 w-4", isActive && "text-gold")}
+                        aria-hidden="true"
+                      />
                       <span className="flex-1">{item.label}</span>
                       {item.showStatus && <LobbyStatusIndicator />}
                       {item.href === "/credits" && (
@@ -181,7 +194,9 @@ const SidebarContent = ({
         </Show>
         <Show when="signed-out">
           <SignInButton>
-            <Button size="sm">Sign In</Button>
+            <Button size="sm" className="min-h-11">
+              Sign In
+            </Button>
           </SignInButton>
         </Show>
       </div>
@@ -318,20 +333,26 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
   return (
     <>
       {/* Mobile navbar - always visible on mobile */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur border-b border-border">
         <div className="flex items-center justify-between p-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className="mr-2"
+            className="mr-2 min-w-11"
+            aria-label="Open navigation menu"
+            aria-expanded={isOpen}
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <Link href="/" onClick={() => setIsOpen(false)}>
-            <h1 className="text-lg font-bold text-foreground font-[family-name:var(--font-cinzel)]">
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center"
+            onClick={() => setIsOpen(false)}
+          >
+            <span className="block whitespace-nowrap text-base font-bold tracking-wide font-display text-gold-gradient">
               AI Wizard Duel
-            </h1>
+            </span>
           </Link>
           <div className="w-10" /> {/* Spacer for centering */}
         </div>
@@ -347,18 +368,19 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
 
       {/* Sidebar */}
       <aside
+        id="main-navigation"
         className={cn(
-          "fixed left-0 h-full bg-background border-r border-border z-40 transition-transform duration-300 ease-in-out",
+          "fixed left-0 h-full bg-sidebar border-r border-border z-40 transition-transform duration-300 ease-in-out",
           "w-64",
           // Desktop: always visible, starts at top
           "md:top-0",
           // Mobile: starts below navbar, slide in/out
-          "top-[57px] md:top-0",
+          "top-[77px] h-[calc(100dvh-77px)] md:top-0 md:h-full",
           // Desktop: always visible
           "md:translate-x-0",
           // Mobile: slide in/out
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-          className
+          className,
         )}
       >
         <SidebarContent

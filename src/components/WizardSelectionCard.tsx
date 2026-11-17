@@ -39,7 +39,7 @@ export function WizardSelectionCard({
 
   // Get next opponent info for campaign
   const nextOpponentData = campaignOpponents.find(
-    (op) => op.opponentNumber === nextOpponent
+    (op) => op.opponentNumber === nextOpponent,
   );
 
   const handleClick = () => {
@@ -49,19 +49,20 @@ export function WizardSelectionCard({
   if (variant === "detailed" && showCampaignProgress) {
     return (
       <Card
-        className={`cursor-pointer transition-all hover:shadow-md ${isSelected
-            ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950"
+        className={`cursor-pointer transition-all hover:shadow-md ${
+          isSelected
+            ? "ring-2 ring-info bg-info/10"
             : wizard.ownerSubscriptionTier === "PREMIUM"
-              ? "border-2 border-purple-500/70 dark:border-purple-400/70 shadow-purple-500/20"
+              ? "border-2 border-primary/70 shadow-primary/20"
               : "hover:border-muted-foreground"
-          }`}
+        }`}
         onClick={handleClick}
       >
         <CardContent className="p-4 space-y-4">
           {/* Header with wizard info */}
           <div className="flex items-center gap-3">
             {/* Wizard Image */}
-            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
               {wizard.illustration ? (
                 <ConvexImage
                   storageId={wizard.illustration}
@@ -79,7 +80,7 @@ export function WizardSelectionCard({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-full h-full bg-arcane flex items-center justify-center text-white font-bold text-xl">
                   {wizard.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -93,7 +94,7 @@ export function WizardSelectionCard({
                   {wizard.ownerSubscriptionTier === "PREMIUM" && (
                     <Badge
                       variant="default"
-                      className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold text-[10px] h-5 px-1.5"
+                      className="flex items-center gap-1 bg-primary text-primary-foreground border-primary/50 backdrop-blur-sm font-bold text-xs h-6 px-1.5"
                     >
                       <Crown className="h-2.5 w-2.5" />
                       Premium
@@ -108,14 +109,14 @@ export function WizardSelectionCard({
 
               {/* Current Status */}
               {isCompleted ? (
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div className="flex items-center gap-2 text-success">
                   <CheckCircle className="w-4 h-4" />
                   <span className="text-sm font-medium">
                     Campaign Completed!
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                <div className="flex items-center gap-2 text-info">
                   <Circle className="w-4 h-4" />
                   <span className="text-sm font-medium">
                     Next: {nextOpponentData?.name || `Opponent ${nextOpponent}`}
@@ -126,7 +127,7 @@ export function WizardSelectionCard({
 
             {/* Selection Indicator */}
             {isSelected && (
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 bg-info rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm">✓</span>
               </div>
             )}
@@ -149,13 +150,14 @@ export function WizardSelectionCard({
                     key={opponentNumber}
                     className={`
                       w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                      ${isDefeated
-                        ? "bg-green-500 text-white"
-                        : isCurrent
-                          ? "bg-blue-500 text-white ring-2 ring-blue-300"
-                          : isLocked
-                            ? "bg-gray-200 text-gray-400 dark:bg-gray-700"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      ${
+                        isDefeated
+                          ? "bg-success text-success-foreground"
+                          : isCurrent
+                            ? "bg-info text-info-foreground ring-2 ring-info/40"
+                            : isLocked
+                              ? "bg-muted text-muted-foreground"
+                              : "bg-muted text-foreground"
                       }
                     `}
                     title={
@@ -197,18 +199,19 @@ export function WizardSelectionCard({
   // Compact variant (for duels and simple selection)
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-md ${isSelected
-          ? "ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/50"
+      className={`cursor-pointer transition-all hover:shadow-md ${
+        isSelected
+          ? "ring-2 ring-primary bg-primary/8"
           : wizard.ownerSubscriptionTier === "PREMIUM"
-            ? "border-2 border-purple-500/70 dark:border-purple-400/70 shadow-purple-500/20"
+            ? "border-2 border-primary/70 shadow-primary/20"
             : "hover:border-muted-foreground"
-        }`}
+      }`}
       onClick={handleClick}
     >
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
           {/* Wizard Image */}
-          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
             {wizard.illustration ? (
               <ConvexImage
                 storageId={wizard.illustration}
@@ -226,7 +229,7 @@ export function WizardSelectionCard({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+              <div className="w-full h-full bg-arcane flex items-center justify-center text-white font-bold text-lg">
                 {wizard.name.charAt(0).toUpperCase()}
               </div>
             )}
@@ -237,14 +240,14 @@ export function WizardSelectionCard({
             <div className="flex items-center gap-1.5">
               <h4 className="font-medium text-foreground">{wizard.name}</h4>
               {wizard.ownerSubscriptionTier === "PREMIUM" && (
-                <Crown className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+                <Crown className="h-3 w-3 text-primary" />
               )}
             </div>
             <p className="text-sm text-muted-foreground truncate">
               {wizard.description}
             </p>
             {showCampaignProgress && !isCompleted && (
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              <p className="text-xs text-info mt-1">
                 Next: {nextOpponentData?.name || `Opponent ${nextOpponent}`}
               </p>
             )}
@@ -265,7 +268,7 @@ export function WizardSelectionCard({
             )}
 
             {isSelected && (
-              <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+              <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
             )}

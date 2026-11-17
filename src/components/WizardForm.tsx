@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
@@ -17,7 +18,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Save, X, Plus } from "lucide-react";
+import { Save, X, Plus } from "lucide-react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface WizardFormData {
   name: string;
@@ -89,7 +91,7 @@ export function WizardForm({
         error,
       );
       // You might want to show a toast notification here
-      alert(
+      toast.error(
         `Error ${mode === "create" ? "creating" : "updating"} wizard. Please try again.`,
       );
     } finally {
@@ -142,13 +144,11 @@ export function WizardForm({
       </div>
 
       {mode === "edit" && (
-        <div className="p-4 bg-blue-50 rounded-lg">
+        <div className="p-4 bg-info/10 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-blue-900">
-                Illustration Generation
-              </h4>
-              <p className="text-sm text-blue-700">
+              <h4 className="font-medium text-info">Illustration Generation</h4>
+              <p className="text-sm text-info">
                 Your wizard&apos;s illustration will be automatically
                 regenerated when you save changes to the name or description.
               </p>
@@ -162,7 +162,7 @@ export function WizardForm({
             >
               {isRegenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
                   Generating...
                 </>
               ) : (
@@ -181,7 +181,7 @@ export function WizardForm({
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <RuneSpinner size="xs" label="Working…" className="mr-2" />
               {mode === "create" ? "Creating..." : "Saving..."}
             </>
           ) : (

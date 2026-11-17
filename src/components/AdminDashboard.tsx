@@ -296,15 +296,15 @@ export function AdminDashboard() {
                       <div className="mt-1">
                         {item.duel.status === "WAITING_FOR_PLAYERS" &&
                           item.waitingTime && (
-                            <span className="text-orange-600">
+                            <span className="text-warning">
                               Waiting {formatDuration(item.waitingTime)}
                             </span>
                           )}
                         {item.duel.status === "IN_PROGRESS" && (
-                          <span className="text-green-600">
+                          <span className="text-success">
                             Round {item.duel.currentRound}
                             {item.roundWaitingTime && (
-                              <span className="text-orange-600 ml-2">
+                              <span className="text-warning ml-2">
                                 ({formatDuration(item.roundWaitingTime)}{" "}
                                 waiting)
                               </span>

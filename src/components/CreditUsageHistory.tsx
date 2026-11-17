@@ -70,33 +70,32 @@ export function CreditUsageHistory({
   const getTransactionIcon = (type: string, source: string) => {
     if (type === "EARNED") {
       if (source === "AD_REWARD")
-        return <Gift className="h-4 w-4 text-green-500" />;
+        return <Gift className="h-4 w-4 text-success" />;
       if (source === "SIGNUP_BONUS")
-        return <Gift className="h-4 w-4 text-blue-500" />;
+        return <Gift className="h-4 w-4 text-info" />;
       if (source === "ADMIN_GRANT")
-        return <Settings className="h-4 w-4 text-purple-500" />;
-      return <TrendingUp className="h-4 w-4 text-green-500" />;
+        return <Settings className="h-4 w-4 text-primary" />;
+      return <TrendingUp className="h-4 w-4 text-success" />;
     }
-    if (type === "CONSUMED")
-      return <Coins className="h-4 w-4 text-orange-500" />;
+    if (type === "CONSUMED") return <Coins className="h-4 w-4 text-warning" />;
     if (type === "GRANTED") {
       if (source === "PREMIUM_GRANT")
-        return <Crown className="h-4 w-4 text-purple-500" />;
-      return <Gift className="h-4 w-4 text-blue-500" />;
+        return <Crown className="h-4 w-4 text-primary" />;
+      return <Gift className="h-4 w-4 text-info" />;
     }
-    return <TrendingDown className="h-4 w-4 text-red-500" />;
+    return <TrendingDown className="h-4 w-4 text-destructive" />;
   };
 
   const getTransactionColor = (type: string) => {
     switch (type) {
       case "EARNED":
-        return "text-green-600 dark:text-green-400";
+        return "text-success";
       case "CONSUMED":
-        return "text-orange-600 dark:text-orange-400";
+        return "text-warning";
       case "GRANTED":
-        return "text-blue-600 dark:text-blue-400";
+        return "text-info";
       case "EXPIRED":
-        return "text-red-600 dark:text-red-400";
+        return "text-destructive";
       default:
         return "text-muted-foreground";
     }

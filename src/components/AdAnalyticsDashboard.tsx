@@ -4,7 +4,7 @@ import React from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Loader2 } from "lucide-react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 type AdPlacement = "WIZARD_PAGE" | "DUEL_PAGE" | "CREDIT_REWARD";
 
@@ -39,7 +39,7 @@ export function AdAnalyticsDashboard({
     return (
       <div className={`space-y-6 ${className}`}>
         <div className="text-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600 mb-4" />
+          <RuneSpinner size="md" label="Loading…" />
           <p className="text-muted-foreground">Loading ad analytics...</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export function AdAnalyticsDashboard({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-2xl font-bold text-success">
               ${(totalRevenue / 100).toFixed(2)}
             </div>
             <div className="text-sm text-muted-foreground">Total Revenue</div>
@@ -86,7 +86,7 @@ export function AdAnalyticsDashboard({
 
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold text-info">
               {totalImpressions.toLocaleString()}
             </div>
             <div className="text-sm text-muted-foreground">
@@ -97,7 +97,7 @@ export function AdAnalyticsDashboard({
 
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="text-2xl font-bold text-primary">
               {totalClicks.toLocaleString()}
             </div>
             <div className="text-sm text-muted-foreground">Total Clicks</div>
@@ -106,7 +106,7 @@ export function AdAnalyticsDashboard({
 
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            <div className="text-2xl font-bold text-warning">
               {overallCTR.toFixed(2)}%
             </div>
             <div className="text-sm text-muted-foreground">Overall CTR</div>

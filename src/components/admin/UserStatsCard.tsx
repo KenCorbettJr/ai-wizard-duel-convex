@@ -61,14 +61,14 @@ interface UserStatsCardProps {
  */
 export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
   const getActivityBadge = (
-    activityLevel: "inactive" | "low" | "medium" | "high"
+    activityLevel: "inactive" | "low" | "medium" | "high",
   ) => {
     switch (activityLevel) {
       case "inactive":
         return (
           <Badge
             variant="outline"
-            className="bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300"
+            className="bg-muted text-foreground border-border"
           >
             <Activity className="h-3 w-3 mr-1" />
             Inactive
@@ -78,7 +78,7 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
         return (
           <Badge
             variant="outline"
-            className="bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400"
+            className="bg-warning/15 text-warning border-warning/40"
           >
             <Activity className="h-3 w-3 mr-1" />
             Low Activity
@@ -88,7 +88,7 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
         return (
           <Badge
             variant="outline"
-            className="bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400"
+            className="bg-info/15 text-info border-info/40"
           >
             <Activity className="h-3 w-3 mr-1" />
             Medium Activity
@@ -98,7 +98,7 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
         return (
           <Badge
             variant="outline"
-            className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400"
+            className="bg-success/15 text-success border-success/40"
           >
             <Activity className="h-3 w-3 mr-1" />
             High Activity
@@ -140,8 +140,8 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
         <div className="space-y-6">
           {/* Wizards Created */}
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-purple-100 dark:bg-purple-900/30 p-3">
-              <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <div className="rounded-lg bg-primary/12 p-3">
+              <Wand2 className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
@@ -155,8 +155,8 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
 
           {/* Multiplayer Duels */}
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-blue-100 dark:bg-blue-900/30 p-3">
-              <Swords className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-lg bg-info/15 p-3">
+              <Swords className="h-5 w-5 text-info" />
             </div>
             <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
@@ -168,21 +168,21 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded-md bg-green-50 dark:bg-green-950/30 p-2 text-center">
+                <div className="rounded-md bg-success/10 p-2 text-center">
                   <p className="text-xs text-muted-foreground">Wins</p>
-                  <p className="font-semibold text-green-600 dark:text-green-400">
+                  <p className="font-semibold text-success">
                     {stats.multiplayerDuels.wins}
                   </p>
                 </div>
-                <div className="rounded-md bg-red-50 dark:bg-red-950/30 p-2 text-center">
+                <div className="rounded-md bg-destructive/10 p-2 text-center">
                   <p className="text-xs text-muted-foreground">Losses</p>
-                  <p className="font-semibold text-red-600 dark:text-red-400">
+                  <p className="font-semibold text-destructive">
                     {stats.multiplayerDuels.losses}
                   </p>
                 </div>
-                <div className="rounded-md bg-yellow-50 dark:bg-yellow-950/30 p-2 text-center">
+                <div className="rounded-md bg-warning/10 p-2 text-center">
                   <p className="text-xs text-muted-foreground">In Progress</p>
-                  <p className="font-semibold text-yellow-600 dark:text-yellow-400">
+                  <p className="font-semibold text-warning">
                     {stats.multiplayerDuels.inProgress}
                   </p>
                 </div>
@@ -193,7 +193,7 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
                   Win Rate:{" "}
                   {calculateWinRate(
                     stats.multiplayerDuels.wins,
-                    stats.multiplayerDuels.wins + stats.multiplayerDuels.losses
+                    stats.multiplayerDuels.wins + stats.multiplayerDuels.losses,
                   )}
                 </span>
               </div>
@@ -202,8 +202,8 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
 
           {/* Campaign Battles */}
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-3">
-              <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <div className="rounded-lg bg-warning/15 p-3">
+              <Target className="h-5 w-5 text-warning" />
             </div>
             <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
@@ -215,15 +215,15 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-md bg-green-50 dark:bg-green-950/30 p-2 text-center">
+                <div className="rounded-md bg-success/10 p-2 text-center">
                   <p className="text-xs text-muted-foreground">Victories</p>
-                  <p className="font-semibold text-green-600 dark:text-green-400">
+                  <p className="font-semibold text-success">
                     {stats.campaignBattles.wins}
                   </p>
                 </div>
-                <div className="rounded-md bg-red-50 dark:bg-red-950/30 p-2 text-center">
+                <div className="rounded-md bg-destructive/10 p-2 text-center">
                   <p className="text-xs text-muted-foreground">Defeats</p>
-                  <p className="font-semibold text-red-600 dark:text-red-400">
+                  <p className="font-semibold text-destructive">
                     {stats.campaignBattles.losses}
                   </p>
                 </div>
@@ -246,8 +246,8 @@ export function UserStatsCard({ stats, userName }: UserStatsCardProps) {
 
           {/* Last Activity */}
           <div className="flex items-start gap-4 pt-4 border-t">
-            <div className="rounded-lg bg-slate-100 dark:bg-slate-900/30 p-3">
-              <Clock className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+            <div className="rounded-lg bg-muted p-3">
+              <Clock className="h-5 w-5 text-foreground" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-muted-foreground">

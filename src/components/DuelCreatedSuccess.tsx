@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface DuelCreatedSuccessProps {
   duelId: Id<"duels">;
@@ -68,7 +69,7 @@ export function DuelCreatedSuccess({
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <RuneSpinner size="md" label="Loading…" />
         </CardContent>
       </Card>
     );
@@ -86,11 +87,9 @@ export function DuelCreatedSuccess({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-            <span className="text-purple-800 dark:text-purple-200 font-medium">
-              Shortcode:
-            </span>
-            <code className="text-2xl font-mono font-bold text-purple-900 dark:text-purple-100 tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/12 rounded-lg">
+            <span className="text-primary font-medium">Shortcode:</span>
+            <code className="text-2xl font-mono font-bold text-primary tracking-wider">
               {duel.shortcode}
             </code>
           </div>

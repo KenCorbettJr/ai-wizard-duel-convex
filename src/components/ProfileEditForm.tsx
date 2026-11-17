@@ -61,9 +61,9 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="h-10 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-10 bg-muted rounded"></div>
+            <div className="h-10 bg-muted rounded w-1/2"></div>
           </div>
         </CardContent>
       </Card>
@@ -74,7 +74,7 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-6">
-          <p className="text-center text-gray-600">
+          <p className="text-center text-foreground">
             Please complete your profile setup first.
           </p>
         </CardContent>
@@ -96,9 +96,9 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
               id="userId"
               value={profileStatus.userId || ""}
               disabled
-              className="bg-gray-50 text-gray-500"
+              className="bg-muted text-muted-foreground"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               User ID cannot be changed after creation
             </p>
           </div>
@@ -114,22 +114,22 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
               maxLength={50}
               required
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {displayName.length}/50 characters
             </p>
           </div>
 
           {/* Error message */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="p-3 bg-destructive/10 border border-destructive/40 rounded-md">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
           {/* Success message */}
           {success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-600">
+            <div className="p-3 bg-success/10 border border-success/40 rounded-md">
+              <p className="text-sm text-success">
                 Profile updated successfully!
               </p>
             </div>

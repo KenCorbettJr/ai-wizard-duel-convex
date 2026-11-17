@@ -25,7 +25,7 @@ export function WizardCampaignProgress({
   // Get wizard's campaign progress
   const wizardProgress = useQuery(
     api.campaigns.getWizardCampaignProgress,
-    wizardId ? { wizardId } : "skip"
+    wizardId ? { wizardId } : "skip",
   );
 
   // Get campaign opponents for context
@@ -43,7 +43,7 @@ export function WizardCampaignProgress({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Scroll className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Scroll className="h-5 w-5 text-primary" />
             Campaign Progress
           </CardTitle>
         </CardHeader>
@@ -70,7 +70,7 @@ export function WizardCampaignProgress({
       opponentNumber?: number;
       name: string;
       difficulty?: string;
-    }) => opponent.opponentNumber === currentOpponent
+    }) => opponent.opponentNumber === currentOpponent,
   );
 
   // Show season info if no active season
@@ -101,7 +101,7 @@ export function WizardCampaignProgress({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Scroll className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Scroll className="h-5 w-5 text-primary" />
             Campaign Progress
             <Badge variant="outline" className="text-xs">
               {activeSeason.name}
@@ -122,12 +122,12 @@ export function WizardCampaignProgress({
                 </p>
               </div>
               {isOwner && (
-                <Link href={`/campaign/wizard/${wizardId}`}>
-                  <Button>
+                <Button asChild>
+                  <Link href={`/campaign/wizard/${wizardId}`}>
                     <Swords className="h-4 w-4 mr-2" />
                     Start Campaign
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               )}
             </div>
           ) : (
@@ -147,12 +147,12 @@ export function WizardCampaignProgress({
               {/* Status */}
               <div className="flex items-center justify-between">
                 {isCompleted ? (
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  <div className="flex items-center gap-2 text-success">
                     <Crown className="h-4 w-4" />
                     <span className="font-medium">Campaign Completed!</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <div className="flex items-center gap-2 text-info">
                     <Target className="h-4 w-4" />
                     <span className="font-medium">
                       Next: Opponent {currentOpponent}
@@ -192,19 +192,19 @@ export function WizardCampaignProgress({
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                  <div className="text-lg font-bold text-success">
                     {defeatedCount}
                   </div>
                   <div className="text-xs text-muted-foreground">Defeated</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-lg font-bold text-info">
                     {10 - defeatedCount}
                   </div>
                   <div className="text-xs text-muted-foreground">Remaining</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                  <div className="text-lg font-bold text-primary">
                     {Math.round(progressPercentage)}%
                   </div>
                   <div className="text-xs text-muted-foreground">Complete</div>
@@ -213,13 +213,13 @@ export function WizardCampaignProgress({
 
               {/* Action Button */}
               {isOwner && (
-                <Link href={`/campaign/wizard/${wizardId}`}>
-                  <Button variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/campaign/wizard/${wizardId}`}>
                     <Scroll className="h-4 w-4 mr-2" />
                     View Full Campaign
                     <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               )}
             </>
           )}

@@ -12,7 +12,13 @@ export default function DuelExample({
   return (
     <div className="relative">
       <div className="relative h-64 md:h-80 rounded-lg overflow-hidden shadow-lg">
-        <Image src={imageUrl} alt={description} fill className="object-cover" />
+        <Image
+          src={imageUrl}
+          alt={description}
+          fill
+          sizes="(min-width: 768px) 50vw, 100vw"
+          className="object-cover"
+        />
       </div>
       <p className="text-sm text-muted-foreground text-center mt-2 italic">
         {description}

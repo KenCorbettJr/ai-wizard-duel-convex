@@ -34,7 +34,7 @@ describe("Property-Based Tests: Approved User Full Access", () => {
     fc.string({ minLength: 1, maxLength: 50 }),
     fc.constant(<div>Test Content</div>),
     fc.constant(<button>Action Button</button>),
-    fc.constant(<span>Protected Feature</span>)
+    fc.constant(<span>Protected Feature</span>),
   );
 
   it("Property 3.1: Approved users always see protected content", () => {
@@ -69,7 +69,7 @@ describe("Property-Based Tests: Approved User Full Access", () => {
         expect(screen.queryByText(/pending/i)).not.toBeInTheDocument();
         expect(screen.queryByText(/approval/i)).not.toBeInTheDocument();
       }),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -85,15 +85,15 @@ describe("Property-Based Tests: Approved User Full Access", () => {
           // Mock approved user status
           vi.spyOn(
             useWaitlistStatusModule,
-            "useWaitlistStatus"
+            "useWaitlistStatus",
           ).mockReturnValue({
             isApproved: true,
             isPending: false,
             isLoading: false,
             status: "approved",
             user: { id: "user_test" } as unknown as ReturnType<
-            typeof useWaitlistStatusModule.useWaitlistStatus
-          >["user"],
+              typeof useWaitlistStatusModule.useWaitlistStatus
+            >["user"],
           });
 
           // For any content and fallback combination. Wrap the fallback in a
@@ -107,7 +107,7 @@ describe("Property-Based Tests: Approved User Full Access", () => {
               fallback={<div data-testid={fallbackId}>{fallback}</div>}
             >
               {children}
-            </WaitlistGuard>
+            </WaitlistGuard>,
           );
 
           // The fallback should never be rendered for approved users.
@@ -117,9 +117,9 @@ describe("Property-Based Tests: Approved User Full Access", () => {
           if (typeof children === "string") {
             expect(container.textContent).toContain(children);
           }
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -142,7 +142,7 @@ describe("Property-Based Tests: Approved User Full Access", () => {
 
         // For any content during loading
         const { container, rerender } = render(
-          <WaitlistGuard>{content}</WaitlistGuard>
+          <WaitlistGuard>{content}</WaitlistGuard>,
         );
 
         // Should show loading indicator
@@ -168,10 +168,10 @@ describe("Property-Based Tests: Approved User Full Access", () => {
 
         // Loading indicator should be gone
         expect(
-          container.querySelector(".animate-spin")
+          container.querySelector(".animate-spin"),
         ).not.toBeInTheDocument();
       }),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });
@@ -206,7 +206,7 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
     fc.string({ minLength: 1, maxLength: 50 }),
     fc.constant(<div>Test Content</div>),
     fc.constant(<button>Action Button</button>),
-    fc.constant(<span>Protected Feature</span>)
+    fc.constant(<span>Protected Feature</span>),
   );
 
   // Arbitrary for generating different UI scenarios
@@ -242,7 +242,7 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
         const { container } = render(
           <WaitlistGuard fallback={fallback}>
             <div data-testid={`${testId}-content`}>{scenario.childrenText}</div>
-          </WaitlistGuard>
+          </WaitlistGuard>,
         );
 
         // Content should be visible
@@ -251,23 +251,23 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
         // Check that the content contains the expected text (accounting for whitespace normalization)
         if (scenario.childrenText.trim().length > 0) {
           expect(contentElement.textContent).toContain(
-            scenario.childrenText.trim()
+            scenario.childrenText.trim(),
           );
         }
 
         // Fallback should never be visible
         expect(
-          screen.queryByTestId(`${testId}-fallback`)
+          screen.queryByTestId(`${testId}-fallback`),
         ).not.toBeInTheDocument();
 
         // No waitlist-related UI elements
         expect(
-          container.querySelector('[class*="yellow"]')
+          container.querySelector('[class*="yellow"]'),
         ).not.toBeInTheDocument();
         expect(screen.queryByRole("alert")).not.toBeInTheDocument();
         expect(screen.queryByText(/waitlist/i)).not.toBeInTheDocument();
       }),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -285,15 +285,15 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
           // Mock approved user status
           vi.spyOn(
             useWaitlistStatusModule,
-            "useWaitlistStatus"
+            "useWaitlistStatus",
           ).mockReturnValue({
             isApproved: true,
             isPending: false,
             isLoading: false,
             status: "approved",
             user: { id: "user_test" } as unknown as ReturnType<
-            typeof useWaitlistStatusModule.useWaitlistStatus
-          >["user"],
+              typeof useWaitlistStatusModule.useWaitlistStatus
+            >["user"],
           });
 
           // For any array of content items - use unique test IDs
@@ -307,13 +307,13 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
                   </div>
                 </WaitlistGuard>
               ))}
-            </div>
+            </div>,
           );
 
           // All content should be rendered
           contentArray.forEach((content, index) => {
             const contentElement = screen.getByTestId(
-              `${testId}-content-${index}`
+              `${testId}-content-${index}`,
             );
             expect(contentElement).toBeInTheDocument();
             // Check that the content contains the expected text (accounting for whitespace normalization)
@@ -325,9 +325,9 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
           // No waitlist messages anywhere
           expect(screen.queryAllByText(/waitlist/i)).toHaveLength(0);
           expect(screen.queryAllByText(/pending/i)).toHaveLength(0);
-        }
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 
@@ -355,12 +355,12 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
         const { container } = render(
           <WaitlistGuard fallback={fallback}>
             <div data-testid={`${testId}-content`}>{scenario.childrenText}</div>
-          </WaitlistGuard>
+          </WaitlistGuard>,
         );
 
         // Content should NOT be visible
         expect(
-          screen.queryByTestId(`${testId}-content`)
+          screen.queryByTestId(`${testId}-content`),
         ).not.toBeInTheDocument();
 
         // Either custom fallback or default waitlist message should be shown
@@ -372,7 +372,7 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
           expect(waitlistElements.length).toBeGreaterThan(0);
         }
       }),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -401,7 +401,7 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
         render(
           <WaitlistGuard>
             <div data-testid={sentinelId}>{content}</div>
-          </WaitlistGuard>
+          </WaitlistGuard>,
         );
 
         // Content should NOT be visible for an unauthenticated user.
@@ -413,7 +413,7 @@ describe("Property-Based Tests: Approved User UI Consistency", () => {
 
         expect(hasAuthMessage || hasWaitlistMessage).toBe(true);
       }),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });

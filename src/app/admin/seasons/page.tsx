@@ -47,7 +47,8 @@ import { SeasonEditForm } from "@/components/SeasonEditForm";
 import { DragDropOpponentSelector } from "@/components/DragDropOpponentSelector";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Edit, Archive } from "lucide-react";
+import { Edit, Archive, Calendar } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function AdminSeasonsPage() {
   const seasons = useQuery(api.campaignSeasons.getAllCampaignSeasons);
@@ -55,7 +56,7 @@ export default function AdminSeasonsPage() {
   const createSeason = useMutation(api.campaignSeasons.createCampaignSeason);
   const archiveSeason = useMutation(api.campaignSeasons.archiveCampaignSeason);
   const createDefaultSeason = useMutation(
-    api.campaignSeasons.createDefaultSeason
+    api.campaignSeasons.createDefaultSeason,
   );
 
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -123,7 +124,7 @@ export default function AdminSeasonsPage() {
       toast.success("Default season created successfully!");
     } catch (error) {
       toast.error(
-        "Failed to create default season: " + (error as Error).message
+        "Failed to create default season: " + (error as Error).message,
       );
     }
   };
@@ -144,11 +145,11 @@ export default function AdminSeasonsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ACTIVE":
-        return "bg-green-500";
+        return "bg-success";
       case "ARCHIVED":
-        return "bg-gray-500";
+        return "bg-muted-foreground/60";
       default:
-        return "bg-gray-400";
+        return "bg-muted-foreground/60";
     }
   };
 
@@ -158,18 +159,21 @@ export default function AdminSeasonsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Campaign Seasons Management</h1>
-        <div className="space-x-2">
-          <Button onClick={() => setShowCreateForm(true)}>
-            Create New Season
-          </Button>
-          <Button variant="outline" onClick={handleCreateDefaultSeason}>
-            Create Default Season
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
+      <PageHeader
+        title="Campaign Seasons Management"
+        icon={<Calendar className="h-6 w-6" aria-hidden="true" />}
+        actions={
+          <>
+            <Button onClick={() => setShowCreateForm(true)}>
+              Create New Season
+            </Button>
+            <Button variant="outline" onClick={handleCreateDefaultSeason}>
+              Create Default Season
+            </Button>
+          </>
+        }
+      />
 
       {editingSeason && (
         <div className="mb-6">

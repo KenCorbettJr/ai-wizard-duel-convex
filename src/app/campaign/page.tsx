@@ -21,6 +21,7 @@ import { CampaignLoadingState } from "@/components/CampaignLoadingState";
 import { CampaignOpponentFan } from "@/components/CampaignOpponentFan";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Scroll, Wand2, Plus, Crown, Target, Award } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 // Define enhanced wizard type from getUserWizards query
 type EnhancedWizard = Doc<"wizards"> & {
@@ -51,7 +52,7 @@ function CampaignWizardCard({
   return (
     <WaitlistGuard>
       <Link href={`/campaign/wizard/${wizard._id}`} className="block">
-        <Card className="overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] border-border/50 dark:border-border/30">
+        <Card className="overflow-hidden bg-card/90 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] border-border/50">
           {/* Large Wizard Image */}
           <div className="relative">
             {wizard.illustration && (
@@ -71,7 +72,7 @@ function CampaignWizardCard({
               {hasRelic && (
                 <Badge
                   variant="default"
-                  className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
+                  className="flex items-center gap-1 bg-primary text-primary-foreground border-primary/50 backdrop-blur-sm font-bold"
                   title={`Campaign Relic (+1 Luck, Effective Luck: ${(wizard as EnhancedWizard).effectiveLuckScore || 11})`}
                 >
                   <Award className="h-3 w-3" />
@@ -81,7 +82,7 @@ function CampaignWizardCard({
               {isCompleted && (
                 <Badge
                   variant="default"
-                  className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm font-bold"
+                  className="flex items-center gap-1 bg-warning/90 text-warning-foreground border-warning/50 backdrop-blur-sm font-bold"
                 >
                   <Crown className="h-3 w-3" />
                   Complete
@@ -92,7 +93,7 @@ function CampaignWizardCard({
 
           {/* Wizard Info */}
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl text-foreground dark:text-foreground/95 mb-2">
+            <CardTitle className="text-xl text-foreground mb-2">
               {wizard.name}
             </CardTitle>
 
@@ -117,9 +118,7 @@ function CampaignWizardCard({
               {hasRelic && (
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Luck bonus:</span>
-                  <span className="font-medium text-purple-600 dark:text-purple-400">
-                    +1 (Relic)
-                  </span>
+                  <span className="font-medium text-primary">+1 (Relic)</span>
                 </div>
               )}
             </div>
@@ -139,39 +138,33 @@ export default function CampaignPage() {
   // Get user's wizards and their campaign progress
   const userWizards = useQuery(
     api.wizards.getUserWizards,
-    user?.id ? {} : "skip"
+    user?.id ? {} : "skip",
   ) as EnhancedWizard[] | undefined;
 
   const campaignProgress = useQuery(
     api.campaigns.getUserCampaignProgress,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Show registration prompt for anonymous users
   if (!user) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8 text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-[family-name:var(--font-cinzel)]">
-                Campaign Mode
-              </h1>
-            </div>
-            <p className="text-xl text-muted-foreground mb-8">
-              Embark on an epic single-player journey through 10 challenging AI
-              opponents
-            </p>
-          </div>
+          <PageHeader
+            title="Campaign Mode"
+            description="Embark on an epic single-player journey through 10 challenging AI
+              opponents"
+            icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
+          />
 
           <RegistrationPrompt context="premium_features" />
 
           <div className="mt-8 grid md:grid-cols-2 gap-6">
-            <Card className="border-purple-200 dark:border-purple-800">
+            <Card className="border-primary/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  <Target className="h-5 w-5 text-primary" />
                   Progressive Challenge
                 </CardTitle>
                 <CardDescription>
@@ -180,10 +173,10 @@ export default function CampaignPage() {
               </CardHeader>
             </Card>
 
-            <Card className="border-purple-200 dark:border-purple-800">
+            <Card className="border-primary/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  <Crown className="h-5 w-5 text-warning" />
                   Earn Relics
                 </CardTitle>
                 <CardDescription>
@@ -200,7 +193,7 @@ export default function CampaignPage() {
   // Show loading state
   if (userWizards === undefined || campaignOpponents === undefined) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <CampaignLoadingState
             type="general"
@@ -214,25 +207,19 @@ export default function CampaignPage() {
   // Show wizard creation prompt if user has no wizards
   if (userWizards.length === 0) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8 text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-[family-name:var(--font-cinzel)]">
-                Campaign Mode
-              </h1>
-            </div>
-            <p className="text-xl text-muted-foreground mb-8">
-              Embark on an epic single-player journey through 10 challenging AI
-              opponents
-            </p>
-          </div>
+          <PageHeader
+            title="Campaign Mode"
+            description="Embark on an epic single-player journey through 10 challenging AI
+              opponents"
+            icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
+          />
 
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-center justify-center">
-                <Wand2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <Wand2 className="h-6 w-6 text-primary" />
                 Create Your First Wizard
               </CardTitle>
               <CardDescription className="text-center">
@@ -248,15 +235,15 @@ export default function CampaignPage() {
               </p>
               <WaitlistGuard>
                 <div className="flex justify-center gap-4">
-                  <Link href="/wizards/create">
-                    <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                  <Button asChild>
+                    <Link href="/wizards/create">
                       <Plus className="h-4 w-4 mr-2" />
                       Create Wizard
-                    </Button>
-                  </Link>
-                  <Link href="/wizards">
-                    <Button variant="outline">View Wizards</Button>
-                  </Link>
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/wizards">View Wizards</Link>
+                  </Button>
                 </div>
               </WaitlistGuard>
             </CardContent>
@@ -277,26 +264,22 @@ export default function CampaignPage() {
 
   return (
     <CampaignErrorBoundary>
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         {/* Header */}
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 text-center">
             <CampaignOpponentFan opponents={campaignOpponents} />
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent font-[family-name:var(--font-cinzel)]">
-                Single Player Campaign
-              </h1>
-            </div>
-            <p className="text-xl text-muted-foreground mb-6">
-              If you can defeat 10 AI powered wizards, you can earn a permanent
-              +1 luck boost for your wizards
-            </p>
+            <PageHeader
+              title="Single Player Campaign"
+              description="If you can defeat 10 AI powered wizards, you can earn a permanent
+              +1 luck boost for your wizards"
+              icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
+            />
 
             {/* Wizard Cards */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-2 font-[family-name:var(--font-cinzel)]">
-                <Wand2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-2 font-display">
+                <Wand2 className="h-6 w-6 text-primary" />
                 Your Campaign Wizards
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

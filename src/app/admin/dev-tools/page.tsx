@@ -9,6 +9,7 @@ import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Settings, User, Shield, AlertTriangle } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function DevToolsPage() {
   const [emailToPromote, setEmailToPromote] = useState("");
@@ -43,15 +44,15 @@ export default function DevToolsPage() {
 
   if (!isDevelopment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-        <div className="container mx-auto px-6 py-12">
-          <Card className="max-w-2xl mx-auto border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+      <div className="min-h-screen">
+        <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
+          <Card className="max-w-2xl mx-auto border-destructive/40 bg-destructive/10">
             <CardContent className="text-center py-12">
-              <AlertTriangle className="h-16 w-16 mx-auto text-red-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2 text-red-800 dark:text-red-200">
+              <AlertTriangle className="h-16 w-16 mx-auto text-destructive mb-4" />
+              <h3 className="text-xl font-semibold mb-2 text-destructive">
                 Development Tools Not Available
               </h3>
-              <p className="text-red-700 dark:text-red-300">
+              <p className="text-destructive">
                 This page is only available in development mode for security
                 reasons.
               </p>
@@ -63,20 +64,16 @@ export default function DevToolsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <Settings className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              Development Tools
-            </h2>
-            <p className="text-muted-foreground">
-              Admin utilities for development and testing (development mode
-              only)
-            </p>
-          </div>
+          <PageHeader
+            title="Development Tools"
+            description="Admin utilities for development and testing (development mode
+              only)"
+            icon={<Settings className="h-6 w-6" aria-hidden="true" />}
+          />
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Current User Debug Info */}
@@ -119,7 +116,7 @@ export default function DevToolsPage() {
                           </p>
                         </div>
                       ) : (
-                        <p className="text-sm text-red-600">
+                        <p className="text-sm text-destructive">
                           User not found in database
                         </p>
                       )}
@@ -185,10 +182,10 @@ export default function DevToolsPage() {
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
                             user.role === "super_admin"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              ? "bg-destructive/15 text-destructive"
                               : user.role === "admin"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                ? "bg-warning/15 text-warning"
+                                : "bg-muted text-foreground"
                           }`}
                         >
                           {user.role}

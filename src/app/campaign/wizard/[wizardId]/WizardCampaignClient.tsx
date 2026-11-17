@@ -24,6 +24,7 @@ import {
   Target,
 } from "lucide-react";
 import Image from "next/image";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function WizardCampaignClient() {
   const { user } = useUser();
@@ -36,24 +37,24 @@ export default function WizardCampaignClient() {
   // Get the specific wizard
   const wizard = useQuery(
     api.wizards.getWizard,
-    wizardId ? { wizardId } : "skip"
+    wizardId ? { wizardId } : "skip",
   );
 
   // Get wizard's campaign progress
   const wizardProgress = useQuery(
     api.campaigns.getWizardCampaignProgress,
-    wizardId ? { wizardId } : "skip"
+    wizardId ? { wizardId } : "skip",
   );
 
   // Show registration prompt for anonymous users
   if (!user) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-linear-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+              <Scroll className="h-12 w-12 text-primary" />
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-wide">
                 Wizard Campaign
               </h1>
             </div>
@@ -72,7 +73,7 @@ export default function WizardCampaignClient() {
   // Show loading state
   if (wizard === undefined || campaignOpponents === undefined) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <CampaignLoadingState
             type="general"
@@ -86,19 +87,21 @@ export default function WizardCampaignClient() {
   // Show error if wizard not found or not owned by user
   if (!wizard || wizard.owner !== user.id) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Wizard Not Found</h1>
+          <h1 className="font-display text-3xl font-bold tracking-wide mb-4">
+            Wizard Not Found
+          </h1>
           <p className="text-muted-foreground mb-6">
             The wizard you&apos;re looking for doesn&apos;t exist or you
             don&apos;t have access to it.
           </p>
-          <Link href="/campaign">
-            <Button>
+          <Button asChild>
+            <Link href="/campaign">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Campaign
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     );
@@ -130,28 +133,22 @@ export default function WizardCampaignClient() {
 
   return (
     <CampaignErrorBoundary>
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 py-8 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header with Back Button */}
           <div className="mb-8">
-            <Link href="/campaign">
-              <Button variant="ghost" className="mb-4">
+            <Button asChild variant="ghost" className="mb-4">
+              <Link href="/campaign">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Campaign
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Scroll className="h-12 w-12 text-purple-600 dark:text-purple-400" />
-                <h1 className="text-4xl font-bold bg-linear-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                  {wizard.name}&apos;s Campaign
-                </h1>
-              </div>
-              <p className="text-xl text-muted-foreground mb-6">
-                Challenge 10 unique AI opponents to earn a powerful relic
-              </p>
-            </div>
+            <PageHeader
+              title={`${wizard.name}\'s Campaign`}
+              description="Challenge 10 unique AI opponents to earn a powerful relic"
+              icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
+            />
           </div>
 
           {/* Wizard Info Card */}
@@ -160,7 +157,7 @@ export default function WizardCampaignClient() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-8">
                   {/* Wizard Image - Made Larger */}
-                  <div className="w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-gray-200">
+                  <div className="w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-muted">
                     {wizard.illustration ? (
                       <ConvexImage
                         storageId={wizard.illustration}
@@ -178,7 +175,7 @@ export default function WizardCampaignClient() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-linear-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold text-3xl">
+                      <div className="w-full h-full bg-arcane flex items-center justify-center text-white font-bold text-3xl">
                         {wizard.name.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -204,14 +201,14 @@ export default function WizardCampaignClient() {
                       <Progress value={progressPercentage} className="h-3" />
 
                       {isCompleted ? (
-                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mt-3">
+                        <div className="flex items-center gap-2 text-success mt-3">
                           <Crown className="h-5 w-5" />
                           <span className="text-base font-medium">
                             Campaign Completed! Relic Earned
                           </span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mt-3">
+                        <div className="flex items-center gap-2 text-info mt-3">
                           <Target className="h-5 w-5" />
                           <span className="text-base font-medium">
                             Next: Opponent{" "}
@@ -230,7 +227,7 @@ export default function WizardCampaignClient() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Target className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <Target className="h-6 w-6 text-primary" />
                 Campaign Opponents
               </h2>
               <div className="text-sm text-muted-foreground">
@@ -264,7 +261,7 @@ export default function WizardCampaignClient() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  <Trophy className="h-5 w-5 text-warning" />
                   Opponents Defeated
                 </CardTitle>
               </CardHeader>
@@ -279,7 +276,7 @@ export default function WizardCampaignClient() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  <Sparkles className="h-5 w-5 text-primary" />
                   Current Opponent
                 </CardTitle>
               </CardHeader>
@@ -298,7 +295,7 @@ export default function WizardCampaignClient() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  <Crown className="h-5 w-5 text-info" />
                   Completion Relic
                 </CardTitle>
               </CardHeader>

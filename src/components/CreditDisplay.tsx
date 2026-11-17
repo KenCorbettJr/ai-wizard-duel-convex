@@ -46,7 +46,7 @@ export function CreditDisplay({
     userInfo?.subscriptionStatus === "ACTIVE";
 
   const sizeClasses = {
-    sm: "text-xs px-2 py-1",
+    sm: "text-sm px-2.5 py-1",
     md: "text-sm px-2.5 py-1.5",
     lg: "text-base px-3 py-2",
   };
@@ -69,12 +69,12 @@ export function CreditDisplay({
       >
         {isPremium ? (
           <>
-            <Crown className={`${iconSizes[size]} text-yellow-500`} />
+            <Crown className={`${iconSizes[size]} text-gold`} />
             <span>Unlimited</span>
           </>
         ) : (
           <>
-            <Coins className={`${iconSizes[size]} text-yellow-500`} />
+            <Coins className={`${iconSizes[size]} text-gold`} />
             <span>{credits ?? 0}</span>
           </>
         )}

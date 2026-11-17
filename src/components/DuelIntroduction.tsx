@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
 import { memo } from "react";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface DuelIntroductionProps {
   duelId: Id<"duels">;
@@ -19,7 +20,7 @@ export const DuelIntroduction = memo(function DuelIntroduction({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <RuneSpinner size="md" label="Loading…" />
           <p className="text-muted-foreground">Preparing the arena...</p>
         </div>
       </div>

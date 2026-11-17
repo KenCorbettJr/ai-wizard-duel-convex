@@ -82,7 +82,7 @@ export class UserManagementErrorBoundary extends React.Component<
         this.state.error?.message.includes("permission");
 
       return (
-        <div className="min-h-screen bg-linear-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-linear-to-br from-primary/15 to-gold/20 flex items-center justify-center p-6">
           <Card className="max-w-2xl w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 text-destructive">

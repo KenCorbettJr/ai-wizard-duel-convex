@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageCreditDisplay } from "@/components/ImageCreditDisplay";
 import { CreditUsageHistory } from "@/components/CreditUsageHistory";
 import { Coins, Crown } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export function CreditsPageClient() {
   const { user } = useUser();
@@ -18,33 +19,28 @@ export function CreditsPageClient() {
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-3xl font-bold mb-4 font-[family-name:var(--font-cinzel)]">
-            Image Credits
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Please sign in to view and manage your image generation credits.
-          </p>
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
+        <div className="max-w-2xl mx-auto">
+          <PageHeader
+            title="Image Credits"
+            description="Please sign in to view and manage your image generation credits."
+            icon={<Coins className="h-6 w-6" aria-hidden="true" />}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold flex items-center justify-center gap-3 font-[family-name:var(--font-cinzel)]">
-            <Coins className="h-8 w-8 text-yellow-500" />
-            Image Credits
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Manage your image generation credits, watch ads to earn more, or
-            upgrade to Premium for unlimited access.
-          </p>
-        </div>
+        <PageHeader
+          className="mb-0"
+          title="Image Credits"
+          description="Manage your image generation credits, watch ads to earn more, or upgrade to Premium for unlimited access."
+          icon={<Coins className="h-6 w-6" aria-hidden="true" />}
+        />
 
         {/* Main Credit Display */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -56,9 +52,9 @@ export function CreditsPageClient() {
         </div>
 
         {/* Premium Benefits */}
-        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200 dark:border-purple-800">
+        <Card className="bg-arcane-soft border-primary/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+            <CardTitle className="flex items-center gap-2 text-primary">
               <Crown className="h-6 w-6" />
               Premium Benefits
             </CardTitle>
@@ -66,42 +62,39 @@ export function CreditsPageClient() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
+                <h4 className="font-semibold text-primary font-display">
                   Unlimited Image Generation
                 </h4>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
+                <p className="text-sm text-muted-foreground">
                   Generate as many AI images as you want for your duels
                 </p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
+                <h4 className="font-semibold text-primary font-display">
                   Advanced Wizard Customization
                 </h4>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
+                <p className="text-sm text-muted-foreground">
                   Access exclusive wizard appearances and magical schools
                 </p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
+                <h4 className="font-semibold text-primary font-display">
                   Priority AI Processing
                 </h4>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
+                <p className="text-sm text-muted-foreground">
                   Faster image generation and spell processing
                 </p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-800 dark:text-purple-200 font-[family-name:var(--font-cinzel)]">
+                <h4 className="font-semibold text-primary font-display">
                   Ad-Free Experience
                 </h4>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
+                <p className="text-sm text-muted-foreground">
                   Enjoy the game without any advertisements
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleUpgrade}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-            >
+            <Button onClick={handleUpgrade} className="w-full">
               <Crown className="h-4 w-4 mr-2" />
               Upgrade to Premium - $9.99/month
             </Button>

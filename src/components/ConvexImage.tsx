@@ -27,7 +27,7 @@ export const ConvexImage = memo(function ConvexImage({
   if (!imageUrl) {
     return (
       <div
-        className={`bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg ${className}`}
+        className={`bg-muted animate-pulse rounded-lg ${className}`}
         style={{ width, height }}
       />
     );

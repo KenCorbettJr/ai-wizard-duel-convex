@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { PageHeader } from "@/components/PageHeader";
 
 const adminFeatures = [
   {
@@ -23,32 +24,32 @@ const adminFeatures = [
     description: "Monitor platform-wide duel analytics and user engagement",
     href: "/admin/platform-stats",
     icon: BarChart3,
-    color: "text-blue-600 dark:text-blue-400",
-    bgColor: "bg-blue-50 dark:bg-blue-950",
+    color: "text-info",
+    bgColor: "bg-info/10",
   },
   {
     title: "User Management",
     description: "View and manage users, grant credits, and monitor activity",
     href: "/admin/users",
     icon: Users,
-    color: "text-green-600 dark:text-green-400",
-    bgColor: "bg-green-50 dark:bg-green-950",
+    color: "text-success",
+    bgColor: "bg-success/10",
   },
   {
     title: "Campaign Opponents",
     description: "Create, edit, and manage the 10 campaign opponents",
     href: "/admin/campaign-opponents",
     icon: Settings,
-    color: "text-purple-600 dark:text-purple-400",
-    bgColor: "bg-purple-50 dark:bg-purple-950",
+    color: "text-primary",
+    bgColor: "bg-primary/8",
   },
   {
     title: "Dev Tools",
     description: "Development utilities and user management tools",
     href: "/admin/dev-tools",
     icon: Wrench,
-    color: "text-orange-600 dark:text-orange-400",
-    bgColor: "bg-orange-50 dark:bg-orange-950",
+    color: "text-warning",
+    bgColor: "bg-warning/10",
     developmentOnly: true,
   },
   {
@@ -56,8 +57,8 @@ const adminFeatures = [
     description: "Advanced duel administration and moderation tools",
     href: "/admin/duels",
     icon: Swords,
-    color: "text-red-600 dark:text-red-400",
-    bgColor: "bg-red-50 dark:bg-red-950",
+    color: "text-destructive",
+    bgColor: "bg-destructive/10",
   },
 ];
 
@@ -65,35 +66,28 @@ export default function AdminDashboardPage() {
   const platformStats = useQuery(api.adminUsers.getPlatformStats);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <SuperAdminOnly>
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600">
-                <Shield className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-foreground">
-                  Super Admin Dashboard
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Administrative tools and platform management
-                </p>
-              </div>
-            </div>
+            <PageHeader
+              className="mb-0"
+              title="Super Admin Dashboard"
+              description="Administrative tools and platform management"
+              icon={<Shield className="h-6 w-6" aria-hidden="true" />}
+            />
 
             {/* Admin Access Notice */}
-            <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+            <Card className="border-warning/40 bg-warning/10">
               <CardContent className="py-4">
                 <div className="flex items-center gap-3">
-                  <Crown className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  <Crown className="h-5 w-5 text-warning" />
                   <div>
-                    <p className="font-medium text-amber-800 dark:text-amber-200">
+                    <p className="font-medium text-warning">
                       Super Administrator Access
                     </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                    <p className="text-sm text-warning">
                       You have full administrative privileges. All actions are
                       logged and monitored.
                     </p>
@@ -119,7 +113,7 @@ export default function AdminDashboardPage() {
                         <Icon className={`h-6 w-6 ${feature.color}`} />
                       </div>
                       {feature.developmentOnly && (
-                        <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 rounded">
+                        <span className="px-2 py-1 text-xs font-medium bg-muted text-foreground rounded">
                           Dev Only
                         </span>
                       )}
@@ -130,15 +124,16 @@ export default function AdminDashboardPage() {
                     <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
                       {feature.description}
                     </p>
-                    <Link href={feature.href}>
-                      <Button
-                        className="w-full group-hover:bg-primary/90 transition-colors"
-                        size="sm"
-                      >
+                    <Button
+                      asChild
+                      className="w-full group- transition-colors"
+                      size="sm"
+                    >
+                      <Link href={feature.href}>
                         Access Tool
                         <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </CardContent>
                 </Card>
               );
@@ -147,7 +142,7 @@ export default function AdminDashboardPage() {
 
           {/* Quick Stats Section */}
           <div className="mt-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
               Quick Overview
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
@@ -159,7 +154,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-green-600" />
+                    <Users className="h-5 w-5 text-success" />
                     <span className="text-2xl font-bold">
                       {platformStats?.totalUsers ?? "--"}
                     </span>
@@ -178,7 +173,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
-                    <Swords className="h-5 w-5 text-blue-600" />
+                    <Swords className="h-5 w-5 text-info" />
                     <span className="text-2xl font-bold">
                       {platformStats?.activeDuels ?? "--"}
                     </span>
@@ -197,7 +192,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse" />
+                    <div className="h-3 w-3 bg-success rounded-full animate-pulse" />
                     <span className="text-sm font-medium">Operational</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">

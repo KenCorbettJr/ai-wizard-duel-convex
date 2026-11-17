@@ -27,10 +27,11 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
-  Loader2,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PageHeader } from "@/components/PageHeader";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 type SortOption = "joinDate" | "activity" | "username";
 type ActivityFilter = "all" | "inactive" | "low" | "medium" | "high";
@@ -64,7 +65,7 @@ function UserManagementPageContent() {
   // Create a stable query key to detect filter changes
   const queryKey = useMemo(
     () => `${debouncedSearch}-${sortBy}-${activityFilter}`,
-    [debouncedSearch, sortBy, activityFilter]
+    [debouncedSearch, sortBy, activityFilter],
   );
 
   // Reset pagination when query key changes
@@ -95,7 +96,7 @@ function UserManagementPageContent() {
   // Fetch batch statistics for all users at once
   const batchStats = useQuery(
     api.adminUsers.getBatchUserStatistics,
-    userIds.length > 0 ? { userIds } : "skip"
+    userIds.length > 0 ? { userIds } : "skip",
   );
 
   // Build userStats map from batch results
@@ -138,23 +139,16 @@ function UserManagementPageContent() {
   const hasStatsError = platformStats === null;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
+    <div className="min-h-screen">
       <div className="w-full px-6 py-12">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-lg bg-linear-to-br from-blue-600 to-purple-600">
-              <Users className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-foreground">
-                User Management
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                View and manage all platform users
-              </p>
-            </div>
-          </div>
+          <PageHeader
+            className="mb-0"
+            title="User Management"
+            description="View and manage all platform users"
+            icon={<Users className="h-6 w-6" aria-hidden="true" />}
+          />
         </div>
 
         {/* Error Alert for Stats */}
@@ -185,7 +179,7 @@ function UserManagementPageContent() {
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-600" />
+                    <Users className="h-5 w-5 text-info" />
                     <span className="text-2xl font-bold">
                       {platformStats?.totalUsers || "--"}
                     </span>
@@ -213,7 +207,7 @@ function UserManagementPageContent() {
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-green-600" />
+                    <Activity className="h-5 w-5 text-success" />
                     <span className="text-2xl font-bold">
                       {platformStats?.activeUsers24h || "--"}
                     </span>
@@ -241,7 +235,7 @@ function UserManagementPageContent() {
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-purple-600" />
+                    <Activity className="h-5 w-5 text-primary" />
                     <span className="text-2xl font-bold">
                       {platformStats?.activeUsers7d || "--"}
                     </span>
@@ -269,7 +263,7 @@ function UserManagementPageContent() {
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-amber-600" />
+                    <Sparkles className="h-5 w-5 text-warning" />
                     <span className="text-2xl font-bold">
                       {platformStats?.totalWizards || "--"}
                     </span>
@@ -290,7 +284,7 @@ function UserManagementPageContent() {
               {/* Search */}
               <div className="relative">
                 {isLoading && debouncedSearch ? (
-                  <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
                 ) : (
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 )}

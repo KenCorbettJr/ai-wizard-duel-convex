@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   History,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
@@ -26,6 +25,7 @@ import {
   Clock,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 /**
  * Modal component for displaying user credit transaction history
@@ -78,7 +78,7 @@ export function CreditHistoryModal({
             cursor: paginationCursor,
           },
         }
-      : "skip"
+      : "skip",
   );
 
   const handleNextPage = () => {
@@ -122,7 +122,7 @@ export function CreditHistoryModal({
   };
 
   const getTransactionTypeConfig = (
-    type: string
+    type: string,
   ): {
     label: string;
     className: string;
@@ -132,43 +132,38 @@ export function CreditHistoryModal({
       case "EARNED":
         return {
           label: "Earned",
-          className:
-            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+          className: "bg-success/15 text-success border-success/40",
           icon: <Coins className="h-3 w-3" />,
         };
       case "CONSUMED":
         return {
           label: "Consumed",
-          className:
-            "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+          className: "bg-destructive/15 text-destructive border-destructive/40",
           icon: <Zap className="h-3 w-3" />,
         };
       case "GRANTED":
         return {
           label: "Granted",
-          className:
-            "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+          className: "bg-info/15 text-info border-info/40",
           icon: <Gift className="h-3 w-3" />,
         };
       case "EXPIRED":
         return {
           label: "Expired",
-          className:
-            "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-800",
+          className: "bg-muted text-foreground border-border",
           icon: <Clock className="h-3 w-3" />,
         };
       default:
         return {
           label: type,
-          className:
-            "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-800",
+          className: "bg-muted text-foreground border-border",
           icon: <Coins className="h-3 w-3" />,
         };
     }
   };
 
   const getSourceConfig = (
-    source: string
+    source: string,
   ): {
     label: string;
     icon: React.ReactNode;
@@ -212,7 +207,7 @@ export function CreditHistoryModal({
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col w-[calc(100vw-2rem)] sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <History className="h-5 w-5 text-blue-500" />
+            <History className="h-5 w-5 text-info" />
             Credit Transaction History
           </DialogTitle>
           <DialogDescription>
@@ -223,7 +218,7 @@ export function CreditHistoryModal({
         <div className="flex-1 overflow-y-auto py-4 min-h-0">
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <RuneSpinner size="xs" label="Working…" className="mr-2" />
             </div>
           )}
 
@@ -291,8 +286,8 @@ export function CreditHistoryModal({
                       <div
                         className={`text-lg sm:text-xl font-bold shrink-0 ${
                           transaction.type === "CONSUMED"
-                            ? "text-red-600 dark:text-red-400"
-                            : "text-green-600 dark:text-green-400"
+                            ? "text-destructive"
+                            : "text-success"
                         }`}
                       >
                         {formatAmount(transaction.amount, transaction.type)}

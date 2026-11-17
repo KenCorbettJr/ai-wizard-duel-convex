@@ -40,9 +40,9 @@ export function WaitlistGuard({ children, fallback }: WaitlistGuardProps) {
 
     // Default fallback message
     return (
-      <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
-        <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-        <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+      <Alert className="border-warning bg-warning/10">
+        <Clock className="h-4 w-4 text-warning" />
+        <AlertDescription className="text-warning">
           <strong>Waitlist Approval Required</strong>
           <p className="mt-2">
             This feature requires waitlist approval. Please check your{" "}
@@ -67,9 +67,9 @@ export function WaitlistGuard({ children, fallback }: WaitlistGuardProps) {
   }
 
   return (
-    <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
-      <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-      <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+    <Alert className="border-warning bg-warning/10">
+      <Clock className="h-4 w-4 text-warning" />
+      <AlertDescription className="text-warning">
         <strong>Authentication Required</strong>
         <p className="mt-2">Please sign in to access this feature.</p>
       </AlertDescription>

@@ -47,25 +47,27 @@ export const WizardCard = memo(function WizardCard({
 }: WizardCardProps) {
   const getBorderClasses = () => {
     if (isWinner) {
-      return "border-4 border-yellow-400 dark:border-yellow-300 ring-4 ring-yellow-400/30 dark:ring-yellow-300/30 shadow-yellow-400/20 dark:shadow-yellow-300/20";
+      return "border-4 border-warning/40 ring-4 ring-warning/30 shadow-warning/20";
     }
     if (wizard.ownerSubscriptionTier === "PREMIUM") {
-      return "border-2 border-purple-500/70 dark:border-purple-400/70 ring-2 ring-purple-500/20 dark:ring-purple-400/20 shadow-purple-500/20 dark:shadow-purple-400/20";
+      return "border-2 border-primary/70 ring-2 ring-primary/20 shadow-primary/20";
     }
     if (isUserWizard) {
-      return "border-2 border-blue-500/70 dark:border-blue-400/70 ring-2 ring-blue-500/20 dark:ring-blue-400/20";
+      return "border-2 border-info/70 ring-2 ring-info/20";
     }
-    return "border-border/50 dark:border-border/30";
+    return "border-border/50";
   };
 
   return (
-    <Link
-      href={`/wizards/${wizard._id}`}
-      className={`flex flex-1 flex-col ${className}`}
-    >
+    <div className={`flex flex-1 flex-col ${className}`}>
       <Card
-        className={`overflow-hidden bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex ${getBorderClasses()}`}
+        className={`overflow-hidden bg-card/90 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex ${getBorderClasses()}`}
       >
+        <Link
+          href={`/wizards/${wizard._id}`}
+          aria-label={`View ${wizard.name}`}
+          className="absolute inset-0 z-0 rounded-xl"
+        />
         <div className="relative">
           {wizard.illustration && (
             <div className="h-96 w-full overflow-hidden">
@@ -82,7 +84,7 @@ export const WizardCard = memo(function WizardCard({
             {wizard.hasCompletionRelic && (
               <Badge
                 variant="default"
-                className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
+                className="flex items-center gap-1 bg-primary text-primary-foreground border-primary/50 backdrop-blur-sm font-bold"
                 title={`Campaign Relic (+1 Luck, Effective Luck: ${wizard.effectiveLuckScore || 11})`}
               >
                 <Award className="h-3 w-3" />
@@ -92,7 +94,7 @@ export const WizardCard = memo(function WizardCard({
             {wizard.ownerSubscriptionTier === "PREMIUM" && !isWinner && (
               <Badge
                 variant="default"
-                className="flex items-center gap-1 bg-purple-100/90 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm font-bold"
+                className="flex items-center gap-1 bg-primary text-primary-foreground border-primary/50 backdrop-blur-sm font-bold"
               >
                 <Crown className="h-3 w-3" />
                 Premium
@@ -101,7 +103,7 @@ export const WizardCard = memo(function WizardCard({
             {isWinner && (
               <Badge
                 variant="default"
-                className="flex items-center gap-1 bg-yellow-100/90 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 border-yellow-200/50 dark:border-yellow-700/30 backdrop-blur-sm font-bold"
+                className="flex items-center gap-1 bg-warning/90 text-warning-foreground border-warning/50 backdrop-blur-sm font-bold"
               >
                 <Crown className="h-3 w-3" />
                 Winner
@@ -110,7 +112,7 @@ export const WizardCard = memo(function WizardCard({
             {isUserWizard && !isWinner && (
               <Badge
                 variant="default"
-                className="flex items-center gap-1 bg-blue-100/90 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30 backdrop-blur-sm font-semibold"
+                className="flex items-center gap-1 bg-info/90 text-info-foreground border-info/50 backdrop-blur-sm font-semibold"
               >
                 Your Wizard
               </Badge>
@@ -120,18 +122,16 @@ export const WizardCard = memo(function WizardCard({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-xl text-foreground dark:text-foreground/95">
+              <CardTitle className="text-xl text-foreground">
                 {wizard.name}
               </CardTitle>
-              {isWinner && (
-                <Crown className="h-6 w-6 text-yellow-500 dark:text-yellow-400" />
-              )}
+              {isWinner && <Crown className="h-6 w-6 text-gold" />}
             </div>
             {points !== undefined && (
               <div className="flex flex-col items-center gap-0.5">
                 <div className="flex items-center gap-0.5">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  <span className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                  <Star className="h-5 w-5 text-gold" />
+                  <span className="text-2xl font-bold text-warning">
                     {points}
                   </span>
                 </div>
@@ -155,7 +155,7 @@ export const WizardCard = memo(function WizardCard({
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1 text-muted-foreground">
-                  <Heart className="h-3 w-3 text-red-500" />
+                  <Heart className="h-3 w-3 text-destructive" />
                   Health
                 </span>
                 <span className="font-medium text-foreground">
@@ -164,12 +164,13 @@ export const WizardCard = memo(function WizardCard({
               </div>
               <Progress
                 value={(hitPoints / maxHitPoints) * 100}
-                className={`h-2 ${hitPoints / maxHitPoints > 0.6
-                    ? "[&>div]:bg-green-500"
+                className={`h-2 ${
+                  hitPoints / maxHitPoints > 0.6
+                    ? "[&>div]:bg-success"
                     : hitPoints / maxHitPoints > 0.3
-                      ? "[&>div]:bg-yellow-500"
-                      : "[&>div]:bg-red-500"
-                  }`}
+                      ? "[&>div]:bg-warning"
+                      : "[&>div]:bg-destructive"
+                }`}
               />
             </div>
           )}
@@ -179,34 +180,27 @@ export const WizardCard = memo(function WizardCard({
         {showActions && isUserWizard && (
           <CardContent className="pt-0 pb-4">
             <div className="flex gap-2">
-              <Link href={`/campaign/wizard/${wizard._id}`} className="flex-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Scroll className="h-3 w-3 mr-1" />
-                  Campaign
-                </Button>
-              </Link>
-              <Link
-                href={`/duels/create?wizardId=${wizard._id}`}
-                className="flex-1"
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="relative z-10 flex-1"
               >
-                <Button
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Swords className="h-3 w-3 mr-1" />
+                <Link href={`/campaign/wizard/${wizard._id}`}>
+                  <Scroll className="h-3 w-3 mr-1" aria-hidden="true" />
+                  Campaign
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="relative z-10 flex-1">
+                <Link href={`/duels/create?wizardId=${wizard._id}`}>
+                  <Swords className="h-3 w-3 mr-1" aria-hidden="true" />
                   Duel
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </CardContent>
         )}
       </Card>
-    </Link>
+    </div>
   );
 });

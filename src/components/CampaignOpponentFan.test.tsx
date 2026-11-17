@@ -113,7 +113,7 @@ describe("CampaignOpponentFan", () => {
 
   it("renders without crashing", () => {
     const { container } = render(
-      <CampaignOpponentFan opponents={mockOpponents} />
+      <CampaignOpponentFan opponents={mockOpponents} />,
     );
 
     expect(container).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("CampaignOpponentFan", () => {
 
   it("displays the correct title", () => {
     const { getByText } = render(
-      <CampaignOpponentFan opponents={mockOpponents} />
+      <CampaignOpponentFan opponents={mockOpponents} />,
     );
 
     expect(getByText("Campaign Opponents")).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe("CampaignOpponentFan", () => {
 
   it("renders all opponents", () => {
     const { container } = render(
-      <CampaignOpponentFan opponents={mockOpponents} />
+      <CampaignOpponentFan opponents={mockOpponents} />,
     );
 
     // Look for opponent cards by their container class
@@ -140,7 +140,7 @@ describe("CampaignOpponentFan", () => {
 
   it("displays opponent numbers correctly", () => {
     const { getByText } = render(
-      <CampaignOpponentFan opponents={mockOpponents} />
+      <CampaignOpponentFan opponents={mockOpponents} />,
     );
 
     expect(getByText("#1")).toBeInTheDocument();
@@ -149,7 +149,7 @@ describe("CampaignOpponentFan", () => {
 
   it("shows opponent names", () => {
     const { getAllByText } = render(
-      <CampaignOpponentFan opponents={mockOpponents} />
+      <CampaignOpponentFan opponents={mockOpponents} />,
     );
 
     // Names appear in both the card and tooltip
@@ -159,11 +159,14 @@ describe("CampaignOpponentFan", () => {
 
   it("applies custom className", () => {
     const { container } = render(
-      <CampaignOpponentFan opponents={mockOpponents} className="custom-class" />
+      <CampaignOpponentFan
+        opponents={mockOpponents}
+        className="custom-class"
+      />,
     );
 
     const mainDiv = container.querySelector(
-      ".w-full.flex.flex-col.items-center"
+      ".w-full.flex.flex-col.items-center",
     );
     expect(mainDiv).toHaveClass("custom-class");
   });
@@ -188,7 +191,7 @@ describe("CampaignOpponentFan", () => {
       <CampaignOpponentFan
         opponents={mockOpponents}
         selectedWizardProgress={mockProgress}
-      />
+      />,
     );
 
     expect(container).toBeInTheDocument();
@@ -202,7 +205,7 @@ describe("CampaignOpponentFan", () => {
     ];
 
     const { getByText } = render(
-      <CampaignOpponentFan opponents={unsortedOpponents} />
+      <CampaignOpponentFan opponents={unsortedOpponents} />,
     );
 
     // Check that both opponent numbers are displayed

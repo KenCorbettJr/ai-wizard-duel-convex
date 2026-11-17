@@ -20,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { ArrowLeft, Swords, Wand2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { PageHeader } from "@/components/PageHeader";
 
 interface WizardSelectionPageProps {
   params: Promise<{
@@ -40,18 +42,18 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
   // Get campaign opponent data
   const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
   const selectedOpponent = campaignOpponents?.find(
-    (op: Doc<"wizards">) => op.opponentNumber === opponentNum
+    (op: Doc<"wizards">) => op.opponentNumber === opponentNum,
   );
 
   // Get user's wizards and their campaign progress
   const userWizards = useQuery(
     api.wizards.getUserWizards,
-    user?.id ? {} : "skip"
+    user?.id ? {} : "skip",
   );
 
   const campaignProgress = useQuery(
     api.campaigns.getUserCampaignProgress,
-    user?.id ? { userId: user.id } : "skip"
+    user?.id ? { userId: user.id } : "skip",
   );
 
   // Start campaign battle mutation
@@ -60,7 +62,7 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
   // Show registration prompt for anonymous users
   if (!user) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <RegistrationPrompt context="premium_features" />
         </div>
@@ -75,10 +77,10 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
     campaignProgress === undefined
   ) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
+            <RuneSpinner size="md" label="Loading…" />
             <p className="text-muted-foreground">Loading campaign data...</p>
           </div>
         </div>
@@ -94,7 +96,7 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
     !selectedOpponent
   ) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <Card className="border-destructive/50">
             <CardHeader>
@@ -107,12 +109,12 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/campaign">
-                <Button>
+              <Button asChild>
+                <Link href="/campaign">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Campaigns
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -123,7 +125,7 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
   // Get eligible wizards (those who can face this opponent)
   const eligibleWizards = userWizards.filter((wizard: Doc<"wizards">) => {
     const progress = campaignProgress.find(
-      (p: Doc<"wizardCampaignProgress">) => p.wizardId === wizard._id
+      (p: Doc<"wizardCampaignProgress">) => p.wizardId === wizard._id,
     );
     if (!progress) {
       // New wizard can only face opponent 1
@@ -154,22 +156,14 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
-        return (
-          <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-            Beginner
-          </Badge>
-        );
+        return <Badge className="bg-success/15 text-success">Beginner</Badge>;
       case "INTERMEDIATE":
         return (
-          <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
-            Intermediate
-          </Badge>
+          <Badge className="bg-warning/15 text-warning">Intermediate</Badge>
         );
       case "ADVANCED":
         return (
-          <Badge className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
-            Advanced
-          </Badge>
+          <Badge className="bg-destructive/15 text-destructive">Advanced</Badge>
         );
       default:
         return null;
@@ -177,41 +171,38 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
   };
 
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/campaign">
-            <Button variant="ghost" className="mb-4">
+          <Button asChild variant="ghost" className="mb-4">
+            <Link href="/campaign">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Campaigns
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Challenge Opponent #{opponentNum}
-            </h1>
-            <p className="text-muted-foreground">
-              Select a wizard to battle against this AI opponent
-            </p>
-          </div>
+          <PageHeader
+            title={`Challenge Opponent #{opponentNum}`}
+            description="Select a wizard to battle against this AI opponent"
+            icon={<Swords className="h-6 w-6" aria-hidden="true" />}
+          />
         </div>
 
         {/* Opponent Display */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Swords className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Swords className="h-5 w-5 text-primary" />
             Your Opponent
           </h2>
 
-          <Card className="border-purple-200 dark:border-purple-800">
+          <Card className="border-primary/30">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   {selectedOpponent.name}
                   {getDifficultyBadge(
-                    selectedOpponent.difficulty || "BEGINNER"
+                    selectedOpponent.difficulty || "BEGINNER",
                   )}
                 </CardTitle>
                 <div className="text-sm text-muted-foreground">
@@ -240,7 +231,7 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
         {/* Wizard Selection */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Wand2 className="h-5 w-5 text-primary" />
             Select Your Wizard
           </h2>
 
@@ -258,13 +249,13 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
                 </p>
                 <div className="flex gap-2 justify-center">
                   {opponentNum === 1 && (
-                    <Link href="/wizards/create">
-                      <Button>Create Wizard</Button>
-                    </Link>
+                    <Button asChild>
+                      <Link href="/wizards/create">Create Wizard</Link>
+                    </Button>
                   )}
-                  <Link href="/campaign">
-                    <Button variant="outline">Back to Campaigns</Button>
-                  </Link>
+                  <Button asChild variant="outline">
+                    <Link href="/campaign">Back to Campaigns</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -273,7 +264,7 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
               {eligibleWizards.map((wizard: Doc<"wizards">) => {
                 const progress = campaignProgress.find(
                   (p: Doc<"wizardCampaignProgress">) =>
-                    p.wizardId === wizard._id
+                    p.wizardId === wizard._id,
                 );
                 const isSelected = selectedWizardId === wizard._id;
 
@@ -282,7 +273,7 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
                     key={wizard._id}
                     className={`cursor-pointer transition-all ${
                       isSelected
-                        ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                        ? "border-primary bg-primary/8"
                         : "border-border hover:border-muted-foreground"
                     }`}
                     onClick={() => setSelectedWizardId(wizard._id)}
@@ -290,11 +281,11 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2">
-                          <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                          <Wand2 className="h-5 w-5 text-primary" />
                           {wizard.name}
                         </CardTitle>
                         {isSelected && (
-                          <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                          <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                             <span className="text-white text-xs">✓</span>
                           </div>
                         )}
@@ -328,11 +319,10 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
               onClick={handleStartBattle}
               disabled={!selectedWizardId || isStarting}
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >
               {isStarting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                  <RuneSpinner size="sm" label="Loading" />
                   Starting Battle...
                 </>
               ) : (
@@ -351,10 +341,10 @@ function WizardSelectionContent({ params }: WizardSelectionPageProps) {
 
 function LoadingFallback() {
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
+          <RuneSpinner size="md" label="Loading…" />
           <p className="text-muted-foreground">Loading wizard selection...</p>
         </div>
       </div>

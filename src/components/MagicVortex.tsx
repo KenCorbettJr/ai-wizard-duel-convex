@@ -7,6 +7,7 @@ interface MagicVortexProps {
   rangeSpeed?: number;
   baseRadius?: number;
   rangeRadius?: number;
+  /** @deprecated The canvas is transparent; kept for API compatibility. */
   backgroundColor?: string;
   className?: string;
   children: React.ReactNode;
@@ -18,7 +19,6 @@ function MagicVortex({
   rangeSpeed = 1.5,
   baseRadius = 1,
   rangeRadius = 2,
-  backgroundColor = "#000000",
   className = "",
   children,
 }: MagicVortexProps) {
@@ -27,6 +27,12 @@ function MagicVortex({
   const [containerHeight, setContainerHeight] = useState(100);
 
   useEffect(() => {
+    // Respect users who prefer reduced motion: draw nothing.
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    let rafId = 0;
     const particleCount =
       window?.innerWidth && window?.innerHeight
         ? Math.round((window.innerWidth * window.innerHeight) / 1000)
@@ -97,11 +103,11 @@ function MagicVortex({
       ttl: number,
       radius: number,
       hue: number,
-      ctx: CanvasRenderingContext2D
+      ctx: CanvasRenderingContext2D,
     ): void => {
       const alpha = fadeInOut(life, ttl);
       // Make particles brighter and more visible
-      const strokeStyle = `hsla(${hue},100%,70%,${alpha})`;
+      const strokeStyle = `hsla(${hue},90%,60%,${alpha})`;
 
       ctx.save();
       ctx.lineCap = "round";
@@ -118,7 +124,7 @@ function MagicVortex({
     const checkBounds = (
       x: number,
       y: number,
-      canvas: HTMLCanvasElement
+      canvas: HTMLCanvasElement,
     ): boolean => {
       return x > canvas.width || x < 0 || y > canvas.height || y < 0;
     };
@@ -170,7 +176,7 @@ function MagicVortex({
 
     const renderGlow = (
       canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D
+      ctx: CanvasRenderingContext2D,
     ) => {
       ctx.save();
       ctx.filter = "blur(3px) brightness(200%)";
@@ -187,7 +193,7 @@ function MagicVortex({
 
     const renderToScreen = (
       canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D
+      ctx: CanvasRenderingContext2D,
     ) => {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
@@ -205,7 +211,7 @@ function MagicVortex({
 
     const draw = (
       canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D
+      ctx: CanvasRenderingContext2D,
     ): void => {
       tick++;
 
@@ -215,7 +221,7 @@ function MagicVortex({
       renderGlow(canvas, ctx);
       renderToScreen(canvas, ctx);
 
-      window.requestAnimationFrame(() => draw(canvas, ctx));
+      rafId = window.requestAnimationFrame(() => draw(canvas, ctx));
     };
 
     const setup = (): void => {
@@ -248,10 +254,10 @@ function MagicVortex({
     window.addEventListener("resize", handleResize);
 
     return () => {
+      window.cancelAnimationFrame(rafId);
       window.removeEventListener("resize", handleResize);
     };
   }, [
-    backgroundColor,
     baseHue,
     baseRadius,
     baseSpeed,
@@ -261,12 +267,12 @@ function MagicVortex({
   ]);
 
   return (
-    <div className={`relative w-full h-screen ${className}`}>
+    <div className={`relative w-full min-h-screen ${className}`}>
       <div
         ref={containerRef}
         className="absolute inset-0 z-0 bg-transparent flex items-center justify-center"
       >
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} className="opacity-40 dark:opacity-60" />
       </div>
       <div className="relative z-10">{children}</div>
     </div>

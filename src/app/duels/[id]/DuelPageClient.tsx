@@ -32,6 +32,7 @@ import { DuelRoundCard } from "@/components/DuelRoundCard";
 import { CastSpellModal } from "@/components/CastSpellModal";
 import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { safeConvexId } from "../../../lib/utils";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 interface DuelPageClientProps {
   params: Promise<{
@@ -44,7 +45,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const [spellDescription, setSpellDescription] = useState("");
   const [isCasting, setIsCasting] = useState(false);
   const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null
+    null,
   );
   const [isJoining, setIsJoining] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -58,11 +59,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   // Fetch wizard data for each wizard in the duel
   const wizard1 = useQuery(
     api.wizards.getWizardWithOwner,
-    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip"
+    duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
   const wizard2 = useQuery(
     api.wizards.getWizardWithOwner,
-    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip"
+    duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
   );
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
@@ -77,9 +78,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     () =>
       [wizard1, wizard2].find(
         (wizard: Doc<"wizards"> | null | undefined) =>
-          wizard?.owner === user?.id
+          wizard?.owner === user?.id,
       ),
-    [wizard1, wizard2, user?.id]
+    [wizard1, wizard2, user?.id],
   );
 
   const userWizardId = userWizard?._id;
@@ -87,9 +88,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const currentRound = useMemo(
     () =>
       duel?.rounds?.find(
-        (round: Doc<"duelRounds">) => round.roundNumber === duel.currentRound
+        (round: Doc<"duelRounds">) => round.roundNumber === duel.currentRound,
       ),
-    [duel?.rounds, duel?.currentRound]
+    [duel?.rounds, duel?.currentRound],
   );
 
   const hasUserCastSpell = useMemo(
@@ -97,12 +98,12 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       currentRound?.spells && userWizardId
         ? currentRound.spells[userWizardId] !== undefined
         : false,
-    [currentRound?.spells, userWizardId]
+    [currentRound?.spells, userWizardId],
   );
 
   const isPlayerInDuel = useMemo(
     () => duel?.players.includes(user?.id || ""),
-    [duel?.players, user?.id]
+    [duel?.players, user?.id],
   );
 
   // Check for loading and error states
@@ -160,25 +161,12 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   // Show loading state
   if (isDuelLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="relative mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400 mx-auto"></div>
-            <div
-              className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-purple-400/60 dark:border-t-purple-300/60 animate-spin mx-auto"
-              style={{
-                animationDirection: "reverse",
-                animationDuration: "1.5s",
-              }}
-            ></div>
-            <div
-              className="absolute inset-2 rounded-full h-12 w-12 border-2 border-transparent border-t-purple-500/40 dark:border-t-purple-200/40 animate-spin mx-auto"
-              style={{ animationDuration: "2s" }}
-            ></div>
-          </div>
-          <div className="bg-card/90 dark:bg-card/95 backdrop-blur-sm border border-border/50 dark:border-border/30 rounded-xl px-8 py-6 shadow-xl dark:shadow-2xl max-w-sm mx-auto">
+          <RuneSpinner size="lg" hideLabel label="Loading…" className="mb-6" />
+          <div className="bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl px-8 py-6 shadow-xl dark:shadow-2xl max-w-sm mx-auto">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400 animate-pulse" />
+              <Sparkles className="h-5 w-5 text-primary animate-pulse" />
               <p className="text-foreground font-semibold">Loading duel...</p>
             </div>
             <p className="text-muted-foreground text-sm">
@@ -195,26 +183,24 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     const isInvalidId = duelId === null;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-        <div className="container mx-auto px-6 py-12">
+      <div className="min-h-screen">
+        <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
           <div className="max-w-2xl mx-auto">
-            <Card className="border-destructive/50 dark:border-destructive/30 bg-card/90 dark:bg-card/95 backdrop-blur-sm shadow-xl dark:shadow-2xl">
+            <Card className="border-destructive/50 bg-card/90 backdrop-blur-sm shadow-xl dark:shadow-2xl">
               <CardHeader>
-                <CardTitle className="text-destructive dark:text-red-400 flex items-center gap-2">
+                <CardTitle className="text-destructive flex items-center gap-2">
                   <Swords className="h-5 w-5" />
                   {isInvalidId ? "Invalid Duel ID" : "Duel Not Found"}
                 </CardTitle>
-                <CardDescription className="dark:text-muted-foreground/80">
+                <CardDescription>
                   {isInvalidId
                     ? "The duel ID in the URL is not valid."
                     : "We couldn't load the duel you're looking for."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-muted-foreground dark:text-muted-foreground/90">
-                  This could happen if:
-                </p>
-                <ul className="list-disc list-inside text-sm text-muted-foreground dark:text-muted-foreground/80 space-y-1 ml-4">
+                <p className="text-muted-foreground">This could happen if:</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-4">
                   {isInvalidId ? (
                     <>
                       <li>The URL was typed incorrectly</li>
@@ -230,17 +216,13 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   )}
                 </ul>
                 <div className="flex gap-3 pt-4">
-                  <Button
-                    asChild
-                    variant="default"
-                    className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600"
-                  >
+                  <Button asChild variant="default">
                     <Link href="/duels">Browse Duels</Link>
                   </Button>
                   {!isInvalidId && (
                     <Button
                       variant="outline"
-                      className="border-border/50 dark:border-border/30 hover:bg-accent/50 dark:hover:bg-accent/30"
+                      className="border-border/50 hover:bg-accent/50 dark:hover:bg-accent/30"
                       onClick={() => window.location.reload()}
                     >
                       Try Again
@@ -266,7 +248,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         return (
           <Badge
             variant="secondary"
-            className="bg-orange-100/80 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 border-orange-200/50 dark:border-orange-700/30 flex items-center gap-1"
+            className="bg-warning/80 text-warning-foreground border-warning/50 flex items-center gap-1"
           >
             <Clock className="h-3 w-3" />
             Waiting for Players
@@ -276,7 +258,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         return (
           <Badge
             variant="default"
-            className="bg-green-100/80 dark:bg-green-900/50 text-green-800 dark:text-green-200 border-green-200/50 dark:border-green-700/30 flex items-center gap-1"
+            className="bg-success/80 text-success-foreground border-success/50 flex items-center gap-1"
           >
             <Sparkles className="h-3 w-3" />
             In Progress
@@ -286,7 +268,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         return (
           <Badge
             variant="outline"
-            className="bg-blue-100/80 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/30 flex items-center gap-1"
+            className="bg-info/80 text-info-foreground border-info/50 flex items-center gap-1"
           >
             <Star className="h-3 w-3" />
             Completed
@@ -296,7 +278,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         return (
           <Badge
             variant="destructive"
-            className="bg-red-100/80 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/30 flex items-center gap-1"
+            className="bg-destructive/80 text-destructive-foreground border-destructive/50 flex items-center gap-1"
           >
             <Swords className="h-3 w-3" />
             Cancelled
@@ -306,7 +288,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         return (
           <Badge
             variant="outline"
-            className="bg-gray-100/80 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 border-gray-200/50 dark:border-gray-700/30"
+            className="bg-muted/80 text-foreground border-border/50"
           >
             {status}
           </Badge>
@@ -315,12 +297,12 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto pb-48">
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold text-gold-gradient font-display">
                 {wizard1 && wizard2
                   ? `${wizard1.name} vs ${wizard2.name}`
                   : typeof duel.numberOfRounds === "number"
@@ -331,7 +313,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 {duel.isCampaignBattle && (
                   <Badge
                     variant="outline"
-                    className="bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 border-purple-200/50 dark:border-purple-700/30 flex items-center gap-1"
+                    className="bg-primary/80 text-primary-foreground border-primary/50 flex items-center gap-1"
                   >
                     <Sparkles className="h-3 w-3" />
                     Campaign Battle
@@ -352,16 +334,17 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               {duel.status === "WAITING_FOR_PLAYERS" &&
                 userWizard &&
                 userWizard._id === duel.wizards[0] && (
-                  <Link href={`/duels/${duel._id}/share`}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-green-200 dark:border-green-700/50 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300"
-                    >
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="border-success/40 hover:bg-success/10 text-success"
+                  >
+                    <Link href={`/duels/${duel._id}/share`}>
                       <Share2 className="h-4 w-4 mr-2" />
                       Share Challenge
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 )}
             </div>
           </div>
@@ -383,7 +366,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 )}
 
                 <div className="flex items-center justify-center">
-                  <div className="bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 border-2 border-white/20 dark:border-white/10 rounded-full p-2 shadow-xl dark:shadow-2xl backdrop-blur-sm scale-150 transform z-10 relative">
+                  <div className="bg-linear-to-br from-primary to-gold border-2 border-white/20 dark:border-white/10 rounded-full p-2 shadow-xl dark:shadow-2xl backdrop-blur-sm scale-150 transform z-10 relative">
                     <Swords className="h-6 w-6 text-white animate-pulse" />
                   </div>
                 </div>
@@ -421,22 +404,20 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               <Card
                 className={`mb-8 ${
                   duel.isCampaignBattle
-                    ? "bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border-2 border-purple-300 dark:border-purple-600/50"
-                    : "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-2 border-yellow-300 dark:border-yellow-600/50"
+                    ? "bg-arcane-soft border-2 border-primary/50"
+                    : "bg-linear-to-r from-warning/20 to-gold/10 border-2 border-warning/40"
                 } shadow-lg dark:shadow-xl`}
               >
                 <CardHeader>
                   <CardTitle
                     className={`flex items-center justify-center gap-3 text-2xl ${
-                      duel.isCampaignBattle
-                        ? "text-purple-800 dark:text-purple-200"
-                        : "text-yellow-800 dark:text-yellow-200"
+                      duel.isCampaignBattle ? "text-primary" : "text-warning"
                     }`}
                   >
                     {duel.isCampaignBattle ? (
-                      <Sparkles className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                      <Sparkles className="h-8 w-8 text-primary" />
                     ) : (
-                      <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                      <Crown className="h-8 w-8 text-warning" />
                     )}
                     {duel.winners.length === 1
                       ? duel.isCampaignBattle
@@ -444,16 +425,14 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                         : "Victory!"
                       : "Draw!"}
                     {duel.isCampaignBattle ? (
-                      <Sparkles className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                      <Sparkles className="h-8 w-8 text-primary" />
                     ) : (
-                      <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                      <Crown className="h-8 w-8 text-warning" />
                     )}
                   </CardTitle>
                   <CardDescription
                     className={`text-center text-lg font-medium ${
-                      duel.isCampaignBattle
-                        ? "text-purple-700 dark:text-purple-300"
-                        : "text-yellow-700 dark:text-yellow-300"
+                      duel.isCampaignBattle ? "text-primary" : "text-warning"
                     }`}
                   >
                     {duel.winners.length === 1 ? (
@@ -474,15 +453,15 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             )}
 
           {duel.status === "WAITING_FOR_PLAYERS" && (
-            <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+            <Card className="mb-8 bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                  <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400 animate-pulse" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Clock className="h-5 w-5 text-warning animate-pulse" />
                   {duel.players.length < 2
                     ? "Waiting for Players"
                     : "Preparing Duel"}
                 </CardTitle>
-                <CardDescription className="dark:text-muted-foreground/80">
+                <CardDescription>
                   {duel.players.length < 2
                     ? "This duel needs one more player to begin"
                     : "Generating magical introduction and preparing the arena..."}
@@ -493,18 +472,16 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   <div className="space-y-4">
                     {!wizards || wizards.length === 0 ? (
                       <div>
-                        <p className="text-muted-foreground dark:text-muted-foreground/80 mb-4">
+                        <p className="text-muted-foreground mb-4">
                           You need a wizard to join this duel.
                         </p>
-                        <Link href="/wizards/create">
-                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
-                            Create Wizard
-                          </Button>
-                        </Link>
+                        <Button asChild>
+                          <Link href="/wizards/create">Create Wizard</Link>
+                        </Button>
                       </div>
                     ) : (
                       <div>
-                        <p className="text-muted-foreground dark:text-muted-foreground/80 mb-4">
+                        <p className="text-muted-foreground mb-4">
                           Select a wizard to join this duel:
                         </p>
                         <div className="space-y-2 mb-4">
@@ -513,7 +490,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                               key={wizard._id}
                               className={`p-3 border rounded-lg cursor-pointer transition-all ${
                                 selectedWizard === wizard._id
-                                  ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                                  ? "border-primary bg-primary/8"
                                   : "border-border hover:border-muted-foreground"
                               }`}
                               onClick={() => setSelectedWizard(wizard._id)}
@@ -526,7 +503,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                                   </p>
                                 </div>
                                 {selectedWizard === wizard._id && (
-                                  <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                                     <span className="text-white text-xs">
                                       ✓
                                     </span>
@@ -539,7 +516,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                         <Button
                           onClick={handleJoinDuel}
                           disabled={!selectedWizard || isJoining}
-                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                          className="w-full"
                         >
                           {isJoining ? "Joining..." : "Join Duel"}
                         </Button>
@@ -548,11 +525,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   </div>
                 ) : duel.players.length < 2 ? (
                   <div className="space-y-4">
-                    <p className="text-muted-foreground dark:text-muted-foreground/80">
+                    <p className="text-muted-foreground">
                       Waiting for more players to join...
                     </p>
                     {duel.shortcode && (
-                      <div className="bg-background/50 dark:bg-background/30 rounded-lg p-4 border border-border/30">
+                      <div className="bg-background/50 rounded-lg p-4 border border-border/30">
                         <p className="text-sm font-medium text-foreground mb-1">
                           Invite another wizard to duel
                         </p>
@@ -560,14 +537,14 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                           Share this link with someone you want to challenge:
                         </p>
                         <div className="flex items-center gap-2">
-                          <code className="px-3 py-1.5 bg-purple-100/80 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md text-sm font-mono border border-purple-200/50 dark:border-purple-700/30 flex-1 truncate">
+                          <code className="px-3 py-1.5 bg-primary/80 text-primary-foreground rounded-md text-sm font-mono border border-primary/50 flex-1 truncate">
                             {`${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`}
                           </code>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={handleCopyLink}
-                            className="border-purple-200 dark:border-purple-700/50 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                            className="border-primary/30 hover:bg-primary/8 text-primary"
                           >
                             {copySuccess ? "✓ Copied!" : "Copy Link"}
                           </Button>
@@ -577,8 +554,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-200/30 dark:border-purple-700/30 border-t-purple-600 dark:border-t-purple-400"></div>
-                    <p className="text-muted-foreground dark:text-muted-foreground/80">
+                    <RuneSpinner size="sm" label="Loading" />
+                    <p className="text-muted-foreground">
                       The Arcane Arbiter is preparing the magical arena...
                     </p>
                   </div>
@@ -605,13 +582,13 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
           {/* Show introduction for in-progress or completed duels */}
           {(duel.status === "IN_PROGRESS" || duel.status === "COMPLETED") && (
-            <Card className="mb-8 bg-card/90 dark:bg-card/95 backdrop-blur-sm border-border/50 dark:border-border/30 shadow-lg dark:shadow-xl">
+            <Card className="mb-8 bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground/95">
-                  <ScrollText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <ScrollText className="h-5 w-5 text-info" />
                   Arena Introduction
                 </CardTitle>
-                <CardDescription className="dark:text-muted-foreground/80">
+                <CardDescription>
                   The Arcane Arbiter introduces the combatants
                 </CardDescription>
               </CardHeader>

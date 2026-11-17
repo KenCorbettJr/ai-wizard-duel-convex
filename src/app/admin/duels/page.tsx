@@ -3,32 +3,30 @@
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
 import { AdminDashboard } from "@/components/AdminDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Swords } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function DuelAdminPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <SuperAdminOnly>
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">
-              Duel Administration Dashboard
-            </h2>
-            <p className="text-muted-foreground">
-              Monitor, manage, and analyze magical duels across the platform
-            </p>
-          </div>
+          <PageHeader
+            title="Duel Administration Dashboard"
+            description="Monitor, manage, and analyze magical duels across the platform"
+            icon={<Swords className="h-6 w-6" aria-hidden="true" />}
+          />
 
           <div className="mb-6">
-            <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+            <Card className="border-warning/40 bg-warning/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                <CardTitle className="flex items-center gap-2 text-warning">
                   <AlertTriangle className="h-5 w-5" />
                   Admin Access Notice
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-orange-700 dark:text-orange-300 text-sm">
+                <p className="text-warning text-sm">
                   You are accessing the super admin dashboard. Please use these
                   tools responsibly. All actions are logged and monitored.
                 </p>

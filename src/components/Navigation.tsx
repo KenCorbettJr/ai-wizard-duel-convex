@@ -15,11 +15,9 @@ export function Navigation({
   userName,
 }: NavigationProps) {
   return (
-    <nav className="flex items-center justify-between p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+    <nav className="flex items-center justify-between p-6 bg-background/80 backdrop-blur-sm">
       <Link href="/">
-        <h1 className="text-2xl font-bold font-[family-name:var(--font-cinzel)]">
-          AI Wizard Duel
-        </h1>
+        <span className="text-2xl font-bold font-display">AI Wizard Duel</span>
       </Link>
       <div className="flex items-center gap-4">
         <ThemeToggle />
@@ -30,9 +28,9 @@ export function Navigation({
         )}
         <Show when="signed-in">
           {showDashboard && (
-            <Link href="/">
-              <Button variant="outline">Dashboard</Button>
-            </Link>
+            <Button asChild variant="outline">
+              <Link href="/">Dashboard</Link>
+            </Button>
           )}
           <UserButton />
         </Show>

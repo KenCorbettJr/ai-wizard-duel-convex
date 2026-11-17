@@ -40,8 +40,21 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import type { Id, Doc } from "../../../../convex/_generated/dataModel";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { PageHeader } from "@/components/PageHeader";
 
 // Component to handle opponent image display with proper URL conversion
 function OpponentImage({
@@ -56,7 +69,7 @@ function OpponentImage({
     api.wizards.getIllustrationUrl,
     opponent.illustration
       ? { storageId: opponent.illustration }
-      : ("skip" as unknown as { storageId: Id<"_storage"> })
+      : ("skip" as unknown as { storageId: Id<"_storage"> }),
   );
 
   if (opponent.illustration && imageUrl) {
@@ -72,11 +85,11 @@ function OpponentImage({
               alt={opponent.name}
               width={80}
               height={80}
-              className="w-20 h-20 rounded-lg object-cover border-2 border-purple-200 dark:border-purple-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+              className="w-20 h-20 rounded-lg object-cover border-2 border-primary/30 hover:border-primary/50 transition-colors"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 dark:bg-gray-800/90 rounded-full p-1">
-                <ImageIcon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-card/90 rounded-full p-1">
+                <ImageIcon className="h-4 w-4 text-foreground" />
               </div>
             </div>
           </div>
@@ -100,7 +113,7 @@ function OpponentImage({
                 alt={opponent.name}
                 width={400}
                 height={400}
-                className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-700"
+                className="max-w-full h-auto rounded-lg border border-border"
               />
             </div>
             <DialogFooter className="flex justify-between">
@@ -122,7 +135,7 @@ function OpponentImage({
 
   return (
     <div className="flex-shrink-0">
-      <div className="w-20 h-20 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600">
+      <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-border">
         <Button
           size="sm"
           variant="outline"
@@ -159,7 +172,7 @@ const defaultFormData: OpponentFormData = {
 
 export default function CampaignOpponentsPage() {
   const [editingOpponent, setEditingOpponent] = useState<Id<"wizards"> | null>(
-    null
+    null,
   );
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<OpponentFormData>(defaultFormData);
@@ -174,10 +187,10 @@ export default function CampaignOpponentsPage() {
   const updateOpponent = useMutation(api.campaigns.updateCampaignOpponent);
   const createOpponent = useMutation(api.campaigns.createCampaignOpponent);
   const regenerateImage = useMutation(
-    api.campaigns.regenerateCampaignOpponentImage
+    api.campaigns.regenerateCampaignOpponentImage,
   );
   const generateAllIllustrations = useMutation(
-    api.campaigns.generateCampaignOpponentIllustrations
+    api.campaigns.generateCampaignOpponentIllustrations,
   );
 
   // Handle seeding opponents
@@ -196,14 +209,6 @@ export default function CampaignOpponentsPage() {
 
   // Handle deleting all opponents
   const handleDeleteAllOpponents = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete ALL campaign opponents? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
     try {
       const result = await deleteOpponents({});
       if (result.success) {
@@ -280,7 +285,7 @@ export default function CampaignOpponentsPage() {
       }
     } catch (error) {
       toast.error(
-        "Failed to generate illustrations: " + (error as Error).message
+        "Failed to generate illustrations: " + (error as Error).message,
       );
     }
   };
@@ -337,7 +342,7 @@ export default function CampaignOpponentsPage() {
     setFormData({
       ...formData,
       personalityTraits: formData.personalityTraits.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       ),
     });
   };
@@ -345,31 +350,30 @@ export default function CampaignOpponentsPage() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-success/15 text-success";
       case "INTERMEDIATE":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+        return "bg-warning/15 text-warning";
       case "ADVANCED":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-destructive/15 text-destructive";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-muted text-foreground";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950 dark:to-pink-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <SuperAdminOnly>
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-                <Settings className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                Campaign Opponents Management
-              </h2>
-              <p className="text-muted-foreground">
-                Create, edit, and manage the 10 campaign opponents that players
-                will face
-              </p>
+              <PageHeader
+                className="mb-0"
+                title="Campaign Opponents Management"
+                description="Create, edit, and manage the 10 campaign opponents that players
+                will face"
+                icon={<Settings className="h-6 w-6" aria-hidden="true" />}
+              />
             </div>
 
             {/* Action buttons */}
@@ -406,14 +410,34 @@ export default function CampaignOpponentsPage() {
                     Generate All Images
                   </Button>
 
-                  <Button
-                    onClick={handleDeleteAllOpponents}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete All
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete All
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Banish every campaign opponent?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This deletes ALL campaign opponents and cannot be
+                          undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep them</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAllOpponents}>
+                          Delete all
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </>
               )}
             </div>
@@ -423,10 +447,7 @@ export default function CampaignOpponentsPage() {
           {campaignOpponents === undefined ? (
             <Card>
               <CardContent className="text-center py-12">
-                <RefreshCw className="h-8 w-8 mx-auto text-muted-foreground mb-4 animate-spin" />
-                <p className="text-muted-foreground">
-                  Loading campaign opponents...
-                </p>
+                <RuneSpinner label="Loading campaign opponents…" />
               </CardContent>
             </Card>
           ) : campaignOpponents.length === 0 ? (
@@ -464,7 +485,7 @@ export default function CampaignOpponentsPage() {
             <div className="grid gap-6">
               {campaignOpponents
                 .sort(
-                  (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0)
+                  (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0),
                 )
                 .map((opponent) => (
                   <Card key={opponent._id} className="relative">
@@ -481,7 +502,7 @@ export default function CampaignOpponentsPage() {
 
                           {/* Opponent Info */}
                           <div className="flex items-center gap-3">
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            <div className="text-2xl font-bold text-primary">
                               #{opponent.opponentNumber}
                             </div>
                             <div>
@@ -504,7 +525,7 @@ export default function CampaignOpponentsPage() {
                               <div className="flex items-center gap-2 mt-1">
                                 <Badge
                                   className={getDifficultyColor(
-                                    opponent.difficulty || "BEGINNER"
+                                    opponent.difficulty || "BEGINNER",
                                   )}
                                 >
                                   {editingOpponent === opponent._id ? (
@@ -514,7 +535,7 @@ export default function CampaignOpponentsPage() {
                                         value:
                                           | "BEGINNER"
                                           | "INTERMEDIATE"
-                                          | "ADVANCED"
+                                          | "ADVANCED",
                                       ) =>
                                         setFormData({
                                           ...formData,
@@ -691,7 +712,7 @@ export default function CampaignOpponentsPage() {
                                   >
                                     {trait} ×
                                   </Badge>
-                                )
+                                ),
                               )}
                             </div>
                           </div>
@@ -779,7 +800,7 @@ export default function CampaignOpponentsPage() {
                     <Select
                       value={formData.difficulty}
                       onValueChange={(
-                        value: "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+                        value: "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
                       ) =>
                         setFormData({
                           ...formData,

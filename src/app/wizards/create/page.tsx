@@ -6,9 +6,11 @@ import { WizardForm } from "@/components/WizardForm";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function CreateWizardPage() {
   const { user, isLoaded } = useUser();
@@ -46,8 +48,8 @@ export default function CreateWizardPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <RuneSpinner size="md" label="Loading…" />
       </div>
     );
   }
@@ -57,28 +59,28 @@ export default function CreateWizardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
-            <Link href="/wizards">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2"
-              >
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Link href="/wizards">
                 <ArrowLeft className="h-4 w-4" />
                 Back to My Wizards
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
 
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2">Create New Wizard</h1>
-            <p className="text-muted-foreground text-lg">
-              Design your magical champion for epic duels
-            </p>
-          </div>
+          <PageHeader
+            title="Create New Wizard"
+            description="Design your magical champion for epic duels"
+            icon={<Wand2 className="h-6 w-6" aria-hidden="true" />}
+          />
         </div>
 
         <div className="max-w-2xl mx-auto">

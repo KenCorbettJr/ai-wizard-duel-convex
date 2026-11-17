@@ -21,11 +21,19 @@ export default function FeatureCard({
   description,
 }: FeatureCardProps) {
   return (
-    <Card className="h-full">
+    <Card className="sparkle-hover h-full">
       <CardHeader className="text-center">
-        {Icon && <Icon className="w-8 h-8 mx-auto mb-2 text-primary" />}
-        {emoji && <div className="text-2xl mb-2">{emoji}</div>}
-        <CardTitle className="text-lg">{title}</CardTitle>
+        {Icon && (
+          <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-xl bg-arcane text-white shadow-md shadow-primary/30">
+            <Icon className="size-6" aria-hidden="true" />
+          </div>
+        )}
+        {emoji && (
+          <div className="mb-2 text-2xl" aria-hidden="true">
+            {emoji}
+          </div>
+        )}
+        <CardTitle className="min-w-0 break-words text-lg">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <CardDescription className="text-center">{description}</CardDescription>

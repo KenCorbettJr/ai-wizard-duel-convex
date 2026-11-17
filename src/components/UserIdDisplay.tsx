@@ -56,7 +56,7 @@ export function UserIdDisplay({
       <div
         className={cn(
           "flex items-center gap-2 text-muted-foreground",
-          className
+          className,
         )}
       >
         {showAvatar && (
@@ -78,7 +78,7 @@ export function UserIdDisplay({
       className={cn(
         "flex items-center gap-2",
         clickable && "hover:text-primary transition-colors cursor-pointer",
-        className
+        className,
       )}
     >
       {showAvatar && (

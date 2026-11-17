@@ -41,7 +41,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <div data-testid="protected-content">Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -60,14 +60,14 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <button>Create Wizard</button>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(
-        screen.getByRole("button", { name: "Create Wizard" })
+        screen.getByRole("button", { name: "Create Wizard" }),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText(/Waitlist Approval Required/i)
+        screen.queryByText(/Waitlist Approval Required/i),
       ).not.toBeInTheDocument();
     });
 
@@ -84,7 +84,7 @@ describe("WaitlistGuard", () => {
         <WaitlistGuard>
           <div>First Child</div>
           <div>Second Child</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.getByText("First Child")).toBeInTheDocument();
@@ -105,14 +105,14 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(
-        screen.getByText(/Waitlist Approval Required/i)
+        screen.getByText(/Waitlist Approval Required/i),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/This feature requires waitlist approval/i)
+        screen.getByText(/This feature requires waitlist approval/i),
       ).toBeInTheDocument();
       expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     });
@@ -129,7 +129,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       const link = screen.getByRole("link", { name: /waitlist status/i });
@@ -151,13 +151,13 @@ describe("WaitlistGuard", () => {
           fallback={<div data-testid="custom-fallback">Custom Message</div>}
         >
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.getByTestId("custom-fallback")).toBeInTheDocument();
       expect(screen.getByText("Custom Message")).toBeInTheDocument();
       expect(
-        screen.queryByText(/Waitlist Approval Required/i)
+        screen.queryByText(/Waitlist Approval Required/i),
       ).not.toBeInTheDocument();
       expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     });
@@ -174,7 +174,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <button data-testid="protected-button">Create Wizard</button>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.queryByTestId("protected-button")).not.toBeInTheDocument();
@@ -194,7 +194,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       // Check for loading spinner (Loader2 icon with animate-spin class)
@@ -215,7 +215,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <div data-testid="protected-content">Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.queryByTestId("protected-content")).not.toBeInTheDocument();
@@ -233,12 +233,12 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard fallback={<div>Custom Fallback</div>}>
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.queryByText("Custom Fallback")).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/Waitlist Approval Required/i)
+        screen.queryByText(/Waitlist Approval Required/i),
       ).not.toBeInTheDocument();
     });
 
@@ -246,7 +246,7 @@ describe("WaitlistGuard", () => {
       const { rerender } = render(
         <WaitlistGuard>
           <div data-testid="protected-content">Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       // Initially loading
@@ -261,7 +261,7 @@ describe("WaitlistGuard", () => {
       rerender(
         <WaitlistGuard>
           <div data-testid="protected-content">Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
@@ -278,7 +278,7 @@ describe("WaitlistGuard", () => {
       rerender(
         <WaitlistGuard>
           <div data-testid="protected-content">Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -298,7 +298,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.getByText(/Authentication Required/i)).toBeInTheDocument();
@@ -319,7 +319,7 @@ describe("WaitlistGuard", () => {
           fallback={<div data-testid="auth-required">Please sign in</div>}
         >
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.getByTestId("auth-required")).toBeInTheDocument();
@@ -339,7 +339,7 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard>
           <button data-testid="protected-button">Create Wizard</button>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(screen.queryByTestId("protected-button")).not.toBeInTheDocument();
@@ -378,15 +378,15 @@ describe("WaitlistGuard", () => {
             <p>Description</p>
             <button>Action</button>
           </div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       expect(
-        screen.getByRole("heading", { name: "Title" })
+        screen.getByRole("heading", { name: "Title" }),
       ).toBeInTheDocument();
       expect(screen.getByText("Description")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Action" })
+        screen.getByRole("button", { name: "Action" }),
       ).toBeInTheDocument();
     });
 
@@ -402,13 +402,13 @@ describe("WaitlistGuard", () => {
       render(
         <WaitlistGuard fallback={null}>
           <div>Protected Content</div>
-        </WaitlistGuard>
+        </WaitlistGuard>,
       );
 
       // Should render nothing for null fallback
       expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/Waitlist Approval Required/i)
+        screen.queryByText(/Waitlist Approval Required/i),
       ).not.toBeInTheDocument();
     });
   });

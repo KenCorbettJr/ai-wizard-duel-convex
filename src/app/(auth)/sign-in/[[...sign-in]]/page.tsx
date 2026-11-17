@@ -1,4 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
+import { ClientOnly } from "@/components/ClientOnly";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <SignIn />
+      <ClientOnly>
+        <SignIn />
+      </ClientOnly>
     </div>
   );
 }

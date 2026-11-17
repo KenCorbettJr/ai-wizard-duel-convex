@@ -107,11 +107,11 @@ export function CampaignProgressTracker({
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "BEGINNER":
-        return "text-green-600 dark:text-green-400";
+        return "text-success";
       case "INTERMEDIATE":
-        return "text-yellow-600 dark:text-yellow-400";
+        return "text-warning";
       case "ADVANCED":
-        return "text-red-600 dark:text-red-400";
+        return "text-destructive";
       default:
         return "text-muted-foreground";
     }
@@ -123,12 +123,12 @@ export function CampaignProgressTracker({
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <Wand2 className="h-4 w-4 text-primary" />
               <span className="font-medium text-sm">{wizard.name}</span>
             </div>
             <div className="flex items-center gap-2">
               {hasCompletionRelic && (
-                <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs">
+                <Badge className="bg-warning/15 text-warning text-xs">
                   <Crown className="h-3 w-3 mr-1" />
                   Relic
                 </Badge>
@@ -147,11 +147,11 @@ export function CampaignProgressTracker({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Wand2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Wand2 className="h-5 w-5 text-primary" />
             {wizard.name}
           </div>
           {hasCompletionRelic && (
-            <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
+            <Badge className="bg-warning/15 text-warning">
               <Crown className="h-4 w-4 mr-1" />
               Campaign Master
             </Badge>
@@ -178,21 +178,19 @@ export function CampaignProgressTracker({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <div className="text-sm font-medium flex items-center gap-1">
-              <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+              <Star className="h-4 w-4 text-warning" />
               Effective Luck
             </div>
             <div className="text-lg font-bold">
               {effectiveLuck}
               {hasCompletionRelic && (
-                <span className="text-sm text-green-600 dark:text-green-400 ml-1">
-                  (+1 relic)
-                </span>
+                <span className="text-sm text-success ml-1">(+1 relic)</span>
               )}
             </div>
           </div>
           <div className="space-y-1">
             <div className="text-sm font-medium flex items-center gap-1">
-              <Trophy className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <Trophy className="h-4 w-4 text-success" />
               Victories
             </div>
             <div className="text-lg font-bold">{defeatedCount}</div>
@@ -201,14 +199,14 @@ export function CampaignProgressTracker({
 
         {/* Next Opponent or Completion Status */}
         {isCompleted ? (
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg p-4">
+          <div className="bg-linear-to-r from-warning/20 to-gold/10 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <Crown className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+              <Crown className="h-8 w-8 text-warning" />
               <div>
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                <h3 className="font-semibold text-warning">
                   Campaign Completed!
                 </h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                <p className="text-sm text-warning">
                   This wizard has earned the legendary relic and gained +1 luck
                   permanently.
                 </p>
@@ -219,7 +217,7 @@ export function CampaignProgressTracker({
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold flex items-center gap-2">
-                <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <Target className="h-4 w-4 text-info" />
                 Next Challenge
               </h3>
               <Badge
@@ -258,7 +256,7 @@ export function CampaignProgressTracker({
         {defeatedCount > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <TrendingUp className="h-4 w-4 text-primary" />
               Defeated Opponents
             </h4>
             <div className="flex flex-wrap gap-1">
@@ -284,20 +282,18 @@ export function CampaignProgressTracker({
         {showActions && (
           <div className="flex gap-2">
             {!isCompleted && nextOpponent && (
-              <Link
-                href={`/campaign/wizard-selection/${nextOpponent.opponentNumber}`}
-              >
-                <Button className="flex-1">
+              <Button asChild className="flex-1">
+                <Link
+                  href={`/campaign/wizard-selection/${nextOpponent.opponentNumber}`}
+                >
                   <Zap className="h-4 w-4 mr-2" />
                   Battle {nextOpponent.name}
-                </Button>
-              </Link>
-            )}
-            <Link href="/campaign">
-              <Button variant="outline" className="flex-1">
-                View Campaign
+                </Link>
               </Button>
-            </Link>
+            )}
+            <Button asChild variant="outline" className="flex-1">
+              <Link href="/campaign">View Campaign</Link>
+            </Button>
           </div>
         )}
       </CardContent>

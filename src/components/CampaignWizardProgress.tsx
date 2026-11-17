@@ -36,16 +36,14 @@ export function CampaignWizardProgress({
 
   // Get next opponent info
   const nextOpponentData = campaignOpponents.find(
-    (op) => op.opponentNumber === nextOpponent
+    (op) => op.opponentNumber === nextOpponent,
   );
 
   return (
     <Card
       className={`cursor-pointer campaign-card-hover animate-fade-in ${
-        isSelected
-          ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950 animate-campaign-glow"
-          : ""
-      } ${hasCompletionRelic ? "border-yellow-200 dark:border-yellow-800" : ""}`}
+        isSelected ? "ring-2 ring-info bg-info/10 animate-campaign-glow" : ""
+      } ${hasCompletionRelic ? "border-warning/40" : ""}`}
       onClick={() => onSelectWizard?.(wizard._id)}
     >
       <CardHeader className="pb-3">
@@ -78,7 +76,7 @@ export function CampaignWizardProgress({
               className="h-3 animate-progress-fill"
             />
             {hasCompletionRelic && (
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-amber-500/20 rounded-full animate-shimmer"></div>
+              <div className="absolute inset-0 bg-linear-to-r from-warning/20 to-gold/10 rounded-full animate-shimmer"></div>
             )}
           </div>
         </div>
@@ -86,13 +84,13 @@ export function CampaignWizardProgress({
         {/* Current Status */}
         <div className="space-y-2">
           {isCompleted ? (
-            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+            <div className="flex items-center gap-2 text-success">
               <CheckCircle className="w-4 h-4" />
               <span className="font-medium">Campaign Completed!</span>
             </div>
           ) : (
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <div className="flex items-center gap-2 text-info">
                 <Circle className="w-4 h-4" />
                 <span className="font-medium">
                   Next: {nextOpponentData?.name || `Opponent ${nextOpponent}`}
@@ -125,12 +123,12 @@ export function CampaignWizardProgress({
                     w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
                     ${
                       isDefeated
-                        ? "bg-green-500 text-white"
+                        ? "bg-success text-success-foreground"
                         : isCurrent
-                          ? "bg-blue-500 text-white ring-2 ring-blue-300"
+                          ? "bg-info text-info-foreground ring-2 ring-info/40"
                           : isLocked
-                            ? "bg-gray-200 text-gray-400 dark:bg-gray-700"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-muted text-foreground"
                     }
                   `}
                   title={

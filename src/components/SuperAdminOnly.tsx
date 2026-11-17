@@ -37,18 +37,18 @@ function SuperAdminOnlyClient({ children, fallback }: SuperAdminOnlyProps) {
     return fallback !== undefined ? (
       fallback
     ) : (
-      <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+      <Card className="border-destructive/40 bg-destructive/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+          <CardTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
             Access Denied
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-red-700 dark:text-red-300 mb-4">
+          <p className="text-destructive mb-4">
             You don&apos;t have permission to access this content.
           </p>
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-destructive">
             Reason: {adminAccess.reason}
           </p>
           <p className="text-sm text-muted-foreground mt-4">
@@ -80,5 +80,5 @@ export const SuperAdminOnly = dynamic(
         </CardContent>
       </Card>
     ),
-  }
+  },
 );

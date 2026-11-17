@@ -64,7 +64,7 @@ interface UserListTableProps {
   onGrantCredits: (
     userId: string,
     userName: string,
-    currentBalance: number
+    currentBalance: number,
   ) => void;
   onViewCreditHistory?: (userId: string, userName: string) => void;
   onSortChange?: (sortBy: "joinDate" | "activity" | "username") => void;
@@ -90,14 +90,14 @@ export function UserListTable({
   };
 
   const getActivityBadge = (
-    activityLevel: "inactive" | "low" | "medium" | "high"
+    activityLevel: "inactive" | "low" | "medium" | "high",
   ) => {
     switch (activityLevel) {
       case "inactive":
         return (
           <Badge
             variant="outline"
-            className="bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300"
+            className="bg-muted text-foreground border-border"
           >
             Inactive
           </Badge>
@@ -106,7 +106,7 @@ export function UserListTable({
         return (
           <Badge
             variant="outline"
-            className="bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400"
+            className="bg-warning/15 text-warning border-warning/40"
           >
             Low
           </Badge>
@@ -115,7 +115,7 @@ export function UserListTable({
         return (
           <Badge
             variant="outline"
-            className="bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400"
+            className="bg-info/15 text-info border-info/40"
           >
             Medium
           </Badge>
@@ -124,7 +124,7 @@ export function UserListTable({
         return (
           <Badge
             variant="outline"
-            className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400"
+            className="bg-success/15 text-success border-success/40"
           >
             High
           </Badge>
@@ -134,11 +134,7 @@ export function UserListTable({
 
   const getSubscriptionBadge = (tier: "FREE" | "PREMIUM") => {
     if (tier === "PREMIUM") {
-      return (
-        <Badge className="bg-linear-to-r from-yellow-400 to-yellow-600 text-white border-0">
-          Premium
-        </Badge>
-      );
+      return <Badge variant="gold">Premium</Badge>;
     }
     return (
       <Badge variant="outline" className="text-muted-foreground">
@@ -151,17 +147,14 @@ export function UserListTable({
     switch (role) {
       case "super_admin":
         return (
-          <Badge
-            variant="default"
-            className="bg-purple-600 hover:bg-purple-700"
-          >
+          <Badge variant="default" className="bg-primary hover:bg-primary">
             <ShieldCheck className="h-3 w-3 mr-1" />
             Super Admin
           </Badge>
         );
       case "admin":
         return (
-          <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+          <Badge variant="default" className="bg-info hover:bg-info/90">
             <Shield className="h-3 w-3 mr-1" />
             Admin
           </Badge>
@@ -265,7 +258,13 @@ export function UserListTable({
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleExpanded(user.clerkId)}
-                        className="h-8 w-8 p-0"
+                        className="size-11 p-0"
+                        aria-label={
+                          isExpanded
+                            ? "Collapse user details"
+                            : "Expand user details"
+                        }
+                        aria-expanded={isExpanded}
                       >
                         {isExpanded ? (
                           <ChevronDown className="h-4 w-4" />
@@ -341,10 +340,10 @@ export function UserListTable({
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Coins
-                          className={`h-4 w-4 ${hasZeroCredits ? "text-red-500" : "text-yellow-500"}`}
+                          className={`h-4 w-4 ${hasZeroCredits ? "text-destructive" : "text-gold"}`}
                         />
                         <span
-                          className={`font-medium ${hasZeroCredits ? "text-red-600 dark:text-red-400" : ""}`}
+                          className={`font-medium ${hasZeroCredits ? "text-destructive" : ""}`}
                         >
                           {user.imageCredits}
                         </span>
@@ -371,7 +370,7 @@ export function UserListTable({
                             onClick={() =>
                               onViewCreditHistory(
                                 user.clerkId,
-                                getUserDisplayName(user)
+                                getUserDisplayName(user),
                               )
                             }
                           >
@@ -386,7 +385,7 @@ export function UserListTable({
                             onGrantCredits(
                               user.clerkId,
                               getUserDisplayName(user),
-                              user.imageCredits
+                              user.imageCredits,
                             )
                           }
                         >
@@ -450,7 +449,11 @@ export function UserListTable({
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleExpanded(user.clerkId)}
-                  className="h-8 w-8 p-0 shrink-0"
+                  className="size-11 p-0 shrink-0"
+                  aria-label={
+                    isExpanded ? "Collapse user details" : "Expand user details"
+                  }
+                  aria-expanded={isExpanded}
                 >
                   {isExpanded ? (
                     <ChevronDown className="h-4 w-4" />
@@ -476,10 +479,10 @@ export function UserListTable({
                   <p className="text-muted-foreground text-xs">Credits</p>
                   <div className="flex items-center gap-1 mt-1">
                     <Coins
-                      className={`h-4 w-4 ${hasZeroCredits ? "text-red-500" : "text-yellow-500"}`}
+                      className={`h-4 w-4 ${hasZeroCredits ? "text-destructive" : "text-gold"}`}
                     />
                     <span
-                      className={`font-medium ${hasZeroCredits ? "text-red-600 dark:text-red-400" : ""}`}
+                      className={`font-medium ${hasZeroCredits ? "text-destructive" : ""}`}
                     >
                       {user.imageCredits}
                     </span>
@@ -551,7 +554,7 @@ export function UserListTable({
                     onClick={() =>
                       onViewCreditHistory(
                         user.clerkId,
-                        getUserDisplayName(user)
+                        getUserDisplayName(user),
                       )
                     }
                   >
@@ -567,7 +570,7 @@ export function UserListTable({
                     onGrantCredits(
                       user.clerkId,
                       getUserDisplayName(user),
-                      user.imageCredits
+                      user.imageCredits,
                     )
                   }
                 >

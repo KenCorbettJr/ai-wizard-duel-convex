@@ -17,7 +17,7 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
   const activeSeason = useQuery(api.campaignSeasons.getActiveCampaignSeason);
   const userProgress = useQuery(
     api.campaignSeasons.getUserCurrentSeasonProgress,
-    userId ? { userId } : "skip"
+    userId ? { userId } : "skip",
   );
 
   if (activeSeason === undefined) {
@@ -51,7 +51,7 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
   const userWizardCount = userProgress?.progress.length || 0;
   const completedWizards =
     userProgress?.progress.filter(
-      (p: { hasCompletionRelic: boolean }) => p.hasCompletionRelic
+      (p: { hasCompletionRelic: boolean }) => p.hasCompletionRelic,
     ).length || 0;
 
   if (compact) {
@@ -59,7 +59,7 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Crown className="h-4 w-4 text-purple-600" />
+            <Crown className="h-4 w-4 text-primary" />
             <span className="font-medium text-sm">{activeSeason.name}</span>
           </div>
           <Badge variant="secondary" className="text-xs">
@@ -80,7 +80,7 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Crown className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <Crown className="h-5 w-5 text-primary" />
           Current Season
         </CardTitle>
       </CardHeader>
@@ -96,7 +96,7 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
         {/* Season Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-info" />
             <span className="font-medium">Status</span>
           </div>
           <div className="text-sm text-muted-foreground">
@@ -105,19 +105,19 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
         </div>
 
         {/* Completion Relic */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-3">
+        <div className="bg-linear-to-r from-primary/15 to-gold/20 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <Trophy className="h-4 w-4 text-purple-600" />
+            <Trophy className="h-4 w-4 text-primary" />
             <span className="font-medium text-sm">Completion Reward</span>
           </div>
           <div>
-            <div className="font-semibold text-sm text-purple-700 dark:text-purple-300">
+            <div className="font-semibold text-sm text-primary">
               {activeSeason.completionRelic.name}
             </div>
             <div className="text-xs text-muted-foreground">
               {activeSeason.completionRelic.description}
             </div>
-            <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+            <div className="text-xs text-primary mt-1">
               +{activeSeason.completionRelic.luckBonus} Luck Bonus
             </div>
           </div>
@@ -127,24 +127,24 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
         {userId && userProgress && userWizardCount > 0 && (
           <div className="border-t pt-4">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-green-600" />
+              <Users className="h-4 w-4 text-success" />
               <span className="font-medium text-sm">Your Progress</span>
             </div>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-lg font-bold text-info">
                   {userWizardCount}
                 </div>
                 <div className="text-xs text-muted-foreground">Wizards</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                <div className="text-lg font-bold text-success">
                   {completedWizards}
                 </div>
                 <div className="text-xs text-muted-foreground">Completed</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-lg font-bold text-primary">
                   {completedWizards}
                 </div>
                 <div className="text-xs text-muted-foreground">Relics</div>
