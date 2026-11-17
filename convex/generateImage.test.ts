@@ -161,7 +161,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("Image generation failed: FAL service unavailable");
     });
 
@@ -172,7 +172,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("FAL_KEY environment variable is not set");
 
       // Restore the original value
@@ -187,7 +187,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("No image generated from Fal service");
     });
 
@@ -197,7 +197,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("No image generated from Fal service");
     });
 
@@ -209,7 +209,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("No image generated from Fal service");
     });
 
@@ -227,7 +227,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("Failed to fetch generated image: Not Found");
     });
 
@@ -242,7 +242,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("Image generation failed: Network error");
     });
 
@@ -252,7 +252,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("Image generation failed: Unknown error");
     });
 
@@ -262,7 +262,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "A magical scene",
-        })
+        }),
       ).rejects.toThrow("Image generation failed: Unknown error");
     });
   });
@@ -385,7 +385,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "Null URL",
-        })
+        }),
       ).rejects.toThrow("No image generated from Fal service");
     });
 
@@ -397,7 +397,7 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "Undefined URL",
-        })
+        }),
       ).rejects.toThrow("No image generated from Fal service");
     });
 
@@ -418,9 +418,9 @@ describe("Generate Image", () => {
       await expect(
         t.action(api.generateImage.generateImage, {
           prompt: "ArrayBuffer error",
-        })
+        }),
       ).rejects.toThrow(
-        "Image generation failed: ArrayBuffer conversion failed"
+        "Image generation failed: ArrayBuffer conversion failed",
       );
     });
   });

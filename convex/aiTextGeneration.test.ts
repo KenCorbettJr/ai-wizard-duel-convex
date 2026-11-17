@@ -3,7 +3,7 @@ import { expect, test, describe, vi, beforeEach, afterEach } from "vitest";
 // Mock the AI module before importing the function
 const mockGenerate = vi.fn();
 vi.mock("./ai/getAI", () => ({
-  getGemni20FlashAI: vi.fn(() => ({
+  getGeminiTextAI: vi.fn(() => ({
     generate: mockGenerate,
   })),
 }));

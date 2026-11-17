@@ -3,21 +3,23 @@
 import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
-import { getGemni25FlashImageAI } from "./ai/getAI";
+import { Id } from "./_generated/dataModel";
+import { getGeminiImageAI } from "./ai/getAI";
 import { isEmulatorMode } from "./mocks/mockServices";
 
 export const generateImageWithGemini = action({
   args: {
     prompt: v.string(),
     previousImage: v.optional(v.string()), // Storage ID of previous image
-    wizardImages: v.optional(v.array(v.string())), // Storage IDs of wizard images for introduction round
+    wizardImages: v.optional(v.array(v.string())), // Storage IDs of plain-background wizard images (character references)
+    wizardImageLabels: v.optional(v.array(v.string())), // Wizard names, parallel to wizardImages
     wizardDescriptions: v.optional(
       v.array(
         v.object({
           name: v.string(),
           description: v.string(),
-        })
-      )
+        }),
+      ),
     ), // Wizard descriptions for context in subsequent rounds
     useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
   },
@@ -28,9 +30,10 @@ export const generateImageWithGemini = action({
       prompt,
       previousImage,
       wizardImages,
+      wizardImageLabels,
       wizardDescriptions,
       useGemini = false,
-    }
+    },
   ): Promise<ArrayBuffer> => {
     try {
       if (useGemini && process.env.GOOGLE_API_KEY) {
@@ -39,7 +42,8 @@ export const generateImageWithGemini = action({
           prompt,
           previousImage,
           wizardImages,
-          wizardDescriptions
+          wizardDescriptions,
+          wizardImageLabels,
         );
       } else {
         // Fallback to FAL
@@ -68,7 +72,8 @@ async function generateWithGeminiFlash(
   prompt: string,
   previousImage?: string,
   wizardImages?: string[],
-  wizardDescriptions?: Array<{ name: string; description: string }>
+  wizardDescriptions?: Array<{ name: string; description: string }>,
+  wizardImageLabels?: string[],
 ): Promise<ArrayBuffer> {
   // Check if we're in emulator mode
   if (isEmulatorMode()) {
@@ -77,60 +82,67 @@ async function generateWithGeminiFlash(
   }
 
   try {
-    const ai = getGemni25FlashImageAI();
+    const ai = getGeminiImageAI();
 
-    // Build the prompt with context
-    let enhancedPrompt = prompt;
+    // Build the multimodal prompt. Gemini only sees images that are passed as
+    // media parts, so every reference is loaded from storage and sent inline.
+    type PromptPart =
+      { text: string } | { media: { url: string; contentType: string } };
+    const parts: PromptPart[] = [];
 
-    // Prepare media inputs for the AI
-    const mediaInputs: Array<{ url: string }> = [];
-
-    // Handle different image input scenarios
-    if (wizardImages && wizardImages.length > 0) {
-      // Introduction round: use wizard images as reference
-      try {
-        for (const wizardImageId of wizardImages) {
-          const imageUrl = await ctx.storage.getUrl(wizardImageId);
-          if (imageUrl) {
-            mediaInputs.push({ url: imageUrl });
-          }
-        }
-
-        if (mediaInputs.length > 0) {
-          enhancedPrompt = `${prompt}. Use the wizard(s) from the reference image(s) and create an epic magical arena scene with both wizards positioned as opponents ready to duel. Generate a new image in low poly art style.`;
-        }
-      } catch (error) {
-        console.warn("Could not load wizard images:", error);
-      }
-    } else if (previousImage) {
-      // Subsequent rounds: use previous image as reference
-      try {
-        const imageUrl = await ctx.storage.getUrl(previousImage);
-        if (imageUrl) {
-          mediaInputs.push({ url: imageUrl });
-
-          // Enhance prompt with wizard descriptions for better context
-          enhancedPrompt = `${prompt}. Continue the scene from the reference image, showing the progression of the magical duel. Maintain the arena setting and wizard positions while showing the new magical effects.`;
-
-          if (wizardDescriptions && wizardDescriptions.length > 0) {
-            const wizardContext = wizardDescriptions
-              .map((w) => `${w.name}: ${w.description}`)
-              .join(". ");
-            enhancedPrompt += ` The wizards in this scene are: ${wizardContext}. Make sure to maintain their visual characteristics and identities from the previous image.`;
-          }
-
-          enhancedPrompt += ` Generate a new image that builds upon the reference image in low poly art style.`;
-        }
-      } catch (error) {
-        console.warn("Could not load previous image:", error);
+    // Character references: each wizard on a plain background
+    const hasWizardRefs = !!wizardImages && wizardImages.length > 0;
+    if (hasWizardRefs) {
+      for (let i = 0; i < wizardImages.length; i++) {
+        const media = await loadStorageImageAsMedia(ctx, wizardImages[i]);
+        if (!media) continue;
+        const label = wizardImageLabels?.[i] ?? `Wizard ${i + 1}`;
+        parts.push({
+          text: `Appearance reference for ${label}. Use it only to copy the character's look:`,
+        });
+        parts.push({ media });
       }
     }
 
-    // Generate image using Gemini
-    // For now, we'll use a simple text prompt approach since image generation
-    // with Gemini may require different API patterns
+    // Scene continuity: previous round image
+    let hasPreviousScene = false;
+    if (previousImage) {
+      const media = await loadStorageImageAsMedia(ctx, previousImage);
+      if (media) {
+        hasPreviousScene = true;
+        parts.push({ text: "Previous scene of the duel:" });
+        parts.push({ media });
+      }
+    }
+
+    let enhancedPrompt = prompt;
+    if (parts.length > 0) {
+      const instructions: string[] = [prompt];
+      if (hasWizardRefs) {
+        instructions.push(
+          "Create ONE single full-frame illustration of ONE scene, as described above, with the wizard(s) drawn from the appearance reference image(s). Keep each wizard's face, fur or skin, hair, clothing, colors, props and overall design exactly as in their reference. Change only the pose, lighting and surroundings. The reference images only show what the character looks like: do NOT reproduce their layout, white or gray background, or framing. Do NOT make a character sheet, turnaround, multiple views, panels, collage, labels, or any text. The scene background must fill the entire image edge to edge.",
+        );
+      }
+      if (hasPreviousScene) {
+        instructions.push(
+          "Continue the arena setting and positions from the previous scene while showing the new magical effects.",
+        );
+      }
+      if (wizardDescriptions && wizardDescriptions.length > 0) {
+        const wizardContext = wizardDescriptions
+          .map((w) => `${w.name}: ${w.description}`)
+          .join(". ");
+        instructions.push(`The wizards are: ${wizardContext}.`);
+      }
+      instructions.push("Generate a new image in low poly art style.");
+      enhancedPrompt = instructions.join(" ");
+    }
+
     const response = await ai.generate({
-      prompt: enhancedPrompt,
+      prompt:
+        parts.length > 0
+          ? [...parts, { text: enhancedPrompt }]
+          : enhancedPrompt,
       config: {
         temperature: 0.8,
         maxOutputTokens: 4096,
@@ -148,7 +160,7 @@ async function generateWithGeminiFlash(
           const imageResponse = await fetch(contentItem.media.url);
           if (!imageResponse.ok) {
             throw new Error(
-              `Failed to fetch generated image: ${imageResponse.statusText}`
+              `Failed to fetch generated image: ${imageResponse.statusText}`,
             );
           }
           const imageBuffer = await imageResponse.arrayBuffer();
@@ -156,7 +168,7 @@ async function generateWithGeminiFlash(
           // Resize the image to reduce size
           const resizedImageBuffer = await ctx.runAction(
             api.imageCompressionService.compressImage,
-            { imageBuffer }
+            { imageBuffer },
           );
 
           return resizedImageBuffer;
@@ -168,14 +180,14 @@ async function generateWithGeminiFlash(
           // If the image is provided as base64 data
           const base64Data = mediaItem.data.replace(
             /^data:image\/[^;]+;base64,/,
-            ""
+            "",
           );
           const imageBuffer = Buffer.from(base64Data, "base64");
 
           // Resize the image to reduce size
           const resizedImageBuffer = await ctx.runAction(
             api.imageCompressionService.compressImage,
-            { imageBuffer: imageBuffer.buffer }
+            { imageBuffer: imageBuffer.buffer },
           );
 
           return resizedImageBuffer;
@@ -185,7 +197,7 @@ async function generateWithGeminiFlash(
         const textItem = contentItem as { text?: string };
         if (textItem.text) {
           const base64Match = textItem.text.match(
-            /data:image\/[^;]+;base64,([^"]+)/
+            /data:image\/[^;]+;base64,([^"]+)/,
           );
           if (base64Match) {
             const base64Data = base64Match[1];
@@ -194,7 +206,7 @@ async function generateWithGeminiFlash(
             // Resize the image to reduce size
             const resizedImageBuffer = await ctx.runAction(
               api.imageCompressionService.compressImage,
-              { imageBuffer: imageBuffer.buffer }
+              { imageBuffer: imageBuffer.buffer },
             );
 
             return resizedImageBuffer;
@@ -212,7 +224,7 @@ async function generateWithGeminiFlash(
         contentLength: response.message?.content?.length || 0,
         contentTypes:
           response.message?.content?.map((item: unknown) =>
-            Object.keys(item as object)
+            Object.keys(item as object),
           ) || [],
         usage: response.usage,
         // Log the actual content items for debugging
@@ -220,8 +232,7 @@ async function generateWithGeminiFlash(
           response.message?.content?.map((item: unknown) => {
             const obj = item as { media?: unknown; text?: string };
             const media = obj.media as
-              | { url?: string; data?: string }
-              | undefined;
+              { url?: string; data?: string } | undefined;
             return {
               hasMedia: !!obj.media,
               hasText: !!obj.text,
@@ -230,15 +241,32 @@ async function generateWithGeminiFlash(
               hasMediaData: !!media?.data,
             };
           }) || [],
-      }
+      },
     );
 
     throw new Error("No image found in Gemini response");
   } catch (error) {
     console.error("Gemini image generation failed:", error);
     throw new Error(
-      `Gemini image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Gemini image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
+  }
+}
+
+// Load a stored image and return it as an inline data URL for Gemini.
+async function loadStorageImageAsMedia(
+  ctx: ActionCtx,
+  storageId: string,
+): Promise<{ url: string; contentType: string } | null> {
+  try {
+    const blob = await ctx.storage.get(storageId as Id<"_storage">);
+    if (!blob) return null;
+    const contentType = blob.type || "image/webp";
+    const base64 = Buffer.from(await blob.arrayBuffer()).toString("base64");
+    return { url: `data:${contentType};base64,${base64}`, contentType };
+  } catch (error) {
+    console.warn(`Could not load reference image ${storageId}:`, error);
+    return null;
   }
 }
 

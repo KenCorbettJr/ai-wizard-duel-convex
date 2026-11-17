@@ -21,6 +21,7 @@ export const getUserWizards = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -36,7 +37,7 @@ export const getUserWizards = query({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -65,7 +66,7 @@ export const getUserWizards = query({
         const baseLuck = 10; // This could be a field on the wizard in the future
         const effectiveLuckScore = Math.min(
           20,
-          baseLuck + (hasCompletionRelic ? 1 : 0)
+          baseLuck + (hasCompletionRelic ? 1 : 0),
         );
 
         return {
@@ -73,7 +74,7 @@ export const getUserWizards = query({
           hasCompletionRelic,
           effectiveLuckScore,
         };
-      })
+      }),
     );
 
     return wizardsWithRelics;
@@ -94,6 +95,7 @@ export const getWizard = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -110,9 +112,9 @@ export const getWizard = query({
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
       ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM"))
+        v.union(v.literal("FREE"), v.literal("PREMIUM")),
       ),
-    })
+    }),
   ),
   handler: async (ctx, { wizardId }) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -147,7 +149,7 @@ export const getWizard = query({
     const baseLuck = 10; // This could be a field on the wizard in the future
     const effectiveLuckScore = Math.min(
       20,
-      baseLuck + (hasCompletionRelic ? 1 : 0)
+      baseLuck + (hasCompletionRelic ? 1 : 0),
     );
 
     return {
@@ -191,7 +193,7 @@ export const createWizard = mutation({
           wizardId,
           name,
           description,
-        }
+        },
       );
     }
 
@@ -269,6 +271,7 @@ export const updateWizardInternal = internalMutation({
     description: v.optional(v.string()),
     illustrationURL: v.optional(v.string()),
     illustration: v.optional(v.string()),
+    plainIllustration: v.optional(v.string()),
     isAIPowered: v.optional(v.boolean()),
   },
   returns: v.null(),
@@ -314,7 +317,7 @@ export const scheduleWizardIllustrationInternal = internalMutation({
           wizardId,
           name,
           description,
-        }
+        },
       );
     }
   },
@@ -373,7 +376,7 @@ export const updateWizard = mutation({
           wizardId,
           name: updates.name || wizard.name,
           description: updates.description || wizard.description,
-        }
+        },
       );
     }
   },
@@ -404,7 +407,7 @@ export const regenerateIllustration = mutation({
     // Only allow regenerating illustrations for owned wizards
     if (wizard.owner !== identity.subject) {
       throw new Error(
-        "Not authorized to regenerate illustration for this wizard"
+        "Not authorized to regenerate illustration for this wizard",
       );
     }
 
@@ -424,7 +427,7 @@ export const regenerateIllustration = mutation({
           wizardId,
           name: wizard.name,
           description: wizard.description,
-        }
+        },
       );
     }
 
@@ -473,7 +476,7 @@ export const getDefeatedWizards = query({
       (duel) =>
         duel.status === "COMPLETED" &&
         duel.wizards.includes(wizardId) &&
-        duel.winners?.includes(wizardId)
+        duel.winners?.includes(wizardId),
     );
 
     // Create a map to track the most recent defeat date for each wizard
@@ -550,6 +553,7 @@ export const getWizardLeaderboard = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -571,9 +575,9 @@ export const getWizardLeaderboard = query({
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
       ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM"))
+        v.union(v.literal("FREE"), v.literal("PREMIUM")),
       ),
-    })
+    }),
   ),
   handler: async (ctx, { limit = 50, minDuels = 1 }) => {
     // Get all wizards
@@ -593,7 +597,7 @@ export const getWizardLeaderboard = query({
         const baseLuck = 10;
         const effectiveLuckScore = Math.min(
           20,
-          baseLuck + (hasCompletionRelic ? 1 : 0)
+          baseLuck + (hasCompletionRelic ? 1 : 0),
         );
 
         // Calculate multiplayer-only stats (excluding campaign battles)
@@ -604,7 +608,7 @@ export const getWizardLeaderboard = query({
           .collect();
 
         const wizardMultiplayerDuels = allMultiplayerDuels.filter((duel) =>
-          duel.wizards.includes(wizard._id)
+          duel.wizards.includes(wizard._id),
         );
 
         let wins = 0;
@@ -631,12 +635,12 @@ export const getWizardLeaderboard = query({
           hasCompletionRelic,
           effectiveLuckScore,
         };
-      })
+      }),
     );
 
     // Filter by minimum duels
     const filteredStats = wizardStats.filter(
-      (wizard) => wizard.totalDuels >= minDuels
+      (wizard) => wizard.totalDuels >= minDuels,
     );
 
     // Sort by win rate (descending), then by total wins (descending), then by total duels (descending)
@@ -665,7 +669,7 @@ export const getWizardLeaderboard = query({
           ownerDisplayName: owner?.displayName,
           ownerSubscriptionTier: owner?.subscriptionTier,
         };
-      })
+      }),
     );
 
     // Apply limit
@@ -687,6 +691,7 @@ export const getWizardWithOwner = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -705,9 +710,9 @@ export const getWizardWithOwner = query({
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
       ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM"))
+        v.union(v.literal("FREE"), v.literal("PREMIUM")),
       ),
-    })
+    }),
   ),
   handler: async (ctx, { wizardId }) => {
     const wizard = await ctx.db.get(wizardId);
@@ -734,7 +739,7 @@ export const getWizardWithOwner = query({
     const baseLuck = 10; // This could be a field on the wizard in the future
     const effectiveLuckScore = Math.min(
       20,
-      baseLuck + (hasCompletionRelic ? 1 : 0)
+      baseLuck + (hasCompletionRelic ? 1 : 0),
     );
 
     return {
@@ -763,6 +768,7 @@ export const getAllWizardsWithOwners = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -779,9 +785,9 @@ export const getAllWizardsWithOwners = query({
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
       ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM"))
+        v.union(v.literal("FREE"), v.literal("PREMIUM")),
       ),
-    })
+    }),
   ),
   handler: async (ctx, { limit = 50 }) => {
     // Get all wizards
@@ -801,7 +807,7 @@ export const getAllWizardsWithOwners = query({
           ownerDisplayName: owner?.displayName,
           ownerSubscriptionTier: owner?.subscriptionTier,
         };
-      })
+      }),
     );
 
     return wizardsWithOwners;
@@ -824,6 +830,7 @@ export const getWizardLeaderboardByPeriod = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -849,9 +856,9 @@ export const getWizardLeaderboardByPeriod = query({
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
       ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM"))
+        v.union(v.literal("FREE"), v.literal("PREMIUM")),
       ),
-    })
+    }),
   ),
   handler: async (ctx, { period, limit = 50, minDuels = 1 }) => {
     const now = Date.now();
@@ -879,7 +886,7 @@ export const getWizardLeaderboardByPeriod = query({
       .withIndex("by_completed_at", (q) =>
         period === "all"
           ? q.gte("completedAt", 0)
-          : q.gte("completedAt", startTime)
+          : q.gte("completedAt", startTime),
       )
       .filter((q) => q.eq(q.field("status"), "COMPLETED"))
       .filter((q) => q.neq(q.field("isCampaignBattle"), true)) // Exclude campaign battles
@@ -899,7 +906,7 @@ export const getWizardLeaderboardByPeriod = query({
         const baseLuck = 10;
         const effectiveLuckScore = Math.min(
           20,
-          baseLuck + (hasCompletionRelic ? 1 : 0)
+          baseLuck + (hasCompletionRelic ? 1 : 0),
         );
 
         // Calculate multiplayer-only stats (excluding campaign battles)
@@ -912,7 +919,7 @@ export const getWizardLeaderboardByPeriod = query({
           .collect();
 
         const wizardMultiplayerDuels = allMultiplayerDuels.filter((duel) =>
-          duel.wizards.includes(wizard._id)
+          duel.wizards.includes(wizard._id),
         );
 
         let overallWins = 0;
@@ -945,7 +952,7 @@ export const getWizardLeaderboardByPeriod = query({
         } else {
           // For specific periods, calculate from duels in that period
           const periodWizardDuels = periodDuels.filter((duel) =>
-            duel.wizards.includes(wizard._id)
+            duel.wizards.includes(wizard._id),
           );
 
           periodWins = 0;
@@ -976,7 +983,7 @@ export const getWizardLeaderboardByPeriod = query({
           hasCompletionRelic,
           effectiveLuckScore,
         };
-      })
+      }),
     );
 
     // Filter by minimum duels (using period duels for week/month, overall for all)
@@ -1019,7 +1026,7 @@ export const getWizardLeaderboardByPeriod = query({
           ownerDisplayName: owner?.displayName,
           ownerSubscriptionTier: owner?.subscriptionTier,
         };
-      })
+      }),
     );
 
     // Apply limit
@@ -1041,6 +1048,7 @@ export const getWizardInternal = internalQuery({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -1056,7 +1064,7 @@ export const getWizardInternal = internalQuery({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-    })
+    }),
   ),
   handler: async (ctx, { wizardId }) => {
     const wizard = await ctx.db.get(wizardId);
@@ -1085,7 +1093,7 @@ export const getWizardInternal = internalQuery({
     const baseLuck = 10; // This could be a field on the wizard in the future
     const effectiveLuckScore = Math.min(
       20,
-      baseLuck + (hasCompletionRelic ? 1 : 0)
+      baseLuck + (hasCompletionRelic ? 1 : 0),
     );
 
     return {

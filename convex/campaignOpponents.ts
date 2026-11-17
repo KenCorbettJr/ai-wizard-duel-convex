@@ -214,6 +214,7 @@ export const getCampaignOpponent = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
@@ -260,6 +261,7 @@ export const getAllCampaignOpponents = query({
       illustrationURL: v.optional(v.string()),
       illustration: v.optional(v.string()),
       illustrationGeneratedAt: v.optional(v.number()),
+      plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),

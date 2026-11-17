@@ -2,7 +2,7 @@
 
 // AI Text Generation Service using Gemini Flash
 import { z } from "genkit/beta";
-import { getGemni20FlashAI } from "./ai/getAI";
+import { getGeminiTextAI } from "./ai/getAI";
 import {
   isEmulatorMode,
   generateMockText,
@@ -28,7 +28,7 @@ export async function generateText(
       return generateMockText(fullPrompt);
     }
 
-    const ai = getGemni20FlashAI();
+    const ai = getGeminiTextAI();
 
     const response = await ai.generate({
       prompt: fullPrompt,
@@ -60,7 +60,7 @@ export async function generateObject<T extends z.ZodTypeAny>(
       return generateMockObject(schema);
     }
 
-    const ai = getGemni20FlashAI();
+    const ai = getGeminiTextAI();
 
     const response = await ai.generate<T>({
       prompt: fullPrompt,

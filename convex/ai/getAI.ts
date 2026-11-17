@@ -3,14 +3,14 @@
 import { genkit } from "genkit/beta";
 import { googleAI } from "@genkit-ai/google-genai";
 
-export function getGemni20FlashAI() {
+export function getGeminiTextAI() {
   const { GOOGLE_API_KEY } = process.env;
 
   // In emulator mode, we don't need a real API key since we use mocks
   if (process.env.ENV === "emulate") {
     return genkit({
       plugins: [googleAI({ apiKey: "mock-api-key-for-emulator" })],
-      model: googleAI.model("gemini-2.0-flash"),
+      model: googleAI.model("gemini-3.5-flash-lite"),
     });
   }
 
@@ -20,18 +20,18 @@ export function getGemni20FlashAI() {
 
   return genkit({
     plugins: [googleAI({ apiKey: GOOGLE_API_KEY })],
-    model: googleAI.model("gemini-2.0-flash"),
+    model: googleAI.model("gemini-3.5-flash-lite"),
   });
 }
 
-export function getGemni25FlashImageAI() {
+export function getGeminiImageAI() {
   const { GOOGLE_API_KEY } = process.env;
 
   // In emulator mode, we don't need a real API key since we use mocks
   if (process.env.ENV === "emulate") {
     return genkit({
       plugins: [googleAI({ apiKey: "mock-api-key-for-emulator" })],
-      model: googleAI.model("gemini-2.5-flash-image-preview"),
+      model: googleAI.model("gemini-nano-banana-2.1"),
     });
   }
 
@@ -41,6 +41,6 @@ export function getGemni25FlashImageAI() {
 
   return genkit({
     plugins: [googleAI({ apiKey: GOOGLE_API_KEY })],
-    model: googleAI.model("gemini-2.5-flash-image-preview"),
+    model: googleAI.model("gemini-nano-banana-2.1"),
   });
 }

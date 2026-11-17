@@ -3,14 +3,7 @@ import { RemotePattern } from "next/dist/shared/lib/image-config";
 
 const remotePatterns: RemotePattern[] = [];
 
-if (process.env.ENV === "dev") {
-  remotePatterns.push({
-    protocol: "https",
-    hostname: "doting-bloodhound-926.convex.cloud",
-    port: "",
-    pathname: "/api/storage/**",
-  });
-} else if (process.env.ENV === "emulate") {
+if (process.env.ENV === "emulate") {
   // For emulation mode, use proxy route to avoid Next.js 16 private IP restrictions
   remotePatterns.push({
     protocol: "http",
@@ -19,13 +12,17 @@ if (process.env.ENV === "dev") {
     pathname: "/api/convex-image/**",
   });
 } else {
-  // Production environment
-  remotePatterns.push({
-    protocol: "https",
-    hostname: "warmhearted-egret-307.convex.cloud",
-    port: "",
-    pathname: "/api/storage/**",
-  });
+  // Allow storage images from whichever Convex deployment this build points at,
+  // so dev, prod, and new deployments need no hardcoded hostnames.
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (convexUrl) {
+    remotePatterns.push({
+      protocol: "https",
+      hostname: new URL(convexUrl).hostname,
+      port: "",
+      pathname: "/api/storage/**",
+    });
+  }
 }
 
 const nextConfig: NextConfig = {

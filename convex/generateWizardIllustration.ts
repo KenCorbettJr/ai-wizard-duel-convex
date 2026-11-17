@@ -1,8 +1,6 @@
 "use node";
 
-"use node";
-
-import { action } from "./_generated/server";
+import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { generateText } from "./aiTextGeneration";
@@ -20,7 +18,7 @@ export const generateWizardIllustration = action({
   }),
   handler: async (ctx, { wizardId, name, description, userId }) => {
     console.log(
-      `Starting illustration generation for wizard ${wizardId} (${name})`
+      `Starting illustration generation for wizard ${wizardId} (${name})`,
     );
 
     try {
@@ -32,12 +30,12 @@ export const generateWizardIllustration = action({
           api.imageCreditService.hasImageCreditsForDuel,
           {
             userId,
-          }
+          },
         );
 
         if (!hasCredits) {
           throw new Error(
-            "Insufficient image credits for wizard illustration generation"
+            "Insufficient image credits for wizard illustration generation",
           );
         }
 
@@ -50,7 +48,7 @@ export const generateWizardIllustration = action({
               wizardId,
               purpose: "wizard_illustration",
             },
-          }
+          },
         );
 
         if (!creditConsumed) {
@@ -58,87 +56,126 @@ export const generateWizardIllustration = action({
         }
 
         console.log(
-          `Consumed 1 image credit for user ${userId} for wizard ${wizardId}`
+          `Consumed 1 image credit for user ${userId} for wizard ${wizardId}`,
         );
       }
-      // Use AI to create a detailed illustration prompt
-      const illustrationPrompt = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" in an action pose that would fit this type of wizard. The wizard has this description: ${description}. Use Dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them. If it makes sense, have them holding a magical implement or familiar. Match the background to the wizard's theme. Only give me the image prompt, no other text.`;
-
-      console.log("Generating enhanced prompt with AI...");
-      const enhancedPrompt = await generateText(illustrationPrompt);
-
-      console.log("Generated illustration text:", enhancedPrompt);
-
-      // Check if we should use Gemini or FAL for image generation
       const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
 
-      let imageBuffer: ArrayBuffer;
-      if (useGemini) {
-        // Use Gemini for image generation
-        imageBuffer = await ctx.runAction(
-          api.generateImageWithGemini.generateImageWithGemini,
-          {
-            prompt: enhancedPrompt,
-            useGemini: true,
-          }
-        );
-      } else {
-        // Use FAL for image generation
-        imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
-          prompt: enhancedPrompt,
-          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
-        });
-      }
+      // Step 1: the character on a plain background. This image is the
+      // canonical look of the wizard and is handed to every later scene.
+      const plainPromptRequest = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" that would fit this type of wizard. The wizard has this description: ${description}. Show the full body, centered, in a neutral standing pose facing the viewer, with all clothing, face, hair, colors, and any magical implement or familiar clearly visible. The background must be a completely plain solid white background with no scenery, no ground, no shadows cast on the background, and no spell effects or particles that extend into the background. Only give me the image prompt, no other text.`;
+      const plainPrompt =
+        (await generateText(plainPromptRequest)) +
+        " Plain solid white background, isolated character, full body, centered, no environment.";
+      console.log("Generated plain illustration prompt:", plainPrompt);
 
-      // Apply additional resizing specifically for wizard illustrations (skip during tests)
-      let finalImageBuffer = imageBuffer;
-
-      if (process.env.NODE_ENV !== "test") {
-        try {
-          finalImageBuffer = await ctx.runAction(
-            api.imageCompressionService.compressImage,
-            {
-              imageBuffer,
-            }
-          );
-        } catch (resizeError) {
-          console.warn(
-            "Wizard illustration compression failed, using original:",
-            resizeError
-          );
-          // Use original image if resize fails
-        }
-      }
-
-      // Store the resized image in Convex File Storage
-      const storageId = await ctx.storage.store(
-        new Blob([finalImageBuffer], { type: "image/webp" })
+      const plainBuffer = await generateAndCompress(ctx, plainPrompt, {
+        useGemini,
+      });
+      const plainStorageId = await ctx.storage.store(
+        new Blob([plainBuffer], { type: "image/webp" }),
       );
 
-      // Update the wizard with the new illustration using internal mutation
+      // Step 2: the same wizard placed into a themed scene for display.
+      let illustrationStorageId: string = plainStorageId;
+      try {
+        const themedPromptRequest = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" in an action pose that would fit this type of wizard. The wizard has this description: ${description}. Use dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them. Set the wizard in a dramatic background that matches the wizard's theme. Only give me the image prompt, no other text.`;
+        const themedPrompt = await generateText(themedPromptRequest);
+        console.log("Generated themed illustration prompt:", themedPrompt);
+
+        const themedBuffer = await generateAndCompress(ctx, themedPrompt, {
+          useGemini,
+          referenceStorageId: plainStorageId,
+          referenceLabel: name,
+        });
+        illustrationStorageId = await ctx.storage.store(
+          new Blob([themedBuffer], { type: "image/webp" }),
+        );
+      } catch (themedError) {
+        // The plain image is still a valid illustration, so don't fail the wizard.
+        console.warn(
+          "Themed wizard illustration failed, using plain image:",
+          themedError,
+        );
+      }
+
+      // Update the wizard with both images using internal mutation
       await ctx.runMutation(internal.wizards.updateWizardInternal, {
         wizardId,
-        illustration: storageId,
+        illustration: illustrationStorageId,
+        plainIllustration: plainStorageId,
       });
+      const storageId = illustrationStorageId;
 
       console.log(`Successfully generated illustration for wizard ${wizardId}`);
       return { success: true, storageId };
     } catch (error) {
       console.error(
         `Error generating illustration for wizard ${wizardId}:`,
-        error
+        error,
       );
 
       // If it's an environment variable issue, provide helpful guidance
       if (error instanceof Error && error.message.includes("FAL_KEY")) {
         throw new Error(
-          "Image generation is not configured. Please add your FAL_KEY to the environment variables."
+          "Image generation is not configured. Please add your FAL_KEY to the environment variables.",
         );
       }
 
       throw new Error(
-        `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   },
 });
+
+// Generate one image (Gemini with an optional reference, otherwise FAL) and compress it.
+async function generateAndCompress(
+  ctx: ActionCtx,
+  prompt: string,
+  options: {
+    useGemini: boolean;
+    referenceStorageId?: string;
+    referenceLabel?: string;
+  },
+): Promise<ArrayBuffer> {
+  const { useGemini, referenceStorageId, referenceLabel } = options;
+
+  let imageBuffer: ArrayBuffer;
+  if (useGemini) {
+    imageBuffer = await ctx.runAction(
+      api.generateImageWithGemini.generateImageWithGemini,
+      {
+        prompt,
+        useGemini: true,
+        ...(referenceStorageId
+          ? {
+              wizardImages: [referenceStorageId],
+              wizardImageLabels: referenceLabel ? [referenceLabel] : undefined,
+            }
+          : {}),
+      },
+    );
+  } else {
+    // FAL (flux schnell) has no reference-image input, so the themed image is
+    // text-only on this path.
+    imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
+      prompt,
+      skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+    });
+  }
+
+  if (process.env.NODE_ENV === "test") return imageBuffer;
+
+  try {
+    return await ctx.runAction(api.imageCompressionService.compressImage, {
+      imageBuffer,
+    });
+  } catch (resizeError) {
+    console.warn(
+      "Wizard illustration compression failed, using original:",
+      resizeError,
+    );
+    return imageBuffer;
+  }
+}

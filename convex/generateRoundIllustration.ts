@@ -23,10 +23,10 @@ export const generateRoundIllustration = action({
       useGemini = false,
       userId,
       skipImageGeneration = false,
-    }
+    },
   ) => {
     console.log(
-      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"} ${skipImageGeneration ? "(text-only mode)" : ""}`
+      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"} ${skipImageGeneration ? "(text-only mode)" : ""}`,
     );
 
     try {
@@ -39,7 +39,7 @@ export const generateRoundIllustration = action({
       // If skipImageGeneration is true, just return success without generating image
       if (skipImageGeneration) {
         console.log(
-          `Skipping image generation for duel ${duelId}, round ${roundNumber} (text-only mode)`
+          `Skipping image generation for duel ${duelId}, round ${roundNumber} (text-only mode)`,
         );
         return { success: true, textOnlyMode: true };
       }
@@ -55,12 +55,12 @@ export const generateRoundIllustration = action({
               roundNumber,
               purpose: "duel_illustration",
             },
-          }
+          },
         );
 
         if (!creditResult.success) {
           console.log(
-            `User ${userId} has insufficient image credits for duel ${duelId} round ${roundNumber}, falling back to text-only mode. Reason: ${creditResult.reason}`
+            `User ${userId} has insufficient image credits for duel ${duelId} round ${roundNumber}, falling back to text-only mode. Reason: ${creditResult.reason}`,
           );
           return {
             success: true,
@@ -71,11 +71,11 @@ export const generateRoundIllustration = action({
 
         if (creditResult.alreadyConsumed) {
           console.log(
-            `Image credit already consumed for duel ${duelId} (${creditResult.reason}), proceeding with image generation`
+            `Image credit already consumed for duel ${duelId} (${creditResult.reason}), proceeding with image generation`,
           );
         } else {
           console.log(
-            `Consumed 1 image credit for user ${userId} for duel ${duelId} (covers all images in this duel)`
+            `Consumed 1 image credit for user ${userId} for duel ${duelId} (covers all images in this duel)`,
           );
         }
       }
@@ -84,46 +84,42 @@ export const generateRoundIllustration = action({
       let previousImage: string | undefined;
 
       if (useGemini) {
-        // For Gemini Nano Banana, we need to handle different scenarios
-        if (roundNumber === "0") {
-          // Introduction round only: get both wizard illustrations
-          const wizardImages = await getAllWizardIllustrations(
-            ctx,
-            duel.wizards
-          );
+        // Every round gets the plain-background wizard images as character
+        // references. Later rounds also get the previous scene for continuity.
+        const wizardRefs = await getWizardReferences(ctx, duel.wizards);
 
-          // Generate with Gemini Nano Banana using wizard images
+        if (roundNumber === "0") {
           imageBuffer = await ctx.runAction(
             api.generateImageWithGemini.generateImageWithGemini,
             {
               prompt: illustrationPrompt,
-              wizardImages,
+              wizardImages: wizardRefs.storageIds,
+              wizardImageLabels: wizardRefs.labels,
               useGemini: true,
-            }
+            },
           );
         } else {
-          // All subsequent rounds: use previous round's illustration + wizard context
           previousImage = await getPreviousRoundIllustration(
             ctx,
             duelId,
-            parseInt(roundNumber)
+            parseInt(roundNumber),
           );
 
-          // Get wizard descriptions for context
           const wizardDescriptions = await getWizardDescriptions(
             ctx,
-            duel.wizards
+            duel.wizards,
           );
 
-          // Generate with Gemini Nano Banana using previous image and wizard context
           imageBuffer = await ctx.runAction(
             api.generateImageWithGemini.generateImageWithGemini,
             {
               prompt: illustrationPrompt,
               previousImage,
+              wizardImages: wizardRefs.storageIds,
+              wizardImageLabels: wizardRefs.labels,
               wizardDescriptions,
               useGemini: true,
-            }
+            },
           );
         }
       } else {
@@ -143,12 +139,12 @@ export const generateRoundIllustration = action({
             api.imageCompressionService.compressImage,
             {
               imageBuffer,
-            }
+            },
           );
         } catch (resizeError) {
           console.warn(
             "Duel round illustration resize failed, using original:",
-            resizeError
+            resizeError,
           );
           // Use original image if resize fails
         }
@@ -156,14 +152,14 @@ export const generateRoundIllustration = action({
 
       // Store the image in Convex File Storage
       const storageId = await ctx.storage.store(
-        new Blob([finalImageBuffer], { type: "image/webp" })
+        new Blob([finalImageBuffer], { type: "image/webp" }),
       );
 
       // Find the round to update
       const rounds = await ctx.runQuery(api.duels.getDuelRounds, { duelId });
       const targetRound = rounds.find(
         (round: { roundNumber: number }) =>
-          round.roundNumber.toString() === roundNumber
+          round.roundNumber.toString() === roundNumber,
       );
 
       if (targetRound) {
@@ -183,18 +179,18 @@ export const generateRoundIllustration = action({
       }
 
       console.log(
-        `Successfully generated illustration for duel ${duelId}, round ${roundNumber}`
+        `Successfully generated illustration for duel ${duelId}, round ${roundNumber}`,
       );
       return { success: true, storageId, textOnlyMode: false };
     } catch (error) {
       console.error(
         `Error generating illustration for duel ${duelId}, round ${roundNumber}:`,
-        error
+        error,
       );
 
       // If image generation fails, fall back to text-only mode instead of throwing error
       console.log(
-        `Falling back to text-only mode for duel ${duelId}, round ${roundNumber} due to image generation error`
+        `Falling back to text-only mode for duel ${duelId}, round ${roundNumber} due to image generation error`,
       );
       return {
         success: true,
@@ -205,52 +201,44 @@ export const generateRoundIllustration = action({
   },
 });
 
-// Helper function to get all wizard illustrations for the first round
-async function getAllWizardIllustrations(
+// Get the character reference image for each wizard. Prefers the plain-background
+// image; falls back to the display illustration for wizards created before it existed.
+async function getWizardReferences(
   ctx: ActionCtx,
-  wizardIds: Id<"wizards">[]
-): Promise<string[]> {
+  wizardIds: Id<"wizards">[],
+): Promise<{ storageIds: string[]; labels: string[] }> {
+  const storageIds: string[] = [];
+  const labels: string[] = [];
   try {
-    // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
     const wizards = await Promise.all(
       wizardIds.map((wizardId) =>
-        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId })
-      )
+        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+      ),
     );
-
-    // Extract all available wizard illustrations
-    const illustrations: string[] = [];
-
     for (const wizard of wizards) {
-      if (
-        wizard &&
-        typeof wizard === "object" &&
-        "illustration" in wizard &&
-        wizard.illustration
-      ) {
-        const w = wizard as { illustration: string };
-        illustrations.push(w.illustration);
+      const storageId = wizard?.plainIllustration ?? wizard?.illustration;
+      if (wizard && storageId) {
+        storageIds.push(storageId);
+        labels.push(wizard.name);
       }
     }
-
-    return illustrations;
   } catch (error) {
-    console.warn("Could not get wizard illustrations:", error);
-    return [];
+    console.warn("Could not get wizard reference images:", error);
   }
+  return { storageIds, labels };
 }
 
 // Helper function to get wizard descriptions for context in subsequent rounds
 async function getWizardDescriptions(
   ctx: ActionCtx,
-  wizardIds: Id<"wizards">[]
+  wizardIds: Id<"wizards">[],
 ): Promise<Array<{ name: string; description: string }>> {
   try {
     // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
     const wizards = await Promise.all(
       wizardIds.map((wizardId) =>
-        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId })
-      )
+        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+      ),
     );
 
     // Extract wizard names and descriptions
@@ -282,7 +270,7 @@ async function getWizardDescriptions(
 async function getPreviousRoundIllustration(
   ctx: ActionCtx,
   duelId: Id<"duels">,
-  currentRoundNumber: number
+  currentRoundNumber: number,
 ): Promise<string | undefined> {
   try {
     const rounds = (await ctx.runQuery(api.duels.getDuelRounds, {
