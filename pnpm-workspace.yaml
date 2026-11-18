@@ -10,3 +10,7 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@posthog/core@1.69.0'
   - posthog-node@6.0.0
+packageExtensions:
+  jsdom:
+    peerDependencies:
+      parse5: '*'
