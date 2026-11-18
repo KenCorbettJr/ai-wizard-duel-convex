@@ -3,7 +3,10 @@
 import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
-import { generateText } from "./aiTextGeneration";
+import {
+  generateText,
+  type AIObservabilityContext,
+} from "./aiTextGeneration";
 
 export const generateWizardIllustration = action({
   args: {
@@ -60,12 +63,22 @@ export const generateWizardIllustration = action({
         );
       }
       const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+      const observabilityContext: AIObservabilityContext = {
+        sessionId: `wizard-${wizardId}`,
+        traceId: crypto.randomUUID(),
+        distinctId: userId,
+      };
 
       // Step 1: the character on a plain background. This image is the
       // canonical look of the wizard and is handed to every later scene.
       const plainPromptRequest = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" that would fit this type of wizard. The wizard has this description: ${description}. Show the full body, centered, in a neutral standing pose facing the viewer, with all clothing, face, hair, colors, and any magical implement or familiar clearly visible. The background must be a completely plain solid white background with no scenery, no ground, no shadows cast on the background, and no spell effects or particles that extend into the background. Only give me the image prompt, no other text.`;
       const plainPrompt =
-        (await generateText(plainPromptRequest)) +
+        (await generateText(
+          plainPromptRequest,
+          undefined,
+          {},
+          { ...observabilityContext, spanName: "generate_wizard_plain_prompt" },
+        )) +
         " Plain solid white background, isolated character, full body, centered, no environment.";
       console.log("Generated plain illustration prompt:", plainPrompt);
 
@@ -80,7 +93,12 @@ export const generateWizardIllustration = action({
       let illustrationStorageId: string = plainStorageId;
       try {
         const themedPromptRequest = `Create a very detailed image prompt for a low poly illustration of a wizard named "${name}" in an action pose that would fit this type of wizard. The wizard has this description: ${description}. Use dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them. Set the wizard in a dramatic background that matches the wizard's theme. Only give me the image prompt, no other text.`;
-        const themedPrompt = await generateText(themedPromptRequest);
+        const themedPrompt = await generateText(
+          themedPromptRequest,
+          undefined,
+          {},
+          { ...observabilityContext, spanName: "generate_wizard_themed_prompt" },
+        );
         console.log("Generated themed illustration prompt:", themedPrompt);
 
         const themedBuffer = await generateAndCompress(ctx, themedPrompt, {

@@ -4,7 +4,10 @@ import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 import { api, internal } from "./_generated/api";
-import { generateObject } from "./aiTextGeneration";
+import {
+  generateObject,
+  type AIObservabilityContext,
+} from "./aiTextGeneration";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
 
@@ -63,7 +66,13 @@ export const generateCampaignOpponentAction = internalAction({
         opponentWizard,
         duel,
         currentRound,
-        previousRounds
+        previousRounds,
+        {
+          sessionId: `duel-${duel._id}`,
+          traceId: crypto.randomUUID(),
+          distinctId: duel.players.find((player) => player !== "campaign"),
+          spanName: "generate_campaign_opponent_spell",
+        },
       );
 
       // Cast the spell
@@ -138,7 +147,8 @@ async function generateCampaignOpponentSpell(
   opponentWizard: Doc<"wizards"> | null,
   duel: Doc<"duels">,
   currentRound: Doc<"duelRounds">,
-  previousRounds: Doc<"duelRounds">[]
+  previousRounds: Doc<"duelRounds">[],
+  observabilityContext: AIObservabilityContext,
 ): Promise<string> {
   // Schema for AI response
   const SpellSchema = z.object({
@@ -204,9 +214,13 @@ Consider the wizard's difficulty level: ${wizard.difficulty} wizards should use 
 - Creative and engaging for players
 - Balanced for the wizard's difficulty level`;
 
-    const result = await generateObject(prompt, SpellSchema, systemPrompt, {
-      temperature: 1.2,
-    });
+    const result = await generateObject(
+      prompt,
+      SpellSchema,
+      systemPrompt,
+      { temperature: 1.2 },
+      observabilityContext,
+    );
     return result.spellDescription;
   } catch (error) {
     console.error("AI spell generation failed, using fallback:", error);

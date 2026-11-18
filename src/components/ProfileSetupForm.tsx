@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import posthog from "posthog-js";
 
 interface ProfileSetupFormProps {
   onComplete: (userId: string) => void;
@@ -102,6 +103,7 @@ export function ProfileSetupForm({
         userId,
         displayName: displayName.trim() || undefined,
       });
+      posthog.capture("profile_completed");
       onComplete(userId);
     } catch (error) {
       console.error("Failed to set user ID:", error);

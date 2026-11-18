@@ -1,8 +1,40 @@
 "use client";
 
-import { ClerkProvider as ClerkProviderBase } from "@clerk/nextjs";
-import { ReactNode, Suspense } from "react";
+import { ClerkProvider as ClerkProviderBase, useUser } from "@clerk/nextjs";
+import posthog from "posthog-js";
+import { ReactNode, Suspense, useEffect, useRef } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+
+function PostHogUserIdentifier() {
+  const { isLoaded, user } = useUser();
+  const identifiedUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!user) {
+      if (identifiedUserId.current) {
+        posthog.reset();
+        identifiedUserId.current = null;
+      }
+      return;
+    }
+
+    if (identifiedUserId.current === user.id) return;
+
+    if (identifiedUserId.current) {
+      posthog.reset();
+    }
+
+    posthog.identify(user.id, {
+      email: user.primaryEmailAddress?.emailAddress,
+      name: user.fullName || user.firstName || undefined,
+    });
+    identifiedUserId.current = user.id;
+  }, [isLoaded, user]);
+
+  return null;
+}
 
 function ClerkProviderContent({ children }: { children: ReactNode }) {
   return (
@@ -47,6 +79,7 @@ function ClerkProviderContent({ children }: { children: ReactNode }) {
         },
       }}
     >
+      <PostHogUserIdentifier />
       {children}
     </ClerkProviderBase>
   );

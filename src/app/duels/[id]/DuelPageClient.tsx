@@ -33,6 +33,7 @@ import { CastSpellModal } from "@/components/CastSpellModal";
 import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { safeConvexId } from "../../../lib/utils";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import posthog from "posthog-js";
 
 interface DuelPageClientProps {
   params: Promise<{
@@ -120,6 +121,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         wizardId: userWizardId,
         spellDescription: spellDescription.trim(),
       });
+      posthog.capture("spell_submitted", {
+        round_number: duel.currentRound,
+        is_campaign_battle: duel.isCampaignBattle,
+        text_only_mode: duel.textOnlyMode,
+      });
       setSpellDescription("");
     } catch (error) {
       console.error("Failed to cast spell:", error);
@@ -137,6 +143,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         duelId: duel._id,
         wizards: [selectedWizard],
       });
+      posthog.capture("duel_joined", { entry_point: "duel_page" });
       // No need to redirect, the page will update automatically
     } catch (error) {
       console.error("Failed to join duel:", error);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import posthog from "posthog-js";
 import { WandSparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
@@ -13,6 +14,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    posthog.captureException(error);
     console.error(error);
   }, [error]);
 

@@ -6,6 +6,18 @@ import { api } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { getGeminiImageAI } from "./ai/getAI";
 import { isEmulatorMode } from "./mocks/mockServices";
+import { captureAIGeneration, captureServerEvent } from "./lib/posthog";
+
+const GEMINI_MAX_ATTEMPTS = 2;
+
+class GeminiNoImageError extends Error {
+  constructor(
+    message: string,
+    public details: Record<string, unknown>,
+  ) {
+    super(message);
+  }
+}
 
 export const generateImageWithGemini = action({
   args: {
@@ -35,9 +47,29 @@ export const generateImageWithGemini = action({
       useGemini = false,
     },
   ): Promise<ArrayBuffer> => {
-    try {
-      if (useGemini && process.env.GOOGLE_API_KEY) {
-        return await generateWithGeminiFlash(
+    const started = Date.now();
+    const baseProps = {
+      hasWizardRefs: (wizardImages?.length ?? 0) > 0,
+      hasPreviousImage: !!previousImage,
+      wizardCount: wizardImages?.length ?? 0,
+      promptLength: prompt.length,
+    };
+
+    const runFal = async (): Promise<ArrayBuffer> =>
+      await ctx.runAction(api.generateImage.generateImage, {
+        prompt,
+        skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+      });
+
+    if (!(useGemini && process.env.GOOGLE_API_KEY)) {
+      return await runFal();
+    }
+
+    // Try Gemini, retrying once on failure
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= GEMINI_MAX_ATTEMPTS; attempt++) {
+      try {
+        const result = await generateWithGeminiFlash(
           ctx,
           prompt,
           previousImage,
@@ -45,24 +77,54 @@ export const generateImageWithGemini = action({
           wizardDescriptions,
           wizardImageLabels,
         );
-      } else {
-        // Fallback to FAL
-        return await ctx.runAction(api.generateImage.generateImage, {
-          prompt,
-          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+        await captureServerEvent("image_generation_succeeded", {
+          ...baseProps,
+          provider: "gemini",
+          attempt,
+          durationMs: Date.now() - started,
+        });
+        return result;
+      } catch (error) {
+        lastError = error;
+        const details =
+          error instanceof GeminiNoImageError ? error.details : {};
+        console.error(
+          `Gemini attempt ${attempt}/${GEMINI_MAX_ATTEMPTS} failed:`,
+          error,
+        );
+        await captureServerEvent("image_generation_failed", {
+          ...baseProps,
+          provider: "gemini",
+          attempt,
+          willRetry: attempt < GEMINI_MAX_ATTEMPTS,
+          error: error instanceof Error ? error.message : String(error),
+          ...details,
         });
       }
-    } catch (error) {
-      console.error("Image generation failed:", error);
-      // Fallback to FAL if Gemini fails
-      if (useGemini) {
-        console.log("Falling back to FAL after Gemini failure");
-        return await ctx.runAction(api.generateImage.generateImage, {
-          prompt,
-          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
-        });
-      }
-      throw error;
+    }
+
+    // Gemini exhausted: fall back to FAL
+    console.log("Falling back to FAL after Gemini failure");
+    await captureServerEvent("image_generation_fallback_to_fal", {
+      ...baseProps,
+      geminiError:
+        lastError instanceof Error ? lastError.message : String(lastError),
+    });
+    try {
+      const result = await runFal();
+      await captureServerEvent("image_generation_succeeded", {
+        ...baseProps,
+        provider: "fal",
+        durationMs: Date.now() - started,
+      });
+      return result;
+    } catch (falError) {
+      await captureServerEvent("image_generation_all_providers_failed", {
+        ...baseProps,
+        error: falError instanceof Error ? falError.message : String(falError),
+        durationMs: Date.now() - started,
+      });
+      throw falError;
     }
   },
 });
@@ -138,16 +200,50 @@ async function generateWithGeminiFlash(
       enhancedPrompt = instructions.join(" ");
     }
 
-    const response = await ai.generate({
-      prompt:
-        parts.length > 0
-          ? [...parts, { text: enhancedPrompt }]
-          : enhancedPrompt,
-      config: {
+    const startedAt = Date.now();
+    const traceId = crypto.randomUUID();
+    let response: Awaited<ReturnType<typeof ai.generate>>;
+    try {
+      response = await ai.generate({
+        prompt:
+          parts.length > 0
+            ? [...parts, { text: enhancedPrompt }]
+            : enhancedPrompt,
+        config: {
+          temperature: 0.8,
+          maxOutputTokens: 4096,
+          responseModalities: ["IMAGE"],
+        },
+      });
+    } catch (error) {
+      await captureAIGeneration({
+        traceId,
+        sessionId: null,
+        spanName: "generate_wizard_image",
+        model: "gemini-nano-banana-2.1",
+        provider: "gemini",
+        input: [{ role: "user", content: enhancedPrompt }],
+        latencySeconds: (Date.now() - startedAt) / 1000,
         temperature: 0.8,
-        maxOutputTokens: 4096,
-        responseModalities: ["IMAGE"],
-      },
+        maxTokens: 4096,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw error;
+    }
+
+    // Do not include image bytes or inline reference images in analytics.
+    await captureAIGeneration({
+      traceId,
+      sessionId: null,
+      spanName: "generate_wizard_image",
+      model: "gemini-nano-banana-2.1",
+      provider: "gemini",
+      input: [{ role: "user", content: enhancedPrompt }],
+      inputTokens: response.usage?.inputTokens,
+      outputTokens: response.usage?.outputTokens,
+      latencySeconds: (Date.now() - startedAt) / 1000,
+      temperature: 0.8,
+      maxTokens: 4096,
     });
 
     // Extract image data from response
@@ -244,8 +340,31 @@ async function generateWithGeminiFlash(
       },
     );
 
-    throw new Error("No image found in Gemini response");
+    const raw = response as unknown as {
+      finishReason?: string;
+      finishMessage?: string;
+      custom?: {
+        promptFeedback?: unknown;
+        candidates?: Array<{ safetyRatings?: unknown }>;
+      };
+    };
+    const details = {
+      finishReason: raw.finishReason,
+      finishMessage: raw.finishMessage,
+      promptFeedback: raw.custom?.promptFeedback,
+      safetyRatings: raw.custom?.candidates?.[0]?.safetyRatings,
+      thoughtsTokens: response.usage?.thoughtsTokens,
+      outputTokens: response.usage?.outputTokens,
+    };
+    console.error("Gemini returned no image. Diagnostics:", details);
+    throw new GeminiNoImageError("No image found in Gemini response", details);
   } catch (error) {
+    if (error instanceof GeminiNoImageError) {
+      throw new GeminiNoImageError(
+        `Gemini image generation failed: ${error.message} (finishReason=${String(error.details.finishReason)})`,
+        error.details,
+      );
+    }
     console.error("Gemini image generation failed:", error);
     throw new Error(
       `Gemini image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,

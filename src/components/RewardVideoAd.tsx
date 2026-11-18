@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Play, Gift, X, Coins } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import posthog from "posthog-js";
 
 interface RewardVideoAdProps {
   onAdCompleted: () => void;
@@ -78,6 +79,9 @@ export function RewardVideoAd({
       setHasWatched(true);
 
       if (result.success) {
+        posthog.capture("ad_reward_earned", {
+          credits_awarded: result.creditsAwarded,
+        });
         onAdCompleted();
       } else {
         onAdFailed();

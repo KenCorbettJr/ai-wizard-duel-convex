@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
+import { WizardConjuringAnimation } from "@/components/WizardConjuringAnimation";
 import { WizardStatistics } from "@/components/WizardStatistics";
 import { TrophyHall } from "@/components/TrophyHall";
 import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
@@ -43,6 +44,8 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
   const { id } = use(params);
 
   const [isEditing, setIsEditing] = useState(false);
+  // Wall-clock "now" captured on mount; used to decide if illustration is still generating
+  const [mountedAt] = useState(() => Date.now());
 
   // Validate the ID format first
   const wizardId = safeConvexId<"wizards">(id);
@@ -204,6 +207,8 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
             {/* Subtle gradient overlay for better text readability */}
             <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-20" />
           </div>
+        ) : mountedAt - wizard._creationTime < 5 * 60 * 1000 ? (
+          <WizardConjuringAnimation />
         ) : (
           <div className="w-full h-full bg-arcane flex items-center justify-center">
             <Zap className="w-24 h-24 text-white" />

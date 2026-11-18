@@ -8,7 +8,10 @@ import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
-import { generateObject } from "./aiTextGeneration";
+import {
+  generateObject,
+  type AIObservabilityContext,
+} from "./aiTextGeneration";
 
 // Zod schema for structured AI output
 const IntroductionResponseSchema = z.object({
@@ -81,7 +84,13 @@ export const generateDuelIntroduction = action({
       const introduction = await generateIntroductionText(
         duel,
         wizard1,
-        wizard2
+        wizard2,
+        {
+          sessionId: `duel-${duel._id}`,
+          traceId: crypto.randomUUID(),
+          distinctId: userId ?? duel.players.find((player) => player !== "campaign"),
+          spanName: "generate_duel_introduction",
+        },
       );
 
       // Create the introduction round (round 0)
@@ -161,7 +170,8 @@ export const generateDuelIntroduction = action({
 async function generateIntroductionText(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">
+  wizard2: Doc<"wizards">,
+  observabilityContext: AIObservabilityContext,
 ): Promise<IntroductionResponse> {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
@@ -197,7 +207,8 @@ The two wizards for this duel are:
       prompt,
       IntroductionResponseSchema,
       systemPrompt,
-      { temperature: 1.5 }
+      { temperature: 1.5 },
+      observabilityContext,
     );
   } catch (error) {
     console.error("AI text generation failed, using fallback:", error);

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Save, X, Plus } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import posthog from "posthog-js";
 
 interface WizardFormData {
   name: string;
@@ -81,6 +82,7 @@ export function WizardForm({
         });
       }
 
+      posthog.capture(mode === "create" ? "wizard_created" : "wizard_updated");
       onSuccess();
       if (mode === "create") {
         onClose();
@@ -105,6 +107,7 @@ export function WizardForm({
     setIsRegenerating(true);
     try {
       await regenerateIllustration({ wizardId });
+      posthog.capture("wizard_illustration_regenerated");
     } catch (error) {
       console.error("Error regenerating illustration:", error);
     } finally {

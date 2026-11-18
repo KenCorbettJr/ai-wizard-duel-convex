@@ -3,7 +3,10 @@
 import type { Doc } from "../convex/_generated/dataModel";
 import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { generateObject } from "./aiTextGeneration";
+import {
+  generateObject,
+  type AIObservabilityContext,
+} from "./aiTextGeneration";
 import { Id } from "./_generated/dataModel";
 import { api, internal } from "./_generated/api";
 import { z } from "genkit/beta";
@@ -213,6 +216,11 @@ export const processDuelRound = action({
       const wizard2 = wizards[1];
       const wizard1ID = duel.wizards[0];
       const wizard2ID = duel.wizards[1];
+      const observabilityContext: AIObservabilityContext = {
+        sessionId: `duel-${duel._id}`,
+        traceId: crypto.randomUUID(),
+        distinctId: duel.players.find((player) => player !== "campaign"),
+      };
 
       // Generate the battle round using AI
       const battleResult = await generateBattleRound(
@@ -222,7 +230,8 @@ export const processDuelRound = action({
         wizard1,
         wizard2,
         wizard1ID,
-        wizard2ID
+        wizard2ID,
+        observabilityContext,
       );
 
       // Calculate bounded health changes
@@ -312,7 +321,8 @@ export const processDuelRound = action({
           wizard1,
           wizard2,
           wizard1ID,
-          wizard2ID
+          wizard2ID,
+          observabilityContext,
         );
       }
 
@@ -353,7 +363,8 @@ async function generateBattleRound(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
-  wizard2ID: Id<"wizards">
+  wizard2ID: Id<"wizards">,
+  observabilityContext: AIObservabilityContext,
 ): Promise<BattleRoundResponse> {
   // Get wizard actions
   const wizard1Action = round.spells?.[wizard1ID]?.description || "No action";
@@ -429,7 +440,8 @@ async function generateBattleRound(
       prompt,
       BattleRoundResponseSchema,
       systemPrompt,
-      { temperature: 1.5, maxTokens: 5000 }
+      { temperature: 1.5, maxTokens: 5000 },
+      { ...observabilityContext, spanName: "generate_duel_round" },
     );
 
     // Validate the AI response structure
@@ -932,7 +944,8 @@ async function generateDuelConclusion(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1ID: Id<"wizards">,
-  wizard2ID: Id<"wizards">
+  wizard2ID: Id<"wizards">,
+  observabilityContext: AIObservabilityContext,
 ): Promise<void> {
   try {
     const wizard1FinalPoints = duel.points[wizard1ID] || 0;
@@ -1021,7 +1034,8 @@ Write a final narration that brings together the entire story of this duel, high
           prompt,
           DuelConclusionSchema,
           systemPrompt,
-          { temperature: 1.5, maxTokens: 5000 }
+          { temperature: 1.5, maxTokens: 5000 },
+          { ...observabilityContext, spanName: "generate_duel_conclusion" },
         );
       }
     } catch (error) {

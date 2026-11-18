@@ -4,6 +4,7 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import * as fal from "@fal-ai/serverless-client";
 import { api } from "./_generated/api";
+import { captureServerEvent } from "./lib/posthog";
 
 export const generateImage = action({
   args: {
@@ -88,6 +89,21 @@ export const generateImage = action({
       return imageBuffer;
     } catch (error) {
       console.error(error);
+      const apiError = error as { status?: number; body?: { detail?: string } };
+      const status = apiError?.status;
+      const isBilling =
+        status === 402 ||
+        status === 403 ||
+        /balance|locked|billing/i.test(apiError?.body?.detail ?? "");
+      await captureServerEvent(
+        isBilling ? "fal_billing_error" : "image_generation_failed",
+        {
+          provider: "fal",
+          status,
+          detail: apiError?.body?.detail,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       throw new Error(
         `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );

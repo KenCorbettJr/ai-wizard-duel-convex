@@ -21,6 +21,7 @@ import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { Image as ImageIcon, Type, AlertTriangle, Info } from "lucide-react";
+import posthog from "posthog-js";
 
 interface CreateDuelFormProps {
   onClose: () => void;
@@ -98,6 +99,10 @@ export function CreateDuelForm({
         numberOfRounds,
         wizards: [selectedWizard],
         enableImageGeneration,
+      });
+      posthog.capture("duel_created", {
+        round_count: numberOfRounds,
+        image_generation_enabled: enableImageGeneration,
       });
       onSuccess(duelId);
     } catch (error) {

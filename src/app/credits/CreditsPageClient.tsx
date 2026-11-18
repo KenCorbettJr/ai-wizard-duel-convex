@@ -7,11 +7,13 @@ import { ImageCreditDisplay } from "@/components/ImageCreditDisplay";
 import { CreditUsageHistory } from "@/components/CreditUsageHistory";
 import { Coins, Crown } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import posthog from "posthog-js";
 
 export function CreditsPageClient() {
   const { user } = useUser();
 
   const handleUpgrade = () => {
+    posthog.capture("premium_upgrade_started");
     // Navigate to Clerk checkout for the specific plan
     const checkoutUrl = `https://checkout.clerk.com/plan/cplan_30kNnUiaUJomHTdauIDaRMldR5F`;
     window.open(checkoutUrl, "_blank");

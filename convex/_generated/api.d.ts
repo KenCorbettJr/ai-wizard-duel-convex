@@ -29,6 +29,7 @@ import type * as generateWizardIllustration from "../generateWizardIllustration.
 import type * as imageCompressionService from "../imageCompressionService.js";
 import type * as imageCreditService from "../imageCreditService.js";
 import type * as imageGenerationConfig from "../imageGenerationConfig.js";
+import type * as lib_posthog from "../lib/posthog.js";
 import type * as metadata from "../metadata.js";
 import type * as mocks_mockServices from "../mocks/mockServices.js";
 import type * as processDuelRound from "../processDuelRound.js";
@@ -74,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   imageCompressionService: typeof imageCompressionService;
   imageCreditService: typeof imageCreditService;
   imageGenerationConfig: typeof imageGenerationConfig;
+  "lib/posthog": typeof lib_posthog;
   metadata: typeof metadata;
   "mocks/mockServices": typeof mocks_mockServices;
   processDuelRound: typeof processDuelRound;

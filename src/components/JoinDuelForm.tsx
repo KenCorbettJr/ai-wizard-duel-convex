@@ -26,6 +26,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import posthog from "posthog-js";
 
 interface JoinDuelFormProps {
   onClose: () => void;
@@ -66,6 +67,7 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
         duelId: selectedDuel,
         wizards: [selectedWizard],
       });
+      posthog.capture("duel_joined", { entry_point: "duel_browser" });
       onSuccess(selectedDuel);
     } catch (error) {
       console.error("Failed to join duel:", error);

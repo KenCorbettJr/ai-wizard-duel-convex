@@ -639,3 +639,14 @@
     grid-template-columns: repeat(5, 1fr);
   }
 }
+
+@keyframes conjure-msg {
+  0%,
+  33% {
+    opacity: 0;
+  }
+  5%,
+  28% {
+    opacity: 1;
+  }
+}

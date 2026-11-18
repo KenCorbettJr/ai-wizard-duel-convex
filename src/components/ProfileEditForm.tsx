@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import posthog from "posthog-js";
 
 interface ProfileEditFormProps {
   onSuccess?: () => void;
@@ -41,6 +42,7 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
       });
 
       if (result.success) {
+        posthog.capture("profile_updated");
         setSuccess(true);
         setTimeout(() => {
           setSuccess(false);
