@@ -67,6 +67,7 @@ export const generateWizardIllustration = action({
         sessionId: `wizard-${wizardId}`,
         traceId: crypto.randomUUID(),
         distinctId: userId,
+        usageCtx: ctx,
       };
 
       // Step 1: the character on a plain background. This image is the
@@ -84,6 +85,7 @@ export const generateWizardIllustration = action({
 
       const plainBuffer = await generateAndCompress(ctx, plainPrompt, {
         useGemini,
+        usage: { userId, sessionId: `wizard-${wizardId}` },
       });
       const plainStorageId = await ctx.storage.store(
         new Blob([plainBuffer], { type: "image/webp" }),
@@ -105,6 +107,7 @@ export const generateWizardIllustration = action({
           useGemini,
           referenceStorageId: plainStorageId,
           referenceLabel: name,
+          usage: { userId, sessionId: `wizard-${wizardId}` },
         });
         illustrationStorageId = await ctx.storage.store(
           new Blob([themedBuffer], { type: "image/webp" }),
@@ -155,9 +158,10 @@ async function generateAndCompress(
     useGemini: boolean;
     referenceStorageId?: string;
     referenceLabel?: string;
+    usage: { userId?: string; sessionId?: string };
   },
 ): Promise<ArrayBuffer> {
-  const { useGemini, referenceStorageId, referenceLabel } = options;
+  const { useGemini, referenceStorageId, referenceLabel, usage } = options;
 
   let imageBuffer: ArrayBuffer;
   if (useGemini) {
@@ -166,6 +170,7 @@ async function generateAndCompress(
       {
         prompt,
         useGemini: true,
+        ...usage,
         ...(referenceStorageId
           ? {
               wizardImages: [referenceStorageId],
@@ -180,6 +185,7 @@ async function generateAndCompress(
     imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
       prompt,
       skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+      ...usage,
     });
   }
 

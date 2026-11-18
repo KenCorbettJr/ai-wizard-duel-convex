@@ -18,7 +18,7 @@ const BattleRoundResponseSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A vivid, detailed description of the magical combat between the wizards, their spells, and how they interact. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time."
+      "A punchy description of the round's magical combat, written in present tense like a live announcer. Keep it SHORT: 2 brief paragraphs, about 70 to 100 words in total. Focus on the one or two decisive moments and how the spells interact. No scene-setting filler.",
     ),
   result: z
     .string()
@@ -28,7 +28,12 @@ const BattleRoundResponseSchema = z.object({
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration capturing the most dramatic moment of the round from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and maintain consistency with previous rounds."
+      "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round. Include wizard appearances, spell effects, action and motion, and keep the arena consistent with previous rounds.",
+    ),
+  damageSummary: z
+    .string()
+    .describe(
+      "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say the wizard took no damage. The health changes below MUST agree with this sentence."
     ),
   wizard1: z.object({
     pointsEarned: z
@@ -65,7 +70,7 @@ const DuelConclusionSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A comprehensive final narration that weaves together the entire duel story, highlighting key moments, character development, and the path to victory. This should feel like the climactic conclusion to an epic tale."
+      "A short sports-announcer style wrap-up of the duel: 3 to 5 sentences, about 60 to 90 words. Name the winner, call out only the one to three biggest moments that decided the match, and end on a memorable line. Do NOT recap every round.",
     ),
   result: z
     .string()
@@ -80,11 +85,60 @@ const DuelConclusionSchema = z.object({
 });
 
 // Types for the battle round response
-export type BattleRoundResponse = z.infer<typeof BattleRoundResponseSchema> & {
+export type BattleRoundResponse = Omit<
+  z.infer<typeof BattleRoundResponseSchema>,
+  "damageSummary"
+> & {
   wizard1Luck?: number;
   wizard2Luck?: number;
 };
 export type DuelConclusionResponse = z.infer<typeof DuelConclusionSchema>;
+
+// Scale of the arena, repeated in every illustration prompt. Without it the
+// image model draws a small platform with the wizards almost touching.
+const ARENA_SCALE =
+  "The Enchanted Arena is a vast, stadium-sized arena with tiered spectator stands all around. The two wizards stand about 50 feet (15 meters) apart, a wide stretch of open arena floor between them, so they can see spells coming and have time to react. Spells visibly travel across that distance.";
+
+// The introduction (round 0) is the wide establishing shot. Every battle round
+// gets a different camera angle. The order is shuffled per
+// duel so every duel feels different, and no angle repeats until all are used.
+const CAMERA_SHOTS = [
+  "Low-angle hero shot looking up at the winning or most dominant wizard, spell energy blazing toward the viewer, the other wizard tiny in the far background across the arena.",
+  "Dramatic close-up on one wizard's face and casting hands, intense expression, magical light on their features, the opponent's distant spell approaching behind.",
+  "Over-the-shoulder shot from behind one wizard, looking across the long arena floor toward the distant opponent as an incoming spell streaks toward the viewer.",
+  "High aerial view looking straight down on the arena floor, the wizards far apart on opposite sides, and the spells colliding in a bright shockwave midway between them.",
+  "Dutch-angle (tilted) action shot at the point of impact, debris and sparks flying, motion lines, a wizard caught mid-movement, the other far in the background.",
+  "Side-on cinematic profile of the whole arena, both wizards facing each other from far apart with the clashing spells meeting in the center.",
+  "Ground-level shot from behind rubble or arena stones, a wizard leaping or diving to dodge in the foreground as a spell streaks past.",
+  "Shot from behind the crowd silhouette in the stands, looking down over spectators gasping or cheering at the duel far below.",
+];
+
+// Small deterministic PRNG so the shuffle is stable for a given duel
+function seededRandom(seed: string): () => number {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  let state = h >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function getCameraShot(duelId: string, roundNumber: number): string {
+  const random = seededRandom(duelId);
+  const order = [...CAMERA_SHOTS];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order[Math.max(0, roundNumber - 1) % order.length];
+}
 
 // Generate a luck number (1-20, like a D20)
 function generateLuck(): number {
@@ -220,6 +274,7 @@ export const processDuelRound = action({
         sessionId: `duel-${duel._id}`,
         traceId: crypto.randomUUID(),
         distinctId: duel.players.find((player) => player !== "campaign"),
+        usageCtx: ctx,
       };
 
       // Generate the battle round using AI
@@ -417,7 +472,7 @@ async function generateBattleRound(
     wizard2
   );
 
-  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}`;
+  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
 
   try {
     // Use structured output with schema for better AI responses
@@ -554,7 +609,7 @@ The two wizards for this duel are:
 - ${wizard1.name}: ${wizard1.description}
 - ${wizard2.name}: ${wizard2.description}
 
-The two wizards face each other on opposite sides of the arena, prepared to continue the duel.
+The two wizards face each other from opposite sides of the arena, about 50 feet apart, prepared to continue the duel. The arena is vast, with open floor between them and spectator stands all around, not a small platform.
 
 ## Duel Structure
 - The duel will be ${duelType}
@@ -610,12 +665,20 @@ When judging each round, consider:
   - Do any sexual or explicit actions
 - If a wizard attempts to violate these guidelines, interpret their action as failing dramatically or backfiring
 
+## Consistency Rules
+- The health changes MUST match what your narration says happened. Decide what hits and what does not first, then set the numbers.
+- If the narration says an attack was destroyed, blocked, dodged, absorbed, reflected or otherwise stopped, the wizard it was aimed at takes NO damage from it (healthChange 0 for that attack).
+- A wizard only loses health if the narration shows them being hit, and the amount should fit how severe the hit was. A glancing blow is small damage, a direct hit is large.
+- Healing only happens if the narration shows healing or restoration.
+- Never describe an attack landing in the narration without also reflecting it in the health change.
+
 ## Response Format
 You must return ONLY a valid JSON object with the following structure:
 {
-  "narration": "A vivid, detailed description of the magical combat between the wizards, their spells, and how they interact. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time. This can be several paragraphs in length if it will help with the story telling.",
+  "narration": "A punchy description of the round's magical combat, written in present tense like a live announcer. Keep it SHORT: 2 brief paragraphs, about 70 to 100 words in total. Focus on the one or two decisive moments and how the spells interact. No scene-setting filler.",
   "result": "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
-  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration capturing the most dramatic moment of the round from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and maintain consistency with previous rounds. Use Dynamic lighting and emphasize the wizard's power with magical particles and spell effects surrounding them.",
+  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Include wizard appearances, spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
+  "damageSummary": "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say that wizard took no damage.",
   "wizard1": {
     "pointsEarned": 0, // 0 to 10
     "healthChange": 0  // -100 to 100, negative means damage taken, positive means healing
@@ -981,18 +1044,18 @@ async function generateDuelConclusion(
       wizard2
     );
 
-    const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel. You have access to the complete history of this epic magical confrontation. Write a final narration that:
+    const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel, speaking like a sports announcer giving the post-game call. You have the complete history of the duel for reference, but the audience just watched it, so do NOT recap it. Write a final narration that:
 
-- References key moments and turning points from throughout the duel
-- Highlights the decisive moments that led to victory
-- Shows how both wizards evolved and adapted during the battle
-- Congratulates the winner on their prowess and strategy
-- Acknowledges the loser's valiant effort and memorable moments
-- Creates a satisfying conclusion that honors the entire journey
+- Is 3 to 5 sentences and about 60 to 90 words in total
+- Names the winner right away
+- Calls out only the one to three moments that decided the match, like a highlight reel
+- Gives the loser a brief, gracious nod
+- Ends on a punchy, memorable closing line
+- Never walks through the rounds in order
 
 You must return ONLY a valid JSON object with these exact keys:
 {
-  "narration": "A comprehensive final narration that weaves together the entire duel story, highlighting key moments, character development, and the path to victory. This should feel like the climactic conclusion to an epic tale.",
+  "narration": "A short sports-announcer wrap-up: 3 to 5 sentences, about 60 to 90 words. Name the winner, highlight only the one to three decisive moments, and end on a memorable line. Do NOT recap every round.",
   "result": "A brief but impactful summary of the duel conclusion that captures the essence of the victory.",
   "illustrationPrompt": "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
 }
@@ -1013,7 +1076,7 @@ The arena is described as: ${arenaDescription}.
 Winning Wizard Description: ${winner.description}
 Losing Wizard Description: ${loser.description}
 
-Write a final narration that brings together the entire story of this duel, highlighting the journey both wizards took and the key moments that determined the outcome.`;
+Write a short announcer-style wrap-up (60 to 90 words) that names the winner and highlights only the one to three moments that decided the duel. Do not recap the whole battle.`;
 
     let parsedResponse: DuelConclusionResponse;
 

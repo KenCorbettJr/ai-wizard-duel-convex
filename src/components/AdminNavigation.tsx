@@ -18,6 +18,7 @@ import {
   X,
   Crown,
   Users,
+  Coins,
 } from "lucide-react";
 
 interface AdminNavItem {
@@ -134,6 +135,11 @@ const adminNavItems: AdminNavItem[] = [
     href: "/admin/platform-stats",
     label: "Platform Stats",
     icon: BarChart3,
+  },
+  {
+    href: "/admin/ai-costs",
+    label: "AI Costs",
+    icon: Coins,
   },
   {
     href: "/admin/users",

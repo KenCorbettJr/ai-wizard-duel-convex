@@ -95,6 +95,7 @@ export default defineSchema({
     imageCreditConsumed: v.optional(v.boolean()), // Whether an image credit has been consumed for this duel
     imageCreditConsumedBy: v.optional(v.string()), // User ID who had the credit consumed for this duel
     isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels
+    rematchDuelId: v.optional(v.id("duels")), // Set when a player requests a rematch of this duel
   })
     .index("by_status", ["status"])
     .index("by_player", ["players"])
@@ -196,6 +197,23 @@ export default defineSchema({
     metadata: v.optional(v.record(v.string(), v.any())),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+  // One row per AI provider call, used to track generation costs
+  aiUsage: defineTable({
+    feature: v.string(), // e.g. generate_duel_round, generate_wizard_image
+    provider: v.string(),
+    model: v.string(),
+    kind: v.union(v.literal("text"), v.literal("image")),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
+    imageCount: v.optional(v.number()),
+    costUsd: v.number(), // Estimated, see lib/aiPricing.ts
+    userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
+    success: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_created_at", ["createdAt"])
+    .index("by_user_id_and_created_at", ["userId", "createdAt"]),
   cosmeticItems: defineTable({
     name: v.string(),
     description: v.string(),

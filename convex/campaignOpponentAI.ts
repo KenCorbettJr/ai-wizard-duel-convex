@@ -72,6 +72,7 @@ export const generateCampaignOpponentAction = internalAction({
           traceId: crypto.randomUUID(),
           distinctId: duel.players.find((player) => player !== "campaign"),
           spanName: "generate_campaign_opponent_spell",
+          usageCtx: ctx,
         },
       );
 

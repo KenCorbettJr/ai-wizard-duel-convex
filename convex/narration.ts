@@ -155,7 +155,7 @@ export const generateRoundNarration = internalAction({
       );
       if (!apiKey || !round) throw new Error("Nothing to narrate");
 
-      const script = buildNarrationScript(round.narrative, round.result);
+      const script = buildNarrationScript(round.narrative);
       if (!script) throw new Error("Empty narration script");
       const voice = await resolveVoice(apiKey);
 

@@ -3,9 +3,10 @@ import {
   mutation,
   internalQuery,
   internalMutation,
+  MutationCtx,
 } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 
 import { api, internal } from "./_generated/api";
 import { narrationValidator } from "./lib/narrationValidator";
@@ -61,6 +62,7 @@ export const getPlayerDuels = query({
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
       isCampaignBattle: v.optional(v.boolean()),
+      rematchDuelId: v.optional(v.id("duels")),
     })
   ),
   handler: async (ctx) => {
@@ -152,6 +154,7 @@ export const getDuelInternal = internalQuery({
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
       isCampaignBattle: v.optional(v.boolean()),
+      rematchDuelId: v.optional(v.id("duels")),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -274,6 +277,59 @@ function generateShortcode(): string {
   return result;
 }
 
+// Insert a new duel that is waiting for an opponent
+async function insertWaitingDuel(
+  ctx: MutationCtx,
+  {
+    userId,
+    numberOfRounds,
+    wizards,
+    enableImageGeneration,
+  }: {
+    userId: string;
+    numberOfRounds: number | "TO_THE_DEATH";
+    wizards: Id<"wizards">[];
+    enableImageGeneration: boolean;
+  }
+): Promise<Id<"duels">> {
+  const players = [userId];
+  // Initialize points and hit points for all wizards
+  const initialPoints: Record<string, number> = {};
+  const initialHitPoints: Record<string, number> = {};
+
+  wizards.forEach((wizardId) => {
+    initialPoints[wizardId] = 0;
+    initialHitPoints[wizardId] = 100; // Starting hit points
+  });
+
+  // Generate a unique shortcode
+  let shortcode: string;
+  let isUnique = false;
+  do {
+    shortcode = generateShortcode();
+    const existing = await ctx.db
+      .query("duels")
+      .withIndex("by_shortcode", (q) => q.eq("shortcode", shortcode))
+      .first();
+    isUnique = !existing;
+  } while (!isUnique);
+
+  return await ctx.db.insert("duels", {
+    numberOfRounds,
+    wizards,
+    players,
+    status: "WAITING_FOR_PLAYERS" as DuelStatus,
+    currentRound: 1,
+    createdAt: Date.now(),
+    points: initialPoints,
+    hitPoints: initialHitPoints,
+    needActionsFrom: wizards, // All wizards need to act initially
+    shortcode,
+    textOnlyMode: !enableImageGeneration,
+    textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
+  });
+}
+
 // Create a new duel
 export const createDuel = mutation({
   args: {
@@ -298,46 +354,65 @@ export const createDuel = mutation({
       }
     }
 
-    const players = [identity.subject];
-    // Initialize points and hit points for all wizards
-    const initialPoints: Record<string, number> = {};
-    const initialHitPoints: Record<string, number> = {};
-
-    wizards.forEach((wizardId) => {
-      initialPoints[wizardId] = 0;
-      initialHitPoints[wizardId] = 100; // Starting hit points
-    });
-
-    // Generate a unique shortcode
-    let shortcode: string;
-    let isUnique = false;
-    do {
-      shortcode = generateShortcode();
-      const existing = await ctx.db
-        .query("duels")
-        .withIndex("by_shortcode", (q) => q.eq("shortcode", shortcode))
-        .first();
-      isUnique = !existing;
-    } while (!isUnique);
-
-    const duelId = await ctx.db.insert("duels", {
+    const duelId = await insertWaitingDuel(ctx, {
+      userId: identity.subject,
       numberOfRounds,
       wizards,
-      players,
-      status: "WAITING_FOR_PLAYERS" as DuelStatus,
-      currentRound: 1,
-      createdAt: Date.now(),
-      points: initialPoints,
-      hitPoints: initialHitPoints,
-      needActionsFrom: wizards, // All wizards need to act initially
-      shortcode,
-      textOnlyMode: !enableImageGeneration,
-      textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
+      enableImageGeneration,
     });
 
     return duelId;
   },
 });
+
+// Add a player and their wizards to a waiting duel, and start the duel
+// introduction once there are two players
+async function addPlayerToDuel(
+  ctx: MutationCtx,
+  duel: Doc<"duels">,
+  userId: string,
+  wizards: Id<"wizards">[]
+): Promise<void> {
+  const duelId = duel._id;
+  // Add player and their wizards to the duel
+  const updatedPlayers = [...duel.players, userId];
+  const updatedWizards = [...duel.wizards, ...wizards];
+
+  // Initialize points and hit points for new wizards
+  const updatedPoints = { ...duel.points };
+  const updatedHitPoints = { ...duel.hitPoints };
+  const updatedNeedActionsFrom = [...duel.needActionsFrom];
+
+  wizards.forEach((wizardId) => {
+    updatedPoints[wizardId] = 0;
+    updatedHitPoints[wizardId] = 100;
+    updatedNeedActionsFrom.push(wizardId);
+  });
+
+  await ctx.db.patch(duelId, {
+    players: updatedPlayers,
+    wizards: updatedWizards,
+    points: updatedPoints,
+    hitPoints: updatedHitPoints,
+    needActionsFrom: updatedNeedActionsFrom,
+  });
+
+  // Auto-start the duel if we now have 2 players
+  if (updatedPlayers.length >= 2) {
+    // Schedule the duel introduction generation which will automatically start the duel
+    // Skip scheduling in test environment to avoid transaction escape errors
+    if (process.env.NODE_ENV !== "test") {
+      await ctx.scheduler.runAfter(
+        100, // Add small delay to ensure database transaction is committed
+        api.duelIntroduction.generateDuelIntroduction,
+        {
+          duelId,
+          userId: updatedPlayers[0], // Use first player for credit consumption
+        }
+      );
+    }
+  }
+}
 
 // Join a duel
 export const joinDuel = mutation({
@@ -373,46 +448,74 @@ export const joinDuel = mutation({
       throw new Error("User is already in this duel");
     }
 
-    // Add player and their wizards to the duel
-    const updatedPlayers = [...duel.players, userId];
-    const updatedWizards = [...duel.wizards, ...wizards];
+    await addPlayerToDuel(ctx, duel, userId, wizards);
 
-    // Initialize points and hit points for new wizards
-    const updatedPoints = { ...duel.points };
-    const updatedHitPoints = { ...duel.hitPoints };
-    const updatedNeedActionsFrom = [...duel.needActionsFrom];
+    return duelId;
+  },
+});
 
-    wizards.forEach((wizardId) => {
-      updatedPoints[wizardId] = 0;
-      updatedHitPoints[wizardId] = 100;
-      updatedNeedActionsFrom.push(wizardId);
-    });
+// Request a rematch of a completed duel. The first participant to ask creates
+// a new waiting duel with their wizards and the same settings. The other
+// participant joins it with their own wizards when they ask.
+export const requestRematch = mutation({
+  args: { duelId: v.id("duels") },
+  returns: v.id("duels"),
+  handler: async (ctx, { duelId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+    const userId = identity.subject;
 
-    await ctx.db.patch(duelId, {
-      players: updatedPlayers,
-      wizards: updatedWizards,
-      points: updatedPoints,
-      hitPoints: updatedHitPoints,
-      needActionsFrom: updatedNeedActionsFrom,
-    });
+    const duel = await ctx.db.get(duelId);
+    if (!duel) {
+      throw new Error("Duel not found");
+    }
+    if (duel.status !== "COMPLETED") {
+      throw new Error("Only completed duels can be rematched");
+    }
+    if (duel.isCampaignBattle) {
+      throw new Error("Campaign battles cannot be rematched");
+    }
+    if (!duel.players.includes(userId)) {
+      throw new Error("Only duel participants can request a rematch");
+    }
 
-    // Auto-start the duel if we now have 2 players
-    if (updatedPlayers.length >= 2) {
-      // Schedule the duel introduction generation which will automatically start the duel
-      // Skip scheduling in test environment to avoid transaction escape errors
-      if (process.env.NODE_ENV !== "test") {
-        await ctx.scheduler.runAfter(
-          100, // Add small delay to ensure database transaction is committed
-          api.duelIntroduction.generateDuelIntroduction,
-          {
-            duelId,
-            userId: updatedPlayers[0], // Use first player for credit consumption
-          }
-        );
+    // This player's wizards from the original duel, if they still exist
+    const myWizards: Id<"wizards">[] = [];
+    for (const wizardId of duel.wizards) {
+      const wizard = await ctx.db.get(wizardId);
+      if (wizard && wizard.owner === userId) {
+        myWizards.push(wizardId);
+      }
+    }
+    if (myWizards.length === 0) {
+      throw new Error("Your wizard from this duel no longer exists");
+    }
+
+    if (duel.rematchDuelId) {
+      const rematch = await ctx.db.get(duel.rematchDuelId);
+      if (rematch && rematch.status !== "CANCELLED") {
+        if (
+          rematch.status === "WAITING_FOR_PLAYERS" &&
+          !rematch.players.includes(userId)
+        ) {
+          await addPlayerToDuel(ctx, rematch, userId, myWizards);
+        }
+        return rematch._id;
       }
     }
 
-    return duelId;
+    const rematchId = await insertWaitingDuel(ctx, {
+      userId,
+      numberOfRounds: duel.numberOfRounds,
+      wizards: myWizards,
+      enableImageGeneration: !(
+        duel.textOnlyMode && duel.textOnlyReason === "user_preference"
+      ),
+    });
+    await ctx.db.patch(duelId, { rematchDuelId: rematchId });
+    return rematchId;
   },
 });
 
@@ -886,6 +989,7 @@ export const getActiveDuels = query({
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
       isCampaignBattle: v.optional(v.boolean()),
+      rematchDuelId: v.optional(v.id("duels")),
     })
   ),
   handler: async (ctx) => {
@@ -940,6 +1044,7 @@ export const getWatchableDuels = query({
         imageCreditConsumed: v.optional(v.boolean()),
         imageCreditConsumedBy: v.optional(v.string()),
         isCampaignBattle: v.optional(v.boolean()),
+        rematchDuelId: v.optional(v.id("duels")),
       })
     ),
     total: v.number(),

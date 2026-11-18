@@ -8,6 +8,15 @@ import { getGeminiImageAI } from "./ai/getAI";
 import { isEmulatorMode } from "./mocks/mockServices";
 import { captureAIGeneration, captureServerEvent } from "./lib/posthog";
 import { generateObject } from "./aiTextGeneration";
+import { estimateTokenCostUsd } from "./lib/aiPricing";
+import { recordAIUsage } from "./lib/recordAIUsage";
+
+const GEMINI_IMAGE_MODEL = "gemini-nano-banana-2.1";
+
+interface UsageContext {
+  userId?: string;
+  sessionId?: string;
+}
 import { z } from "genkit/beta";
 
 // Attempt 1 uses the original prompt. Attempt 2 uses a prompt rewritten to
@@ -27,6 +36,8 @@ const rewriteSchema = z.object({
 // Rewrites the prompt and wizard descriptions so they describe only visual
 // traits and never name or imply existing copyrighted characters or franchises.
 async function rewriteForImageSafety(
+  ctx: ActionCtx,
+  usage: UsageContext,
   prompt: string,
   descriptions?: WizardDescription[],
 ): Promise<{ prompt: string; descriptions?: WizardDescription[] } | null> {
@@ -36,7 +47,12 @@ async function rewriteForImageSafety(
       rewriteSchema,
       `You rewrite text prompts for an image generator that refuses prompts resembling copyrighted characters. Rewrite the "prompt" and each wizard "description" so they describe only original visual traits (clothing, colors, props, pose, magical effects, setting). Remove or replace any names of existing characters, actors, franchises, brands or places with generic visual descriptions. Keep each wizard's "name" unchanged, keep the same meaning, scene and action, and keep the order and number of descriptions. Return JSON with the same shape as the input.`,
       { temperature: 0.3, maxTokens: 2048 },
-      { spanName: "rewrite_image_prompt" },
+      {
+        spanName: "rewrite_image_prompt",
+        usageCtx: ctx,
+        distinctId: usage.userId,
+        sessionId: usage.sessionId,
+      },
     );
     const descs = descriptions
       ? descriptions.map((d, i) => ({
@@ -75,6 +91,8 @@ export const generateImageWithGemini = action({
       ),
     ), // Wizard descriptions for context in subsequent rounds
     useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
+    userId: v.optional(v.string()), // For cost tracking
+    sessionId: v.optional(v.string()), // For cost tracking
   },
   returns: v.bytes(),
   handler: async (
@@ -86,8 +104,11 @@ export const generateImageWithGemini = action({
       wizardImageLabels,
       wizardDescriptions,
       useGemini = false,
+      userId,
+      sessionId,
     },
   ): Promise<ArrayBuffer> => {
+    const usage: UsageContext = { userId, sessionId };
     const started = Date.now();
     const baseProps = {
       hasWizardRefs: (wizardImages?.length ?? 0) > 0,
@@ -122,6 +143,8 @@ export const generateImageWithGemini = action({
         referenceImageUrls:
           referenceImageUrls.length > 0 ? referenceImageUrls : undefined,
         skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+        userId,
+        sessionId,
       });
     };
 
@@ -134,7 +157,12 @@ export const generateImageWithGemini = action({
     for (let attempt = 1; attempt <= GEMINI_MAX_ATTEMPTS; attempt++) {
       try {
         if (attempt > 1 && !rewritten) {
-          rewritten = await rewriteForImageSafety(prompt, wizardDescriptions);
+          rewritten = await rewriteForImageSafety(
+            ctx,
+            usage,
+            prompt,
+            wizardDescriptions,
+          );
         }
         const result = await generateWithGeminiFlash(
           ctx,
@@ -145,6 +173,7 @@ export const generateImageWithGemini = action({
             ? rewritten.descriptions
             : wizardDescriptions,
           wizardImageLabels,
+          usage,
         );
         await captureServerEvent("image_generation_succeeded", {
           ...baseProps,
@@ -209,6 +238,7 @@ async function generateWithGeminiFlash(
   wizardImages?: string[],
   wizardDescriptions?: Array<{ name: string; description: string }>,
   wizardImageLabels?: string[],
+  usage: UsageContext = {},
 ): Promise<ArrayBuffer> {
   // Check if we're in emulator mode
   if (isEmulatorMode()) {
@@ -245,7 +275,7 @@ async function generateWithGeminiFlash(
       const media = await loadStorageImageAsMedia(ctx, previousImage);
       if (media) {
         hasPreviousScene = true;
-        parts.push({ text: "Previous scene of the duel:" });
+        parts.push({ text: "Previous scene of the duel (for setting and continuity only, do not repeat its camera angle):" });
         parts.push({ media });
       }
     }
@@ -260,7 +290,7 @@ async function generateWithGeminiFlash(
       }
       if (hasPreviousScene) {
         instructions.push(
-          "Continue the arena setting and positions from the previous scene while showing the new magical effects.",
+          "Keep the same arena setting and wizard designs as the previous scene, but this is a NEW comic book panel: use the camera angle and composition described in the prompt and do NOT copy the previous image's framing, viewpoint or wizard positions.",
         );
       }
       if (wizardDescriptions && wizardDescriptions.length > 0) {
@@ -289,11 +319,21 @@ async function generateWithGeminiFlash(
         },
       });
     } catch (error) {
+      await recordAIUsage(ctx, {
+        feature: "generate_wizard_image",
+        provider: "gemini",
+        model: GEMINI_IMAGE_MODEL,
+        kind: "image",
+        imageCount: 0,
+        costUsd: 0,
+        ...usage,
+        success: false,
+      });
       await captureAIGeneration({
         traceId,
         sessionId: null,
         spanName: "generate_wizard_image",
-        model: "gemini-nano-banana-2.1",
+        model: GEMINI_IMAGE_MODEL,
         provider: "gemini",
         input: [{ role: "user", content: enhancedPrompt }],
         latencySeconds: (Date.now() - startedAt) / 1000,
@@ -304,16 +344,39 @@ async function generateWithGeminiFlash(
       throw error;
     }
 
+    // Tokens are billed even when no image comes back (e.g. a safety refusal).
+    const costUsd = estimateTokenCostUsd(
+      GEMINI_IMAGE_MODEL,
+      response.usage?.inputTokens,
+      response.usage?.outputTokens,
+    );
+    const returnedImage = !!response.message?.content?.some(
+      (item) => item.media || item.text,
+    );
+    await recordAIUsage(ctx, {
+      feature: "generate_wizard_image",
+      provider: "gemini",
+      model: GEMINI_IMAGE_MODEL,
+      kind: "image",
+      inputTokens: response.usage?.inputTokens,
+      outputTokens: response.usage?.outputTokens,
+      imageCount: returnedImage ? 1 : 0,
+      costUsd,
+      ...usage,
+      success: returnedImage,
+    });
+
     // Do not include image bytes or inline reference images in analytics.
     await captureAIGeneration({
       traceId,
       sessionId: null,
       spanName: "generate_wizard_image",
-      model: "gemini-nano-banana-2.1",
+      model: GEMINI_IMAGE_MODEL,
       provider: "gemini",
       input: [{ role: "user", content: enhancedPrompt }],
       inputTokens: response.usage?.inputTokens,
       outputTokens: response.usage?.outputTokens,
+      costUsd,
       latencySeconds: (Date.now() - startedAt) / 1000,
       temperature: 0.8,
       maxTokens: 4096,

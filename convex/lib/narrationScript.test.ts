@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { buildNarrationScript } from "./narrationScript";
 
 describe("buildNarrationScript", () => {
-  it("joins paragraphs and result with short pauses", () => {
-    expect(buildNarrationScript("One.\n\nTwo.", "Done!")).toBe(
-      "One. <short pause> Two. <short pause> Done!",
+  it("joins paragraphs with short pauses", () => {
+    expect(buildNarrationScript("One.\n\nTwo.")).toBe(
+      "One. <short pause> Two.",
     );
   });
 

@@ -3,7 +3,10 @@
 // AI Text Generation Service using Gemini Flash
 import { z } from "genkit/beta";
 import { getGeminiTextAI } from "./ai/getAI";
+import type { ActionCtx } from "./_generated/server";
 import { captureAIGeneration } from "./lib/posthog";
+import { estimateTokenCostUsd } from "./lib/aiPricing";
+import { recordAIUsage } from "./lib/recordAIUsage";
 import {
   isEmulatorMode,
   generateMockText,
@@ -21,6 +24,8 @@ export interface AIObservabilityContext {
   traceId?: string;
   distinctId?: string;
   spanName?: string;
+  /** When provided, usage and estimated cost are stored in the aiUsage table. */
+  usageCtx?: Pick<ActionCtx, "runMutation">;
 }
 
 const GEMINI_TEXT_MODEL = "gemini-3.5-flash-lite";
@@ -31,7 +36,28 @@ function getObservabilityContext(context: AIObservabilityContext = {}) {
     traceId: context.traceId ?? crypto.randomUUID(),
     distinctId: context.distinctId,
     spanName: context.spanName ?? "generate_text",
+    usageCtx: context.usageCtx,
   };
+}
+
+function recordTextUsage(
+  observability: ReturnType<typeof getObservabilityContext>,
+  success: boolean,
+  costUsd: number,
+  usage?: { inputTokens?: number; outputTokens?: number },
+) {
+  return recordAIUsage(observability.usageCtx, {
+    feature: observability.spanName,
+    provider: "gemini",
+    model: GEMINI_TEXT_MODEL,
+    kind: "text",
+    inputTokens: usage?.inputTokens,
+    outputTokens: usage?.outputTokens,
+    costUsd,
+    userId: observability.distinctId,
+    sessionId: observability.sessionId ?? undefined,
+    success,
+  });
 }
 
 function getInput(prompt: string, systemPrompt?: string) {
@@ -78,6 +104,12 @@ export async function generateText(
       },
     });
 
+    const costUsd = estimateTokenCostUsd(
+      GEMINI_TEXT_MODEL,
+      response.usage?.inputTokens,
+      response.usage?.outputTokens,
+    );
+    await recordTextUsage(observability, true, costUsd, response.usage);
     await captureAIGeneration({
       ...observability,
       model: GEMINI_TEXT_MODEL,
@@ -86,6 +118,7 @@ export async function generateText(
       output: response.text,
       inputTokens: response.usage?.inputTokens,
       outputTokens: response.usage?.outputTokens,
+      costUsd,
       latencySeconds: (Date.now() - startedAt) / 1000,
       temperature,
       maxTokens,
@@ -93,6 +126,7 @@ export async function generateText(
 
     return response.text;
   } catch (error) {
+    await recordTextUsage(observability, false, 0);
     await captureAIGeneration({
       ...observability,
       model: GEMINI_TEXT_MODEL,
@@ -143,6 +177,12 @@ export async function generateObject<T extends z.ZodTypeAny>(
       output: schema ? { schema } : undefined,
     });
 
+    const costUsd = estimateTokenCostUsd(
+      GEMINI_TEXT_MODEL,
+      response.usage?.inputTokens,
+      response.usage?.outputTokens,
+    );
+    await recordTextUsage(observability, true, costUsd, response.usage);
     await captureAIGeneration({
       ...observability,
       model: GEMINI_TEXT_MODEL,
@@ -151,6 +191,7 @@ export async function generateObject<T extends z.ZodTypeAny>(
       output: serializeOutput(response.output),
       inputTokens: response.usage?.inputTokens,
       outputTokens: response.usage?.outputTokens,
+      costUsd,
       latencySeconds: (Date.now() - startedAt) / 1000,
       temperature,
       maxTokens,
@@ -158,6 +199,7 @@ export async function generateObject<T extends z.ZodTypeAny>(
 
     return response.output;
   } catch (error) {
+    await recordTextUsage(observability, false, 0);
     await captureAIGeneration({
       ...observability,
       model: GEMINI_TEXT_MODEL,

@@ -5,18 +5,27 @@ import { v } from "convex/values";
 import * as fal from "@fal-ai/serverless-client";
 import { api } from "./_generated/api";
 import { captureServerEvent } from "./lib/posthog";
+import { estimateImageCostUsd } from "./lib/aiPricing";
+import { recordAIUsage } from "./lib/recordAIUsage";
 
 export const generateImage = action({
   args: {
     prompt: v.string(),
     skipResize: v.optional(v.boolean()), // Skip resizing for tests or when not needed
     referenceImageUrls: v.optional(v.array(v.string())), // Character/scene references; switches to a reference-image model
+    userId: v.optional(v.string()), // For cost tracking
+    sessionId: v.optional(v.string()), // For cost tracking
   },
   returns: v.bytes(),
   handler: async (
     ctx,
-    { prompt, skipResize = false, referenceImageUrls },
+    { prompt, skipResize = false, referenceImageUrls, userId, sessionId },
   ): Promise<ArrayBuffer> => {
+    const hasReferences = !!referenceImageUrls?.length;
+    const model = hasReferences
+      ? "fal-ai/flux-pro/kontext/multi"
+      : "fal-ai/flux/schnell";
+    let generated = false;
     try {
       // Get FAL API key from environment
       const falKey = process.env.FAL_KEY;
@@ -38,7 +47,6 @@ export const generateImage = action({
         }>;
       }
 
-      const hasReferences = !!referenceImageUrls?.length;
       // With references, use FLUX Kontext (multi-image) to keep characters
       // consistent. Otherwise use the fast text-to-image model.
       const result: FalImageResult = hasReferences
@@ -62,8 +70,21 @@ export const generateImage = action({
             },
           });
 
+      generated = true;
+
       // Get the image URL from the result
       const imageUrl = result.images?.[0]?.url;
+      await recordAIUsage(ctx, {
+        feature: "generate_image_fal",
+        provider: "fal",
+        model,
+        kind: "image",
+        imageCount: imageUrl ? 1 : 0,
+        costUsd: imageUrl ? estimateImageCostUsd(model, 1) : 0,
+        userId,
+        sessionId,
+        success: !!imageUrl,
+      });
       if (!imageUrl) {
         throw new Error("No image generated from Fal service");
       }
@@ -100,6 +121,19 @@ export const generateImage = action({
 
       return imageBuffer;
     } catch (error) {
+      if (!generated) {
+        await recordAIUsage(ctx, {
+          feature: "generate_image_fal",
+          provider: "fal",
+          model,
+          kind: "image",
+          imageCount: 0,
+          costUsd: 0,
+          userId,
+          sessionId,
+          success: false,
+        });
+      }
       console.error(error);
       const apiError = error as { status?: number; body?: { detail?: string } };
       const status = apiError?.status;

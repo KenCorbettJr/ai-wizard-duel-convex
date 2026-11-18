@@ -13,6 +13,7 @@ import {
   Shield,
   ArrowRight,
   Crown,
+  Coins,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -26,6 +27,14 @@ const adminFeatures = [
     icon: BarChart3,
     color: "text-info",
     bgColor: "bg-info/10",
+  },
+  {
+    title: "AI Costs",
+    description: "Track estimated spend on AI text and image generation",
+    href: "/admin/ai-costs",
+    icon: Coins,
+    color: "text-warning",
+    bgColor: "bg-warning/10",
   },
   {
     title: "User Management",

@@ -11,11 +11,12 @@ import { ConvexImage } from "@/components/ConvexImage";
 import { TimeAgo } from "@/components/TimeAgo";
 import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";
-import { Clock, Sparkles, RefreshCw, Undo2 } from "lucide-react";
+import { Clock, Sparkles, RefreshCw, Undo2, Scroll } from "lucide-react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 import { memo, useState, useEffect } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { NarratedText } from "@/components/NarratedText";
+import { useConclusionReveal } from "@/hooks/useConclusionReveal";
 
 interface DuelRoundCardProps {
   round: Doc<"duelRounds">;
@@ -67,6 +68,8 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   const { user } = useUser();
   const [showReprocessButton, setShowReprocessButton] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
+  const { revealed, reveal } = useConclusionReveal(duel._id);
+  const conclusionLocked = round.type === "CONCLUSION" && !revealed;
 
   const triggerRoundProcessing = useMutation(api.duels.triggerRoundProcessing);
 
@@ -345,7 +348,19 @@ export const DuelRoundCard = memo(function DuelRoundCard({
           </div>
         )}
 
-        {round.status === "COMPLETED" && (
+        {round.status === "COMPLETED" && conclusionLocked && (
+          <div className="flex flex-col items-center gap-4 py-8 text-center">
+            <p className="text-muted-foreground">
+              The duel is over. Ready to hear how it ended?
+            </p>
+            <Button size="lg" onClick={reveal}>
+              <Scroll className="h-4 w-4 mr-2" />
+              Reveal the Conclusion
+            </Button>
+          </div>
+        )}
+
+        {round.status === "COMPLETED" && !conclusionLocked && (
           <div className="space-y-6">
             {/* Winner Announcement for Conclusion Rounds */}
             {round.type === "CONCLUSION" &&
@@ -434,24 +449,21 @@ export const DuelRoundCard = memo(function DuelRoundCard({
               </div>
             ) : null}
 
-            {/* Narration audio, with the written text in a dropdown */}
-            {(round.outcome?.result || round.outcome?.narrative) && (
-              <NarratedText narration={round.narration}>
-                {/* Result */}
-                {round.outcome?.result && (
-                  <div className="whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed">
-                    {round.outcome.result}
-                  </div>
-                )}
+            {/* Result teaser, always visible and not read aloud */}
+            {round.outcome?.result && (
+              <div className="whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed">
+                {round.outcome.result}
+              </div>
+            )}
 
-                {/* Narrative */}
-                {round.outcome?.narrative && (
-                  <div className="whitespace-pre-line">
-                    <div className="text-foreground/80 leading-relaxed">
-                      {round.outcome.narrative}
-                    </div>
+            {/* Narration audio, with the written text in a dropdown */}
+            {round.outcome?.narrative && (
+              <NarratedText narration={round.narration}>
+                <div className="whitespace-pre-line">
+                  <div className="text-foreground/80 leading-relaxed">
+                    {round.outcome.narrative}
                   </div>
-                )}
+                </div>
               </NarratedText>
             )}
 

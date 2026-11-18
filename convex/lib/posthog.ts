@@ -60,6 +60,7 @@ interface AIGenerationCapture {
   output?: string;
   inputTokens?: number;
   outputTokens?: number;
+  costUsd?: number;
   latencySeconds: number;
   temperature: number;
   maxTokens: number;
@@ -86,6 +87,9 @@ export async function captureAIGeneration(
         : {}),
       ...(capture.outputTokens !== undefined
         ? { $ai_output_tokens: capture.outputTokens }
+        : {}),
+      ...(capture.costUsd !== undefined
+        ? { $ai_total_cost_usd: capture.costUsd }
         : {}),
       ...(capture.output !== undefined
         ? {

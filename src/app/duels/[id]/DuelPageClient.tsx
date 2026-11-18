@@ -3,6 +3,7 @@
 import { use } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id, Doc } from "../../../../convex/_generated/dataModel";
@@ -29,6 +30,7 @@ import { Crown } from "@/components/ui/crown-icon";
 import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
 import { DuelRoundCard } from "@/components/DuelRoundCard";
+import { useConclusionReveal } from "@/hooks/useConclusionReveal";
 import { CastSpellModal } from "@/components/CastSpellModal";
 import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { safeConvexId } from "../../../lib/utils";
@@ -67,9 +69,28 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
   );
 
+  // Hide the winner until the viewer reveals the conclusion. This applies when
+  // the duel has a conclusion round, or finished recently enough that the
+  // conclusion is probably still being generated.
+  const { revealed: conclusionRevealed } = useConclusionReveal(id);
+  const [mountedAt] = useState(() => Date.now());
+  const hasConclusion = !!duel?.rounds?.some(
+    (round: Doc<"duelRounds">) => round.type === "CONCLUSION",
+  );
+  const justCompleted =
+    !!duel?.completedAt && duel.completedAt >= mountedAt - 3 * 60 * 1000;
+  const showWinner = conclusionRevealed || !(hasConclusion || justCompleted);
+
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const castSpell = useMutation(api.duels.castSpell);
   const joinDuel = useMutation(api.duels.joinDuel);
+  const requestRematch = useMutation(api.duels.requestRematch);
+  const router = useRouter();
+  const [isStartingRematch, setIsStartingRematch] = useState(false);
+  const rematchDuel = useQuery(
+    api.duels.getDuel,
+    duel?.rematchDuelId ? { duelId: duel.rematchDuelId } : "skip",
+  );
 
   // Get user's wizards for joining
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
@@ -149,6 +170,19 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       console.error("Failed to join duel:", error);
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const handleRematch = async () => {
+    if (!duel) return;
+    setIsStartingRematch(true);
+    try {
+      const rematchId = await requestRematch({ duelId: duel._id });
+      posthog.capture("duel_rematch_requested", { duel_id: duel._id });
+      router.push(`/duels/${rematchId}`);
+    } catch (error) {
+      console.error("Failed to start rematch:", error);
+      setIsStartingRematch(false);
     }
   };
 
@@ -367,7 +401,10 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     points={duel.points[duel.wizards[0]] || 0}
                     hitPoints={duel.hitPoints[duel.wizards[0]] || 100}
                     isUserWizard={wizard1.owner === user?.id}
-                    isWinner={duel.winners?.includes(duel.wizards[0]) || false}
+                    isWinner={
+                      (showWinner && duel.winners?.includes(duel.wizards[0])) ||
+                      false
+                    }
                     showOwner={true}
                   />
                 )}
@@ -385,7 +422,10 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     points={duel.points[duel.wizards[1]] || 0}
                     hitPoints={duel.hitPoints[duel.wizards[1]] || 100}
                     isUserWizard={wizard2.owner === user?.id}
-                    isWinner={duel.winners?.includes(duel.wizards[1]) || false}
+                    isWinner={
+                      (showWinner && duel.winners?.includes(duel.wizards[1])) ||
+                      false
+                    }
                     showOwner={true}
                   />
                 )}
@@ -406,6 +446,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
           {/* Winner Announcement for Completed Duels */}
           {duel.status === "COMPLETED" &&
+            showWinner &&
             duel.winners &&
             duel.winners.length > 0 && (
               <Card
@@ -619,6 +660,37 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 ))}
             </div>
           )}
+
+          {/* Rematch, shown once the result has been revealed */}
+          {duel.status === "COMPLETED" &&
+            showWinner &&
+            !duel.isCampaignBattle &&
+            !!user?.id &&
+            duel.players.includes(user.id) && (
+              <div className="mt-8 flex flex-col items-center gap-2 text-center">
+                <Button
+                  size="lg"
+                  onClick={handleRematch}
+                  disabled={isStartingRematch}
+                >
+                  {isStartingRematch ? (
+                    <RuneSpinner size="sm" label="Starting rematch" />
+                  ) : (
+                    <Swords className="h-4 w-4 mr-2" />
+                  )}
+                  {!duel.rematchDuelId
+                    ? "Rematch"
+                    : rematchDuel?.players.includes(user.id)
+                      ? "Go to Rematch"
+                      : "Join Rematch"}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {duel.rematchDuelId
+                    ? "A rematch is ready."
+                    : "Start a new duel with the same wizards and settings."}
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </div>

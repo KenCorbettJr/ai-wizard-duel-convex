@@ -18,7 +18,7 @@ const IntroductionResponseSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A vivid, detailed introduction of the magical combat that is about to take place. This should be several paragraphs and capture the drama and excitement of the duel, written in present tense as if events are unfolding in real time."
+      "A short, punchy announcer introduction to the duel about to begin: 2 brief paragraphs, about 80 to 110 words in total, in present tense. Introduce both wizards and build excitement without filler.",
     ),
   result: z
     .string()
@@ -28,7 +28,7 @@ const IntroductionResponseSchema = z.object({
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration capturing the moment from a great distance, as if viewed from the stands surrounding the arena. Include wizard appearances, environments, spell effects, and dynamic lighting with magical particles."
+      "A very detailed prompt for a low poly art style illustration: a wide establishing shot from high in the spectator stands, looking down across a vast, stadium-sized arena. The two wizards stand about 50 feet apart on opposite sides of a large open arena floor and look small from this distance. Include wizard appearances, the crowd in the stands, the arena environment, and dynamic lighting with magical particles."
     ),
 });
 
@@ -88,8 +88,10 @@ export const generateDuelIntroduction = action({
         {
           sessionId: `duel-${duel._id}`,
           traceId: crypto.randomUUID(),
-          distinctId: userId ?? duel.players.find((player) => player !== "campaign"),
+          distinctId:
+            userId ?? duel.players.find((player) => player !== "campaign"),
           spanName: "generate_duel_introduction",
+          usageCtx: ctx,
         },
       );
 
@@ -201,7 +203,7 @@ The two wizards for this duel are:
 - Each wizard begins with 100 health points
 - A wizard losing all health points results in immediate defeat`;
 
-    const prompt = `Introduce the two wizards, ${wizard1.name} and ${wizard2.name}, for their upcoming ${duelType} duel in the Enchanted Arena. Create an epic, dramatic introduction that sets the stage for magical combat.`;
+    const prompt = `Introduce the two wizards, ${wizard1.name} and ${wizard2.name}, for their upcoming ${duelType} duel in the Enchanted Arena. In the illustration prompt, show the wizards about 50 feet apart in a vast arena, viewed from the spectator stands. Create a dramatic but brief introduction (about 80 to 110 words) that sets the stage for magical combat.`;
 
     return await generateObject(
       prompt,
@@ -245,7 +247,7 @@ Let the magical combat commence!`;
 
     const result = `The stage is set for an epic magical duel between ${wizard1.name} and ${wizard2.name}!`;
 
-    const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide shot showing the full arena from an elevated perspective.`;
+    const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide establishing shot from high in the spectator stands showing a vast stadium-sized arena, with the two wizards about 50 feet apart on opposite sides of a large open arena floor.`;
 
     return {
       narration,
@@ -268,7 +270,7 @@ Let the simulated magical combat commence!`;
 
   const result = `🎭 Mock duel setup: The stage is set for an epic magical duel between ${wizard1.name} and ${wizard2.name}!`;
 
-  const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide shot showing the full arena from an elevated perspective.`;
+  const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide establishing shot from high in the spectator stands showing a vast stadium-sized arena, with the two wizards about 50 feet apart on opposite sides of a large open arena floor.`;
 
   return {
     narration,
@@ -302,7 +304,7 @@ Let the magical combat commence!`;
 
   const result = `The stage is set for an epic magical duel between ${wizard1.name} and ${wizard2.name}!`;
 
-  const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide shot showing the full arena from an elevated perspective.`;
+  const illustrationPrompt = `Low poly art style illustration of two powerful wizards facing each other in a magical arena, viewed from the spectator stands. ${wizard1.name} on the left: ${wizard1.description}. ${wizard2.name} on the right: ${wizard2.description}. Epic magical arena with swirling mystical energies, dynamic lighting, magical particles floating in the air, ancient stone architecture, dramatic atmosphere, wide establishing shot from high in the spectator stands showing a vast stadium-sized arena, with the two wizards about 50 feet apart on opposite sides of a large open arena floor.`;
 
   return {
     narration,

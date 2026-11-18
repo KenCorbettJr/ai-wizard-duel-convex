@@ -96,6 +96,8 @@ export const generateRoundIllustration = action({
               wizardImages: wizardRefs.storageIds,
               wizardImageLabels: wizardRefs.labels,
               useGemini: true,
+              userId,
+              sessionId: `duel-${duelId}`,
             },
           );
         } else {
@@ -119,6 +121,8 @@ export const generateRoundIllustration = action({
               wizardImageLabels: wizardRefs.labels,
               wizardDescriptions,
               useGemini: true,
+              userId,
+              sessionId: `duel-${duelId}`,
             },
           );
         }
@@ -127,6 +131,8 @@ export const generateRoundIllustration = action({
         imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
           prompt: illustrationPrompt,
           skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
+          userId,
+          sessionId: `duel-${duelId}`,
         });
       }
 
