@@ -15,6 +15,7 @@ import { Clock, Sparkles, RefreshCw, Undo2 } from "lucide-react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 import { memo, useState, useEffect } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { NarratedText } from "@/components/NarratedText";
 
 interface DuelRoundCardProps {
   round: Doc<"duelRounds">;
@@ -433,20 +434,25 @@ export const DuelRoundCard = memo(function DuelRoundCard({
               </div>
             ) : null}
 
-            {/* Result */}
-            {round.outcome?.result && (
-              <div className="whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed">
-                {round.outcome.result}
-              </div>
-            )}
+            {/* Narration audio, with the written text in a dropdown */}
+            {(round.outcome?.result || round.outcome?.narrative) && (
+              <NarratedText narration={round.narration}>
+                {/* Result */}
+                {round.outcome?.result && (
+                  <div className="whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed">
+                    {round.outcome.result}
+                  </div>
+                )}
 
-            {/* Narrative */}
-            {round.outcome?.narrative && (
-              <div className="whitespace-pre-line">
-                <div className="text-foreground/80 leading-relaxed">
-                  {round.outcome.narrative}
-                </div>
-              </div>
+                {/* Narrative */}
+                {round.outcome?.narrative && (
+                  <div className="whitespace-pre-line">
+                    <div className="text-foreground/80 leading-relaxed">
+                      {round.outcome.narrative}
+                    </div>
+                  </div>
+                )}
+              </NarratedText>
             )}
 
             {/* Outcome Table */}

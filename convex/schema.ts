@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { narrationValidator } from "./lib/narrationValidator";
 
 export default defineSchema({
   users: defineTable({
@@ -134,6 +135,7 @@ export default defineSchema({
       v.literal("PROCESSING"),
       v.literal("COMPLETED")
     ),
+    narration: v.optional(narrationValidator), // Audio narration of the outcome
   }).index("by_duel", ["duelId"]),
   duelLobby: defineTable({
     userId: v.string(), // Clerk user ID

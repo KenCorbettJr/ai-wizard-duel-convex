@@ -7,8 +7,49 @@ import { Id } from "./_generated/dataModel";
 import { getGeminiImageAI } from "./ai/getAI";
 import { isEmulatorMode } from "./mocks/mockServices";
 import { captureAIGeneration, captureServerEvent } from "./lib/posthog";
+import { generateObject } from "./aiTextGeneration";
+import { z } from "genkit/beta";
 
+// Attempt 1 uses the original prompt. Attempt 2 uses a prompt rewritten to
+// remove named/copyrighted characters, which is the most likely refusal cause.
 const GEMINI_MAX_ATTEMPTS = 2;
+const MAX_FAL_REFERENCE_IMAGES = 4;
+
+type WizardDescription = { name: string; description: string };
+
+const rewriteSchema = z.object({
+  prompt: z.string(),
+  descriptions: z.array(
+    z.object({ name: z.string(), description: z.string() }),
+  ),
+});
+
+// Rewrites the prompt and wizard descriptions so they describe only visual
+// traits and never name or imply existing copyrighted characters or franchises.
+async function rewriteForImageSafety(
+  prompt: string,
+  descriptions?: WizardDescription[],
+): Promise<{ prompt: string; descriptions?: WizardDescription[] } | null> {
+  try {
+    const result = await generateObject(
+      JSON.stringify({ prompt, descriptions: descriptions ?? [] }),
+      rewriteSchema,
+      `You rewrite text prompts for an image generator that refuses prompts resembling copyrighted characters. Rewrite the "prompt" and each wizard "description" so they describe only original visual traits (clothing, colors, props, pose, magical effects, setting). Remove or replace any names of existing characters, actors, franchises, brands or places with generic visual descriptions. Keep each wizard's "name" unchanged, keep the same meaning, scene and action, and keep the order and number of descriptions. Return JSON with the same shape as the input.`,
+      { temperature: 0.3, maxTokens: 2048 },
+      { spanName: "rewrite_image_prompt" },
+    );
+    const descs = descriptions
+      ? descriptions.map((d, i) => ({
+          name: d.name,
+          description: result.descriptions[i]?.description ?? d.description,
+        }))
+      : undefined;
+    return { prompt: result.prompt || prompt, descriptions: descs };
+  } catch (error) {
+    console.warn("Prompt rewrite failed, using original prompt:", error);
+    return null;
+  }
+}
 
 class GeminiNoImageError extends Error {
   constructor(
@@ -55,11 +96,34 @@ export const generateImageWithGemini = action({
       promptLength: prompt.length,
     };
 
-    const runFal = async (): Promise<ArrayBuffer> =>
-      await ctx.runAction(api.generateImage.generateImage, {
-        prompt,
+    // Rewritten prompt, computed lazily on the first retry and reused for FAL
+    let rewritten: Awaited<ReturnType<typeof rewriteForImageSafety>> = null;
+
+    const runFal = async (): Promise<ArrayBuffer> => {
+      // Give FAL the same character references so the wizards stay consistent
+      const referenceImageUrls: string[] = [];
+      for (const id of [...(wizardImages ?? []), previousImage ?? ""]) {
+        if (!id || referenceImageUrls.length >= MAX_FAL_REFERENCE_IMAGES) {
+          continue;
+        }
+        try {
+          const url = await ctx.storage.getUrl(id as Id<"_storage">);
+          if (url) referenceImageUrls.push(url);
+        } catch (error) {
+          console.warn(`Could not get URL for reference ${id}:`, error);
+        }
+      }
+      const falPrompt = rewritten?.prompt ?? prompt;
+      return await ctx.runAction(api.generateImage.generateImage, {
+        prompt:
+          referenceImageUrls.length > 0
+            ? `${falPrompt} Keep each wizard's appearance exactly as in the reference images. Low poly art style.`
+            : falPrompt,
+        referenceImageUrls:
+          referenceImageUrls.length > 0 ? referenceImageUrls : undefined,
         skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
       });
+    };
 
     if (!(useGemini && process.env.GOOGLE_API_KEY)) {
       return await runFal();
@@ -69,18 +133,24 @@ export const generateImageWithGemini = action({
     let lastError: unknown;
     for (let attempt = 1; attempt <= GEMINI_MAX_ATTEMPTS; attempt++) {
       try {
+        if (attempt > 1 && !rewritten) {
+          rewritten = await rewriteForImageSafety(prompt, wizardDescriptions);
+        }
         const result = await generateWithGeminiFlash(
           ctx,
-          prompt,
+          attempt > 1 && rewritten ? rewritten.prompt : prompt,
           previousImage,
           wizardImages,
-          wizardDescriptions,
+          attempt > 1 && rewritten
+            ? rewritten.descriptions
+            : wizardDescriptions,
           wizardImageLabels,
         );
         await captureServerEvent("image_generation_succeeded", {
           ...baseProps,
           provider: "gemini",
           attempt,
+          usedRewrittenPrompt: attempt > 1 && !!rewritten,
           durationMs: Date.now() - started,
         });
         return result;
@@ -96,6 +166,7 @@ export const generateImageWithGemini = action({
           ...baseProps,
           provider: "gemini",
           attempt,
+          usedRewrittenPrompt: attempt > 1 && !!rewritten,
           willRetry: attempt < GEMINI_MAX_ATTEMPTS,
           error: error instanceof Error ? error.message : String(error),
           ...details,
@@ -115,6 +186,8 @@ export const generateImageWithGemini = action({
       await captureServerEvent("image_generation_succeeded", {
         ...baseProps,
         provider: "fal",
+        usedRewrittenPrompt: !!rewritten,
+        withReferences: (wizardImages?.length ?? 0) > 0 || !!previousImage,
         durationMs: Date.now() - started,
       });
       return result;

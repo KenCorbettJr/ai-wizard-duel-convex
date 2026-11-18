@@ -8,6 +8,8 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
 import { api, internal } from "./_generated/api";
+import { narrationValidator } from "./lib/narrationValidator";
+import { scheduleRoundNarration } from "./lib/scheduleNarration";
 import {
   verifySuperAdmin,
   debugUserMetadata,
@@ -188,6 +190,7 @@ export const getDuelInternal = internalQuery({
             v.literal("PROCESSING"),
             v.literal("COMPLETED")
           ),
+          narration: v.optional(narrationValidator),
         })
       ),
     })
@@ -650,6 +653,8 @@ export const completeRound = mutation({
       status: "COMPLETED" as DuelRoundStatus,
     });
 
+    await scheduleRoundNarration(ctx, roundId);
+
     // Update duel points and hit points
     const updatedPoints: Record<string, number> = { ...duel.points };
     const updatedHitPoints: Record<string, number> = { ...duel.hitPoints };
@@ -1098,6 +1103,7 @@ export const createIntroductionRound = mutation({
       outcome,
     });
 
+    await scheduleRoundNarration(ctx, roundId);
     return roundId;
   },
 });
@@ -1629,6 +1635,7 @@ export const createConclusionRound = mutation({
       outcome,
     });
 
+    await scheduleRoundNarration(ctx, roundId);
     return roundId;
   },
 });

@@ -6,6 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
 import { memo } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { NarratedText } from "@/components/NarratedText";
 
 interface DuelIntroductionProps {
   duelId: Id<"duels">;
@@ -60,17 +61,19 @@ export const DuelIntroduction = memo(function DuelIntroduction({
             Welcome to the Enchanted Arena!
           </h2>
 
-          <div className="whitespace-pre-line text-foreground leading-relaxed">
-            {introRound.outcome.narrative}
-          </div>
-
-          {introRound.outcome.result && (
-            <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
-              <p className="text-center font-semibold text-primary">
-                {introRound.outcome.result}
-              </p>
+          <NarratedText narration={introRound.narration}>
+            <div className="whitespace-pre-line text-foreground leading-relaxed">
+              {introRound.outcome.narrative}
             </div>
-          )}
+
+            {introRound.outcome.result && (
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <p className="text-center font-semibold text-primary">
+                  {introRound.outcome.result}
+                </p>
+              </div>
+            )}
+          </NarratedText>
         </div>
       </div>
     </div>

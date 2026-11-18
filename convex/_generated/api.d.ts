@@ -29,9 +29,13 @@ import type * as generateWizardIllustration from "../generateWizardIllustration.
 import type * as imageCompressionService from "../imageCompressionService.js";
 import type * as imageCreditService from "../imageCreditService.js";
 import type * as imageGenerationConfig from "../imageGenerationConfig.js";
+import type * as lib_narrationScript from "../lib/narrationScript.js";
+import type * as lib_narrationValidator from "../lib/narrationValidator.js";
 import type * as lib_posthog from "../lib/posthog.js";
+import type * as lib_scheduleNarration from "../lib/scheduleNarration.js";
 import type * as metadata from "../metadata.js";
 import type * as mocks_mockServices from "../mocks/mockServices.js";
+import type * as narration from "../narration.js";
 import type * as processDuelRound from "../processDuelRound.js";
 import type * as promoteUser from "../promoteUser.js";
 import type * as seasonHelpers from "../seasonHelpers.js";
@@ -75,9 +79,13 @@ declare const fullApi: ApiFromModules<{
   imageCompressionService: typeof imageCompressionService;
   imageCreditService: typeof imageCreditService;
   imageGenerationConfig: typeof imageGenerationConfig;
+  "lib/narrationScript": typeof lib_narrationScript;
+  "lib/narrationValidator": typeof lib_narrationValidator;
   "lib/posthog": typeof lib_posthog;
+  "lib/scheduleNarration": typeof lib_scheduleNarration;
   metadata: typeof metadata;
   "mocks/mockServices": typeof mocks_mockServices;
+  narration: typeof narration;
   processDuelRound: typeof processDuelRound;
   promoteUser: typeof promoteUser;
   seasonHelpers: typeof seasonHelpers;

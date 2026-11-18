@@ -10,11 +10,12 @@ export const generateImage = action({
   args: {
     prompt: v.string(),
     skipResize: v.optional(v.boolean()), // Skip resizing for tests or when not needed
+    referenceImageUrls: v.optional(v.array(v.string())), // Character/scene references; switches to a reference-image model
   },
   returns: v.bytes(),
   handler: async (
     ctx,
-    { prompt, skipResize = false },
+    { prompt, skipResize = false, referenceImageUrls },
   ): Promise<ArrayBuffer> => {
     try {
       // Get FAL API key from environment
@@ -37,18 +38,29 @@ export const generateImage = action({
         }>;
       }
 
-      const result: FalImageResult = await fal.subscribe(
-        "fal-ai/flux/schnell",
-        {
-          input: {
-            prompt: prompt,
-            image_size: "square_hd", // 1024x1024
-            num_inference_steps: 4,
-            num_images: 1,
-            enable_safety_checker: true,
-          },
-        },
-      );
+      const hasReferences = !!referenceImageUrls?.length;
+      // With references, use FLUX Kontext (multi-image) to keep characters
+      // consistent. Otherwise use the fast text-to-image model.
+      const result: FalImageResult = hasReferences
+        ? await fal.subscribe("fal-ai/flux-pro/kontext/multi", {
+            input: {
+              prompt: prompt,
+              image_urls: referenceImageUrls,
+              aspect_ratio: "1:1",
+              num_images: 1,
+              output_format: "png",
+              safety_tolerance: "5",
+            },
+          })
+        : await fal.subscribe("fal-ai/flux/schnell", {
+            input: {
+              prompt: prompt,
+              image_size: "square_hd", // 1024x1024
+              num_inference_steps: 4,
+              num_images: 1,
+              enable_safety_checker: true,
+            },
+          });
 
       // Get the image URL from the result
       const imageUrl = result.images?.[0]?.url;
