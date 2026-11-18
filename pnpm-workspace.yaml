@@ -1,6 +1,7 @@
 allowBuilds:
   '@clerk/shared': true
   '@firebase/util': true
+  core-js: true
   cypress: true
   esbuild: true
   protobufjs: true
