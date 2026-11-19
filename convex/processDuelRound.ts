@@ -40,7 +40,7 @@ const BattleRoundResponseSchema = z.object({
       .number()
       .min(0)
       .max(10)
-      .describe("Points earned by wizard 1 (0-10)"),
+      .describe("Points earned by wizard 1 (0-10). Wizard 1 is the first wizard named in the output field mapping, NOT necessarily the first listed in the actions."),
     healthChange: z
       .number()
       .min(-100)
@@ -472,7 +472,7 @@ async function generateBattleRound(
     wizard2
   );
 
-  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
+  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
 
   try {
     // Use structured output with schema for better AI responses
