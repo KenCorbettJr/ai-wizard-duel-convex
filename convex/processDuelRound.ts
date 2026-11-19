@@ -97,18 +97,23 @@ export type DuelConclusionResponse = z.infer<typeof DuelConclusionSchema>;
 // Scale of the arena, repeated in every illustration prompt. Without it the
 // image model draws a small platform with the wizards almost touching.
 const ARENA_SCALE =
-  "The Enchanted Arena is a vast, stadium-sized arena with tiered spectator stands all around. The two wizards stand about 50 feet (15 meters) apart, a wide stretch of open arena floor between them, so they can see spells coming and have time to react. Spells visibly travel across that distance.";
+  "The Enchanted Arena is a vast, stadium-sized arena with tiered spectator stands all around, not a small platform. The wizards began the duel about 50 feet (15 meters) apart, but they are free to move: they can run, fly, leap, teleport, change the environment, and close to point-blank range or retreat as far as they like. Draw them wherever the action of this round puts them.";
+
+// Camera shots and the arena scale push wizards far apart. When an attack
+// actually lands, the picture must show it landing on the target.
+const ILLUSTRATION_RULES =
+  "ILLUSTRATION RULES: Pick the moment of impact, and show both wizards clearly in frame. Name each wizard and say who is attacking whom. If an attack hits (the target loses health), the attacker's move must be aimed AT the target, and the prompt must show the target being struck, with the target clearly visible and not tiny or in the background. A leaping, flying or swinging attacker travels toward the target, never toward the camera, the crowd or the stands. If the attack is blocked or dodged, show the attack meeting the defense. Wizards may be at any distance from each other, so place them where this round's actions put them, and let the camera shot frame them. Say which direction each wizard is facing and moving.";
 
 // The introduction (round 0) is the wide establishing shot. Every battle round
 // gets a different camera angle. The order is shuffled per
 // duel so every duel feels different, and no angle repeats until all are used.
 const CAMERA_SHOTS = [
-  "Low-angle hero shot looking up at the winning or most dominant wizard, spell energy blazing toward the viewer, the other wizard tiny in the far background across the arena.",
-  "Dramatic close-up on one wizard's face and casting hands, intense expression, magical light on their features, the opponent's distant spell approaching behind.",
-  "Over-the-shoulder shot from behind one wizard, looking across the long arena floor toward the distant opponent as an incoming spell streaks toward the viewer.",
-  "High aerial view looking straight down on the arena floor, the wizards far apart on opposite sides, and the spells colliding in a bright shockwave midway between them.",
-  "Dutch-angle (tilted) action shot at the point of impact, debris and sparks flying, motion lines, a wizard caught mid-movement, the other far in the background.",
-  "Side-on cinematic profile of the whole arena, both wizards facing each other from far apart with the clashing spells meeting in the center.",
+  "Low-angle hero shot looking up at the winning or most dominant wizard, the dominant wizard's spell or strike blazing toward its target, with the other wizard clearly visible in the frame.",
+  "Dramatic close-up on one wizard's face and casting hands, intense expression, magical light on their features, the opponent and their spell visible behind.",
+  "Over-the-shoulder shot from behind one wizard, looking toward the opponent as spells and attacks pass between the two.",
+  "High aerial view looking straight down on the arena floor, the wizards wherever their actions put them, and the spells or strikes meeting in a bright shockwave.",
+  "Dutch-angle (tilted) action shot at the point of impact, debris and sparks flying, motion lines, a wizard caught mid-movement, the other wizard visible and part of the action.",
+  "Side-on cinematic profile of the whole arena, both wizards in frame, positioned where their actions put them, with clashing spells or strikes meeting between them.",
   "Ground-level shot from behind rubble or arena stones, a wizard leaping or diving to dodge in the foreground as a spell streaks past.",
   "Shot from behind the crowd silhouette in the stands, looking down over spectators gasping or cheering at the duel far below.",
 ];
@@ -472,7 +477,7 @@ async function generateBattleRound(
     wizard2
   );
 
-  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
+  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\n${ILLUSTRATION_RULES}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
 
   try {
     // Use structured output with schema for better AI responses
@@ -609,7 +614,7 @@ The two wizards for this duel are:
 - ${wizard1.name}: ${wizard1.description}
 - ${wizard2.name}: ${wizard2.description}
 
-The two wizards face each other from opposite sides of the arena, about 50 feet apart, prepared to continue the duel. The arena is vast, with open floor between them and spectator stands all around, not a small platform.
+The duel began with the wizards facing each other from opposite sides of the arena, about 50 feet apart. Since then they may have moved, so use the previous rounds to track positions. They are free to move, fly, change the environment, and close in or back away. The arena is vast, with spectator stands all around, not a small platform.
 
 ## Duel Structure
 - The duel will be ${duelType}
@@ -677,7 +682,7 @@ You must return ONLY a valid JSON object with the following structure:
 {
   "narration": "A punchy description of the round's magical combat, written in present tense like a live announcer. Keep it SHORT: 2 brief paragraphs, about 70 to 100 words in total. Focus on the one or two decisive moments and how the spells interact. No scene-setting filler.",
   "result": "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
-  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Include wizard appearances, spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
+  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Follow the ILLUSTRATION RULES: both wizards visible, and every attack that lands is shown aimed at and striking its target. Include wizard appearances, spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
   "damageSummary": "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say that wizard took no damage.",
   "wizard1": {
     "pointsEarned": 0, // 0 to 10
