@@ -650,3 +650,95 @@
     opacity: 1;
   }
 }
+
+@keyframes duel-hit {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.duel-hit {
+  animation: duel-hit 0.5s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-hit {
+    animation: none;
+  }
+}
+
+/* Staged reveal of a resolved round: spells, art, teaser, narration, outcome. */
+@keyframes duel-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.duel-reveal > * {
+  animation: duel-reveal 0.6s ease-out both;
+}
+.duel-reveal > *:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.duel-reveal > *:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.duel-reveal > *:nth-child(4) {
+  animation-delay: 0.6s;
+}
+.duel-reveal > *:nth-child(5) {
+  animation-delay: 0.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-reveal > * {
+    animation: none;
+  }
+}
+
+:root {
+  --app-navbar-h: 77px;
+}
+
+/* Keep the sticky scoreboard short on phones while the composer is open. */
+@media (max-width: 767px) {
+  html[data-composer-open] .duel-scoreboard-details {
+    display: none;
+  }
+}
+
+/* Brief highlight when a round resolves while the viewer is watching. */
+@keyframes duel-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 70%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+.duel-flash {
+  animation: duel-flash 1.6s ease-out 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .duel-flash {
+    animation: none;
+  }
+}

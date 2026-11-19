@@ -1,5 +1,11 @@
 "use client";
 
+import Link from "next/link";
+import { CampaignPathMap } from "@/components/CampaignPathMap";
+import {
+  CAMPAIGN_TOTAL_OPPONENTS,
+  getCampaignSummary,
+} from "@/lib/campaignStatus";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Doc } from "../../convex/_generated/dataModel";
@@ -69,11 +75,10 @@ export function CampaignStats({
   // Calculate statistics
   const totalWizards = userWizards.length;
   const completedCampaigns = campaignProgress.filter(
-    (p: Doc<"wizardCampaignProgress">) => p.hasCompletionRelic,
+    (p: Doc<"wizardCampaignProgress">) => getCampaignSummary(p).isCompleted,
   ).length;
   const activeCampaigns = campaignProgress.filter(
-    (p: Doc<"wizardCampaignProgress">) =>
-      !p.hasCompletionRelic && p.currentOpponent <= 10,
+    (p: Doc<"wizardCampaignProgress">) => !getCampaignSummary(p).isCompleted,
   ).length;
   const totalBattlesWon = campaignProgress.reduce(
     (sum: number, p: Doc<"wizardCampaignProgress">) =>
@@ -84,7 +89,7 @@ export function CampaignStats({
     totalWizards > 0
       ? campaignProgress.reduce(
           (sum: number, p: Doc<"wizardCampaignProgress">) =>
-            sum + Math.min(p.currentOpponent - 1, 10),
+            sum + getCampaignSummary(p).defeatedCount,
           0,
         ) / totalWizards
       : 0;
@@ -98,7 +103,7 @@ export function CampaignStats({
     )[0];
 
   // Calculate completion percentage and milestones
-  const totalPossibleBattles = totalWizards * 10;
+  const totalPossibleBattles = totalWizards * CAMPAIGN_TOTAL_OPPONENTS;
   const completionPercentage =
     totalPossibleBattles > 0
       ? (totalBattlesWon / totalPossibleBattles) * 100
@@ -388,8 +393,8 @@ export function CampaignStats({
                     (p: Doc<"wizardCampaignProgress">) =>
                       p.wizardId === wizard._id,
                   );
-                  const defeatedCount = progress?.defeatedOpponents.length || 0;
-                  const progressPercent = (defeatedCount / 10) * 100;
+                  const summary = getCampaignSummary(progress);
+                  const defeatedCount = summary.defeatedCount;
 
                   return (
                     <div key={wizard._id} className="border rounded-lg p-4">
@@ -411,25 +416,26 @@ export function CampaignStats({
                             </Badge>
                           )}
                           <span className="text-sm font-medium">
-                            {defeatedCount} / 10
+                            {defeatedCount} / {summary.total}
                           </span>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Campaign Progress</span>
-                          <span>{Math.round(progressPercent)}%</span>
+                        <CampaignPathMap progress={progress} compact />
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>
+                            {summary.isCompleted
+                              ? "Campaign complete"
+                              : `Next opponent: #${summary.nextOpponent}`}
+                          </span>
+                          <Link
+                            href={`/campaign/wizard/${wizard._id}`}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            Open campaign
+                          </Link>
                         </div>
-                        <Progress value={progressPercent} className="h-2" />
-
-                        {progress &&
-                          progress.currentOpponent <= 10 &&
-                          !progress.hasCompletionRelic && (
-                            <div className="text-sm text-muted-foreground">
-                              Next opponent: #{progress.currentOpponent}
-                            </div>
-                          )}
                       </div>
                     </div>
                   );

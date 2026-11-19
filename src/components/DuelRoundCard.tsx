@@ -8,93 +8,178 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
-import { TimeAgo } from "@/components/TimeAgo";
 import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";
-import { Clock, Sparkles, RefreshCw, Undo2, Scroll } from "lucide-react";
-import { Doc, Id } from "../../convex/_generated/dataModel";
-import { memo, useState, useEffect } from "react";
+import { Sparkles, RefreshCw, Scroll, ChevronDown, Check } from "lucide-react";
+import { toast } from "sonner";
+import { Doc } from "../../convex/_generated/dataModel";
+import { memo, useState, useEffect, useRef } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { NarratedText } from "@/components/NarratedText";
 import { useConclusionReveal } from "@/hooks/useConclusionReveal";
 
+type RoundWizard = Doc<"wizards"> | null | undefined;
+
 interface DuelRoundCardProps {
   round: Doc<"duelRounds">;
   duel: Doc<"duels">;
+  /** Wizards already loaded by the page. Avoids a query per round. */
+  wizard1?: RoundWizard;
+  wizard2?: RoundWizard;
+  /** The newest round stays expanded. Older completed rounds start collapsed. */
+  isLatest?: boolean;
 }
 
-const UndoSpellButton = ({
-  duelId,
-  wizardId,
+const PROCESSING_STAGES = [
+  "Reading both actions",
+  "Rolling for luck",
+  "Writing the tale",
+  "Painting the scene",
+];
+
+/** Processing starts when the last wizard submits, so use the newest spell time. */
+function processingStartedAt(round: Doc<"duelRounds">): number {
+  const times = Object.values(round.spells ?? {}).map((s) => s.timestamp);
+  return times.length ? Math.max(...times) : round._creationTime;
+}
+
+function ProcessingStages({
+  startedAt,
+  textOnly,
 }: {
-  duelId: Id<"duels">;
-  wizardId: Id<"wizards">;
-}) => {
-  const [isUndoing, setIsUndoing] = useState(false);
-  const undoSpell = useMutation(api.duels.undoSpell);
-
-  const handleUndoSpell = async () => {
-    setIsUndoing(true);
-    try {
-      await undoSpell({
-        duelId,
-        wizardId,
-      });
-    } catch (error) {
-      console.error("Failed to undo spell:", error);
-    } finally {
-      setIsUndoing(false);
-    }
-  };
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleUndoSpell}
-      disabled={isUndoing}
-      className="border-warning/40 hover:bg-warning/10 text-warning"
-    >
-      <Undo2 className="h-3 w-3 mr-1" />
-      {isUndoing ? "Undoing..." : "Undo Spell"}
-    </Button>
+  startedAt: number;
+  textOnly: boolean;
+}) {
+  const stages = textOnly ? PROCESSING_STAGES.slice(0, 3) : PROCESSING_STAGES;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const elapsed = Math.max(0, (now - startedAt) / 1000);
+  // Estimated from elapsed time. The backend does not report sub-steps.
+  const current = Math.min(
+    stages.length - 1,
+    elapsed < 6 ? 0 : elapsed < 14 ? 1 : elapsed < 30 ? 2 : 3,
   );
-};
+  return (
+    <ol
+      className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs"
+      aria-label="Estimated round progress"
+      title="Estimated from elapsed time"
+    >
+      <li className="sr-only">Estimated from elapsed time</li>
+      {stages.map((label, i) => (
+        <li
+          key={label}
+          aria-current={i === current ? "step" : undefined}
+          className={`flex items-center gap-1 ${
+            i < current
+              ? "text-success"
+              : i === current
+                ? "font-semibold text-primary"
+                : "text-muted-foreground"
+          }`}
+        >
+          {i < current ? (
+            <Check className="h-3 w-3" aria-hidden="true" />
+          ) : (
+            <span
+              className={`inline-block h-1.5 w-1.5 rounded-full bg-current ${i === current ? "animate-pulse motion-reduce:animate-none" : ""}`}
+              aria-hidden="true"
+            />
+          )}
+          {label}
+          {i === stages.length - 1 && elapsed > 60 && (
+            <span className="text-muted-foreground"> · still working…</span>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function DeltaValue({ value }: { value: number }) {
+  if (value === 0) return <span>0</span>;
+  if (value > 0)
+    return <span className="font-bold text-success">+{value}</span>;
+  return <span className="text-destructive font-bold">{value}</span>;
+}
 
 export const DuelRoundCard = memo(function DuelRoundCard({
   round,
   duel,
+  wizard1: wizard1Prop,
+  wizard2: wizard2Prop,
+  isLatest = true,
 }: DuelRoundCardProps) {
   const { user } = useUser();
   const [showReprocessButton, setShowReprocessButton] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
   const { revealed, reveal } = useConclusionReveal(duel._id);
   const conclusionLocked = round.type === "CONCLUSION" && !revealed;
+  const [expandedOverride, setExpandedOverride] = useState<boolean | null>(
+    null,
+  );
 
   const triggerRoundProcessing = useMutation(api.duels.triggerRoundProcessing);
 
   // Fetch wizard data for each wizard in the duel
-  const wizard1 = useQuery(
+  const fetched1 = useQuery(
     api.wizards.getWizardWithOwner,
-    duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
+    duel.wizards[0] && wizard1Prop === undefined
+      ? { wizardId: duel.wizards[0] }
+      : "skip",
   );
-  const wizard2 = useQuery(
+  const fetched2 = useQuery(
     api.wizards.getWizardWithOwner,
-    duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
+    duel.wizards[1] && wizard2Prop === undefined
+      ? { wizardId: duel.wizards[1] }
+      : "skip",
   );
+  const wizard1 = wizard1Prop !== undefined ? wizard1Prop : fetched1;
+  const wizard2 = wizard2Prop !== undefined ? wizard2Prop : fetched2;
 
-  // Show reprocess button after 1 minute if round is stuck in PROCESSING
+  // Expand when a timeline chip jumps to this round.
+  useEffect(() => {
+    const onExpand = (e: Event) => {
+      const n = (e as CustomEvent<{ roundNumber: number }>).detail?.roundNumber;
+      if (n === round.roundNumber) setExpandedOverride(true);
+    };
+    window.addEventListener("duel-expand-round", onExpand);
+    return () => window.removeEventListener("duel-expand-round", onExpand);
+  }, [round.roundNumber]);
+
+  // Flash the card briefly when a round resolves while the viewer is here.
+  const prevStatus = useRef(round.status);
+  const [justResolved, setJustResolved] = useState(false);
+  useEffect(() => {
+    if (prevStatus.current !== "COMPLETED" && round.status === "COMPLETED") {
+      setJustResolved(true);
+      const t = setTimeout(() => setJustResolved(false), 4000);
+      prevStatus.current = round.status;
+      return () => clearTimeout(t);
+    }
+    prevStatus.current = round.status;
+  }, [round.status]);
+
+  // Show the reprocess button 1 minute after the round entered PROCESSING. The
+  // start is never earlier than when this card mounted, so a client clock that
+  // runs ahead of the server can't show it early.
+  const [mountedAt] = useState(() => Date.now());
+  const startedAtMs = Math.max(processingStartedAt(round), mountedAt);
   useEffect(() => {
     if (round.status === "PROCESSING") {
+      const remaining = Math.max(0, 60000 - (Date.now() - startedAtMs));
       const timer = setTimeout(() => {
         setShowReprocessButton(true);
-      }, 60000); // 1 minute
+      }, remaining); // 1 minute after the round started processing
 
       return () => clearTimeout(timer);
     } else {
       setShowReprocessButton(false);
     }
-  }, [round.status]);
+  }, [round.status, startedAtMs]);
 
   const handleReprocess = async () => {
     try {
@@ -106,6 +191,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
       setShowReprocessButton(false);
     } catch (error) {
       console.error("Failed to reprocess round:", error);
+      toast.error("Couldn't reprocess the round. Please try again.");
     } finally {
       setIsReprocessing(false);
     }
@@ -151,43 +237,17 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     );
   };
 
-  const hasOtherWizardSubmitted = () => {
-    if (!round.spells || !userWizard) return false;
-
-    // Check if any wizard other than the current user has submitted a spell
-    const otherWizards = duel.wizards.filter(
-      (wizardId) => wizardId !== userWizard._id,
-    );
-    return otherWizards.some((wizardId) => round.spells![wizardId]);
-  };
-
   const getStatusBadge = () => {
     if (round.status === "COMPLETED") {
       return null; // No badge for completed rounds
     }
 
     if (isWaitingForMyAction()) {
-      return (
-        <Badge
-          variant="default"
-          className="bg-warning/15 text-warning border-warning/40"
-        >
-          <Clock className="h-3 w-3 mr-1" />
-          Your Turn - <TimeAgo timestamp={round._creationTime} />
-        </Badge>
-      );
+      return null; // The scoreboard and composer already prompt the player
     }
 
     if (round.status === "WAITING_FOR_SPELLS") {
-      return (
-        <Badge
-          variant="secondary"
-          className="bg-info/15 text-info border-info/40"
-        >
-          <Clock className="h-3 w-3 mr-1" />
-          Actions Submitted
-        </Badge>
-      );
+      return null; // The banner below already explains who we are waiting on
     }
 
     if (round.status === "PROCESSING") {
@@ -212,18 +272,21 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     return `Round ${round.roundNumber}`;
   };
 
+  // Winner of this round: more points awarded, else the smaller health loss.
   const isWinner = (wizardId: string) => {
-    return duel.winners?.includes(wizardId as Id<"wizards">) || false;
+    const [a, b] = duel.wizards;
+    const compare = (rec?: Record<string, number>) =>
+      rec && rec[a] !== undefined && rec[b] !== undefined
+        ? Math.sign(rec[a] - rec[b])
+        : 0;
+    const result =
+      compare(round.outcome?.pointsAwarded) ||
+      compare(round.outcome?.healthChange);
+    if (!result) return false;
+    return wizardId === (result > 0 ? a : b);
   };
 
-  const DeltaValue = ({ value }: { value: number }) => {
-    if (value === 0) return <span>0</span>;
-    if (value > 0)
-      return <span className="font-bold text-success">+{value}</span>;
-    return <span className="text-destructive font-bold">{value}</span>;
-  };
-
-  const WizardName = ({ wizardId }: { wizardId: string }) => {
+  const renderWizardName = (wizardId: string) => {
     const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
     const winner = isWinner(wizardId);
     return (
@@ -239,7 +302,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     );
   };
 
-  const WizardThumbnail = ({ wizardId }: { wizardId: unknown }) => {
+  const renderWizardThumbnail = (wizardId: unknown) => {
     const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
 
     if (!wizard?.illustration) {
@@ -265,47 +328,99 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     );
   };
 
+  const canCollapse =
+    round.status === "COMPLETED" && round.type !== "CONCLUSION" && !isLatest;
+  const expanded = !canCollapse || (expandedOverride ?? false);
+  const bodyId = `round-${round.roundNumber}-body`;
+
+  const hpSummary = duel.wizards.slice(0, 2).map((id, i) => {
+    const change = round.outcome?.healthChange?.[id] ?? 0;
+    const name = (i === 0 ? wizard1 : wizard2)?.name ?? "Wizard";
+    return change !== 0 ? `${name} ${change > 0 ? "+" : ""}${change} HP` : null;
+  });
+  const summary = [...hpSummary.filter(Boolean)].join(" · ");
+
   return (
-    <Card className="mb-4 w-full bg-card/90 backdrop-blur-sm border-border/50 shadow-lg">
+    <Card
+      id={`round-${round.roundNumber}`}
+      tabIndex={-1}
+      data-resolved={justResolved ? "true" : undefined}
+      className="mb-4 outline-none data-[resolved=true]:duel-flash w-full scroll-mt-[calc(var(--app-navbar-h)+var(--duel-sticky-h,10rem)+1rem)] md:scroll-mt-[calc(var(--duel-sticky-h,10rem)+1rem)] border-border/50 bg-card/90 shadow-lg backdrop-blur-sm"
+    >
       <CardHeader>
         <CardTitle>
-          <div className="flex items-center justify-between">
-            <div className="text-3xl font-bold text-foreground">
-              {getRoundTitle()}
+          {canCollapse ? (
+            <h2 className="w-full">
+              <button
+                type="button"
+                onClick={() => setExpandedOverride(!expanded)}
+                aria-expanded={expanded}
+                aria-controls={bodyId}
+                className="flex w-full items-center justify-between gap-3 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                <span className="min-w-0">
+                  <span className="block text-xl font-bold text-foreground sm:text-2xl">
+                    {getRoundTitle()}
+                  </span>
+                  {!expanded && (
+                    <span className="mt-1 block truncate text-sm font-normal text-muted-foreground">
+                      {[summary, round.outcome?.result]
+                        .filter(Boolean)
+                        .join(" — ") || "Round complete"}
+                    </span>
+                  )}
+                </span>
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`}
+                  aria-hidden="true"
+                />
+              </button>
+            </h2>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
+                {getRoundTitle()}
+              </h2>
+              {getStatusBadge()}
             </div>
-            {getStatusBadge()}
-          </div>
+          )}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {isWaitingForMyAction() && hasOtherWizardSubmitted() && (
-          <div className="mb-4 p-3 bg-warning/10 border border-warning/40 rounded-lg">
-            <p className="text-warning font-medium">
-              The other wizard has submitted their actions.
-            </p>
-          </div>
-        )}
-
-        {isWaitingForMyAction() && !hasOtherWizardSubmitted() && (
-          <div className="mb-4 p-3 bg-info/10 border border-info/40 rounded-lg">
-            <p className="text-info font-medium">
-              Waiting for all wizards to submit their actions.
-            </p>
-          </div>
-        )}
-
-        {round.status === "WAITING_FOR_SPELLS" && !isWaitingForMyAction() && (
-          <div className="mb-4 p-3 bg-info/10 border border-info/40 rounded-lg">
-            <div className="flex items-center justify-between">
-              <p className="text-info font-medium">
-                Actions Submitted. Awaiting other wizard&apos;s actions.
-              </p>
-              {userWizard && (
-                <UndoSpellButton duelId={duel._id} wizardId={userWizard._id} />
+      <CardContent
+        id={bodyId}
+        hidden={!expanded}
+        className={
+          expanded
+            ? "animate-in fade-in slide-in-from-bottom-2 duration-500 motion-reduce:animate-none"
+            : undefined
+        }
+      >
+        {round.status === "WAITING_FOR_SPELLS" &&
+          !isWaitingForMyAction() &&
+          userWizard && (
+            <div className="mb-4 rounded-lg border border-info/50 bg-info/10 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="font-medium text-foreground">
+                  Your action is locked in. Waiting for the other wizard.
+                </p>
+              </div>
+              {round.spells?.[userWizard._id]?.description && (
+                <blockquote className="mt-2 border-l-2 border-info/50 pl-3 text-sm italic text-foreground/80">
+                  {round.spells[userWizard._id].description}
+                </blockquote>
               )}
             </div>
-          </div>
-        )}
+          )}
+
+        {round.status === "WAITING_FOR_SPELLS" &&
+          !isWaitingForMyAction() &&
+          !userWizard && (
+            <div className="mb-4 rounded-lg border border-info/50 bg-info/10 p-3">
+              <p className="font-medium text-foreground">
+                Waiting for the wizards to submit their actions.
+              </p>
+            </div>
+          )}
 
         {round.status === "PROCESSING" && (
           <div className="mb-4 p-3 bg-primary/8 border border-primary/30 rounded-lg">
@@ -316,14 +431,36 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   <p className="text-primary font-medium">
                     The Arcane Arbiter is weaving the tale of this round...
                   </p>
-                  {showReprocessButton && (
+                  <ProcessingStages
+                    startedAt={processingStartedAt(round)}
+                    textOnly={!!duel.textOnlyMode}
+                  />
+                  {round.spells && (
+                    <ul className="mt-3 space-y-1 text-sm">
+                      {duel.wizards.slice(0, 2).map((id, i) => {
+                        const spell = round.spells?.[id];
+                        if (!spell) return null;
+                        return (
+                          <li key={id} className="break-words">
+                            <span className="font-semibold">
+                              {(i === 0 ? wizard1 : wizard2)?.name ?? "Wizard"}:
+                            </span>{" "}
+                            <span className="italic text-foreground/80">
+                              {spell.description}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  {showReprocessButton && userWizard && (
                     <p className="text-primary text-sm mt-1">
                       Taking longer than expected? Try reprocessing the round.
                     </p>
                   )}
                 </div>
               </div>
-              {showReprocessButton && (
+              {showReprocessButton && userWizard && (
                 <Button
                   onClick={handleReprocess}
                   disabled={isReprocessing}
@@ -361,58 +498,64 @@ export const DuelRoundCard = memo(function DuelRoundCard({
         )}
 
         {round.status === "COMPLETED" && !conclusionLocked && (
-          <div className="space-y-6">
-            {/* Winner Announcement for Conclusion Rounds */}
-            {round.type === "CONCLUSION" &&
-              duel.winners &&
-              duel.winners.length > 0 && (
-                <div className="bg-linear-to-r from-warning/20 to-gold/10 border-2 border-warning/40 rounded-lg p-6 text-center">
-                  <div className="flex items-center justify-center gap-3 mb-3">
-                    <Crown className="h-8 w-8 text-warning" />
-                    <h3 className="text-2xl font-bold text-warning">
-                      {duel.winners.length === 1
-                        ? "Victory Declared!"
-                        : "Honorable Draw!"}
-                    </h3>
-                    <Crown className="h-8 w-8 text-warning" />
-                  </div>
-                  <p className="text-lg text-warning font-medium">
-                    {duel.winners.length === 1 ? (
-                      <>
-                        {duel.wizards[0] === duel.winners[0]
-                          ? wizard1?.name
-                          : wizard2?.name}{" "}
-                        emerges as the champion!
-                      </>
-                    ) : (
-                      "Both wizards have proven their worth in this epic duel!"
-                    )}
-                  </p>
-                </div>
-              )}
-            {/* Spell Actions Display */}
+          <div className="space-y-6 duel-reveal">
+            {/* Face-off: each wizard's action, luck roll and result */}
             {round.spells && duel.wizards.length >= 2 && (
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
-                <div className="flex-1 flex gap-4 items-center min-w-64">
-                  <WizardThumbnail wizardId={duel.wizards[0]} />
-                  {round.spells[duel.wizards[0]] && (
-                    <div className="flex-1">
-                      <span className="bg-info text-info-foreground p-2 rounded inline-block max-w-xs">
-                        {round.spells[duel.wizards[0]].description}
-                      </span>
+              <div className="grid gap-3 md:grid-cols-2">
+                {[0, 1].map((i) => {
+                  const id = duel.wizards[i];
+                  const wiz = i === 0 ? wizard1 : wizard2;
+                  const spell = round.spells?.[id];
+                  const roll = round.outcome?.luckRolls?.[id];
+                  const hp = round.outcome?.healthChange?.[id];
+                  const pts = round.outcome?.pointsAwarded?.[id];
+                  return (
+                    <div
+                      key={id}
+                      className={`rounded-lg border p-3 ${
+                        isWinner(id)
+                          ? "border-warning/60 bg-warning/10"
+                          : "border-border/60 bg-muted/30"
+                      }`}
+                    >
+                      <div className="mb-2 flex items-center gap-3">
+                        {renderWizardThumbnail(id)}
+                        <span className="min-w-0 flex-1 truncate font-semibold">
+                          {wiz?.name ?? "Wizard"}
+                        </span>
+                        {roll !== undefined && (
+                          <D20Die value={roll} size="sm" />
+                        )}
+                      </div>
+                      {spell && (
+                        <blockquote className="break-words border-l-2 border-info/60 pl-3 text-sm italic text-foreground/90">
+                          {spell.description}
+                        </blockquote>
+                      )}
+                      {(hp !== undefined || pts !== undefined) && (
+                        <div
+                          className="mt-3 flex flex-wrap gap-2 text-sm animate-in fade-in zoom-in-90 fill-mode-both motion-reduce:animate-none"
+                          style={{ animationDelay: "900ms" }}
+                        >
+                          {hp !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
+                              <span className="text-muted-foreground">HP</span>
+                              <DeltaValue value={hp} />
+                            </span>
+                          )}
+                          {pts !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
+                              <span className="text-muted-foreground">
+                                Points
+                              </span>
+                              <DeltaValue value={pts} />
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="flex-1 flex gap-4 items-center">
-                  {round.spells[duel.wizards[1]] && (
-                    <div className="flex-1 text-right">
-                      <span className="bg-info text-info-foreground p-2 rounded inline-block max-w-xs">
-                        {round.spells[duel.wizards[1]].description}
-                      </span>
-                    </div>
-                  )}
-                  <WizardThumbnail wizardId={duel.wizards[1]} />
-                </div>
+                  );
+                })}
               </div>
             )}
 
@@ -471,141 +614,168 @@ export const DuelRoundCard = memo(function DuelRoundCard({
             {(round.outcome?.pointsAwarded ||
               round.outcome?.healthChange ||
               round.outcome?.luckRolls) && (
-              <div>
-                <h3 className="text-lg font-bold mb-3">Outcome</h3>
-                <div className="overflow-x-auto text-sm">
-                  <table className="w-full border-collapse border border-border/50 rounded-lg">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="border border-border/50 p-2 text-left"></th>
-                        <th
-                          className={`border border-border/50 p-2 text-center ${
-                            isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                          }`}
-                        >
-                          <WizardName wizardId={duel.wizards[0]} />
-                        </th>
-                        <th
-                          className={`border border-border/50 p-2 text-center ${
-                            isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                          }`}
-                        >
-                          <WizardName wizardId={duel.wizards[1]} />
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {round.outcome?.luckRolls && (
-                        <tr>
-                          <td className="border border-border/50 p-2 font-medium">
-                            Luck Roll (D20)
-                          </td>
-                          <td
+              <details className="rounded-lg border border-border/50 p-3">
+                <summary className="cursor-pointer font-semibold focus-visible:ring-2 focus-visible:ring-primary/40 rounded">
+                  Outcome details
+                </summary>
+                <div className="mt-3">
+                  <div className="overflow-x-auto text-sm">
+                    <table className="w-full border-collapse border border-border/50 rounded-lg">
+                      <caption className="sr-only">
+                        {getRoundTitle()} outcome for each wizard
+                      </caption>
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th
+                            scope="col"
+                            className="border border-border/50 p-2 text-left"
+                          >
+                            <span className="sr-only">Stat</span>
+                          </th>
+                          <th
+                            scope="col"
                             className={`border border-border/50 p-2 text-center ${
                               isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
                             }`}
                           >
-                            <div className="flex justify-center">
-                              <D20Die
-                                value={
-                                  round.outcome.luckRolls[duel.wizards[0]] || 1
-                                }
-                                size="sm"
-                              />
-                            </div>
-                          </td>
-                          <td
+                            {renderWizardName(duel.wizards[0])}
+                          </th>
+                          <th
+                            scope="col"
                             className={`border border-border/50 p-2 text-center ${
                               isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
                             }`}
                           >
-                            <div className="flex justify-center">
-                              <D20Die
-                                value={
-                                  round.outcome.luckRolls[duel.wizards[1]] || 1
-                                }
-                                size="sm"
-                              />
-                            </div>
-                          </td>
+                            {renderWizardName(duel.wizards[1])}
+                          </th>
                         </tr>
-                      )}
-                      {round.outcome?.pointsAwarded && (
-                        <tr>
-                          <td className="border border-border/50 p-2 font-medium">
-                            Points Awarded
-                          </td>
-                          <td
-                            className={`border border-border/50 p-2 text-center ${
-                              isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                            }`}
-                          >
-                            <span className="p-2 bg-background rounded min-w-14 inline-block">
-                              <DeltaValue
-                                value={
-                                  round.outcome.pointsAwarded[
-                                    duel.wizards[0]
-                                  ] || 0
-                                }
-                              />
-                            </span>
-                          </td>
-                          <td
-                            className={`border border-border/50 p-2 text-center ${
-                              isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                            }`}
-                          >
-                            <span className="p-2 bg-background rounded min-w-14 inline-block">
-                              <DeltaValue
-                                value={
-                                  round.outcome.pointsAwarded[
-                                    duel.wizards[1]
-                                  ] || 0
-                                }
-                              />
-                            </span>
-                          </td>
-                        </tr>
-                      )}
-                      {round.outcome?.healthChange && (
-                        <tr>
-                          <td className="border border-border/50 p-2 font-medium">
-                            Hit Points Change
-                          </td>
-                          <td
-                            className={`border border-border/50 p-2 text-center ${
-                              isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                            }`}
-                          >
-                            <span className="p-2 bg-background rounded min-w-14 inline-block">
-                              <DeltaValue
-                                value={
-                                  round.outcome.healthChange[duel.wizards[0]] ||
-                                  0
-                                }
-                              />
-                            </span>
-                          </td>
-                          <td
-                            className={`border border-border/50 p-2 text-center ${
-                              isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                            }`}
-                          >
-                            <span className="p-2 bg-background rounded min-w-14 inline-block">
-                              <DeltaValue
-                                value={
-                                  round.outcome.healthChange[duel.wizards[1]] ||
-                                  0
-                                }
-                              />
-                            </span>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {round.outcome?.luckRolls && (
+                          <tr>
+                            <th
+                              scope="row"
+                              className="border border-border/50 p-2 text-left font-medium"
+                            >
+                              Luck Roll (D20)
+                            </th>
+                            <td
+                              className={`border border-border/50 p-2 text-center ${
+                                isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
+                              }`}
+                            >
+                              <div className="flex justify-center">
+                                <D20Die
+                                  value={
+                                    round.outcome.luckRolls[duel.wizards[0]] ??
+                                    1
+                                  }
+                                  size="sm"
+                                />
+                              </div>
+                            </td>
+                            <td
+                              className={`border border-border/50 p-2 text-center ${
+                                isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
+                              }`}
+                            >
+                              <div className="flex justify-center">
+                                <D20Die
+                                  value={
+                                    round.outcome.luckRolls[duel.wizards[1]] ??
+                                    1
+                                  }
+                                  size="sm"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        {round.outcome?.pointsAwarded && (
+                          <tr>
+                            <th
+                              scope="row"
+                              className="border border-border/50 p-2 text-left font-medium"
+                            >
+                              Points Awarded
+                            </th>
+                            <td
+                              className={`border border-border/50 p-2 text-center ${
+                                isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
+                              }`}
+                            >
+                              <span className="p-2 bg-background rounded min-w-14 inline-block">
+                                <DeltaValue
+                                  value={
+                                    round.outcome.pointsAwarded[
+                                      duel.wizards[0]
+                                    ] || 0
+                                  }
+                                />
+                              </span>
+                            </td>
+                            <td
+                              className={`border border-border/50 p-2 text-center ${
+                                isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
+                              }`}
+                            >
+                              <span className="p-2 bg-background rounded min-w-14 inline-block">
+                                <DeltaValue
+                                  value={
+                                    round.outcome.pointsAwarded[
+                                      duel.wizards[1]
+                                    ] || 0
+                                  }
+                                />
+                              </span>
+                            </td>
+                          </tr>
+                        )}
+                        {round.outcome?.healthChange && (
+                          <tr>
+                            <th
+                              scope="row"
+                              className="border border-border/50 p-2 text-left font-medium"
+                            >
+                              Hit Points Change
+                            </th>
+                            <td
+                              className={`border border-border/50 p-2 text-center ${
+                                isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
+                              }`}
+                            >
+                              <span className="p-2 bg-background rounded min-w-14 inline-block">
+                                <DeltaValue
+                                  value={
+                                    round.outcome.healthChange[
+                                      duel.wizards[0]
+                                    ] || 0
+                                  }
+                                />
+                              </span>
+                            </td>
+                            <td
+                              className={`border border-border/50 p-2 text-center ${
+                                isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
+                              }`}
+                            >
+                              <span className="p-2 bg-background rounded min-w-14 inline-block">
+                                <DeltaValue
+                                  value={
+                                    round.outcome.healthChange[
+                                      duel.wizards[1]
+                                    ] || 0
+                                  }
+                                />
+                              </span>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              </details>
             )}
           </div>
         )}

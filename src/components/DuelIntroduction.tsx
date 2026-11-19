@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { NarratedText } from "@/components/NarratedText";
 
@@ -16,6 +16,12 @@ export const DuelIntroduction = memo(function DuelIntroduction({
   duelId,
 }: DuelIntroductionProps) {
   const introRound = useQuery(api.duels.getIntroductionRound, { duelId });
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (introRound) return;
+    const t = setTimeout(() => setSlow(true), 60_000);
+    return () => clearTimeout(t);
+  }, [introRound]);
 
   if (!introRound) {
     return (
@@ -23,6 +29,12 @@ export const DuelIntroduction = memo(function DuelIntroduction({
         <div className="text-center">
           <RuneSpinner size="md" label="Loading…" />
           <p className="text-muted-foreground">Preparing the arena...</p>
+          {slow && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              This is taking longer than usual. You can still play: the duel
+              doesn&apos;t depend on the introduction.
+            </p>
+          )}
         </div>
       </div>
     );

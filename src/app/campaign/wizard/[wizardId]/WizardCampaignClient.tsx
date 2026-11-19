@@ -2,11 +2,14 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
+import { useEffect, useState } from "react";
+import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
+import { PartyPopper } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
@@ -17,19 +20,31 @@ import { ConvexImage } from "@/components/ConvexImage";
 import { CampaignOpponentCard } from "@/components/CampaignOpponentCard";
 import {
   Scroll,
-  Trophy,
-  Sparkles,
   ArrowLeft,
+  Award,
+  BarChart3,
   Crown,
+  Swords,
   Target,
 } from "lucide-react";
 import Image from "next/image";
-import { PageHeader } from "@/components/PageHeader";
+import { CampaignPathMap } from "@/components/CampaignPathMap";
+import { useStartCampaignBattle } from "@/hooks/useStartCampaignBattle";
+import { getCampaignSummary, getOpponentStatus } from "@/lib/campaignStatus";
+
+const MILESTONES: Record<number, string> = {
+  1: "First victory! The journey has begun.",
+  3: "Three down. You're an apprentice no more.",
+  5: "Halfway there! The road gets harder from here.",
+  9: "One more to go. The final boss awaits.",
+};
 
 export default function WizardCampaignClient() {
   const { user } = useUser();
   const params = useParams();
   const wizardId = params.wizardId as Id<"wizards">;
+  const battle = useStartCampaignBattle();
+  const { start, isStarting, isBusy } = battle;
 
   // Get campaign opponents
   const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
@@ -45,6 +60,27 @@ export default function WizardCampaignClient() {
     api.campaigns.getWizardCampaignProgress,
     wizardId ? { wizardId } : "skip",
   );
+
+  // Celebrate new victories: compare against the count last seen for this wizard
+  const seenKey = `campaign-seen:${wizardId}`;
+  const liveDefeated = wizardProgress?.defeatedOpponents.length;
+  const [celebrate, setCelebrate] = useState<number | null>(null);
+  useEffect(() => {
+    if (liveDefeated === undefined) return;
+    const stored = window.localStorage.getItem(seenKey);
+    const recentlyPlayed =
+      wizardProgress?.lastBattleAt !== undefined &&
+      Date.now() - wizardProgress.lastBattleAt < 10 * 60 * 1000;
+    const increased =
+      liveDefeated >
+      (stored !== null ? Number(stored) : recentlyPlayed ? 0 : liveDefeated);
+    if (increased) {
+      // One-time sync from external storage on mount
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCelebrate(liveDefeated);
+    }
+    window.localStorage.setItem(seenKey, String(liveDefeated));
+  }, [liveDefeated, seenKey, wizardProgress?.lastBattleAt]);
 
   // Show registration prompt for anonymous users
   if (!user) {
@@ -71,7 +107,11 @@ export default function WizardCampaignClient() {
   }
 
   // Show loading state
-  if (wizard === undefined || campaignOpponents === undefined) {
+  if (
+    wizard === undefined ||
+    campaignOpponents === undefined ||
+    wizardProgress === undefined
+  ) {
     return (
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
@@ -107,208 +147,232 @@ export default function WizardCampaignClient() {
     );
   }
 
-  // Get opponent status for this wizard
-  const getOpponentStatus = (opponentNumber: number) => {
-    if (!wizardProgress) {
-      return {
-        isUnlocked: opponentNumber === 1,
-        isDefeated: false,
-        isCurrent: opponentNumber === 1,
-        canBattle: opponentNumber === 1,
-      };
-    }
+  const summary = getCampaignSummary(wizardProgress);
+  const sortedOpponents = [...campaignOpponents]
+    .filter((o) => o.opponentNumber)
+    .sort((a, b) => (a.opponentNumber ?? 0) - (b.opponentNumber ?? 0));
+  const nextOpponentDoc = sortedOpponents.find(
+    (o) => o.opponentNumber === summary.nextOpponent,
+  );
+  const starting =
+    summary.nextOpponent !== null && isStarting(wizardId, summary.nextOpponent);
 
-    const isDefeated =
-      wizardProgress.defeatedOpponents.includes(opponentNumber);
-    const isCurrent = wizardProgress.currentOpponent === opponentNumber;
-    const isUnlocked = isCurrent || isDefeated;
-    const canBattle = isCurrent && !isDefeated;
-
-    return { isUnlocked, isDefeated, isCurrent, canBattle };
+  const jumpTo = (n: number) => {
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    document.getElementById(`opponent-${n}`)?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "center",
+    });
   };
-
-  const defeatedCount = wizardProgress?.defeatedOpponents.length || 0;
-  const isCompleted = defeatedCount === 10;
-  const progressPercentage = (defeatedCount / 10) * 100;
 
   return (
     <CampaignErrorBoundary>
       <div className="container mx-auto px-4 py-8 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header with Back Button */}
-          <div className="mb-8">
-            <Button asChild variant="ghost" className="mb-4">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <nav
+            aria-label="Breadcrumb"
+            className="flex items-center justify-between"
+          >
+            <Button asChild variant="ghost">
               <Link href="/campaign">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Campaign
+                All campaign wizards
               </Link>
             </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/campaign/stats">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Stats &amp; history
+              </Link>
+            </Button>
+          </nav>
 
-            <PageHeader
-              title={`${wizard.name}\'s Campaign`}
-              description="Challenge 10 unique AI opponents to earn a powerful relic"
-              icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
-            />
-          </div>
-
-          {/* Wizard Info Card */}
-          <div className="mb-8">
-            <Card className="max-w-4xl mx-auto">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-8">
-                  {/* Wizard Image - Made Larger */}
-                  <div className="w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-muted">
-                    {wizard.illustration ? (
-                      <ConvexImage
-                        storageId={wizard.illustration}
-                        alt={wizard.name}
-                        width={128}
-                        height={128}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : wizard.illustrationURL ? (
-                      <Image
-                        src={wizard.illustrationURL}
-                        alt={wizard.name}
-                        width={128}
-                        height={128}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-arcane flex items-center justify-center text-white font-bold text-3xl">
-                        {wizard.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Wizard Details - Expanded */}
-                  <div className="flex-1">
-                    <h2 className="text-3xl font-bold mb-3">{wizard.name}</h2>
-                    <p className="text-muted-foreground mb-6 text-lg">
-                      {wizard.description}
-                    </p>
-
-                    {/* Progress */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-base font-medium">
-                          Campaign Progress
-                        </span>
-                        <span className="text-base text-muted-foreground">
-                          {defeatedCount}/10 opponents defeated
-                        </span>
-                      </div>
-                      <Progress value={progressPercentage} className="h-3" />
-
-                      {isCompleted ? (
-                        <div className="flex items-center gap-2 text-success mt-3">
-                          <Crown className="h-5 w-5" />
-                          <span className="text-base font-medium">
-                            Campaign Completed! Relic Earned
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-info mt-3">
-                          <Target className="h-5 w-5" />
-                          <span className="text-base font-medium">
-                            Next: Opponent{" "}
-                            {wizardProgress?.currentOpponent || 1}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Campaign Opponents Grid */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Target className="h-6 w-6 text-primary" />
-                Campaign Opponents
-              </h2>
-              <div className="text-sm text-muted-foreground">
-                Progress: {defeatedCount}/10
+          {celebrate !== null && (
+            <div
+              role="status"
+              className="flex items-start gap-3 rounded-xl border border-warning/50 bg-warning/10 p-4 motion-safe:animate-fade-in"
+            >
+              <PartyPopper
+                className="mt-0.5 h-6 w-6 shrink-0 text-warning"
+                aria-hidden
+              />
+              <div className="flex-1">
+                <p className="font-bold">
+                  {summary.isCompleted
+                    ? "Campaign conquered!"
+                    : MILESTONES[celebrate]
+                      ? MILESTONES[celebrate]
+                      : "Victory! Opponent defeated."}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {summary.isCompleted
+                    ? `${wizard.name} defeated all ${summary.total} opponents${summary.hasRelic ? " and earned the Campaign Relic (+1 Luck)" : ""}.`
+                    : `${celebrate} of ${summary.total} down.${nextOpponentDoc ? ` Next up: ${nextOpponentDoc.name}.` : ""}`}
+                </p>
               </div>
+              {summary.hasRelic && <CampaignRelicBadge hasRelic />}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCelebrate(null)}
+              >
+                Dismiss
+              </Button>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {campaignOpponents.map((opponent) => {
-                if (!opponent.opponentNumber) return null;
+          {/* Hero: who, how far, what's next */}
+          <Card className="gap-0 overflow-hidden border-primary/30 py-0">
+            <CardContent className="p-5 sm:p-8">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                <div className="mx-auto h-36 w-36 shrink-0 overflow-hidden rounded-xl bg-muted sm:mx-0">
+                  {wizard.illustration ? (
+                    <ConvexImage
+                      storageId={wizard.illustration}
+                      alt={wizard.name}
+                      width={144}
+                      height={144}
+                      className="h-full w-full object-cover object-top"
+                    />
+                  ) : wizard.illustrationURL ? (
+                    <Image
+                      src={wizard.illustrationURL}
+                      alt={wizard.name}
+                      width={144}
+                      height={144}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-arcane text-4xl font-bold text-white">
+                      {wizard.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
 
-                const status = getOpponentStatus(opponent.opponentNumber);
+                <div className="min-w-0 flex-1 space-y-4 text-center sm:text-left">
+                  <div>
+                    <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                      Campaign
+                    </p>
+                    <h1 className="font-display text-3xl font-bold tracking-wide">
+                      {wizard.name}
+                    </h1>
+                  </div>
 
-                return (
-                  <CampaignOpponentCard
-                    key={opponent._id}
-                    opponent={opponent}
-                    isUnlocked={status.isUnlocked}
-                    isDefeated={status.isDefeated}
-                    isCurrent={status.isCurrent}
-                    wizardId={wizardId}
-                    className="h-full"
-                  />
-                );
-              })}
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-medium">
+                        {summary.isCompleted
+                          ? "Campaign complete"
+                          : summary.isFresh
+                            ? "Your journey begins"
+                            : "Campaign progress"}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {summary.defeatedCount} / {summary.total} defeated ·{" "}
+                        {summary.total - summary.defeatedCount} to go
+                      </span>
+                    </div>
+                    <Progress
+                      value={summary.percent}
+                      className="h-3"
+                      aria-label={`${summary.defeatedCount} of ${summary.total} opponents defeated`}
+                    />
+                  </div>
+
+                  {summary.isCompleted ? (
+                    <div className="flex items-center justify-center gap-2 text-success sm:justify-start">
+                      <Crown className="h-5 w-5" aria-hidden />
+                      <span className="font-medium">
+                        All 10 opponents defeated.
+                        {summary.hasRelic &&
+                          " Campaign Relic earned (+1 Luck)."}
+                      </span>
+                    </div>
+                  ) : (
+                    nextOpponentDoc && (
+                      <Button
+                        size="lg"
+                        className="w-full sm:w-auto"
+                        disabled={isBusy}
+                        onClick={() => start(wizardId, summary.nextOpponent!)}
+                      >
+                        <Swords className="h-5 w-5 mr-2" aria-hidden />
+                        {starting
+                          ? "Entering the arena..."
+                          : summary.nextOpponent === summary.total
+                            ? `Final boss: face ${nextOpponentDoc.name}`
+                            : `${summary.isFresh ? "Begin" : "Continue"}: face ${nextOpponentDoc.name}`}
+                      </Button>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Journey path */}
+              <div className="mt-8">
+                <CampaignPathMap
+                  progress={wizardProgress}
+                  opponents={sortedOpponents}
+                  onSelect={jumpTo}
+                />
+              </div>
+
+              {/* Reward */}
+              <div
+                className={`mt-6 flex items-center gap-3 rounded-lg border p-3 ${
+                  summary.hasRelic
+                    ? "border-warning/50 bg-warning/10"
+                    : "border-border bg-muted/40"
+                }`}
+              >
+                <Award
+                  className={`h-6 w-6 shrink-0 ${summary.hasRelic ? "text-warning" : "text-muted-foreground"}`}
+                  aria-hidden
+                />
+                <p className="text-sm">
+                  {summary.hasRelic ? (
+                    <>
+                      <strong>Campaign Relic earned.</strong> {wizard.name} has
+                      a permanent +1 Luck bonus.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Reward:</strong> defeat the final boss to earn the
+                      Campaign Relic, a permanent +1 Luck bonus.
+                    </>
+                  )}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Opponents */}
+          <section aria-labelledby="opponents-heading">
+            <h2
+              id="opponents-heading"
+              className="mb-4 flex items-center gap-2 text-2xl font-bold font-display"
+            >
+              <Target className="h-6 w-6 text-primary" aria-hidden />
+              Opponents
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {sortedOpponents.map((opponent) => (
+                <CampaignOpponentCard
+                  key={opponent._id}
+                  opponent={opponent}
+                  status={getOpponentStatus(
+                    opponent.opponentNumber!,
+                    wizardProgress,
+                  )}
+                  wizardId={wizardId}
+                  battle={battle}
+                />
+              ))}
             </div>
-          </div>
-
-          {/* Campaign Statistics */}
-          <div className="grid md:grid-cols-3 gap-6 mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-warning" />
-                  Opponents Defeated
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {defeatedCount}
-                </div>
-                <p className="text-sm text-muted-foreground">Out of 10 total</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Current Opponent
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {isCompleted
-                    ? "Complete"
-                    : wizardProgress?.currentOpponent || 1}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {isCompleted ? "Campaign finished" : "Next challenge"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-info" />
-                  Completion Relic
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {wizardProgress?.hasCompletionRelic ? "✓" : "—"}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {wizardProgress?.hasCompletionRelic ? "Earned" : "Not earned"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          </section>
         </div>
       </div>
     </CampaignErrorBoundary>

@@ -49,6 +49,8 @@ function NarrationPlayer({
   children: ReactNode;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
   const autoplayTried = useRef(false);
   // Was this narration still pending when we first rendered it? Then it is
   // being generated live, and we should play it as soon as it lands.
@@ -60,6 +62,21 @@ function NarrationPlayer({
   const [duration, setDuration] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
   const [blocked, setBlocked] = useState(false);
+
+  // Only autoplay narration for a round that is actually on screen.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.1 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     setAutoplay(localStorage.getItem(AUTOPLAY_KEY) !== "false");
@@ -81,6 +98,7 @@ function NarrationPlayer({
       !audio ||
       !url ||
       !autoplay ||
+      !inView ||
       autoplayTried.current ||
       !(startedPending.current || isFresh)
     ) {
@@ -88,7 +106,7 @@ function NarrationPlayer({
     }
     autoplayTried.current = true;
     audio.play().catch(() => setBlocked(true)); // browser blocked autoplay
-  }, [url, autoplay, narration.generatedAt]);
+  }, [url, autoplay, inView, narration.generatedAt]);
 
   const toggle = () => {
     const audio = audioRef.current;
@@ -110,7 +128,7 @@ function NarrationPlayer({
   const ready = narration.status === "READY" && !!url;
 
   return (
-    <div className="space-y-3">
+    <div ref={rootRef} className="space-y-3">
       <div
         className={`flex items-center gap-3 rounded-lg border bg-card/70 p-3 ${
           blocked ? "border-warning/60 animate-pulse" : "border-border/50"
@@ -189,18 +207,21 @@ function NarrationPlayer({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setShowText((s) => !s)}
-        aria-expanded={showText}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronDown
-          className={`h-4 w-4 transition-transform ${showText ? "rotate-180" : ""}`}
-        />
-        {showText ? "Hide text" : "Read the text"}
-      </button>
-      {showText && <div className="space-y-6">{children}</div>}
+      {/* While the audio is still being made, show the text straight away. */}
+      {ready && (
+        <button
+          type="button"
+          onClick={() => setShowText((s) => !s)}
+          aria-expanded={showText}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${showText ? "rotate-180" : ""}`}
+          />
+          {showText ? "Hide text" : "Read the text"}
+        </button>
+      )}
+      {(showText || !ready) && <div className="space-y-6">{children}</div>}
     </div>
   );
 }

@@ -25,7 +25,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           <LeftSidebar />
 
           {/* Main content area with left margin for desktop sidebar and top padding for mobile navbar */}
-          <main id="main-content" className="md:ml-64 pt-[57px] md:pt-0">
+          <main
+            id="main-content"
+            className="md:ml-64 pt-[var(--app-navbar-h)] md:pt-0"
+          >
             {children}
           </main>
         </div>

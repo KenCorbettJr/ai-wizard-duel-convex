@@ -375,7 +375,7 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
           // Desktop: always visible, starts at top
           "md:top-0",
           // Mobile: starts below navbar, slide in/out
-          "top-[77px] h-[calc(100dvh-77px)] md:top-0 md:h-full",
+          "top-[var(--app-navbar-h)] h-[calc(100dvh-var(--app-navbar-h))] md:top-0 md:h-full",
           // Desktop: always visible
           "md:translate-x-0",
           // Mobile: slide in/out
