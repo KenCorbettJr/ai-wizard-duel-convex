@@ -182,10 +182,10 @@ async function generateCampaignOpponentSpell(
     }
 
     context += `\nCurrent round: ${currentRound.roundNumber}`;
-    context += `\nYour current health: ${duel.hitPoints[wizard._id] || 100}/100`;
+    context += `\nYour current health: ${duel.hitPoints[wizard._id] ?? 100}/100`;
 
     if (opponentWizard) {
-      context += `\nOpponent's health: ${duel.hitPoints[opponentWizard._id] || 100}/100`;
+      context += `\nOpponent's health: ${duel.hitPoints[opponentWizard._id] ?? 100}/100`;
     }
 
     // Add context from previous rounds

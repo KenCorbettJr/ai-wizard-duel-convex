@@ -292,12 +292,12 @@ export const processDuelRound = action({
       // Calculate bounded health changes
       const wizard1HealthUpdates = getBoundedHealthChange(
         battleResult.wizard1.healthChange,
-        duel.hitPoints[wizard1ID] || 100
+        duel.hitPoints[wizard1ID] ?? 100
       );
 
       const wizard2HealthUpdates = getBoundedHealthChange(
         battleResult.wizard2.healthChange,
-        duel.hitPoints[wizard2ID] || 100
+        duel.hitPoints[wizard2ID] ?? 100
       );
 
       // Get the luck rolls that were used in the battle generation
@@ -718,7 +718,7 @@ function generateRoundActions(
   ): string {
     const wizard = wizardId === wizard1ID ? wizard1 : wizard2;
     return `Actions for ${wizard.name}:
-- Health: ${duel.hitPoints[wizardId] || 100}
+- Health: ${duel.hitPoints[wizardId] ?? 100}
 - Current Points: ${duel.points[wizardId] || 0}
 - Luck: ${luck}
 - Action: '${action}'`;

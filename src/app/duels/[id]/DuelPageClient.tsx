@@ -399,7 +399,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   <WizardCard
                     wizard={wizard1}
                     points={duel.points[duel.wizards[0]] || 0}
-                    hitPoints={duel.hitPoints[duel.wizards[0]] || 100}
+                    hitPoints={duel.hitPoints[duel.wizards[0]] ?? 100}
                     isUserWizard={wizard1.owner === user?.id}
                     isWinner={
                       (showWinner && duel.winners?.includes(duel.wizards[0])) ||
@@ -420,7 +420,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   <WizardCard
                     wizard={wizard2}
                     points={duel.points[duel.wizards[1]] || 0}
-                    hitPoints={duel.hitPoints[duel.wizards[1]] || 100}
+                    hitPoints={duel.hitPoints[duel.wizards[1]] ?? 100}
                     isUserWizard={wizard2.owner === user?.id}
                     isWinner={
                       (showWinner && duel.winners?.includes(duel.wizards[1])) ||

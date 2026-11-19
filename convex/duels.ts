@@ -774,7 +774,7 @@ export const completeRound = mutation({
         ([wizardId, healthChange]) => {
           updatedHitPoints[wizardId] = Math.max(
             0,
-            (updatedHitPoints[wizardId] || 100) + (healthChange as number)
+            (updatedHitPoints[wizardId] ?? 100) + (healthChange as number)
           );
         }
       );

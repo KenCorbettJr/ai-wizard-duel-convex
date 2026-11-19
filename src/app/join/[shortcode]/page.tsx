@@ -246,7 +246,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                         className="bg-destructive/90 text-destructive-foreground border-destructive/50 backdrop-blur-sm flex items-center gap-1"
                       >
                         <Heart className="h-3 w-3" />
-                        {duel.hitPoints[challengerWizard._id] || 100}
+                        {duel.hitPoints[challengerWizard._id] ?? 100}
                       </Badge>
                     )}
                   </div>
