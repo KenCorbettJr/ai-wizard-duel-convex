@@ -17,8 +17,11 @@ interface DuelPageProps {
 export async function generateMetadata({
   params,
 }: DuelPageProps): Promise<Metadata> {
+  // Await params outside the try/catch. During prerender it is a promise that
+  // rejects on purpose, and Next.js must see that rejection to defer this
+  // route to request time.
+  const { id } = await params;
   try {
-    const { id } = await params;
     const duelId = safeConvexId<"duels">(id);
 
     if (!duelId) {

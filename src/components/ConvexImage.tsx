@@ -11,6 +11,10 @@ interface ConvexImageProps {
   width?: number;
   height?: number;
   className?: string;
+  /** Rendered size hint. Without it Next only offers 1x/2x of `width`. */
+  sizes?: string;
+  /** Re-encode quality. Stored images are already compressed, so stay high. */
+  quality?: number;
 }
 
 export const ConvexImage = memo(function ConvexImage({
@@ -19,6 +23,8 @@ export const ConvexImage = memo(function ConvexImage({
   width = 400,
   height = 300,
   className,
+  sizes,
+  quality = 90,
 }: ConvexImageProps) {
   const imageUrl = useConvexImage(api.wizards.getIllustrationUrl, {
     storageId,
@@ -40,6 +46,8 @@ export const ConvexImage = memo(function ConvexImage({
       width={width}
       height={height}
       className={className}
+      sizes={sizes}
+      quality={quality}
       priority={false}
       loading="lazy"
     />

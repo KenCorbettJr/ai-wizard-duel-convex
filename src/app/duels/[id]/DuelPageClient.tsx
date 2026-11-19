@@ -37,7 +37,6 @@ import {
 import { Crown } from "@/components/ui/crown-icon";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
-import { WizardCard } from "@/components/WizardCard";
 import { DuelRoundCard } from "@/components/DuelRoundCard";
 import { useConclusionReveal } from "@/hooks/useConclusionReveal";
 import { useReplayProgress } from "@/hooks/useReplayProgress";
@@ -1208,44 +1207,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   {timelineEl}
                 </DuelScoreboard>
                 <div className="mb-4 sm:hidden">{timelineEl}</div>
-                <details className="mb-6 group">
-                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 rounded">
-                    Wizard profiles
-                    <span className="ml-1 text-xs">
-                      (portraits, owners, full stats)
-                    </span>
-                  </summary>
-                  <div className="mt-4 flex flex-col items-stretch gap-4 md:flex-row">
-                    {wizard1 && (
-                      <WizardCard
-                        wizard={wizard1}
-                        points={shownPoints[duel.wizards[0]] || 0}
-                        hitPoints={shownHitPoints[duel.wizards[0]] ?? 100}
-                        isUserWizard={wizard1.owner === user?.id}
-                        isWinner={
-                          (showWinner &&
-                            duel.winners?.includes(duel.wizards[0])) ||
-                          false
-                        }
-                        showOwner={true}
-                      />
-                    )}
-                    {wizard2 && (
-                      <WizardCard
-                        wizard={wizard2}
-                        points={shownPoints[duel.wizards[1]] || 0}
-                        hitPoints={shownHitPoints[duel.wizards[1]] ?? 100}
-                        isUserWizard={wizard2.owner === user?.id}
-                        isWinner={
-                          (showWinner &&
-                            duel.winners?.includes(duel.wizards[1])) ||
-                          false
-                        }
-                        showOwner={true}
-                      />
-                    )}
-                  </div>
-                </details>
               </>
             )}
 

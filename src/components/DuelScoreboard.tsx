@@ -13,6 +13,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Crown } from "@/components/ui/crown-icon";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { Id } from "../../convex/_generated/dataModel";
 
 export interface ScoreboardWizard {
@@ -20,6 +30,9 @@ export interface ScoreboardWizard {
   name: string;
   illustration?: string;
   owner?: string;
+  description?: string;
+  ownerUserId?: string;
+  ownerDisplayName?: string;
 }
 
 interface DuelScoreboardProps {
@@ -182,29 +195,76 @@ function Combatant({
     <div
       className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${right ? "flex-row-reverse text-right" : ""}`}
     >
-      <div
-        className={`relative size-9 shrink-0 overflow-hidden rounded-full border-2 sm:size-14 md:size-20 ${
-          isWinner
-            ? "border-warning ring-2 ring-warning/50"
-            : isYou
-              ? "border-info"
-              : "border-border"
-        } ${hp <= 0 && !hideOutcome ? "grayscale" : ""} ${hpDelta && hpDelta.amount < 0 ? "duel-hit" : ""}`}
-      >
-        {wizard?.illustration ? (
-          <ConvexImage
-            storageId={wizard.illustration}
-            alt=""
-            width={80}
-            height={80}
-            className="h-full w-full object-cover object-top"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary to-gold text-sm font-bold text-white">
-            {name.charAt(0)}
+      <Dialog>
+        <DialogTrigger
+          disabled={!wizard?.illustration}
+          aria-label={`View ${name}`}
+          className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 enabled:cursor-zoom-in"
+        >
+          <div
+            className={`relative size-9 shrink-0 overflow-hidden rounded-full border-2 sm:size-14 md:size-20 ${
+              isWinner
+                ? "border-warning ring-2 ring-warning/50"
+                : isYou
+                  ? "border-info"
+                  : "border-border"
+            } ${hp <= 0 && !hideOutcome ? "grayscale" : ""} ${hpDelta && hpDelta.amount < 0 ? "duel-hit" : ""}`}
+          >
+            {wizard?.illustration ? (
+              <ConvexImage
+                storageId={wizard.illustration}
+                alt=""
+                width={80}
+                height={80}
+                className="h-full w-full object-cover object-top"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary to-gold text-sm font-bold text-white">
+                {name.charAt(0)}
+              </div>
+            )}
           </div>
+        </DialogTrigger>
+        {wizard?.illustration && (
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{name}</DialogTitle>
+              <DialogDescription className="line-clamp-4">
+                {wizard.description ?? ""}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="aspect-square w-full overflow-hidden rounded-lg">
+              <ConvexImage
+                storageId={wizard.illustration}
+                alt={name}
+                width={1024}
+                height={1024}
+                sizes="(min-width: 512px) 480px, 100vw"
+                quality={92}
+                className="h-full w-full object-cover object-top"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2 text-sm">
+              {wizard.ownerUserId ? (
+                <UserIdDisplay
+                  userId={wizard.ownerUserId}
+                  displayName={wizard.ownerDisplayName}
+                  size="sm"
+                  showAvatar={false}
+                />
+              ) : (
+                <span />
+              )}
+              <Link
+                href={`/wizards/${wizard._id}`}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                View wizard
+              </Link>
+            </div>
+          </DialogContent>
         )}
-      </div>
+      </Dialog>
       <div className="min-w-0 flex-1">
         <div
           className={`flex items-center gap-1.5 ${right ? "flex-row-reverse" : ""}`}

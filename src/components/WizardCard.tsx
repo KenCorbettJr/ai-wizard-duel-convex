@@ -74,8 +74,9 @@ export const WizardCard = memo(function WizardCard({
               <ConvexImage
                 storageId={wizard.illustration}
                 alt={wizard.name}
-                width={400}
-                height={250}
+                width={768}
+                height={480}
+                sizes="(min-width: 768px) 50vw, 100vw"
                 className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
               />
             </div>

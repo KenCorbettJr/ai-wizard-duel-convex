@@ -17,8 +17,9 @@ interface WizardPageProps {
 export async function generateMetadata({
   params,
 }: WizardPageProps): Promise<Metadata> {
+  // Await params outside the try/catch so Next.js sees the prerender rejection.
+  const { id } = await params;
   try {
-    const { id } = await params;
     const wizardId = safeConvexId<"wizards">(id);
 
     if (!wizardId) {

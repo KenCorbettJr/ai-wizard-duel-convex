@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
-import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";
 import {
   Sparkles,
@@ -474,22 +473,6 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     return wizardId === (result > 0 ? a : b);
   };
 
-  const renderWizardName = (wizardId: string) => {
-    const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
-    const winner = isWinner(wizardId);
-    return (
-      <div className="flex flex-col items-center gap-1">
-        <span
-          className={`font-semibold flex items-center gap-1 ${winner ? "text-warning" : ""}`}
-        >
-          {winner && <Crown className="h-4 w-4" />}
-          {wizard?.name || "Loading..."}
-          {winner && <Crown className="h-4 w-4" />}
-        </span>
-      </div>
-    );
-  };
-
   const renderWizardThumbnail = (wizardId: unknown) => {
     const wizard = wizardId === duel.wizards[0] ? wizard1 : wizard2;
 
@@ -796,8 +779,10 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                     round.outcome.illustrationPrompt ||
                     `Round ${round.roundNumber} illustration`
                   }
-                  width={800}
-                  height={800}
+                  width={1024}
+                  height={1024}
+                  sizes="(min-width: 672px) 672px, 100vw"
+                  quality={92}
                 />
               </div>
             ) : duel.textOnlyMode && round.outcome?.illustrationPrompt ? (
@@ -851,176 +836,6 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   </div>
                 </NarratedText>
               </div>
-            )}
-
-            {/* Outcome Table */}
-            {(round.outcome?.pointsAwarded ||
-              round.outcome?.healthChange ||
-              round.outcome?.luckRolls) && (
-              <details
-                className={`rounded-lg border border-border/50 p-3 ${at(STAGE.IMPACT, "reveal-pop")}`}
-              >
-                <summary className="cursor-pointer font-semibold focus-visible:ring-2 focus-visible:ring-primary/40 rounded">
-                  Outcome details
-                </summary>
-                <div className="mt-3">
-                  <div className="overflow-x-auto text-sm">
-                    <table className="w-full border-collapse border border-border/50 rounded-lg">
-                      <caption className="sr-only">
-                        {getRoundTitle()} outcome for each wizard
-                      </caption>
-                      <thead>
-                        <tr className="bg-muted/50">
-                          <th
-                            scope="col"
-                            className="border border-border/50 p-2 text-left"
-                          >
-                            <span className="sr-only">Stat</span>
-                          </th>
-                          <th
-                            scope="col"
-                            className={`border border-border/50 p-2 text-center ${
-                              isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                            }`}
-                          >
-                            {renderWizardName(duel.wizards[0])}
-                          </th>
-                          <th
-                            scope="col"
-                            className={`border border-border/50 p-2 text-center ${
-                              isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                            }`}
-                          >
-                            {renderWizardName(duel.wizards[1])}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {round.outcome?.luckRolls && (
-                          <tr>
-                            <th
-                              scope="row"
-                              className="border border-border/50 p-2 text-left font-medium"
-                            >
-                              Luck Roll (D20)
-                            </th>
-                            <td
-                              className={`border border-border/50 p-2 text-center ${
-                                isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                              }`}
-                            >
-                              <div className="flex justify-center">
-                                <D20Die
-                                  value={
-                                    round.outcome.luckRolls[duel.wizards[0]] ??
-                                    1
-                                  }
-                                  size="sm"
-                                />
-                              </div>
-                            </td>
-                            <td
-                              className={`border border-border/50 p-2 text-center ${
-                                isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                              }`}
-                            >
-                              <div className="flex justify-center">
-                                <D20Die
-                                  value={
-                                    round.outcome.luckRolls[duel.wizards[1]] ??
-                                    1
-                                  }
-                                  size="sm"
-                                />
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                        {round.outcome?.pointsAwarded && (
-                          <tr>
-                            <th
-                              scope="row"
-                              className="border border-border/50 p-2 text-left font-medium"
-                            >
-                              Points Awarded
-                            </th>
-                            <td
-                              className={`border border-border/50 p-2 text-center ${
-                                isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                              }`}
-                            >
-                              <span className="p-2 bg-background rounded min-w-14 inline-block">
-                                <DeltaValue
-                                  value={
-                                    round.outcome.pointsAwarded[
-                                      duel.wizards[0]
-                                    ] || 0
-                                  }
-                                />
-                              </span>
-                            </td>
-                            <td
-                              className={`border border-border/50 p-2 text-center ${
-                                isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                              }`}
-                            >
-                              <span className="p-2 bg-background rounded min-w-14 inline-block">
-                                <DeltaValue
-                                  value={
-                                    round.outcome.pointsAwarded[
-                                      duel.wizards[1]
-                                    ] || 0
-                                  }
-                                />
-                              </span>
-                            </td>
-                          </tr>
-                        )}
-                        {round.outcome?.healthChange && (
-                          <tr>
-                            <th
-                              scope="row"
-                              className="border border-border/50 p-2 text-left font-medium"
-                            >
-                              Hit Points Change
-                            </th>
-                            <td
-                              className={`border border-border/50 p-2 text-center ${
-                                isWinner(duel.wizards[0]) ? "bg-warning/15" : ""
-                              }`}
-                            >
-                              <span className="p-2 bg-background rounded min-w-14 inline-block">
-                                <DeltaValue
-                                  value={
-                                    round.outcome.healthChange[
-                                      duel.wizards[0]
-                                    ] || 0
-                                  }
-                                />
-                              </span>
-                            </td>
-                            <td
-                              className={`border border-border/50 p-2 text-center ${
-                                isWinner(duel.wizards[1]) ? "bg-warning/15" : ""
-                              }`}
-                            >
-                              <span className="p-2 bg-background rounded min-w-14 inline-block">
-                                <DeltaValue
-                                  value={
-                                    round.outcome.healthChange[
-                                      duel.wizards[1]
-                                    ] || 0
-                                  }
-                                />
-                              </span>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </details>
             )}
           </div>
         )}

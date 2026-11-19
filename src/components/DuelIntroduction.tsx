@@ -61,8 +61,19 @@ export const DuelIntroduction = memo(function DuelIntroduction({
           <ConvexImage
             storageId={introRound.outcome.illustration}
             alt="Duel Introduction"
+            width={1024}
+            height={1024}
+            sizes="(min-width: 672px) 672px, 100vw"
+            quality={92}
             className="w-full h-full object-cover"
           />
+        </div>
+      )}
+
+      {/* Result teaser, same style as the round cards */}
+      {introRound.outcome.result && (
+        <div className="whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed">
+          {introRound.outcome.result}
         </div>
       )}
 
@@ -77,14 +88,6 @@ export const DuelIntroduction = memo(function DuelIntroduction({
             <div className="whitespace-pre-line text-foreground leading-relaxed">
               {introRound.outcome.narrative}
             </div>
-
-            {introRound.outcome.result && (
-              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                <p className="text-center font-semibold text-primary">
-                  {introRound.outcome.result}
-                </p>
-              </div>
-            )}
           </NarratedText>
         </div>
       </div>
