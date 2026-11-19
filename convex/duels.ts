@@ -10,6 +10,11 @@ import { Doc, Id } from "./_generated/dataModel";
 
 import { api, internal } from "./_generated/api";
 import { narrationValidator } from "./lib/narrationValidator";
+import {
+  assertCanAffordDuelToken,
+  chargeDuelToken,
+  refundDuelTokens,
+} from "./lib/duelTokens";
 import { scheduleRoundNarration } from "./lib/scheduleNarration";
 import {
   verifySuperAdmin,
@@ -19,16 +24,10 @@ import {
 
 // Types for better type safety
 export type DuelStatus =
-  | "WAITING_FOR_PLAYERS"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "CANCELLED";
+  "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type DuelRoundStatus = "WAITING_FOR_SPELLS" | "PROCESSING" | "COMPLETED";
 export type DuelRoundType =
-  | "SPELL_CASTING"
-  | "COUNTER_SPELL"
-  | "FINAL_ROUND"
-  | "CONCLUSION";
+  "SPELL_CASTING" | "COUNTER_SPELL" | "FINAL_ROUND" | "CONCLUSION";
 export type DuelLengthOption = "TO_THE_DEATH";
 
 // Get all duels for the authenticated player
@@ -45,7 +44,7 @@ export const getPlayerDuels = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED")
+        v.literal("CANCELLED"),
       ),
       currentRound: v.number(),
       createdAt: v.number(),
@@ -61,9 +60,11 @@ export const getPlayerDuels = query({
       textOnlyReason: v.optional(v.string()),
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
+      tokensCharged: v.optional(v.array(v.string())),
+      tokensRefunded: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -93,7 +94,8 @@ export const getPlayerCompletedDuels = query({
     return duels
       .filter(
         (duel) =>
-          duel.players.includes(identity.subject) && duel.status === "COMPLETED"
+          duel.players.includes(identity.subject) &&
+          duel.status === "COMPLETED",
       )
       .sort((a, b) => b.createdAt - a.createdAt); // Most recent first
   },
@@ -137,7 +139,7 @@ export const getDuelInternal = internalQuery({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED")
+        v.literal("CANCELLED"),
       ),
       currentRound: v.number(),
       createdAt: v.number(),
@@ -153,6 +155,8 @@ export const getDuelInternal = internalQuery({
       textOnlyReason: v.optional(v.string()),
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
+      tokensCharged: v.optional(v.array(v.string())),
+      tokensRefunded: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
       rounds: v.array(
@@ -165,7 +169,7 @@ export const getDuelInternal = internalQuery({
             v.literal("SPELL_CASTING"),
             v.literal("COUNTER_SPELL"),
             v.literal("FINAL_ROUND"),
-            v.literal("CONCLUSION")
+            v.literal("CONCLUSION"),
           ),
           spells: v.optional(
             v.record(
@@ -174,8 +178,8 @@ export const getDuelInternal = internalQuery({
                 description: v.string(),
                 castBy: v.id("wizards"),
                 timestamp: v.number(),
-              })
-            )
+              }),
+            ),
           ),
           outcome: v.optional(
             v.object({
@@ -186,17 +190,17 @@ export const getDuelInternal = internalQuery({
               pointsAwarded: v.optional(v.record(v.string(), v.number())),
               healthChange: v.optional(v.record(v.string(), v.number())),
               luckRolls: v.optional(v.record(v.string(), v.number())),
-            })
+            }),
           ),
           status: v.union(
             v.literal("WAITING_FOR_SPELLS"),
             v.literal("PROCESSING"),
-            v.literal("COMPLETED")
+            v.literal("COMPLETED"),
           ),
           narration: v.optional(narrationValidator),
-        })
+        }),
       ),
-    })
+    }),
   ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -223,7 +227,7 @@ export const getDuelByShortcode = query({
     const duel = await ctx.db
       .query("duels")
       .withIndex("by_shortcode", (q) =>
-        q.eq("shortcode", shortcode.toUpperCase())
+        q.eq("shortcode", shortcode.toUpperCase()),
       )
       .first();
 
@@ -290,8 +294,12 @@ async function insertWaitingDuel(
     numberOfRounds: number | "TO_THE_DEATH";
     wizards: Id<"wizards">[];
     enableImageGeneration: boolean;
-  }
+  },
 ): Promise<Id<"duels">> {
+  // A token is only taken when a second player joins and the duel starts.
+  // Until then, just make sure the creator could pay for it.
+  await assertCanAffordDuelToken(ctx, userId);
+
   const players = [userId];
   // Initialize points and hit points for all wizards
   const initialPoints: Record<string, number> = {};
@@ -339,7 +347,7 @@ export const createDuel = mutation({
   },
   handler: async (
     ctx,
-    { numberOfRounds, wizards, enableImageGeneration = true }
+    { numberOfRounds, wizards, enableImageGeneration = true },
   ) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -371,9 +379,22 @@ async function addPlayerToDuel(
   ctx: MutationCtx,
   duel: Doc<"duels">,
   userId: string,
-  wizards: Id<"wizards">[]
+  wizards: Id<"wizards">[],
 ): Promise<void> {
   const duelId = duel._id;
+
+  // The duel starts when the second player joins, so both players pay now.
+  // Any failure here throws and rolls the whole join back.
+  if (duel.players.length + 1 >= 2) {
+    // Joiner first: the message is about them. Then re-check the creator,
+    // who may have spent their tokens while the duel was waiting.
+    await chargeDuelToken(ctx, userId, duelId, "pvp_duel");
+    for (const playerId of duel.players) {
+      await assertCanAffordDuelToken(ctx, playerId, "creator");
+      await chargeDuelToken(ctx, playerId, duelId, "pvp_duel");
+    }
+  }
+
   // Add player and their wizards to the duel
   const updatedPlayers = [...duel.players, userId];
   const updatedWizards = [...duel.wizards, ...wizards];
@@ -408,7 +429,7 @@ async function addPlayerToDuel(
         {
           duelId,
           userId: updatedPlayers[0], // Use first player for credit consumption
-        }
+        },
       );
     }
   }
@@ -608,7 +629,7 @@ export const castSpell = mutation({
 
     // Remove wizard from needActionsFrom
     const updatedNeedActions = duel.needActionsFrom.filter(
-      (id) => id !== wizardId
+      (id) => id !== wizardId,
     );
     await ctx.db.patch(duelId, {
       needActionsFrom: updatedNeedActions,
@@ -628,7 +649,7 @@ export const castSpell = mutation({
           {
             duelId,
             roundId: currentRound._id,
-          }
+          },
         );
       }
     } else if (duel.isCampaignBattle) {
@@ -638,7 +659,7 @@ export const castSpell = mutation({
         await ctx.scheduler.runAfter(
           500, // Small delay to ensure database is updated
           internal.campaignOpponentAI.processCampaignOpponentActions,
-          { duelId }
+          { duelId },
         );
       }
     }
@@ -687,7 +708,7 @@ export const undoSpell = mutation({
 
     if (currentRound.status !== "WAITING_FOR_SPELLS") {
       throw new Error(
-        "Cannot undo spell - round is no longer accepting spells"
+        "Cannot undo spell - round is no longer accepting spells",
       );
     }
 
@@ -699,7 +720,7 @@ export const undoSpell = mutation({
     // Check if the wizard has actually cast a spell this round
     if (!currentRound.spells || !currentRound.spells[wizardId]) {
       throw new Error(
-        "No spell to undo - wizard has not cast a spell this round"
+        "No spell to undo - wizard has not cast a spell this round",
       );
     }
 
@@ -774,16 +795,16 @@ export const completeRound = mutation({
         ([wizardId, healthChange]) => {
           updatedHitPoints[wizardId] = Math.max(
             0,
-            (updatedHitPoints[wizardId] ?? 100) + (healthChange as number)
+            (updatedHitPoints[wizardId] ?? 100) + (healthChange as number),
           );
-        }
+        },
       );
     }
 
     // Check if duel should end
     const shouldEndDuel = checkDuelEndConditions(
       { ...duel, points: updatedPoints },
-      updatedHitPoints
+      updatedHitPoints,
     );
 
     if (shouldEndDuel.shouldEnd) {
@@ -822,7 +843,7 @@ export const completeRound = mutation({
             duelId: duel._id,
             winners: shouldEndDuel.winners || [],
             losers: shouldEndDuel.losers || [],
-          }
+          },
         );
       }
     } else {
@@ -848,7 +869,7 @@ export const completeRound = mutation({
         await ctx.scheduler.runAfter(
           1000, // Small delay to ensure database is updated
           internal.campaignOpponentAI.processCampaignOpponentActions,
-          { duelId: duel._id }
+          { duelId: duel._id },
         );
       }
     }
@@ -865,7 +886,7 @@ function checkDuelEndConditions(
     currentRound: number;
     points: Record<string, number>;
   },
-  hitPoints: Record<string, number>
+  hitPoints: Record<string, number>,
 ): {
   shouldEnd: boolean;
   winners?: Id<"wizards">[];
@@ -873,7 +894,7 @@ function checkDuelEndConditions(
 } {
   // Check if any wizard has 0 hit points (death condition)
   const aliveWizards = duel.wizards.filter(
-    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0
+    (wizardId: Id<"wizards">) => (hitPoints[wizardId] || 0) > 0,
   );
 
   if (aliveWizards.length <= 1) {
@@ -881,7 +902,7 @@ function checkDuelEndConditions(
       shouldEnd: true,
       winners: aliveWizards,
       losers: duel.wizards.filter(
-        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId)
+        (wizardId: Id<"wizards">) => !aliveWizards.includes(wizardId),
       ),
     };
   }
@@ -901,11 +922,11 @@ function checkDuelEndConditions(
     wizardScores.sort(
       (
         a: { points: number; hitPoints: number },
-        b: { points: number; hitPoints: number }
+        b: { points: number; hitPoints: number },
       ) => {
         if (a.points !== b.points) return b.points - a.points;
         return b.hitPoints - a.hitPoints;
-      }
+      },
     );
 
     const highestScore = wizardScores[0];
@@ -913,7 +934,7 @@ function checkDuelEndConditions(
       .filter(
         (w: { points: number; hitPoints: number; wizardId: Id<"wizards"> }) =>
           w.points === highestScore.points &&
-          w.hitPoints === highestScore.hitPoints
+          w.hitPoints === highestScore.hitPoints,
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -923,7 +944,7 @@ function checkDuelEndConditions(
           !(
             w.points === highestScore.points &&
             w.hitPoints === highestScore.hitPoints
-          )
+          ),
       )
       .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
 
@@ -972,7 +993,7 @@ export const getActiveDuels = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED")
+        v.literal("CANCELLED"),
       ),
       currentRound: v.number(),
       createdAt: v.number(),
@@ -988,9 +1009,11 @@ export const getActiveDuels = query({
       textOnlyReason: v.optional(v.string()),
       imageCreditConsumed: v.optional(v.boolean()),
       imageCreditConsumedBy: v.optional(v.string()),
+      tokensCharged: v.optional(v.array(v.string())),
+      tokensRefunded: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const inProgressDuels = await ctx.db
@@ -1027,7 +1050,7 @@ export const getWatchableDuels = query({
           v.literal("WAITING_FOR_PLAYERS"),
           v.literal("IN_PROGRESS"),
           v.literal("COMPLETED"),
-          v.literal("CANCELLED")
+          v.literal("CANCELLED"),
         ),
         currentRound: v.number(),
         createdAt: v.number(),
@@ -1043,9 +1066,11 @@ export const getWatchableDuels = query({
         textOnlyReason: v.optional(v.string()),
         imageCreditConsumed: v.optional(v.boolean()),
         imageCreditConsumedBy: v.optional(v.string()),
+        tokensCharged: v.optional(v.array(v.string())),
+        tokensRefunded: v.optional(v.boolean()),
         isCampaignBattle: v.optional(v.boolean()),
         rematchDuelId: v.optional(v.id("duels")),
-      })
+      }),
     ),
     total: v.number(),
     hasMore: v.boolean(),
@@ -1162,7 +1187,7 @@ export const getPlayerDuelStats = query({
           });
 
           const hasWinningWizard = duel.winners?.some((winnerId) =>
-            playerWizards.includes(winnerId)
+            playerWizards.includes(winnerId),
           );
 
           if (hasWinningWizard) {
@@ -1258,7 +1283,7 @@ export const scheduleRoundIllustration = mutation({
       useGemini = false,
       userId,
       skipImageGeneration = false,
-    }
+    },
   ) => {
     // Schedule the illustration generation
     // Skip scheduling in test environment to avoid transaction escape errors
@@ -1273,7 +1298,7 @@ export const scheduleRoundIllustration = mutation({
           useGemini,
           userId,
           skipImageGeneration,
-        }
+        },
       );
     }
   },
@@ -1307,7 +1332,7 @@ export const startDuelAfterIntroduction = mutation({
       await ctx.scheduler.runAfter(
         1000, // Small delay to ensure database is updated
         internal.campaignOpponentAI.processCampaignOpponentActions,
-        { duelId }
+        { duelId },
       );
     }
 
@@ -1352,8 +1377,8 @@ export const searchDuels = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED")
-      )
+        v.literal("CANCELLED"),
+      ),
     ),
     playerUserId: v.optional(v.string()),
     wizardId: v.optional(v.id("wizards")),
@@ -1374,7 +1399,7 @@ export const searchDuels = query({
       numberOfRounds,
       limit = 50,
       offset = 0,
-    }
+    },
   ) => {
     // Verify super admin access
     await verifySuperAdmin(ctx);
@@ -1435,8 +1460,8 @@ export const getDuelAnalytics = query({
         v.literal("24h"),
         v.literal("7d"),
         v.literal("30d"),
-        v.literal("all")
-      )
+        v.literal("all"),
+      ),
     ),
   },
   handler: async (ctx, { timeRange = "30d" }) => {
@@ -1475,10 +1500,10 @@ export const getDuelAnalytics = query({
       },
       roundTypeBreakdown: {
         fixedRounds: filteredDuels.filter(
-          (d) => typeof d.numberOfRounds === "number"
+          (d) => typeof d.numberOfRounds === "number",
         ).length,
         toTheDeath: filteredDuels.filter(
-          (d) => d.numberOfRounds === "TO_THE_DEATH"
+          (d) => d.numberOfRounds === "TO_THE_DEATH",
         ).length,
       },
       averageRoundsPerDuel: 0,
@@ -1489,12 +1514,12 @@ export const getDuelAnalytics = query({
 
     // Calculate average rounds for completed duels
     const completedDuels = filteredDuels.filter(
-      (d) => d.status === "COMPLETED"
+      (d) => d.status === "COMPLETED",
     );
     if (completedDuels.length > 0) {
       const totalRounds = completedDuels.reduce(
         (sum, duel) => sum + duel.currentRound,
-        0
+        0,
       );
       analytics.averageRoundsPerDuel =
         Math.round((totalRounds / completedDuels.length) * 10) / 10;
@@ -1520,12 +1545,12 @@ export const getDuelAnalytics = query({
       const dayStart = new Date(
         date.getFullYear(),
         date.getMonth(),
-        date.getDate()
+        date.getDate(),
       ).getTime();
       const dayEnd = dayStart + 24 * 60 * 60 * 1000;
 
       const duelsOnDay = filteredDuels.filter(
-        (d) => d.createdAt >= dayStart && d.createdAt < dayEnd
+        (d) => d.createdAt >= dayStart && d.createdAt < dayEnd,
       ).length;
       analytics.dailyActivity.push({
         date: date.toISOString().split("T")[0],
@@ -1548,8 +1573,8 @@ export const getActiveDuelMonitoring = query({
       .filter((q) =>
         q.or(
           q.eq(q.field("status"), "WAITING_FOR_PLAYERS"),
-          q.eq(q.field("status"), "IN_PROGRESS")
-        )
+          q.eq(q.field("status"), "IN_PROGRESS"),
+        ),
       )
       .collect();
 
@@ -1569,7 +1594,7 @@ export const getActiveDuelMonitoring = query({
             return wizard
               ? { id: wizardId, name: wizard.name, owner: wizard.owner }
               : null;
-          })
+          }),
         );
 
         return {
@@ -1585,12 +1610,12 @@ export const getActiveDuelMonitoring = query({
               ? Date.now() -
                 (Math.max(
                   ...Object.values(currentRound.spells || {}).map(
-                    (s) => s.timestamp
-                  )
+                    (s) => s.timestamp,
+                  ),
                 ) || duel.createdAt)
               : null,
         };
-      })
+      }),
     );
 
     return monitoringData.sort((a, b) => b.duel.createdAt - a.duel.createdAt);
@@ -1619,6 +1644,9 @@ export const forceCancelDuel = mutation({
       status: "CANCELLED" as DuelStatus,
     });
 
+    // Admins cancel broken or stuck duels, so every player gets their token back
+    await refundDuelTokens(ctx, duelId, "admin_cancelled");
+
     // Log the cancellation reason if provided
     if (reason) {
       // In a real implementation, you might want to store this in a separate audit log table
@@ -1640,7 +1668,7 @@ export const getAllRecentDuels = query({
 
     // Filter to only show active (in progress) or completed duels
     const watchableDuels = duels.filter(
-      (duel) => duel.status === "IN_PROGRESS" || duel.status === "COMPLETED"
+      (duel) => duel.status === "IN_PROGRESS" || duel.status === "COMPLETED",
     );
 
     // Sort by creation date (newest first) and apply pagination
@@ -1686,7 +1714,7 @@ export const getMultiPlayerDuelStats = query({
 
             // Check if any of the player's wizards won
             const hasWinningWizard = duel.winners?.some((winnerId) =>
-              duel.wizards.includes(winnerId)
+              duel.wizards.includes(winnerId),
             );
 
             if (hasWinningWizard) {
@@ -1771,7 +1799,7 @@ export const createDuelInternal = internalMutation({
   returns: v.id("duels"),
   handler: async (
     ctx,
-    { numberOfRounds, wizards, players, isCampaignBattle }
+    { numberOfRounds, wizards, players, isCampaignBattle },
   ) => {
     // Initialize points and hit points for all wizards
     const points: Record<string, number> = {};
@@ -1865,7 +1893,7 @@ export const castSpellForCampaignOpponent = internalMutation({
 
     // Remove wizard from needActionsFrom
     const updatedNeedActions = duel.needActionsFrom.filter(
-      (id) => id !== wizardId
+      (id) => id !== wizardId,
     );
     await ctx.db.patch(duelId, {
       needActionsFrom: updatedNeedActions,
@@ -1885,7 +1913,7 @@ export const castSpellForCampaignOpponent = internalMutation({
           {
             duelId,
             roundId: currentRound._id,
-          }
+          },
         );
       }
     }

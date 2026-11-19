@@ -44,41 +44,8 @@ export const generateRoundIllustration = action({
         return { success: true, textOnlyMode: true };
       }
 
-      // Check and consume image credits if userId is provided (only once per duel)
-      if (userId) {
-        const creditResult = await ctx.runMutation(
-          api.imageCreditService.consumeImageCreditForDuel,
-          {
-            userId,
-            duelId,
-            metadata: {
-              roundNumber,
-              purpose: "duel_illustration",
-            },
-          },
-        );
-
-        if (!creditResult.success) {
-          console.log(
-            `User ${userId} has insufficient image credits for duel ${duelId} round ${roundNumber}, falling back to text-only mode. Reason: ${creditResult.reason}`,
-          );
-          return {
-            success: true,
-            textOnlyMode: true,
-            reason: "insufficient_credits",
-          };
-        }
-
-        if (creditResult.alreadyConsumed) {
-          console.log(
-            `Image credit already consumed for duel ${duelId} (${creditResult.reason}), proceeding with image generation`,
-          );
-        } else {
-          console.log(
-            `Consumed 1 image credit for user ${userId} for duel ${duelId} (covers all images in this duel)`,
-          );
-        }
-      }
+      // Players already paid a token when the duel started, so there is no
+      // per-image credit check here.
 
       let imageBuffer: ArrayBuffer;
       let previousImage: string | undefined;
@@ -98,6 +65,7 @@ export const generateRoundIllustration = action({
               useGemini: true,
               userId,
               sessionId: `duel-${duelId}`,
+              feature: "generate_duel_illustration",
             },
           );
         } else {
@@ -123,6 +91,7 @@ export const generateRoundIllustration = action({
               useGemini: true,
               userId,
               sessionId: `duel-${duelId}`,
+              feature: "generate_duel_illustration",
             },
           );
         }

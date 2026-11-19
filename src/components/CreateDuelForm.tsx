@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
@@ -52,7 +51,7 @@ export function CreateDuelForm({
 
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
-  // Check if user has credits for image generation
+  // Entering a duel costs 1 token (Premium is included)
   const hasImageCredits = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
     user?.id ? { userId: user.id } : "skip",
@@ -204,11 +203,6 @@ export function CreateDuelForm({
                           ? "Images Enabled"
                           : "Text-Only Mode"}
                       </span>
-                      {enableImageGeneration && !isPremium && (
-                        <Badge variant="outline" className="text-xs">
-                          Uses 1 credit
-                        </Badge>
-                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {enableImageGeneration
@@ -223,42 +217,40 @@ export function CreateDuelForm({
                 />
               </div>
 
-              {/* Credit Information */}
-              {enableImageGeneration && (
-                <div className="space-y-3">
-                  {isPremium ? (
-                    <div className="flex items-center gap-2 p-3 bg-primary/8 border border-primary/30 rounded-lg">
-                      <Info className="h-4 w-4 text-primary" />
-                      <span className="text-sm text-primary">
-                        Premium: Unlimited image generation included
-                      </span>
-                    </div>
-                  ) : hasImageCredits ? (
-                    <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/40 rounded-lg">
-                      <Info className="h-4 w-4 text-success" />
-                      <span className="text-sm text-success">
-                        This duel will use 1 of your image credits
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="p-3 bg-warning/10 border border-warning/40 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
-                        <div className="space-y-2">
-                          <p className="text-sm text-warning font-medium">
-                            No image credits available
-                          </p>
-                          <p className="text-sm text-warning">
-                            Your duel will automatically switch to text-only
-                            mode. You can earn credits by watching ads or
-                            upgrading to Premium.
-                          </p>
-                        </div>
+              {/* Token Information */}
+              <div className="space-y-3">
+                {isPremium ? (
+                  <div className="flex items-center gap-2 p-3 bg-primary/8 border border-primary/30 rounded-lg">
+                    <Info className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-primary">
+                      Premium: duels are included
+                    </span>
+                  </div>
+                ) : hasImageCredits ? (
+                  <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/40 rounded-lg">
+                    <Info className="h-4 w-4 text-success" />
+                    <span className="text-sm text-success">
+                      Entering a duel costs 1 token. It is refunded if the duel
+                      is cancelled before an opponent joins.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-warning/10 border border-warning/40 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
+                      <div className="space-y-2">
+                        <p className="text-sm text-warning font-medium">
+                          No tokens available
+                        </p>
+                        <p className="text-sm text-warning">
+                          You need 1 token to start a duel. You can earn tokens
+                          by watching ads or upgrading to Premium.
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -318,7 +310,9 @@ export function CreateDuelForm({
           <div className="flex gap-3">
             <Button
               type="submit"
-              disabled={!selectedWizard || isCreating}
+              disabled={
+                !selectedWizard || isCreating || hasImageCredits === false
+              }
               className="flex-1"
             >
               {isCreating ? (

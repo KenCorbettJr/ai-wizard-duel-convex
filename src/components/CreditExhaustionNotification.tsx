@@ -82,11 +82,11 @@ export function CreditExhaustionNotification({
       <div className="space-y-3 flex-1">
         <div>
           <h4 className="font-semibold text-destructive mb-1">
-            Out of Image Credits!
+            Out of Tokens!
           </h4>
           <p className="text-sm text-destructive">
             Your duels will continue in text-only mode until you get more
-            credits.
+            tokens.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export function CreditExhaustionNotification({
               className="border-destructive/40 text-destructive hover:bg-destructive/10"
             >
               <Play className="h-4 w-4 mr-2" />
-              Watch Ad (+1 Credit)
+              Watch Ad (+1 Token)
             </Button>
           )}
           <Button onClick={handleUpgrade} size="sm">

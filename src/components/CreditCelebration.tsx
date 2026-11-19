@@ -69,13 +69,11 @@ export function CreditCelebration({
 
             {/* Text */}
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-success">
-                Credit Earned!
-              </h3>
+              <h3 className="text-2xl font-bold text-success">Token Earned!</h3>
               <div className="flex items-center justify-center gap-2 text-xl font-semibold text-success">
                 <Coins className="h-6 w-6 animate-rune-pulse" />
                 <span className="animate-bounce">
-                  +{creditsEarned} Image Credit{creditsEarned !== 1 ? "s" : ""}
+                  +{creditsEarned} Token{creditsEarned !== 1 ? "s" : ""}
                 </span>
               </div>
               <p className="text-sm text-success">

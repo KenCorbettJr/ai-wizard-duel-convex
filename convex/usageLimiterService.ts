@@ -35,7 +35,7 @@ export const canCreateWizard = query({
       internal.userSubscriptionQueries.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
 
     if (!subscription) {
@@ -105,7 +105,7 @@ export const canStartDuel = query({
     // Check subscription status
     const subscription: UserSubscription = await ctx.runQuery(
       internal.userSubscriptionQueries.getUserSubscription,
-      { clerkId }
+      { clerkId },
     );
 
     if (!subscription) {
@@ -178,7 +178,7 @@ export const canGenerateImages = query({
       internal.userSubscriptionQueries.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
 
     if (!subscription) {
@@ -208,7 +208,7 @@ export const canGenerateImages = query({
       return {
         canGenerate: false,
         reason:
-          "Insufficient image credits. Watch ads to earn more credits or upgrade to Premium for unlimited image generation.",
+          "Insufficient tokens. Watch ads to earn more tokens or upgrade to Premium.",
         imageCredits: 0,
         isPremium: false,
       };
@@ -299,7 +299,7 @@ export const getUserUsageStatus = query({
         v.literal("ACTIVE"),
         v.literal("CANCELED"),
         v.literal("PAST_DUE"),
-        v.literal("TRIALING")
+        v.literal("TRIALING"),
       ),
       wizards: v.object({
         current: v.number(),
@@ -323,7 +323,7 @@ export const getUserUsageStatus = query({
         adsWatched: v.number(),
         resetDate: v.number(),
       }),
-    })
+    }),
   ),
   handler: async (ctx, { clerkId }): Promise<UserUsageStatus> => {
     // Get subscription info
@@ -331,7 +331,7 @@ export const getUserUsageStatus = query({
       internal.userSubscriptionQueries.getUserSubscription,
       {
         clerkId,
-      }
+      },
     );
     if (!subscription) {
       return null;

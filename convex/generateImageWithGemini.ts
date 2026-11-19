@@ -16,6 +16,8 @@ const GEMINI_IMAGE_MODEL = "gemini-nano-banana-2.1";
 interface UsageContext {
   userId?: string;
   sessionId?: string;
+  // Cost-tracking feature name, e.g. generate_duel_illustration
+  feature?: string;
 }
 import { z } from "genkit/beta";
 
@@ -93,6 +95,7 @@ export const generateImageWithGemini = action({
     useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
     userId: v.optional(v.string()), // For cost tracking
     sessionId: v.optional(v.string()), // For cost tracking
+    feature: v.optional(v.string()), // Cost-tracking feature name (default generate_wizard_image)
   },
   returns: v.bytes(),
   handler: async (
@@ -106,9 +109,10 @@ export const generateImageWithGemini = action({
       useGemini = false,
       userId,
       sessionId,
+      feature,
     },
   ): Promise<ArrayBuffer> => {
-    const usage: UsageContext = { userId, sessionId };
+    const usage: UsageContext = { userId, sessionId, feature };
     const started = Date.now();
     const baseProps = {
       hasWizardRefs: (wizardImages?.length ?? 0) > 0,
@@ -303,6 +307,8 @@ async function generateWithGeminiFlash(
       enhancedPrompt = instructions.join(" ");
     }
 
+    const { feature: usageFeature, ...usageRest } = usage;
+    const feature = usageFeature ?? "generate_wizard_image";
     const startedAt = Date.now();
     const traceId = crypto.randomUUID();
     let response: Awaited<ReturnType<typeof ai.generate>>;
@@ -320,19 +326,19 @@ async function generateWithGeminiFlash(
       });
     } catch (error) {
       await recordAIUsage(ctx, {
-        feature: "generate_wizard_image",
+        feature,
         provider: "gemini",
         model: GEMINI_IMAGE_MODEL,
         kind: "image",
         imageCount: 0,
         costUsd: 0,
-        ...usage,
+        ...usageRest,
         success: false,
       });
       await captureAIGeneration({
         traceId,
         sessionId: null,
-        spanName: "generate_wizard_image",
+        spanName: feature,
         model: GEMINI_IMAGE_MODEL,
         provider: "gemini",
         input: [{ role: "user", content: enhancedPrompt }],
@@ -354,7 +360,7 @@ async function generateWithGeminiFlash(
       (item) => item.media || item.text,
     );
     await recordAIUsage(ctx, {
-      feature: "generate_wizard_image",
+      feature,
       provider: "gemini",
       model: GEMINI_IMAGE_MODEL,
       kind: "image",
@@ -362,7 +368,7 @@ async function generateWithGeminiFlash(
       outputTokens: response.usage?.outputTokens,
       imageCount: returnedImage ? 1 : 0,
       costUsd,
-      ...usage,
+      ...usageRest,
       success: returnedImage,
     });
 
@@ -370,7 +376,7 @@ async function generateWithGeminiFlash(
     await captureAIGeneration({
       traceId,
       sessionId: null,
-      spanName: "generate_wizard_image",
+      spanName: feature,
       model: GEMINI_IMAGE_MODEL,
       provider: "gemini",
       input: [{ role: "user", content: enhancedPrompt }],

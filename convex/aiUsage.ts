@@ -24,6 +24,7 @@ export const record = internalMutation({
 });
 
 const MAX_ROWS = 8000;
+const DUEL_SESSION_PREFIX = "duel-";
 
 const totalsValidator = v.object({
   key: v.string(),
@@ -46,6 +47,9 @@ export const getCostSummary = query({
     byFeature: v.array(totalsValidator),
     byProvider: v.array(totalsValidator),
     byUser: v.array(totalsValidator),
+    byDuel: v.array(totalsValidator),
+    duelCount: v.number(),
+    avgCostPerDuelUsd: v.number(),
   }),
   handler: async (ctx, { sinceMs, untilMs }) => {
     await verifySuperAdmin(ctx);
@@ -62,13 +66,14 @@ export const getCostSummary = query({
     const used = truncated ? rows.slice(0, MAX_ROWS) : rows;
 
     const groups: Record<
-      "day" | "feature" | "provider" | "user",
+      "day" | "feature" | "provider" | "user" | "duel",
       Map<string, { costUsd: number; calls: number }>
     > = {
       day: new Map(),
       feature: new Map(),
       provider: new Map(),
       user: new Map(),
+      duel: new Map(),
     };
     const add = (
       map: Map<string, { costUsd: number; calls: number }>,
@@ -92,7 +97,19 @@ export const getCostSummary = query({
       add(groups.feature, row.feature, row.costUsd);
       add(groups.provider, `${row.provider}/${row.model}`, row.costUsd);
       add(groups.user, row.userId ?? "unknown", row.costUsd);
+      // Duel text and image calls share the sessionId `duel-<duelId>`
+      if (row.sessionId?.startsWith(DUEL_SESSION_PREFIX)) {
+        add(
+          groups.duel,
+          row.sessionId.slice(DUEL_SESSION_PREFIX.length),
+          row.costUsd,
+        );
+      }
     }
+
+    let duelTotalUsd = 0;
+    for (const entry of groups.duel.values()) duelTotalUsd += entry.costUsd;
+    const duelCount = groups.duel.size;
 
     const toArray = (
       map: Map<string, { costUsd: number; calls: number }>,
@@ -112,6 +129,9 @@ export const getCostSummary = query({
       byFeature: toArray(groups.feature),
       byProvider: toArray(groups.provider),
       byUser: toArray(groups.user).slice(0, 50),
+      byDuel: toArray(groups.duel).slice(0, 20),
+      duelCount,
+      avgCostPerDuelUsd: duelCount > 0 ? duelTotalUsd / duelCount : 0,
     };
   },
 });

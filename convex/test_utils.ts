@@ -1,5 +1,6 @@
 import type { TestConvex } from "convex-test";
 import { Id, TableNames } from "./_generated/dataModel";
+import { getFunctionName, type FunctionReference } from "convex/server";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
@@ -26,7 +27,7 @@ export function generateTestIds<T extends TableNames>(count: number): Id<T>[] {
 // Mock user identity for testing
 export function createMockUserIdentity(
   userId: string = "test-user-1",
-  role: string = "user"
+  role: string = "user",
 ) {
   return {
     subject: userId,
@@ -42,19 +43,75 @@ export function createMockUserIdentity(
   };
 }
 
+// Mutations that take a token from the caller
+const TOKEN_SPENDING_FUNCTIONS = new Set([
+  "duels:createDuel",
+  "duels:joinDuel",
+  "duels:requestRematch",
+  "campaigns:startCampaignBattle",
+  "wizards:regenerateIllustration",
+]);
+
 // Set up authenticated context for tests
 export function withAuth(
   t: TestConvex<typeof schema>,
-  userId: string = "test-user-1"
+  userId: string = "test-user-1",
 ) {
   const identity = createMockUserIdentity(userId);
-  return t.withIdentity(identity);
+  const authed = t.withIdentity(identity);
+  // Entering a duel costs a token, so mutations need a user record that has
+  // some. Create one the first time this user calls a mutation, unless the
+  // test already created it.
+  const runMutation = authed.mutation.bind(authed);
+  authed.mutation = (async (
+    ref: FunctionReference<"mutation">,
+    args: never,
+  ) => {
+    if (TOKEN_SPENDING_FUNCTIONS.has(getFunctionName(ref))) {
+      await ensureTestUser(t, userId);
+    }
+    return runMutation(ref, args);
+  }) as unknown as typeof authed.mutation;
+  return authed;
+}
+
+/** Create a user with starter tokens if the test has not created one. */
+export async function ensureTestUser(
+  t: TestConvex<typeof schema>,
+  userId: string,
+  tokens: number = 10,
+) {
+  await t.run(async (ctx) => {
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
+      .first();
+    if (existing) return;
+    await ctx.db.insert("users", {
+      clerkId: userId,
+      role: "user",
+      email: `${userId}@test.com`,
+      name: `Test User ${userId}`,
+      subscriptionTier: "FREE",
+      subscriptionStatus: "ACTIVE",
+      imageCredits: tokens,
+      monthlyUsage: {
+        duelsPlayed: 0,
+        wizardsCreated: 0,
+        imageGenerations: 0,
+        adsWatched: 0,
+        resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  });
 }
 
 // Set up super admin authenticated context for tests
 export function withSuperAdminAuth(
   t: TestConvex<typeof schema>,
-  userId: string = "super-admin-user"
+  userId: string = "super-admin-user",
 ) {
   const identity = createMockUserIdentity(userId, "super_admin");
   return t.withIdentity(identity);
@@ -64,7 +121,7 @@ export function withSuperAdminAuth(
 export async function createTestUser(
   t: TestConvex<typeof schema>,
   clerkId: string,
-  role: "user" | "admin" | "super_admin" = "user"
+  role: "user" | "admin" | "super_admin" = "user",
 ) {
   return await t
     .mutation(api.users.getOrCreateUser, {

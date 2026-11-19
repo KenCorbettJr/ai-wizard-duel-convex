@@ -142,7 +142,7 @@ export default function WaitlistPage() {
                 <CardContent>
                   <p className="text-muted-foreground">
                     Once approved, you&apos;ll have immediate access to all
-                    features and 10 free image credits.
+                    features and 10 free tokens.
                   </p>
                 </CardContent>
               </Card>
@@ -279,8 +279,8 @@ export default function WaitlistPage() {
                   <p className="text-muted-foreground">
                     You&apos;ll receive an email notification and can
                     immediately sign in to access all features. You&apos;ll
-                    start with 10 free image credits to create your first
-                    wizards and duels.
+                    start with 10 free tokens to create your first wizards and
+                    duels.
                   </p>
                 </CardContent>
               </Card>
@@ -295,7 +295,7 @@ export default function WaitlistPage() {
                   <p className="text-muted-foreground">
                     No! AI Wizard Duel is free to play. You can create wizards,
                     participate in unlimited duels, and earn additional image
-                    credits by watching ads. Premium subscriptions are optional
+                    tokens by watching ads. Premium subscriptions are optional
                     for unlimited features.
                   </p>
                 </CardContent>

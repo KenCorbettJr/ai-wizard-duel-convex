@@ -221,7 +221,7 @@ const sidebarGroups: SidebarGroup[] = [
       },
       {
         href: "/credits",
-        label: "Credits",
+        label: "Tokens",
         icon: Coins,
         requiresAuth: true,
       },

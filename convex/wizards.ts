@@ -6,6 +6,7 @@ import {
 } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { chargeWizardImageToken } from "./lib/wizardImageTokens";
 import { Wizard } from "@/types/wizard";
 
 // Get all wizards for the authenticated user with campaign relic status
@@ -193,6 +194,8 @@ export const createWizard = mutation({
           wizardId,
           name,
           description,
+          // First illustration is free. userId is only for cost tracking.
+          userId: identity.subject,
         },
       );
     }
@@ -349,14 +352,6 @@ export const updateWizard = mutation({
       throw new Error("Not authorized to update this wizard");
     }
 
-    // Check if name or description changed
-    const nameChanged =
-      updates.name !== undefined && updates.name !== wizard.name;
-    const descriptionChanged =
-      updates.description !== undefined &&
-      updates.description !== wizard.description;
-    const shouldRegenerateIllustration = nameChanged || descriptionChanged;
-
     await ctx.db.patch(wizardId, {
       ...updates,
       illustrationVersion: updates.illustration
@@ -366,19 +361,6 @@ export const updateWizard = mutation({
         ? Date.now()
         : wizard.illustrationGeneratedAt,
     });
-
-    // Regenerate illustration if name or description changed
-    if (shouldRegenerateIllustration && process.env.NODE_ENV !== "test") {
-      await ctx.scheduler.runAfter(
-        100, // Add small delay to ensure database transaction is committed
-        api.generateWizardIllustration.generateWizardIllustration,
-        {
-          wizardId,
-          name: updates.name || wizard.name,
-          description: updates.description || wizard.description,
-        },
-      );
-    }
   },
 });
 
@@ -411,6 +393,12 @@ export const regenerateIllustration = mutation({
       );
     }
 
+    // The first illustration is free. Redoing one that already exists costs a
+    // token. Throws (rolling back) if the player has none.
+    const tokenCharged = wizard.illustration
+      ? await chargeWizardImageToken(ctx, identity.subject, wizardId)
+      : false;
+
     // Increment illustration version immediately
     const currentVersion = wizard.illustrationVersion || 1;
     await ctx.db.patch(wizardId, {
@@ -427,6 +415,8 @@ export const regenerateIllustration = mutation({
           wizardId,
           name: wizard.name,
           description: wizard.description,
+          userId: identity.subject,
+          refundTokenOnFailure: tokenCharged,
         },
       );
     }

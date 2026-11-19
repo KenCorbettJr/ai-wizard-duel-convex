@@ -39,7 +39,7 @@ export function CreditUsageHistory({
       <Card className={className}>
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground">
-            Sign in to view your credit history
+            Sign in to view your token history
           </p>
         </CardContent>
       </Card>
@@ -53,13 +53,13 @@ export function CreditUsageHistory({
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Clock className="h-5 w-5" />
-              Credit History
+              Token History
             </CardTitle>
           </CardHeader>
         )}
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground text-center py-8">
-            No credit activity yet. Start earning credits by watching ads or
+            No token activity yet. Start earning tokens by watching ads or
             upgrade to Premium!
           </p>
         </CardContent>
@@ -111,6 +111,14 @@ export function CreditUsageHistory({
         return "Premium";
       case "ADMIN_GRANT":
         return "Admin Grant";
+      case "DUEL_ENTRY":
+        return "Duel Entry";
+      case "DUEL_REFUND":
+        return "Duel Refund";
+      case "WIZARD_IMAGE":
+        return "Wizard Illustration";
+      case "WIZARD_IMAGE_REFUND":
+        return "Illustration Refund";
       default:
         return source.replace("_", " ");
     }
@@ -141,7 +149,7 @@ export function CreditUsageHistory({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Clock className="h-5 w-5" />
-            Credit History
+            Token History
             <Badge variant="secondary" className="ml-auto">
               {creditHistory.length} transactions
             </Badge>

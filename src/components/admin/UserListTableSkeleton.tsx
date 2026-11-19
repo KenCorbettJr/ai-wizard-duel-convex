@@ -34,7 +34,7 @@ export function UserListTableSkeleton({
             <TableHead className="text-center">Wizards</TableHead>
             <TableHead className="text-center">Duels</TableHead>
             <TableHead className="text-center">Campaign</TableHead>
-            <TableHead className="text-center">Credits</TableHead>
+            <TableHead className="text-center">Tokens</TableHead>
             <TableHead>Subscription</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>

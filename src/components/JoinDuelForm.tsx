@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
@@ -71,6 +73,11 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
       onSuccess(selectedDuel);
     } catch (error) {
       console.error("Failed to join duel:", error);
+      toast.error(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : "Couldn't join the duel. Please try again.",
+      );
     } finally {
       setIsJoining(false);
     }

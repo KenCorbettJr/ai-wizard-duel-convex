@@ -137,10 +137,10 @@ export function AdDisplay({
                   🎬 Watch & Earn
                 </div>
                 <div className="text-sm text-foreground mb-3">
-                  Watch a short video to earn image credits!
+                  Watch a short video to earn tokens!
                 </div>
                 <Button size="sm" onClick={handleAdClick}>
-                  Watch Video (+1 Credit)
+                  Watch Video (+1 Token)
                 </Button>
               </div>
             </div>

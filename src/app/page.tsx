@@ -260,32 +260,32 @@ function LandingPage() {
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
               Every duel features stunning AI-generated artwork that visualizes
-              your magical creations. Use image credits to generate unique
+              your magical creations. Use tokens to generate unique
               illustrations for your spells and wizards.
             </p>
           </div>
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
             <FeatureCard
               icon={Gift}
-              title="Free Credits"
-              description="Start with 10 free image credits when you sign up. Perfect for trying out the magic!"
+              title="Free Tokens"
+              description="Start with 10 free tokens when you sign up. Perfect for trying out the magic!"
             />
             <FeatureCard
               icon={Sparkles}
-              title="Earn More Credits"
-              description="Watch short video ads to earn additional credits. One ad = one credit, with a 5-minute cooldown."
+              title="Earn More Tokens"
+              description="Watch short video ads to earn additional tokens. One ad = one token, with a 5-minute cooldown."
             />
             <FeatureCard
               icon={Crown}
-              title="Unlimited with Premium"
-              description="Premium users get unlimited image generation plus exclusive features and faster processing."
+              title="Included with Premium"
+              description="Premium players are not charged tokens for duels, plus exclusive features and faster processing."
             />
           </div>
           <div className="text-center mt-8">
             <p className="text-sm text-muted-foreground">
-              <strong>Want to play without using credits?</strong> You can
-              always duel in text-only mode, which focuses purely on the magical
-              storytelling without AI-generated images.
+              <strong>Prefer a story-only duel?</strong> You can turn off
+              AI-generated images when you create a duel. It still costs 1 token
+              to enter.
             </p>
           </div>
         </div>
@@ -338,7 +338,7 @@ function LandingPage() {
                 Sign Up Free
               </h3>
               <p className="text-muted-foreground">
-                Create your account and get 10 free image credits to start
+                Create your account and get 10 free tokens to start
               </p>
             </div>
             <div className="text-center space-y-4">
@@ -526,16 +526,15 @@ function LandingPage() {
           <div className="max-w-3xl mx-auto space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">
-                  What are image credits?
-                </CardTitle>
+                <CardTitle className="text-lg">What are tokens?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Image credits are used to generate AI artwork for your spells
-                  and wizards. Each duel with images consumes 1 credit. You
-                  start with 10 free credits and can earn more by watching ads
-                  or upgrade to Premium for unlimited generation.
+                  Tokens pay for AI-powered duels and artwork. Each player
+                  spends 1 token to enter a duel against another player, and 1
+                  token starts a campaign battle. You start with 10 free tokens
+                  and can earn more by watching ads. Premium players are not
+                  charged for duels.
                 </p>
               </CardContent>
             </Card>
@@ -548,10 +547,9 @@ function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Absolutely! The game is completely free to play. You can
-                  create wizards, participate in unlimited duels, and earn
-                  additional image credits by watching short video ads. Premium
-                  is optional and adds convenience and extra features.
+                  Yes. You start with 10 free tokens and can earn more by
+                  watching short video ads. Premium is optional and adds
+                  convenience and extra features.
                 </p>
               </CardContent>
             </Card>

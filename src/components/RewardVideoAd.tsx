@@ -149,7 +149,7 @@ export function RewardVideoAd({
                 <div className="flex items-center justify-center gap-3 text-lg font-bold text-success">
                   <Coins className="h-6 w-6 animate-spin" />
                   <span className="animate-credit-pulse">
-                    +{rewardResult.creditsAwarded} Image Credit
+                    +{rewardResult.creditsAwarded} Token
                     {rewardResult.creditsAwarded !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -195,7 +195,7 @@ export function RewardVideoAd({
           </Button>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Play className="h-5 w-5" />
-            Earn Free Credits
+            Earn Free Tokens
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -204,12 +204,12 @@ export function RewardVideoAd({
             <h3 className="text-lg font-semibold mb-2">Watch & Earn</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Watch a short video advertisement to earn 1 free image generation
-              credit!
+              token!
             </p>
 
             <div className="flex items-center justify-center gap-2 text-sm text-success mb-4">
               <Gift className="h-4 w-4" />
-              <span>+1 Image Credit</span>
+              <span>+1 Token</span>
             </div>
 
             <Button
@@ -233,7 +233,7 @@ export function RewardVideoAd({
 
           {!user && (
             <p className="text-xs text-muted-foreground">
-              Please sign in to earn credits from watching ads.
+              Please sign in to earn tokens from watching ads.
             </p>
           )}
         </CardContent>

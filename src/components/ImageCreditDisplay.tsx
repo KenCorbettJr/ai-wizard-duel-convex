@@ -106,7 +106,7 @@ export function ImageCreditDisplay({
       <Card className={className}>
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground">
-            Sign in to view your image credits
+            Sign in to view your tokens
           </p>
         </CardContent>
       </Card>
@@ -147,7 +147,7 @@ export function ImageCreditDisplay({
                 className={`h-5 w-5 text-gold ${showCelebration ? "animate-bounce" : ""}`}
               />
             )}
-            Image Credits
+            Tokens
             {isPremium ? (
               <Badge variant="default" className="bg-arcane">
                 <Crown className="h-3 w-3 mr-1" />
@@ -187,7 +187,7 @@ export function ImageCreditDisplay({
             ) : (
               <div className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <span className="font-medium">No credits remaining</span>
+                <span className="font-medium">No tokens remaining</span>
               </div>
             )}
           </div>
@@ -199,12 +199,11 @@ export function ImageCreditDisplay({
                 <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
                   <h4 className="font-medium text-destructive">
-                    Out of Image Credits!
+                    Out of Tokens!
                   </h4>
                   <p className="text-sm text-destructive">
-                    You&apos;ve used all your image generation credits. Your
-                    duels will continue in text-only mode until you get more
-                    credits.
+                    You&apos;ve used all your tokens. Your duels will continue
+                    in text-only mode until you get more tokens.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 mt-3">
                     {adCooldown?.canEarn && (
@@ -215,7 +214,7 @@ export function ImageCreditDisplay({
                         className="border-destructive/40 text-destructive hover:bg-destructive/10"
                       >
                         <Play className="h-4 w-4 mr-2" />
-                        Watch Ad (+1 Credit)
+                        Watch Ad (+1 Token)
                       </Button>
                     )}
                     <Button onClick={handleUpgrade} size="sm">
@@ -232,7 +231,7 @@ export function ImageCreditDisplay({
           {!isPremium && adCooldown && (
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground font-medium">
-                Earn Free Credits
+                Earn Free Tokens
               </div>
               {adCooldown.canEarn ? (
                 <Button
@@ -242,7 +241,7 @@ export function ImageCreditDisplay({
                   className="w-full border-success/40 text-success hover:bg-success/10"
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Watch Ad for 1 Credit
+                  Watch Ad for 1 Token
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" disabled className="w-full">
@@ -251,8 +250,7 @@ export function ImageCreditDisplay({
                 </Button>
               )}
               <p className="text-xs text-muted-foreground">
-                Watch a short video to earn 1 image credit. Available every 5
-                minutes.
+                Watch a short video to earn 1 token. Available every 5 minutes.
               </p>
             </div>
           )}
@@ -289,6 +287,12 @@ export function ImageCreditDisplay({
                       {transaction.source === "SIGNUP_BONUS" && "Welcome Bonus"}
                       {transaction.source === "ADMIN_GRANT" && "Admin Grant"}
                       {transaction.source === "PREMIUM_GRANT" && "Premium"}
+                      {transaction.source === "DUEL_ENTRY" && "Duel Entry"}
+                      {transaction.source === "DUEL_REFUND" && "Duel Refund"}
+                      {transaction.source === "WIZARD_IMAGE" &&
+                        "Wizard Illustration"}
+                      {transaction.source === "WIZARD_IMAGE_REFUND" &&
+                        "Illustration Refund"}
                     </div>
                   </div>
                 ))}

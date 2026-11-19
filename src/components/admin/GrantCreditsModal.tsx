@@ -83,18 +83,18 @@ export function GrantCreditsModal({
 
   const validateForm = (): boolean => {
     if (!amount || amount === "0") {
-      setError("Please enter a valid credit amount");
+      setError("Please enter a valid token amount");
       return false;
     }
 
     const numAmount = parseInt(amount, 10);
     if (numAmount <= 0 || !Number.isInteger(numAmount)) {
-      setError("Credit amount must be a positive integer");
+      setError("Token amount must be a positive integer");
       return false;
     }
 
     if (!reason.trim()) {
-      setError("Please provide a reason for this credit grant");
+      setError("Please provide a reason for this token grant");
       return false;
     }
 
@@ -121,8 +121,8 @@ export function GrantCreditsModal({
 
       if (result.success) {
         setSuccess(true);
-        toast.success("Credits granted successfully!", {
-          description: `${userName} now has ${result.newBalance} credits`,
+        toast.success("Tokens granted successfully!", {
+          description: `${userName} now has ${result.newBalance} tokens`,
         });
         // Wait a moment to show success message
         setTimeout(() => {
@@ -132,9 +132,9 @@ export function GrantCreditsModal({
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to grant credits";
+        err instanceof Error ? err.message : "Failed to grant tokens";
       setError(errorMessage);
-      toast.error("Failed to grant credits", {
+      toast.error("Failed to grant tokens", {
         description: errorMessage,
       });
     } finally {
@@ -162,10 +162,10 @@ export function GrantCreditsModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-gold" />
-            Grant Image Credits
+            Grant Tokens
           </DialogTitle>
           <DialogDescription>
-            Add credits to {userName}&apos;s account
+            Add tokens to {userName}&apos;s account
           </DialogDescription>
         </DialogHeader>
 
@@ -198,7 +198,7 @@ export function GrantCreditsModal({
             {/* Amount Input */}
             <div className="space-y-2">
               <Label htmlFor="amount">
-                Credit Amount <span className="text-destructive">*</span>
+                Token Amount <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="amount"
@@ -224,7 +224,7 @@ export function GrantCreditsModal({
               </Label>
               <Textarea
                 id="reason"
-                placeholder="e.g., Customer support request, promotional credit, compensation for issue..."
+                placeholder="e.g., Customer support request, promotional token, compensation for issue..."
                 value={reason}
                 onChange={(e) => {
                   setReason(e.target.value);
@@ -253,7 +253,7 @@ export function GrantCreditsModal({
               <Alert className="border-success bg-success/10">
                 <CheckCircle2 className="h-4 w-4 text-success" />
                 <AlertDescription className="text-success">
-                  Credits granted successfully!
+                  Tokens granted successfully!
                 </AlertDescription>
               </Alert>
             )}
@@ -287,7 +287,7 @@ export function GrantCreditsModal({
               ) : (
                 <>
                   <Coins className="h-4 w-4 mr-2" />
-                  Grant Credits
+                  Grant Tokens
                 </>
               )}
             </Button>

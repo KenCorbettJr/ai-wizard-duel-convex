@@ -10,10 +10,7 @@ export async function captureServerEvent(
   properties: Record<string, unknown> = {},
   distinctId = "server",
 ): Promise<void> {
-  if (
-    process.env.ENV === "emulate" ||
-    process.env.NODE_ENV === "test"
-  ) {
+  if (process.env.ENV === "emulate" || process.env.NODE_ENV === "test") {
     return;
   }
 
@@ -103,11 +100,7 @@ export async function captureAIGeneration(
         : {}),
     };
 
-    await captureServerEvent(
-      "$ai_generation",
-      properties,
-      capture.distinctId,
-    );
+    await captureServerEvent("$ai_generation", properties, capture.distinctId);
   } catch (error) {
     console.warn("PostHog AI generation capture failed:", error);
   }

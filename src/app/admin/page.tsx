@@ -38,7 +38,7 @@ const adminFeatures = [
   },
   {
     title: "User Management",
-    description: "View and manage users, grant credits, and monitor activity",
+    description: "View and manage users, grant tokens, and monitor activity",
     href: "/admin/users",
     icon: Users,
     color: "text-success",

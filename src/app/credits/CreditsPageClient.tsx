@@ -24,8 +24,8 @@ export function CreditsPageClient() {
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-2xl mx-auto">
           <PageHeader
-            title="Image Credits"
-            description="Please sign in to view and manage your image generation credits."
+            title="Tokens"
+            description="Please sign in to view and manage your tokens."
             icon={<Coins className="h-6 w-6" aria-hidden="true" />}
           />
         </div>
@@ -39,8 +39,8 @@ export function CreditsPageClient() {
         {/* Header */}
         <PageHeader
           className="mb-0"
-          title="Image Credits"
-          description="Manage your image generation credits, watch ads to earn more, or upgrade to Premium for unlimited access."
+          title="Tokens"
+          description="Manage your tokens, watch ads to earn more, or upgrade to Premium for unlimited access."
           icon={<Coins className="h-6 w-6" aria-hidden="true" />}
         />
 

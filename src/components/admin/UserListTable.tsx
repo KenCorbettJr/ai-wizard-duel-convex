@@ -237,7 +237,7 @@ export function UserListTable({
               <TableHead className="text-center w-20">Wizards</TableHead>
               <TableHead className="text-center w-24">Duels</TableHead>
               <TableHead className="text-center w-24">Campaign</TableHead>
-              <TableHead className="text-center w-20">Credits</TableHead>
+              <TableHead className="text-center w-20">Tokens</TableHead>
               <TableHead className="w-28">Subscription</TableHead>
               <TableHead className="text-right min-w-[280px] sticky right-0 bg-background">
                 Actions
@@ -476,7 +476,7 @@ export function UserListTable({
                   </div>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Credits</p>
+                  <p className="text-muted-foreground text-xs">Tokens</p>
                   <div className="flex items-center gap-1 mt-1">
                     <Coins
                       className={`h-4 w-4 ${hasZeroCredits ? "text-destructive" : "text-gold"}`}

@@ -23,7 +23,7 @@ const BattleRoundResponseSchema = z.object({
   result: z
     .string()
     .describe(
-      "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less."
+      "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
     ),
   illustrationPrompt: z
     .string()
@@ -33,20 +33,22 @@ const BattleRoundResponseSchema = z.object({
   damageSummary: z
     .string()
     .describe(
-      "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say the wizard took no damage. The health changes below MUST agree with this sentence."
+      "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say the wizard took no damage. The health changes below MUST agree with this sentence.",
     ),
   wizard1: z.object({
     pointsEarned: z
       .number()
       .min(0)
       .max(10)
-      .describe("Points earned by wizard 1 (0-10). Wizard 1 is the first wizard named in the output field mapping, NOT necessarily the first listed in the actions."),
+      .describe(
+        "Points earned by wizard 1 (0-10). Wizard 1 is the first wizard named in the output field mapping, NOT necessarily the first listed in the actions.",
+      ),
     healthChange: z
       .number()
       .min(-100)
       .max(100)
       .describe(
-        "Health change for wizard 1 (-100 to +100, negative means damage taken, positive means healing)"
+        "Health change for wizard 1 (-100 to +100, negative means damage taken, positive means healing)",
       ),
   }),
   wizard2: z.object({
@@ -60,7 +62,7 @@ const BattleRoundResponseSchema = z.object({
       .min(-100)
       .max(100)
       .describe(
-        "Health change for wizard 2 (-100 to +100, negative means damage taken, positive means healing)"
+        "Health change for wizard 2 (-100 to +100, negative means damage taken, positive means healing)",
       ),
   }),
 });
@@ -75,12 +77,12 @@ const DuelConclusionSchema = z.object({
   result: z
     .string()
     .describe(
-      "A brief but impactful summary of the duel conclusion that captures the essence of the victory."
+      "A brief but impactful summary of the duel conclusion that captures the essence of the victory.",
     ),
   illustrationPrompt: z
     .string()
     .describe(
-      "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description."
+      "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description.",
     ),
 });
 
@@ -203,21 +205,21 @@ function validateBattleResponse(response: unknown): BattleRoundResponse | null {
       wizard1: {
         pointsEarned: Math.max(
           0,
-          Math.min(10, Math.floor(responseObj.wizard1.pointsEarned))
+          Math.min(10, Math.floor(responseObj.wizard1.pointsEarned)),
         ),
         healthChange: Math.max(
           -100,
-          Math.min(100, Math.floor(responseObj.wizard1.healthChange))
+          Math.min(100, Math.floor(responseObj.wizard1.healthChange)),
         ),
       },
       wizard2: {
         pointsEarned: Math.max(
           0,
-          Math.min(10, Math.floor(responseObj.wizard2.pointsEarned))
+          Math.min(10, Math.floor(responseObj.wizard2.pointsEarned)),
         ),
         healthChange: Math.max(
           -100,
-          Math.min(100, Math.floor(responseObj.wizard2.healthChange))
+          Math.min(100, Math.floor(responseObj.wizard2.healthChange)),
         ),
       },
     };
@@ -258,8 +260,8 @@ export const processDuelRound = action({
           (wizardId: Id<"wizards">) =>
             ctx.runQuery(internal.wizards.getWizardInternal, {
               wizardId,
-            }) as Promise<Wizard>
-        )
+            }) as Promise<Wizard>,
+        ),
       );
 
       if (wizards.length < 2 || wizards.some((w) => !w)) {
@@ -297,12 +299,12 @@ export const processDuelRound = action({
       // Calculate bounded health changes
       const wizard1HealthUpdates = getBoundedHealthChange(
         battleResult.wizard1.healthChange,
-        duel.hitPoints[wizard1ID] ?? 100
+        duel.hitPoints[wizard1ID] ?? 100,
       );
 
       const wizard2HealthUpdates = getBoundedHealthChange(
         battleResult.wizard2.healthChange,
-        duel.hitPoints[wizard2ID] ?? 100
+        duel.hitPoints[wizard2ID] ?? 100,
       );
 
       // Get the luck rolls that were used in the battle generation
@@ -340,22 +342,12 @@ export const processDuelRound = action({
         // Use the first player in the duel for credit consumption
         const firstPlayerId = duel.players[0];
 
-        // Check if duel is in text-only mode or user has image credits
-        let skipImageGeneration = duel.textOnlyMode || false;
-        if (!skipImageGeneration && firstPlayerId) {
-          const hasCredits = await ctx.runQuery(
-            api.imageCreditService.hasImageCreditsForDuel,
-            { userId: firstPlayerId }
-          );
-          if (!hasCredits) {
-            skipImageGeneration = true;
-            console.log(
-              `User ${firstPlayerId} has insufficient credits for duel ${duelId} round ${round.roundNumber}, using text-only mode`
-            );
-          }
-        } else if (skipImageGeneration) {
+        // Players paid a token when the duel started. Images are only skipped
+        // when the duel was created in text-only mode.
+        const skipImageGeneration = duel.textOnlyMode || false;
+        if (skipImageGeneration) {
           console.log(
-            `Duel ${duelId} round ${round.roundNumber} is in text-only mode by user preference`
+            `Duel ${duelId} round ${round.roundNumber} is in text-only mode by user preference`,
           );
         }
 
@@ -389,7 +381,7 @@ export const processDuelRound = action({
       return { success: true, roundId };
     } catch (error) {
       throw new Error(
-        `Failed to process duel round: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to process duel round: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   },
@@ -398,7 +390,7 @@ export const processDuelRound = action({
 // Helper function to calculate bounded health changes
 function getBoundedHealthChange(
   healthChange: number,
-  currentHealth: number
+  currentHealth: number,
 ): { healthChange: number; newHealth: number } {
   let newHealth = currentHealth + healthChange;
 
@@ -444,18 +436,18 @@ async function generateBattleRound(
   const previousRounds = allRounds
     .filter(
       (r: { roundNumber: number; status: string }) =>
-        r.roundNumber < round.roundNumber && r.status === "COMPLETED"
+        r.roundNumber < round.roundNumber && r.status === "COMPLETED",
     )
     .sort(
       (a: { roundNumber: number }, b: { roundNumber: number }) =>
-        a.roundNumber - b.roundNumber
+        a.roundNumber - b.roundNumber,
     );
 
   const systemPrompt = generateSystemPrompt(
     duel,
     wizard1,
     wizard2,
-    previousRounds
+    previousRounds,
   );
 
   const roundActions = generateRoundActions(
@@ -468,13 +460,13 @@ async function generateBattleRound(
     wizard1Luck,
     wizard2Luck,
     duel,
-    firstWizard
+    firstWizard,
   );
 
   const previousRoundsContext = generatePreviousRoundsContext(
     previousRounds,
     wizard1,
-    wizard2
+    wizard2,
   );
 
   const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\n${ILLUSTRATION_RULES}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
@@ -489,7 +481,7 @@ async function generateBattleRound(
           wizard1,
           wizard2,
           wizard1Action,
-          wizard2Action
+          wizard2Action,
         ),
         wizard1Luck,
         wizard2Luck,
@@ -524,7 +516,7 @@ async function generateBattleRound(
         wizard1,
         wizard2,
         wizard1Action,
-        wizard2Action
+        wizard2Action,
       ),
       wizard1Luck,
       wizard2Luck,
@@ -535,7 +527,7 @@ async function generateBattleRound(
 function generatePreviousRoundsContext(
   previousRounds: Array<Doc<"duelRounds">>,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">
+  wizard2: Doc<"wizards">,
 ): string {
   if (previousRounds.length === 0) {
     return "=== Previous Rounds ===\nThis is the first round of combat. No previous rounds to reference.";
@@ -583,7 +575,7 @@ function generateSystemPrompt(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
-  previousRounds: unknown[] = []
+  previousRounds: unknown[] = [],
 ): string {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
@@ -714,12 +706,12 @@ function generateRoundActions(
   wizard1Luck: number,
   wizard2Luck: number,
   duel: Doc<"duels">,
-  firstWizard: number
+  firstWizard: number,
 ): string {
   function generateWizardAction(
     wizardId: Id<"wizards">,
     action: string,
-    luck: number
+    luck: number,
   ): string {
     const wizard = wizardId === wizard1ID ? wizard1 : wizard2;
     return `Actions for ${wizard.name}:
@@ -733,12 +725,12 @@ function generateRoundActions(
     generateWizardAction(
       firstWizard === 1 ? wizard1ID : wizard2ID,
       firstWizard === 1 ? wizard1Action : wizard2Action,
-      firstWizard === 1 ? wizard1Luck : wizard2Luck
+      firstWizard === 1 ? wizard1Luck : wizard2Luck,
     ),
     generateWizardAction(
       firstWizard === 1 ? wizard2ID : wizard1ID,
       firstWizard === 1 ? wizard2Action : wizard1Action,
-      firstWizard === 1 ? wizard2Luck : wizard1Luck
+      firstWizard === 1 ? wizard2Luck : wizard1Luck,
     ),
   ];
 
@@ -750,15 +742,15 @@ function generateMockBattleResult(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1Action: string,
-  wizard2Action: string
+  wizard2Action: string,
 ): BattleRoundResponse {
   // Check if we're in test mode and return test-compatible responses
   if (process.env.NODE_ENV === "test") {
     console.log(
-      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`
+      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`,
     );
     console.log(
-      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`
+      `🧪 Test mode: wizard1Action="${wizard1Action}", wizard2Action="${wizard2Action}"`,
     );
 
     // Return responses that match test expectations
@@ -898,7 +890,7 @@ function generateFallbackBattleResult(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   wizard1Action: string,
-  wizard2Action: string
+  wizard2Action: string,
 ): BattleRoundResponse {
   const narration = `The magical energies crackle through the arena as both wizards unleash their powers simultaneously!
 
@@ -939,7 +931,7 @@ The crowd watches in awe as the magical energies settle, revealing the results o
 function generateDuelHistoryContext(
   completedRounds: Array<Doc<"duelRounds">>,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">
+  wizard2: Doc<"wizards">,
 ): string {
   if (completedRounds.length === 0) {
     return "=== DUEL HISTORY ===\nNo rounds completed.";
@@ -1027,11 +1019,11 @@ async function generateDuelConclusion(
       .filter((r: { status: string }) => r.status === "COMPLETED")
       .sort(
         (a: { roundNumber: number }, b: { roundNumber: number }) =>
-          a.roundNumber - b.roundNumber
+          a.roundNumber - b.roundNumber,
       );
 
     const introductionRound = completedRounds.find(
-      (round: { roundNumber: number }) => round.roundNumber === 0
+      (round: { roundNumber: number }) => round.roundNumber === 0,
     );
     const arenaDescription =
       introductionRound?.outcome?.illustrationPrompt ||
@@ -1046,7 +1038,7 @@ async function generateDuelConclusion(
     const duelHistory = generateDuelHistoryContext(
       completedRounds,
       wizard1,
-      wizard2
+      wizard2,
     );
 
     const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel, speaking like a sports announcer giving the post-game call. You have the complete history of the duel for reference, but the audience just watched it, so do NOT recap it. Write a final narration that:
@@ -1088,14 +1080,14 @@ Write a short announcer-style wrap-up (60 to 90 words) that names the winner and
     try {
       if (isEmulatorMode() || process.env.NODE_ENV === "test") {
         console.log(
-          "🎭 Using mock AI conclusion generation (emulator/test mode)"
+          "🎭 Using mock AI conclusion generation (emulator/test mode)",
         );
         parsedResponse = generateMockConclusion(
           duel,
           wizard1,
           wizard2,
           winner,
-          loser
+          loser,
         );
       } else {
         parsedResponse = await generateObject(
@@ -1150,7 +1142,7 @@ function generateMockConclusion(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
   winner: Doc<"wizards">,
-  loser: Doc<"wizards">
+  loser: Doc<"wizards">,
 ): DuelConclusionResponse {
   const winnerName = winner?.name || "Unknown";
   const loserName = loser?.name || "Unknown";
@@ -1177,7 +1169,7 @@ function generateMockConclusion(
 function generateFallbackConclusion(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">
+  wizard2: Doc<"wizards">,
 ): DuelConclusionResponse {
   const winnerId = duel.winners?.[0];
   const winner = winnerId === wizard1._id ? wizard1 : wizard2;

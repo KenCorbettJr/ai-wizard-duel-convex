@@ -87,7 +87,7 @@ export default function DesignSystemPage() {
               <AlertDescription>Your spell landed perfectly.</AlertDescription>
             </Alert>
             <Alert variant="warning">
-              <AlertDescription>Your credits are running low.</AlertDescription>
+              <AlertDescription>Your tokens are running low.</AlertDescription>
             </Alert>
             <Alert variant="info">
               <AlertDescription>A new season has begun.</AlertDescription>

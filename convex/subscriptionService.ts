@@ -4,15 +4,9 @@ import { v } from "convex/values";
 // Types for subscription management
 export type SubscriptionTier = "FREE" | "PREMIUM";
 export type SubscriptionStatus =
-  | "ACTIVE"
-  | "CANCELED"
-  | "PAST_DUE"
-  | "TRIALING";
+  "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING";
 export type UsageAction =
-  | "DUEL_PLAYED"
-  | "WIZARD_CREATED"
-  | "IMAGE_GENERATED"
-  | "AD_WATCHED";
+  "DUEL_PLAYED" | "WIZARD_CREATED" | "IMAGE_GENERATED" | "AD_WATCHED";
 export type PremiumFeature =
   | "UNLIMITED_WIZARDS"
   | "UNLIMITED_DUELS"
@@ -37,7 +31,7 @@ export const hasFeatureAccess = query({
       v.literal("UNLIMITED_WIZARDS"),
       v.literal("UNLIMITED_DUELS"),
       v.literal("PREMIUM_AI"),
-      v.literal("ADVANCED_CUSTOMIZATION")
+      v.literal("ADVANCED_CUSTOMIZATION"),
     ),
   },
   returns: v.boolean(),
@@ -102,7 +96,7 @@ export const checkUsageLimit = query({
       v.literal("DUEL_PLAYED"),
       v.literal("WIZARD_CREATED"),
       v.literal("IMAGE_GENERATED"),
-      v.literal("AD_WATCHED")
+      v.literal("AD_WATCHED"),
     ),
   },
   returns: v.object({
@@ -183,7 +177,7 @@ export const checkUsageLimit = query({
         if (user.imageCredits <= 0) {
           return {
             canPerform: false,
-            reason: "Insufficient image credits",
+            reason: "Insufficient tokens",
             currentUsage: user.imageCredits,
             limit: 0,
           };
@@ -210,7 +204,7 @@ export const incrementUsage = mutation({
       v.literal("DUEL_PLAYED"),
       v.literal("WIZARD_CREATED"),
       v.literal("IMAGE_GENERATED"),
-      v.literal("AD_WATCHED")
+      v.literal("AD_WATCHED"),
     ),
   },
   returns: v.null(),
@@ -274,7 +268,7 @@ export const updateSubscription = mutation({
       v.literal("ACTIVE"),
       v.literal("CANCELED"),
       v.literal("PAST_DUE"),
-      v.literal("TRIALING")
+      v.literal("TRIALING"),
     ),
     stripeCustomerId: v.optional(v.string()),
     stripeSubscriptionId: v.optional(v.string()),
@@ -421,7 +415,7 @@ export const getUserUsageLimits = query({
         resetDate: v.number(),
       }),
       resetDate: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, { clerkId }) => {
     const user = await ctx.db

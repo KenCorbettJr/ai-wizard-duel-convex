@@ -148,7 +148,7 @@ describe("UsageLimiterService", () => {
 
       expect(result.canStart).toBe(false);
       expect(result.reason).toBe(
-        "Registration required to participate in duels"
+        "Registration required to participate in duels",
       );
     });
   });
@@ -177,7 +177,7 @@ describe("UsageLimiterService", () => {
       });
 
       expect(result.canGenerate).toBe(false);
-      expect(result.reason).toContain("Insufficient image credits");
+      expect(result.reason).toContain("Insufficient tokens");
       expect(result.imageCredits).toBe(0);
       expect(result.isPremium).toBe(false);
     });
@@ -225,7 +225,7 @@ describe("UsageLimiterService", () => {
         api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
@@ -240,7 +240,7 @@ describe("UsageLimiterService", () => {
         api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
@@ -255,7 +255,7 @@ describe("UsageLimiterService", () => {
         api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.imageGenerations).toBe(1);
@@ -270,7 +270,7 @@ describe("UsageLimiterService", () => {
         api.userSubscriptionQueries.getUserSubscription,
         {
           clerkId: testClerkId,
-        }
+        },
       );
 
       expect(subscription!.monthlyUsage.adsWatched).toBe(1);

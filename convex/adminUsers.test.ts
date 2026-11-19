@@ -393,7 +393,7 @@ describe("Admin Users - listUsers", () => {
     await expect(
       withAuth(t, "regular-user").query(api.adminUsers.listUsers, {
         paginationOpts: { numItems: 10, cursor: null },
-      })
+      }),
     ).rejects.toThrow("Access denied");
   });
 });
@@ -455,7 +455,7 @@ describe("Admin Users - getUserStatistics", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getUserStatistics,
-      { userId: "test-user" }
+      { userId: "test-user" },
     );
 
     expect(stats.totalWizards).toBe(3);
@@ -569,7 +569,7 @@ describe("Admin Users - getUserStatistics", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getUserStatistics,
-      { userId: "test-user" }
+      { userId: "test-user" },
     );
 
     expect(stats.multiplayerDuels.total).toBe(3);
@@ -683,7 +683,7 @@ describe("Admin Users - getUserStatistics", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getUserStatistics,
-      { userId: "test-user" }
+      { userId: "test-user" },
     );
 
     expect(stats.campaignBattles.total).toBe(3);
@@ -738,7 +738,7 @@ describe("Admin Users - getUserStatistics", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getUserStatistics,
-      { userId: "inactive-user" }
+      { userId: "inactive-user" },
     );
 
     expect(stats.activityLevel).toBe("inactive");
@@ -770,7 +770,7 @@ describe("Admin Users - getUserStatistics", () => {
     await expect(
       withSuperAdminAuth(t).query(api.adminUsers.getUserStatistics, {
         userId: "non-existent-user",
-      })
+      }),
     ).rejects.toThrow("User not found");
   });
 });
@@ -826,7 +826,7 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "target-user",
         amount: 10,
         reason: "Customer support request",
-      }
+      },
     );
 
     expect(result.success).toBe(true);
@@ -896,8 +896,8 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "target-user",
         amount: -5,
         reason: "Test",
-      })
-    ).rejects.toThrow("Credit amount must be a positive integer");
+      }),
+    ).rejects.toThrow("Token amount must be a positive integer");
 
     // Test zero amount
     await expect(
@@ -905,8 +905,8 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "target-user",
         amount: 0,
         reason: "Test",
-      })
-    ).rejects.toThrow("Credit amount must be a positive integer");
+      }),
+    ).rejects.toThrow("Token amount must be a positive integer");
 
     // Test decimal amount
     await expect(
@@ -914,8 +914,8 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "target-user",
         amount: 5.5,
         reason: "Test",
-      })
-    ).rejects.toThrow("Credit amount must be a positive integer");
+      }),
+    ).rejects.toThrow("Token amount must be a positive integer");
   });
 
   test("should require reason for credit grant", async () => {
@@ -967,7 +967,7 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "target-user",
         amount: 10,
         reason: "",
-      })
+      }),
     ).rejects.toThrow("Reason is required");
 
     // Test whitespace-only reason
@@ -976,7 +976,7 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "target-user",
         amount: 10,
         reason: "   ",
-      })
+      }),
     ).rejects.toThrow("Reason is required");
   });
 
@@ -1008,7 +1008,7 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "non-existent-user",
         amount: 10,
         reason: "Test",
-      })
+      }),
     ).rejects.toThrow("Target user not found");
   });
 
@@ -1040,7 +1040,7 @@ describe("Admin Users - grantImageCredits", () => {
         targetUserId: "regular-user",
         amount: 10,
         reason: "Test",
-      })
+      }),
     ).rejects.toThrow("Access denied");
   });
 });
@@ -1108,7 +1108,7 @@ describe("Admin Users - getCreditHistory", () => {
       {
         userId: "test-user",
         paginationOpts: { numItems: 3, cursor: null },
-      }
+      },
     );
 
     expect(result.page.length).toBe(3);
@@ -1121,7 +1121,7 @@ describe("Admin Users - getCreditHistory", () => {
       {
         userId: "test-user",
         paginationOpts: { numItems: 3, cursor: result.continueCursor },
-      }
+      },
     );
 
     expect(result2.page.length).toBe(2);
@@ -1205,7 +1205,7 @@ describe("Admin Users - getCreditHistory", () => {
       {
         userId: "test-user",
         paginationOpts: { numItems: 10, cursor: null },
-      }
+      },
     );
 
     // Most recent should be first
@@ -1277,7 +1277,7 @@ describe("Admin Users - getCreditHistory", () => {
       {
         userId: "test-user",
         paginationOpts: { numItems: 10, cursor: null },
-      }
+      },
     );
 
     expect(result.page[0].metadata?.grantedBy).toBe("super-admin");
@@ -1311,7 +1311,7 @@ describe("Admin Users - getCreditHistory", () => {
       withAuth(t, "regular-user").query(api.adminUsers.getCreditHistory, {
         userId: "regular-user",
         paginationOpts: { numItems: 10, cursor: null },
-      })
+      }),
     ).rejects.toThrow("Access denied");
   });
 });
@@ -1364,7 +1364,7 @@ describe("Admin Users - getPlatformStats", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getPlatformStats,
-      {}
+      {},
     );
 
     expect(stats.totalUsers).toBe(6); // 5 regular users + 1 super admin
@@ -1425,7 +1425,7 @@ describe("Admin Users - getPlatformStats", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getPlatformStats,
-      {}
+      {},
     );
 
     expect(stats.activeUsers24h).toBeGreaterThanOrEqual(1);
@@ -1499,7 +1499,7 @@ describe("Admin Users - getPlatformStats", () => {
 
     const stats = await withSuperAdminAuth(t).query(
       api.adminUsers.getPlatformStats,
-      {}
+      {},
     );
 
     expect(stats.totalWizards).toBe(2);
@@ -1531,7 +1531,7 @@ describe("Admin Users - getPlatformStats", () => {
     });
 
     await expect(
-      withAuth(t, "regular-user").query(api.adminUsers.getPlatformStats, {})
+      withAuth(t, "regular-user").query(api.adminUsers.getPlatformStats, {}),
     ).rejects.toThrow("Access denied");
   });
 });

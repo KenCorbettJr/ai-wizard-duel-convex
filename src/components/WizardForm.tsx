@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { Id } from "../../convex/_generated/dataModel";
@@ -110,6 +111,11 @@ export function WizardForm({
       posthog.capture("wizard_illustration_regenerated");
     } catch (error) {
       console.error("Error regenerating illustration:", error);
+      toast.error(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : "Couldn't regenerate the illustration. Please try again.",
+      );
     } finally {
       setIsRegenerating(false);
     }
@@ -152,8 +158,9 @@ export function WizardForm({
             <div>
               <h4 className="font-medium text-info">Illustration Generation</h4>
               <p className="text-sm text-info">
-                Your wizard&apos;s illustration will be automatically
-                regenerated when you save changes to the name or description.
+                Saving changes to the name or description does not change the
+                illustration. Regenerating it costs 1 token. Your first
+                illustration is free.
               </p>
             </div>
             <Button
@@ -169,7 +176,7 @@ export function WizardForm({
                   Generating...
                 </>
               ) : (
-                "Regenerate Now"
+                "Regenerate (1 token)"
               )}
             </Button>
           </div>
@@ -225,7 +232,7 @@ export function WizardForm({
             <CardDescription>
               {mode === "create"
                 ? "Design your magical companion"
-                : "Update your wizard's details. Changes to name or description will regenerate the illustration if AI-powered."}
+                : "Update your wizard's details. Regenerating the illustration costs 1 token."}
             </CardDescription>
           </div>
           {mode === "edit" && (

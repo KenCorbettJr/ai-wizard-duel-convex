@@ -3,65 +3,31 @@
 import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
-import {
-  generateText,
-  type AIObservabilityContext,
-} from "./aiTextGeneration";
+import { generateText, type AIObservabilityContext } from "./aiTextGeneration";
 
 export const generateWizardIllustration = action({
   args: {
     wizardId: v.id("wizards"),
     name: v.string(),
     description: v.string(),
-    userId: v.optional(v.string()), // User ID for credit consumption
+    userId: v.optional(v.string()), // Owner, for cost tracking
+    refundTokenOnFailure: v.optional(v.boolean()), // A token was charged for this run; refund it if generation fails
   },
   returns: v.object({
     success: v.boolean(),
     storageId: v.string(),
   }),
-  handler: async (ctx, { wizardId, name, description, userId }) => {
+  handler: async (
+    ctx,
+    { wizardId, name, description, userId, refundTokenOnFailure },
+  ) => {
     console.log(
       `Starting illustration generation for wizard ${wizardId} (${name})`,
     );
 
     try {
-      // Check and consume image credits if userId is provided
-      // Note: Wizard illustrations are generated independently and still consume individual credits
-      // Only duel-related images (round illustrations) use the duel-level credit system
-      if (userId) {
-        const hasCredits = await ctx.runQuery(
-          api.imageCreditService.hasImageCreditsForDuel,
-          {
-            userId,
-          },
-        );
-
-        if (!hasCredits) {
-          throw new Error(
-            "Insufficient image credits for wizard illustration generation",
-          );
-        }
-
-        // Consume one credit for image generation
-        const creditConsumed = await ctx.runMutation(
-          api.imageCreditService.consumeImageCredit,
-          {
-            userId,
-            metadata: {
-              wizardId,
-              purpose: "wizard_illustration",
-            },
-          },
-        );
-
-        if (!creditConsumed) {
-          throw new Error("Failed to consume image credit");
-        }
-
-        console.log(
-          `Consumed 1 image credit for user ${userId} for wizard ${wizardId}`,
-        );
-      }
+      // Tokens are charged by the mutation that scheduled this action (the
+      // first illustration is free). userId is only used for cost tracking.
       const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
       const observabilityContext: AIObservabilityContext = {
         sessionId: `wizard-${wizardId}`,
@@ -99,7 +65,10 @@ export const generateWizardIllustration = action({
           themedPromptRequest,
           undefined,
           {},
-          { ...observabilityContext, spanName: "generate_wizard_themed_prompt" },
+          {
+            ...observabilityContext,
+            spanName: "generate_wizard_themed_prompt",
+          },
         );
         console.log("Generated themed illustration prompt:", themedPrompt);
 
@@ -135,6 +104,20 @@ export const generateWizardIllustration = action({
         `Error generating illustration for wizard ${wizardId}:`,
         error,
       );
+
+      if (refundTokenOnFailure && userId) {
+        try {
+          await ctx.runMutation(
+            internal.imageCreditService.refundWizardImageToken,
+            {
+              userId,
+              wizardId,
+            },
+          );
+        } catch (refundError) {
+          console.error("Failed to refund wizard image token:", refundError);
+        }
+      }
 
       // If it's an environment variable issue, provide helpful guidance
       if (error instanceof Error && error.message.includes("FAL_KEY")) {

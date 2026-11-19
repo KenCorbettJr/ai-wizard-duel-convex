@@ -10,6 +10,7 @@ import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { checkSuperAdminAccess } from "./auth.utils";
 import { getActiveCampaignSeasonHelper } from "./seasonHelpers";
+import { chargeDuelToken } from "./lib/duelTokens";
 
 /**
  * Seed the campaign opponents as wizards with campaign-specific fields
@@ -23,7 +24,7 @@ export const seedCampaignOpponents = internalMutation({
     const existingOpponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -54,7 +55,7 @@ export const seedCampaignOpponents = internalMutation({
     }
 
     console.log(
-      `Seeded ${CAMPAIGN_OPPONENTS_DATA.length} campaign opponents as wizards`
+      `Seeded ${CAMPAIGN_OPPONENTS_DATA.length} campaign opponents as wizards`,
     );
     return null;
   },
@@ -89,18 +90,18 @@ export const getCampaignOpponents = query({
         v.union(
           v.literal("BEGINNER"),
           v.literal("INTERMEDIATE"),
-          v.literal("ADVANCED")
-        )
+          v.literal("ADVANCED"),
+        ),
       ),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const opponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -132,7 +133,7 @@ export const seedCampaignOpponentsPublic = mutation({
     const existingOpponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -195,7 +196,7 @@ export const deleteCampaignOpponents = mutation({
     const opponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -226,8 +227,8 @@ export const updateCampaignOpponent = mutation({
         v.union(
           v.literal("BEGINNER"),
           v.literal("INTERMEDIATE"),
-          v.literal("ADVANCED")
-        )
+          v.literal("ADVANCED"),
+        ),
       ),
       luckModifier: v.optional(v.number()),
       spellStyle: v.optional(v.string()),
@@ -276,7 +277,7 @@ export const updateCampaignOpponent = mutation({
           name: updatedName,
           description: updatedDescription,
           // No userId for campaign opponents - they don't consume user credits
-        }
+        },
       );
     }
 
@@ -320,7 +321,7 @@ export const regenerateCampaignOpponentImage = mutation({
         name: opponent.name,
         description: opponent.description,
         // No userId for campaign opponents - they don't consume user credits
-      }
+      },
     );
 
     return {
@@ -341,7 +342,7 @@ export const createCampaignOpponent = mutation({
     difficulty: v.union(
       v.literal("BEGINNER"),
       v.literal("INTERMEDIATE"),
-      v.literal("ADVANCED")
+      v.literal("ADVANCED"),
     ),
     luckModifier: v.number(),
     spellStyle: v.string(),
@@ -366,13 +367,13 @@ export const createCampaignOpponent = mutation({
       .withIndex("by_campaign_opponent", (q) =>
         q
           .eq("isCampaignOpponent", true)
-          .eq("opponentNumber", args.opponentNumber)
+          .eq("opponentNumber", args.opponentNumber),
       )
       .unique();
 
     if (existingOpponent) {
       throw new Error(
-        `Opponent number ${args.opponentNumber} is already taken`
+        `Opponent number ${args.opponentNumber} is already taken`,
       );
     }
 
@@ -404,7 +405,7 @@ export const createCampaignOpponent = mutation({
         name: args.name,
         description: args.description,
         // No userId for campaign opponents - they don't consume user credits
-      }
+      },
     );
 
     return {
@@ -444,19 +445,19 @@ export const getCampaignOpponent = query({
         v.union(
           v.literal("BEGINNER"),
           v.literal("INTERMEDIATE"),
-          v.literal("ADVANCED")
-        )
+          v.literal("ADVANCED"),
+        ),
       ),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx, { opponentNumber }) => {
     const opponent = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber)
+        q.eq("isCampaignOpponent", true).eq("opponentNumber", opponentNumber),
       )
       .unique();
 
@@ -482,7 +483,7 @@ export const getWizardCampaignProgress = query({
       createdAt: v.number(),
       lastBattleAt: v.optional(v.number()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx, { wizardId }) => {
     // Get the active season
@@ -494,7 +495,7 @@ export const getWizardCampaignProgress = query({
     const progress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard_season", (q) =>
-        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id),
       )
       .unique();
 
@@ -519,7 +520,7 @@ export const getUserCampaignProgress = query({
       hasCompletionRelic: v.boolean(),
       createdAt: v.number(),
       lastBattleAt: v.optional(v.number()),
-    })
+    }),
   ),
   handler: async (ctx, { userId }) => {
     // Get the active season
@@ -558,7 +559,7 @@ export const initializeWizardCampaignProgress = mutation({
     const existingProgress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard_season", (q) =>
-        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id),
       )
       .unique();
 
@@ -602,13 +603,13 @@ export const defeatOpponent = mutation({
     const progress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard_season", (q) =>
-        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id),
       )
       .unique();
 
     if (!progress) {
       throw new Error(
-        "No campaign progress found for this wizard in the current season"
+        "No campaign progress found for this wizard in the current season",
       );
     }
 
@@ -625,7 +626,7 @@ export const defeatOpponent = mutation({
     // Check if opponent can be defeated (must be current opponent)
     if (opponentNumber !== progress.currentOpponent) {
       throw new Error(
-        `Cannot defeat opponent ${opponentNumber}. Must defeat opponent ${progress.currentOpponent} first.`
+        `Cannot defeat opponent ${opponentNumber}. Must defeat opponent ${progress.currentOpponent} first.`,
       );
     }
 
@@ -682,7 +683,7 @@ export const createCampaignBattle = mutation({
 
     if (existingBattle) {
       throw new Error(
-        `Battle already exists for wizard against opponent ${opponentNumber} in current season`
+        `Battle already exists for wizard against opponent ${opponentNumber} in current season`,
       );
     }
 
@@ -742,13 +743,13 @@ export const getCampaignBattle = query({
       status: v.union(
         v.literal("IN_PROGRESS"),
         v.literal("WON"),
-        v.literal("LOST")
+        v.literal("LOST"),
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
       seasonId: v.optional(v.id("campaignSeasons")),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx, { battleId }) => {
     return await ctx.db.get(battleId);
@@ -771,12 +772,12 @@ export const getWizardCampaignBattles = query({
       status: v.union(
         v.literal("IN_PROGRESS"),
         v.literal("WON"),
-        v.literal("LOST")
+        v.literal("LOST"),
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
       seasonId: v.optional(v.id("campaignSeasons")),
-    })
+    }),
   ),
   handler: async (ctx, { wizardId }) => {
     return await ctx.db
@@ -805,18 +806,18 @@ export const getUserOpponentBattles = query({
       status: v.union(
         v.literal("IN_PROGRESS"),
         v.literal("WON"),
-        v.literal("LOST")
+        v.literal("LOST"),
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
       seasonId: v.optional(v.id("campaignSeasons")),
-    })
+    }),
   ),
   handler: async (ctx, { userId, opponentNumber }) => {
     return await ctx.db
       .query("campaignBattles")
       .withIndex("by_user_opponent", (q) =>
-        q.eq("userId", userId).eq("opponentNumber", opponentNumber)
+        q.eq("userId", userId).eq("opponentNumber", opponentNumber),
       )
       .collect();
   },
@@ -888,12 +889,12 @@ export const calculateCampaignLuck = query({
     // Get the opponent wizard ID from the season
     const opponentId = await ctx.runQuery(
       api.campaigns.getCampaignOpponentWizard,
-      { seasonId, opponentNumber }
+      { seasonId, opponentNumber },
     );
 
     if (!opponentId) {
       throw new Error(
-        `Campaign opponent ${opponentNumber} not found in season`
+        `Campaign opponent ${opponentNumber} not found in season`,
       );
     }
 
@@ -906,7 +907,7 @@ export const calculateCampaignLuck = query({
     // Apply luck modifier and ensure it stays within valid range (1-20)
     const modifiedLuck = Math.max(
       1,
-      Math.min(20, baseLuck + opponent.luckModifier)
+      Math.min(20, baseLuck + opponent.luckModifier),
     );
 
     return modifiedLuck;
@@ -927,7 +928,7 @@ export const startCampaignBattle = mutation({
   }),
   handler: async (
     ctx,
-    { wizardId, opponentNumber }
+    { wizardId, opponentNumber },
   ): Promise<{
     duelId: Doc<"duels">["_id"];
     campaignBattleId: Doc<"campaignBattles">["_id"];
@@ -962,7 +963,7 @@ export const startCampaignBattle = mutation({
     let progress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard_season", (q) =>
-        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id),
       )
       .unique();
 
@@ -987,7 +988,7 @@ export const startCampaignBattle = mutation({
     // Verify this is the correct opponent to face
     if (opponentNumber !== progress.currentOpponent) {
       throw new Error(
-        `Cannot battle opponent ${opponentNumber}. Must battle opponent ${progress.currentOpponent} first.`
+        `Cannot battle opponent ${opponentNumber}. Must battle opponent ${progress.currentOpponent} first.`,
       );
     }
 
@@ -999,7 +1000,7 @@ export const startCampaignBattle = mutation({
     // Get the campaign opponent wizard
     const aiWizardId = await ctx.runQuery(
       internal.campaigns.getCampaignOpponentWizardInternal,
-      { seasonId: activeSeason._id, opponentNumber }
+      { seasonId: activeSeason._id, opponentNumber },
     );
 
     if (!aiWizardId) {
@@ -1019,6 +1020,10 @@ export const startCampaignBattle = mutation({
       needActionsFrom: [],
       isCampaignBattle: true, // Mark as campaign battle
     });
+
+    // Each campaign battle (including retries after a loss) costs 1 token.
+    // Throws, rolling back the duel above, if the player has none.
+    await chargeDuelToken(ctx, identity.subject, duelId, "campaign_battle");
 
     // Create campaign battle record
     const campaignBattleId = await ctx.db.insert("campaignBattles", {
@@ -1040,7 +1045,7 @@ export const startCampaignBattle = mutation({
         {
           duelId,
           userId: identity.subject, // Use the player for credit consumption
-        }
+        },
       );
     }
 
@@ -1085,7 +1090,7 @@ export const completeCampaignBattleWithResult = mutation({
       const progress = await ctx.db
         .query("wizardCampaignProgress")
         .withIndex("by_wizard_season", (q) =>
-          q.eq("wizardId", battle.wizardId).eq("seasonId", battle.seasonId!)
+          q.eq("wizardId", battle.wizardId).eq("seasonId", battle.seasonId!),
         )
         .unique();
 
@@ -1171,7 +1176,7 @@ export const completeCampaignBattleInternal = internalMutation({
       const progress = await ctx.db
         .query("wizardCampaignProgress")
         .withIndex("by_wizard_season", (q) =>
-          q.eq("wizardId", battle.wizardId).eq("seasonId", seasonId)
+          q.eq("wizardId", battle.wizardId).eq("seasonId", seasonId),
         )
         .unique();
 
@@ -1221,7 +1226,7 @@ export const checkCampaignCompletion = mutation({
     const progress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard_season", (q) =>
-        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id),
       )
       .unique();
 
@@ -1273,7 +1278,7 @@ export const checkCampaignCompletionInternal = internalMutation({
     const progress = await ctx.db
       .query("wizardCampaignProgress")
       .withIndex("by_wizard_season", (q) =>
-        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id)
+        q.eq("wizardId", wizardId).eq("seasonId", activeSeason._id),
       )
       .unique();
 
@@ -1395,11 +1400,11 @@ export const getCampaignStatistics = query({
         status: v.union(
           v.literal("WON"),
           v.literal("LOST"),
-          v.literal("IN_PROGRESS")
+          v.literal("IN_PROGRESS"),
         ),
         completedAt: v.optional(v.number()),
         lastBattleAt: v.number(),
-      })
+      }),
     ),
     milestones: v.array(
       v.object({
@@ -1407,7 +1412,7 @@ export const getCampaignStatistics = query({
         threshold: v.number(),
         achieved: v.boolean(),
         progress: v.number(),
-      })
+      }),
     ),
   }),
   handler: async (ctx, { userId }) => {
@@ -1432,23 +1437,23 @@ export const getCampaignStatistics = query({
     // Calculate basic statistics
     const totalWizards = userWizards.length;
     const completedCampaigns = campaignProgress.filter(
-      (p) => p.hasCompletionRelic
+      (p) => p.hasCompletionRelic,
     ).length;
     const activeCampaigns = campaignProgress.filter(
-      (p) => !p.hasCompletionRelic && p.currentOpponent <= 10
+      (p) => !p.hasCompletionRelic && p.currentOpponent <= 10,
     ).length;
     const totalBattlesWon = campaignProgress.reduce(
       (sum, p) => sum + p.defeatedOpponents.length,
-      0
+      0,
     );
     const totalBattlesLost = allBattles.filter(
-      (b) => b.status === "LOST"
+      (b) => b.status === "LOST",
     ).length;
     const averageProgress =
       totalWizards > 0
         ? campaignProgress.reduce(
             (sum, p) => sum + Math.min(p.currentOpponent - 1, 10),
-            0
+            0,
           ) / totalWizards
         : 0;
 
@@ -1459,7 +1464,7 @@ export const getCampaignStatistics = query({
         : 0;
 
     const relicsEarned = campaignProgress.filter(
-      (p) => p.hasCompletionRelic
+      (p) => p.hasCompletionRelic,
     ).length;
 
     // Get most recent battle
@@ -1525,13 +1530,13 @@ export const getRecentCampaignBattles = query({
       status: v.union(
         v.literal("IN_PROGRESS"),
         v.literal("WON"),
-        v.literal("LOST")
+        v.literal("LOST"),
       ),
       completedAt: v.optional(v.number()),
       createdAt: v.number(),
       seasonId: v.optional(v.id("campaignSeasons")),
       duration: v.optional(v.number()),
-    })
+    }),
   ),
   handler: async (ctx, { userId, limit = 20 }) => {
     // Get recent battles
@@ -1545,18 +1550,18 @@ export const getRecentCampaignBattles = query({
     const opponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
     const opponentMap = new Map(
-      opponents.map((o) => [o.opponentNumber, o.name])
+      opponents.map((o) => [o.opponentNumber, o.name]),
     );
 
     // Get wizards for names
     const wizardIds = [...new Set(battles.map((b) => b.wizardId))];
     const wizards = await Promise.all(wizardIds.map((id) => ctx.db.get(id)));
     const wizardMap = new Map(
-      wizards.filter(Boolean).map((w) => [w!._id, w!.name])
+      wizards.filter(Boolean).map((w) => [w!._id, w!.name]),
     );
 
     // Enrich battles with additional data
@@ -1594,7 +1599,7 @@ export const generateCampaignOpponentIllustrations = mutation({
     const opponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -1608,7 +1613,7 @@ export const generateCampaignOpponentIllustrations = mutation({
 
     // Find opponents without illustrations
     const opponentsNeedingIllustrations = opponents.filter(
-      (opponent) => !opponent.illustration
+      (opponent) => !opponent.illustration,
     );
 
     if (opponentsNeedingIllustrations.length === 0) {
@@ -1630,7 +1635,7 @@ export const generateCampaignOpponentIllustrations = mutation({
           name: opponent.name,
           description: opponent.description,
           // No userId for campaign opponents - they don't consume user credits
-        }
+        },
       );
       scheduledCount++;
     }
@@ -1656,7 +1661,7 @@ export const getCampaignLeaderboard = query({
       relicsEarned: v.number(),
       averageProgress: v.number(),
       rank: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, { limit = 10 }) => {
     // Get all campaign progress
@@ -1704,7 +1709,7 @@ export const getCampaignLeaderboard = query({
         relicsEarned: stats.relicsEarned,
         averageProgress:
           stats.totalWizards > 0 ? stats.totalProgress / stats.totalWizards : 0,
-      })
+      }),
     );
 
     // Sort by total battles won (primary) and completed campaigns (secondary)

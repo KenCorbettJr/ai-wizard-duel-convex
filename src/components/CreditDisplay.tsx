@@ -60,7 +60,7 @@ export function CreditDisplay({
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       {showLabel && (
-        <span className="text-sm text-muted-foreground">Credits:</span>
+        <span className="text-sm text-muted-foreground">Tokens:</span>
       )}
 
       <Badge

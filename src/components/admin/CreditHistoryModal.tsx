@@ -189,6 +189,26 @@ export function CreditHistoryModal({
           label: "Admin Grant",
           icon: <UserCog className="h-3 w-3" />,
         };
+      case "DUEL_ENTRY":
+        return {
+          label: "Duel Entry",
+          icon: <Coins className="h-3 w-3" />,
+        };
+      case "DUEL_REFUND":
+        return {
+          label: "Duel Refund",
+          icon: <Coins className="h-3 w-3" />,
+        };
+      case "WIZARD_IMAGE":
+        return {
+          label: "Wizard Illustration",
+          icon: <Coins className="h-3 w-3" />,
+        };
+      case "WIZARD_IMAGE_REFUND":
+        return {
+          label: "Illustration Refund",
+          icon: <Coins className="h-3 w-3" />,
+        };
       default:
         return {
           label: source.replace(/_/g, " "),
@@ -208,7 +228,7 @@ export function CreditHistoryModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <History className="h-5 w-5 text-info" />
-            Credit Transaction History
+            Token Transaction History
           </DialogTitle>
           <DialogDescription>
             Transaction history for {userName}

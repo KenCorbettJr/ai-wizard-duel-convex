@@ -1,0 +1,396 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import { convexTest } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { api, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import schema from "./schema";
+import { ensureTestUser, withAuth, withSuperAdminAuth } from "./test_utils";
+
+describe("Duel tokens", () => {
+  let t: TestConvex<typeof schema>;
+
+  beforeEach(() => {
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
+  });
+
+  const tokens = async (userId: string) =>
+    await t.query(api.imageCreditService.getUserImageCredits, { userId });
+
+  const makeWizard = async (owner: string): Promise<Id<"wizards">> =>
+    await t.run(
+      async (ctx) =>
+        await ctx.db.insert("wizards", {
+          owner,
+          name: `Wizard of ${owner}`,
+          description: "A test wizard",
+          wins: 0,
+          losses: 0,
+          isAIPowered: false,
+        }),
+    );
+
+  const ledger = async (userId: string) =>
+    await t.run(async (ctx) =>
+      ctx.db
+        .query("imageCreditTransactions")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect(),
+    );
+
+  it("does not take a token while a duel is waiting for an opponent", async () => {
+    const wizard = await makeWizard("alice");
+    await ensureTestUser(t, "alice", 3);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [wizard],
+    });
+
+    expect(await tokens("alice")).toBe(3);
+    expect(await ledger("alice")).toHaveLength(0);
+
+    // Cancelling a waiting duel has nothing to refund
+    await withAuth(t, "alice").mutation(api.duels.cancelDuel, { duelId });
+    expect(await tokens("alice")).toBe(3);
+    expect(await ledger("alice")).toHaveLength(0);
+  });
+
+  it("does not create a duel when the creator has no tokens", async () => {
+    const wizard = await makeWizard("alice");
+    await ensureTestUser(t, "alice", 0);
+
+    await expect(
+      withAuth(t, "alice").mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [wizard],
+      }),
+    ).rejects.toThrow(/at least 1 token/);
+
+    const duels = await t.run(async (ctx) => ctx.db.query("duels").collect());
+    expect(duels).toHaveLength(0);
+  });
+
+  it("takes a token from each player in a PvP duel", async () => {
+    const aliceWizard = await makeWizard("alice");
+    const bobWizard = await makeWizard("bob");
+    await ensureTestUser(t, "alice", 5);
+    await ensureTestUser(t, "bob", 5);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [aliceWizard],
+    });
+    await withAuth(t, "bob").mutation(api.duels.joinDuel, {
+      duelId,
+      wizards: [bobWizard],
+    });
+
+    expect(await tokens("alice")).toBe(4);
+    expect(await tokens("bob")).toBe(4);
+    const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+    expect(duel?.tokensCharged?.sort()).toEqual(["alice", "bob"]);
+  });
+
+  it("does not let a player without tokens join, and leaves the duel waiting", async () => {
+    const aliceWizard = await makeWizard("alice");
+    const bobWizard = await makeWizard("bob");
+    await ensureTestUser(t, "alice", 5);
+    await ensureTestUser(t, "bob", 0);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [aliceWizard],
+    });
+    await expect(
+      withAuth(t, "bob").mutation(api.duels.joinDuel, {
+        duelId,
+        wizards: [bobWizard],
+      }),
+    ).rejects.toThrow(/at least 1 token/);
+
+    const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+    expect(duel?.players).toEqual(["alice"]);
+    expect(duel?.status).toBe("WAITING_FOR_PLAYERS");
+    expect(await tokens("alice")).toBe(5);
+    expect(await tokens("bob")).toBe(0);
+  });
+
+  it("does not start the duel if the creator spent their tokens while waiting", async () => {
+    const aliceWizard = await makeWizard("alice");
+    const bobWizard = await makeWizard("bob");
+    await ensureTestUser(t, "alice", 1);
+    await ensureTestUser(t, "bob", 5);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [aliceWizard],
+    });
+    // Alice spends her last token elsewhere
+    await t.run(async (ctx) => {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
+        .first();
+      await ctx.db.patch(user!._id, { imageCredits: 0 });
+    });
+
+    await expect(
+      withAuth(t, "bob").mutation(api.duels.joinDuel, {
+        duelId,
+        wizards: [bobWizard],
+      }),
+    ).rejects.toThrow(/creator no longer has a token/);
+
+    expect(await tokens("bob")).toBe(5);
+    const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+    expect(duel?.players).toEqual(["alice"]);
+  });
+
+  it("does not charge active Premium players", async () => {
+    const wizard = await makeWizard("alice");
+    await ensureTestUser(t, "alice", 0);
+    await t.run(async (ctx) => {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
+        .first();
+      await ctx.db.patch(user!._id, { subscriptionTier: "PREMIUM" });
+    });
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [wizard],
+    });
+
+    expect(await tokens("alice")).toBe(0);
+    const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+    expect(duel?.tokensCharged ?? []).toEqual([]);
+  });
+
+  it("does not refund when a duel in progress is cancelled by a player", async () => {
+    const aliceWizard = await makeWizard("alice");
+    const bobWizard = await makeWizard("bob");
+    await ensureTestUser(t, "alice", 5);
+    await ensureTestUser(t, "bob", 5);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [aliceWizard],
+    });
+    await withAuth(t, "bob").mutation(api.duels.joinDuel, {
+      duelId,
+      wizards: [bobWizard],
+    });
+    await t.run(async (ctx) => ctx.db.patch(duelId, { status: "IN_PROGRESS" }));
+
+    await withAuth(t, "alice").mutation(api.duels.cancelDuel, { duelId });
+
+    expect(await tokens("alice")).toBe(4);
+    expect(await tokens("bob")).toBe(4);
+  });
+
+  it("refunds every player when an admin force-cancels a duel", async () => {
+    const aliceWizard = await makeWizard("alice");
+    const bobWizard = await makeWizard("bob");
+    await ensureTestUser(t, "alice", 5);
+    await ensureTestUser(t, "bob", 5);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: 3,
+      wizards: [aliceWizard],
+    });
+    await withAuth(t, "bob").mutation(api.duels.joinDuel, {
+      duelId,
+      wizards: [bobWizard],
+    });
+
+    await ensureTestUser(t, "super-admin-user");
+    await t.run(async (ctx) => {
+      const admin = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "super-admin-user"))
+        .first();
+      await ctx.db.patch(admin!._id, { role: "super_admin" });
+    });
+    await withSuperAdminAuth(t).mutation(api.duels.forceCancelDuel, {
+      duelId,
+      reason: "stuck",
+    });
+
+    expect(await tokens("alice")).toBe(5);
+    expect(await tokens("bob")).toBe(5);
+  });
+
+  describe("campaign battles", () => {
+    beforeEach(async () => {
+      await t.mutation(internal.campaigns.seedCampaignOpponents, {});
+      await t.mutation(
+        internal.campaignSeasons.createDefaultSeasonInternal,
+        {},
+      );
+    });
+
+    const startBattle = async (userId: string) => {
+      const wizardId = await withAuth(t, userId).mutation(
+        api.wizards.createWizard,
+        { name: "Campaign Wizard", description: "Fights the campaign" },
+      );
+      await withAuth(t, userId).mutation(
+        api.campaigns.initializeWizardCampaignProgress,
+        { wizardId, userId },
+      );
+      return await withAuth(t, userId).mutation(
+        api.campaigns.startCampaignBattle,
+        { wizardId, opponentNumber: 1 },
+      );
+    };
+
+    it("takes 1 token for a campaign battle", async () => {
+      await ensureTestUser(t, "alice", 4);
+      const { duelId } = await startBattle("alice");
+
+      expect(await tokens("alice")).toBe(3);
+      const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+      expect(duel?.tokensCharged).toEqual(["alice"]);
+    });
+
+    it("does not start a campaign battle without tokens", async () => {
+      await ensureTestUser(t, "alice", 0);
+
+      await expect(startBattle("alice")).rejects.toThrow(/at least 1 token/);
+
+      const battles = await t.run(async (ctx) =>
+        ctx.db.query("campaignBattles").collect(),
+      );
+      expect(battles).toHaveLength(0);
+      const duels = await t.run(async (ctx) => ctx.db.query("duels").collect());
+      expect(duels).toHaveLength(0);
+    });
+  });
+});
+
+describe("Wizard illustration tokens", () => {
+  let t: TestConvex<typeof schema>;
+
+  beforeEach(() => {
+    t = convexTest(schema, import.meta.glob("./**/*.*s"));
+  });
+
+  const tokens = async (userId: string) =>
+    await t.query(api.imageCreditService.getUserImageCredits, { userId });
+
+  const makeWizard = async (owner: string, withIllustration: boolean) =>
+    await t.run(
+      async (ctx) =>
+        await ctx.db.insert("wizards", {
+          owner,
+          name: "Image Wizard",
+          description: "A test wizard",
+          wins: 0,
+          losses: 0,
+          isAIPowered: false,
+          illustration: withIllustration ? "storage-id" : undefined,
+        }),
+    );
+
+  it("creating a wizard is free", async () => {
+    await ensureTestUser(t, "alice", 3);
+    await withAuth(t, "alice").mutation(api.wizards.createWizard, {
+      name: "Free Wizard",
+      description: "First look is free",
+    });
+    expect(await tokens("alice")).toBe(3);
+  });
+
+  it("regenerating a wizard that has an illustration costs 1 token", async () => {
+    await ensureTestUser(t, "alice", 3);
+    const wizardId = await makeWizard("alice", true);
+
+    await withAuth(t, "alice").mutation(api.wizards.regenerateIllustration, {
+      wizardId,
+    });
+
+    expect(await tokens("alice")).toBe(2);
+    const entries = await t.run(async (ctx) =>
+      ctx.db
+        .query("imageCreditTransactions")
+        .withIndex("by_user", (q) => q.eq("userId", "alice"))
+        .collect(),
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      type: "CONSUMED",
+      amount: 1,
+      source: "WIZARD_IMAGE",
+    });
+  });
+
+  it("regenerating a wizard that has no illustration yet is free", async () => {
+    await ensureTestUser(t, "alice", 3);
+    const wizardId = await makeWizard("alice", false);
+
+    await withAuth(t, "alice").mutation(api.wizards.regenerateIllustration, {
+      wizardId,
+    });
+
+    expect(await tokens("alice")).toBe(3);
+  });
+
+  it("refuses to regenerate without a token and leaves the wizard unchanged", async () => {
+    await ensureTestUser(t, "alice", 0);
+    const wizardId = await makeWizard("alice", true);
+
+    await expect(
+      withAuth(t, "alice").mutation(api.wizards.regenerateIllustration, {
+        wizardId,
+      }),
+    ).rejects.toThrow(/at least 1 token/);
+
+    const wizard = await t.run(async (ctx) => ctx.db.get(wizardId));
+    expect(wizard?.illustrationVersion).toBeUndefined();
+  });
+
+  it("does not charge Premium players for regenerating", async () => {
+    await ensureTestUser(t, "alice", 0);
+    await t.run(async (ctx) => {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
+        .first();
+      await ctx.db.patch(user!._id, { subscriptionTier: "PREMIUM" });
+    });
+    const wizardId = await makeWizard("alice", true);
+
+    await withAuth(t, "alice").mutation(api.wizards.regenerateIllustration, {
+      wizardId,
+    });
+    expect(await tokens("alice")).toBe(0);
+  });
+
+  it("refunds the token when generation fails", async () => {
+    await ensureTestUser(t, "alice", 3);
+    const wizardId = await makeWizard("alice", true);
+    await withAuth(t, "alice").mutation(api.wizards.regenerateIllustration, {
+      wizardId,
+    });
+    expect(await tokens("alice")).toBe(2);
+
+    await t.mutation(internal.imageCreditService.refundWizardImageToken, {
+      userId: "alice",
+      wizardId,
+    });
+    expect(await tokens("alice")).toBe(3);
+  });
+
+  it("saving a new name or description does not take a token", async () => {
+    await ensureTestUser(t, "alice", 3);
+    const wizardId = await makeWizard("alice", true);
+
+    await withAuth(t, "alice").mutation(api.wizards.updateWizard, {
+      wizardId,
+      name: "Renamed",
+      description: "New description",
+    });
+    expect(await tokens("alice")).toBe(3);
+  });
+});

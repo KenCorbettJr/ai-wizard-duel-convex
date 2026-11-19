@@ -150,7 +150,31 @@ export default function AiCostsPage() {
                 </Card>
               </div>
 
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Average cost per duel</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-3xl font-bold">
+                    {formatUsd(summary.avgCostPerDuelUsd)}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Duels with AI usage</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-3xl font-bold">
+                    {summary.duelCount}
+                  </CardContent>
+                </Card>
+              </div>
+
               <div className="grid gap-6 lg:grid-cols-2">
+                <TotalsTable
+                  title="Most expensive duels"
+                  keyLabel="Duel ID"
+                  rows={summary.byDuel}
+                />
                 <TotalsTable
                   title="By feature"
                   keyLabel="Feature"

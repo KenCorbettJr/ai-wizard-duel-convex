@@ -32,9 +32,9 @@ export function DuelModeIndicator({
   const getReasonText = (reason?: string) => {
     switch (reason) {
       case "insufficient_credits":
-        return "Insufficient image credits";
+        return "Insufficient tokens";
       case "credit_consumption_failed":
-        return "Credit processing failed";
+        return "Token processing failed";
       case "image_generation_failed":
         return "Image generation failed";
       default:

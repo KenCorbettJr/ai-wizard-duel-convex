@@ -23,12 +23,12 @@ const IntroductionResponseSchema = z.object({
   result: z
     .string()
     .describe(
-      "A brief summary of the introduction, this can be a little snarky or humorous if you like."
+      "A brief summary of the introduction, this can be a little snarky or humorous if you like.",
     ),
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration: a wide establishing shot from high in the spectator stands, looking down across a vast, stadium-sized arena. The two wizards stand about 50 feet apart on opposite sides of a large open arena floor and look small from this distance. Include wizard appearances, the crowd in the stands, the arena environment, and dynamic lighting with magical particles."
+      "A very detailed prompt for a low poly art style illustration: a wide establishing shot from high in the spectator stands, looking down across a vast, stadium-sized arena. The two wizards stand about 50 feet apart on opposite sides of a large open arena floor and look small from this distance. Include wizard appearances, the crowd in the stands, the arena environment, and dynamic lighting with magical particles.",
     ),
 });
 
@@ -43,7 +43,7 @@ export const generateDuelIntroduction = action({
   },
   handler: async (
     ctx,
-    { duelId, userId }
+    { duelId, userId },
   ): Promise<{
     success: boolean;
     introRoundId: Id<"duelRounds">;
@@ -61,8 +61,8 @@ export const generateDuelIntroduction = action({
       // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
       const wizards = await Promise.all(
         duel.wizards.map((wizardId: Id<"wizards">) =>
-          ctx.runQuery(internal.wizards.getWizardInternal, { wizardId })
-        )
+          ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+        ),
       );
 
       if (
@@ -105,32 +105,16 @@ export const generateDuelIntroduction = action({
             result: introduction.result,
             illustrationPrompt: introduction.illustrationPrompt,
           },
-        }
+        },
       );
 
-      // Generate the illustration (with credit checking and user preference)
-      let textOnlyMode = duel.textOnlyMode || false;
+      // Generate the illustration unless the duel is text-only by user preference
+      const textOnlyMode = duel.textOnlyMode || false;
       if (introduction.illustrationPrompt && !textOnlyMode) {
         // Skip introduction illustration scheduling to avoid transaction escape errors in tests
         if (process.env.NODE_ENV !== "test") {
           // Check if we should use Gemini Nano Banana
           const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
-
-          // Check if user has image credits before scheduling illustration
-          let skipImageGeneration = false;
-          if (userId) {
-            const hasCredits = await ctx.runQuery(
-              api.imageCreditService.hasImageCreditsForDuel,
-              { userId }
-            );
-            if (!hasCredits) {
-              skipImageGeneration = true;
-              textOnlyMode = true;
-              console.log(
-                `User ${userId} has insufficient credits for duel ${duelId} introduction, using text-only mode`
-              );
-            }
-          }
 
           await ctx.scheduler.runAfter(
             100, // Add small delay to ensure database transaction is committed
@@ -141,19 +125,10 @@ export const generateDuelIntroduction = action({
               roundNumber: "0", // Introduction round
               useGemini,
               userId,
-              skipImageGeneration,
-            }
+              skipImageGeneration: false,
+            },
           );
         }
-      }
-
-      // Update duel text-only mode status if needed
-      if (textOnlyMode) {
-        await ctx.runMutation(api.duels.updateDuelTextOnlyMode, {
-          duelId,
-          textOnlyMode: true,
-          reason: "insufficient_credits",
-        });
       }
 
       // Start the duel (move to first actual round)
@@ -162,7 +137,7 @@ export const generateDuelIntroduction = action({
       return { success: true, introRoundId, textOnlyMode };
     } catch (error) {
       throw new Error(
-        `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to generate duel introduction: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   },
@@ -224,7 +199,7 @@ The two wizards for this duel are:
 function generateMockIntroduction(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">
+  wizard2: Doc<"wizards">,
 ): IntroductionResponse {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"
@@ -283,7 +258,7 @@ Let the simulated magical combat commence!`;
 function generateFallbackIntroduction(
   duel: Doc<"duels">,
   wizard1: Doc<"wizards">,
-  wizard2: Doc<"wizards">
+  wizard2: Doc<"wizards">,
 ): IntroductionResponse {
   const duelType =
     duel.numberOfRounds === "TO_THE_DEATH"

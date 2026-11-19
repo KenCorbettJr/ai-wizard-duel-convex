@@ -15,8 +15,8 @@ export const listUsers = query({
       v.union(
         v.literal("joinDate"),
         v.literal("activity"),
-        v.literal("username")
-      )
+        v.literal("username"),
+      ),
     ),
     activityFilter: v.optional(
       v.union(
@@ -24,8 +24,8 @@ export const listUsers = query({
         v.literal("inactive"),
         v.literal("low"),
         v.literal("medium"),
-        v.literal("high")
-      )
+        v.literal("high"),
+      ),
     ),
   },
   returns: v.object({
@@ -42,16 +42,16 @@ export const listUsers = query({
           v.literal("ACTIVE"),
           v.literal("CANCELED"),
           v.literal("PAST_DUE"),
-          v.literal("TRIALING")
+          v.literal("TRIALING"),
         ),
         imageCredits: v.number(),
         createdAt: v.number(),
         role: v.union(
           v.literal("user"),
           v.literal("admin"),
-          v.literal("super_admin")
+          v.literal("super_admin"),
         ),
-      })
+      }),
     ),
     isDone: v.boolean(),
     continueCursor: v.string(),
@@ -223,7 +223,7 @@ export const getUserStatistics = query({
       v.literal("inactive"),
       v.literal("low"),
       v.literal("medium"),
-      v.literal("high")
+      v.literal("high"),
     ),
   }),
   handler: async (ctx, args) => {
@@ -271,13 +271,13 @@ export const getUserStatistics = query({
       } else if (duel.status === "COMPLETED") {
         // Check if any of user's wizards won
         const userWizardIds = duel.wizards.filter((wId) =>
-          wizardIds.includes(wId)
+          wizardIds.includes(wId),
         );
         const userWon = userWizardIds.some((wId) =>
-          duel.winners?.includes(wId)
+          duel.winners?.includes(wId),
         );
         const userLost = userWizardIds.some((wId) =>
-          duel.losers?.includes(wId)
+          duel.losers?.includes(wId),
         );
 
         if (userWon) {
@@ -295,10 +295,10 @@ export const getUserStatistics = query({
       .collect();
 
     const campaignWins = campaignBattles.filter(
-      (b) => b.status === "WON"
+      (b) => b.status === "WON",
     ).length;
     const campaignLosses = campaignBattles.filter(
-      (b) => b.status === "LOST"
+      (b) => b.status === "LOST",
     ).length;
 
     // Find highest opponent defeated
@@ -314,7 +314,7 @@ export const getUserStatistics = query({
     // Check last wizard creation
     if (wizards.length > 0) {
       const lastWizardTime = Math.max(
-        ...wizards.map((w) => w.illustrationGeneratedAt || 0)
+        ...wizards.map((w) => w.illustrationGeneratedAt || 0),
       );
       if (lastWizardTime > lastActivityAt) {
         lastActivityAt = lastWizardTime;
@@ -324,7 +324,7 @@ export const getUserStatistics = query({
     // Check last duel activity
     if (userDuels.length > 0) {
       const lastDuelTime = Math.max(
-        ...userDuels.map((d) => d.completedAt || d.createdAt)
+        ...userDuels.map((d) => d.completedAt || d.createdAt),
       );
       if (lastDuelTime > lastActivityAt) {
         lastActivityAt = lastDuelTime;
@@ -335,7 +335,7 @@ export const getUserStatistics = query({
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
     const recentDuels = userDuels.filter(
-      (d) => d.createdAt > thirtyDaysAgo
+      (d) => d.createdAt > thirtyDaysAgo,
     ).length;
 
     let activityLevel: "inactive" | "low" | "medium" | "high";
@@ -452,7 +452,7 @@ export const getPlatformStats = query({
 
     // Count active duels (IN_PROGRESS status)
     const activeDuels = allDuels.filter(
-      (d) => d.status === "IN_PROGRESS"
+      (d) => d.status === "IN_PROGRESS",
     ).length;
 
     return {
@@ -486,12 +486,12 @@ export const grantImageCredits = mutation({
 
     // Validate amount
     if (args.amount <= 0 || !Number.isInteger(args.amount)) {
-      throw new Error("Credit amount must be a positive integer");
+      throw new Error("Token amount must be a positive integer");
     }
 
     // Validate reason
     if (!args.reason || args.reason.trim() === "") {
-      throw new Error("Reason is required for credit grants");
+      throw new Error("Reason is required for token grants");
     }
 
     // Find target user
@@ -561,9 +561,9 @@ export const getBatchUserStatistics = query({
         v.literal("inactive"),
         v.literal("low"),
         v.literal("medium"),
-        v.literal("high")
+        v.literal("high"),
       ),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     // Verify admin access
@@ -633,13 +633,13 @@ export const getBatchUserStatistics = query({
         } else if (duel.status === "COMPLETED") {
           // Check if any of user's wizards won
           const userWizardIds = duel.wizards.filter((wId) =>
-            wizardIds.includes(wId)
+            wizardIds.includes(wId),
           );
           const userWon = userWizardIds.some((wId) =>
-            duel.winners?.includes(wId)
+            duel.winners?.includes(wId),
           );
           const userLost = userWizardIds.some((wId) =>
-            duel.losers?.includes(wId)
+            duel.losers?.includes(wId),
           );
 
           if (userWon) {
@@ -657,10 +657,10 @@ export const getBatchUserStatistics = query({
         .collect();
 
       const campaignWins = campaignBattles.filter(
-        (b) => b.status === "WON"
+        (b) => b.status === "WON",
       ).length;
       const campaignLosses = campaignBattles.filter(
-        (b) => b.status === "LOST"
+        (b) => b.status === "LOST",
       ).length;
 
       // Find highest opponent defeated
@@ -676,7 +676,7 @@ export const getBatchUserStatistics = query({
       // Check last wizard creation
       if (wizards.length > 0) {
         const lastWizardTime = Math.max(
-          ...wizards.map((w) => w.illustrationGeneratedAt || 0)
+          ...wizards.map((w) => w.illustrationGeneratedAt || 0),
         );
         if (lastWizardTime > lastActivityAt) {
           lastActivityAt = lastWizardTime;
@@ -686,7 +686,7 @@ export const getBatchUserStatistics = query({
       // Check last duel activity
       if (userDuels.length > 0) {
         const lastDuelTime = Math.max(
-          ...userDuels.map((d) => d.completedAt || d.createdAt)
+          ...userDuels.map((d) => d.completedAt || d.createdAt),
         );
         if (lastDuelTime > lastActivityAt) {
           lastActivityAt = lastDuelTime;
@@ -697,7 +697,7 @@ export const getBatchUserStatistics = query({
       const now = Date.now();
       const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
       const recentDuels = userDuels.filter(
-        (d) => d.createdAt > thirtyDaysAgo
+        (d) => d.createdAt > thirtyDaysAgo,
       ).length;
 
       let activityLevel: "inactive" | "low" | "medium" | "high";
@@ -748,7 +748,7 @@ export const updateUserRole = mutation({
     newRole: v.union(
       v.literal("user"),
       v.literal("admin"),
-      v.literal("super_admin")
+      v.literal("super_admin"),
     ),
   },
   returns: v.object({
@@ -792,7 +792,7 @@ export const updateUserRoleByEmail = mutation({
     newRole: v.union(
       v.literal("user"),
       v.literal("admin"),
-      v.literal("super_admin")
+      v.literal("super_admin"),
     ),
   },
   returns: v.object({
@@ -845,18 +845,22 @@ export const getCreditHistory = query({
           v.literal("EARNED"),
           v.literal("CONSUMED"),
           v.literal("GRANTED"),
-          v.literal("EXPIRED")
+          v.literal("EXPIRED"),
         ),
         amount: v.number(),
         source: v.union(
           v.literal("SIGNUP_BONUS"),
           v.literal("AD_REWARD"),
           v.literal("PREMIUM_GRANT"),
-          v.literal("ADMIN_GRANT")
+          v.literal("ADMIN_GRANT"),
+          v.literal("DUEL_ENTRY"),
+          v.literal("DUEL_REFUND"),
+          v.literal("WIZARD_IMAGE"),
+          v.literal("WIZARD_IMAGE_REFUND"),
         ),
         createdAt: v.number(),
         metadata: v.optional(v.record(v.string(), v.any())),
-      })
+      }),
     ),
     isDone: v.boolean(),
     continueCursor: v.string(),

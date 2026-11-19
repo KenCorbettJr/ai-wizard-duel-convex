@@ -5,6 +5,8 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "sonner";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import {
@@ -98,6 +100,11 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
       router.push(`/duels/${duel._id}`);
     } catch (error) {
       console.error("Failed to join duel:", error);
+      toast.error(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : "Couldn't join the duel. Please try again.",
+      );
     } finally {
       setIsJoining(false);
     }

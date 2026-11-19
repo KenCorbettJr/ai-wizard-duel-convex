@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
@@ -28,9 +29,11 @@ export function useStartCampaignBattle() {
         router.push(`/duels/${result.duelId}`);
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Could not start the battle. Please try again.",
+          error instanceof ConvexError && typeof error.data === "string"
+            ? error.data
+            : error instanceof Error
+              ? error.message
+              : "Could not start the battle. Please try again.",
         );
         setStartingKey(null);
       }

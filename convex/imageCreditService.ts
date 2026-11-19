@@ -1,12 +1,17 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { refundWizardImageToken as refundToken } from "./lib/wizardImageTokens";
 
 // Credit source types
 const CreditSource = v.union(
   v.literal("SIGNUP_BONUS"),
   v.literal("AD_REWARD"),
   v.literal("PREMIUM_GRANT"),
-  v.literal("ADMIN_GRANT")
+  v.literal("ADMIN_GRANT"),
+  v.literal("DUEL_ENTRY"),
+  v.literal("DUEL_REFUND"),
+  v.literal("WIZARD_IMAGE"),
+  v.literal("WIZARD_IMAGE_REFUND"),
 );
 
 // Transaction types
@@ -14,7 +19,7 @@ const TransactionType = v.union(
   v.literal("EARNED"),
   v.literal("CONSUMED"),
   v.literal("GRANTED"),
-  v.literal("EXPIRED")
+  v.literal("EXPIRED"),
 );
 
 /**
@@ -147,139 +152,17 @@ export const consumeImageCredit = mutation({
 });
 
 /**
- * Consume an image credit for a duel (only once per duel)
+ * Refund the token charged for a wizard illustration that failed to generate
  */
-export const consumeImageCreditForDuel = mutation({
-  args: {
-    userId: v.string(),
-    duelId: v.id("duels"),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
-  returns: v.object({
-    success: v.boolean(),
-    alreadyConsumed: v.boolean(),
-    reason: v.optional(v.string()),
-  }),
+export const refundWizardImageToken = internalMutation({
+  args: { userId: v.string(), wizardId: v.id("wizards") },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    // Get the duel first
-    const duel = await ctx.db.get(args.duelId);
-    if (!duel) {
-      return {
-        success: false,
-        alreadyConsumed: false,
-        reason: "Duel not found",
-      };
-    }
-
-    // Check if credit has already been consumed for this duel
-    if (duel.imageCreditConsumed) {
-      return {
-        success: true,
-        alreadyConsumed: true,
-        reason: `Credit already consumed by user ${duel.imageCreditConsumedBy}`,
-      };
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
-      .first();
-
-    if (!user) {
-      return {
-        success: false,
-        alreadyConsumed: false,
-        reason: "User not found",
-      };
-    }
-
-    // Premium users have unlimited credits
-    if (
-      user.subscriptionTier === "PREMIUM" &&
-      user.subscriptionStatus === "ACTIVE"
-    ) {
-      // Mark the duel as having consumed a credit (even though it's free for premium)
-      await ctx.db.patch(args.duelId, {
-        imageCreditConsumed: true,
-        imageCreditConsumedBy: args.userId,
-      });
-
-      // Still track the usage for analytics
-      await ctx.db.insert("imageCreditTransactions", {
-        userId: args.userId,
-        type: "CONSUMED",
-        amount: 0, // No actual credit consumed for premium users
-        source: "PREMIUM_GRANT",
-        metadata: {
-          ...args.metadata,
-          duelId: args.duelId,
-          purpose: "duel_images",
-        },
-        createdAt: Date.now(),
-      });
-
-      // Update monthly usage
-      await ctx.db.patch(user._id, {
-        monthlyUsage: {
-          ...user.monthlyUsage,
-          imageGenerations: user.monthlyUsage.imageGenerations + 1,
-        },
-        updatedAt: Date.now(),
-      });
-
-      return {
-        success: true,
-        alreadyConsumed: false,
-        reason: "Premium user - unlimited credits",
-      };
-    }
-
-    // Check if user has credits
-    if (user.imageCredits <= 0) {
-      return {
-        success: false,
-        alreadyConsumed: false,
-        reason: "Insufficient credits",
-      };
-    }
-
-    // Consume one credit
-    await ctx.db.patch(user._id, {
-      imageCredits: user.imageCredits - 1,
-      monthlyUsage: {
-        ...user.monthlyUsage,
-        imageGenerations: user.monthlyUsage.imageGenerations + 1,
-      },
-      updatedAt: Date.now(),
-    });
-
-    // Mark the duel as having consumed a credit
-    await ctx.db.patch(args.duelId, {
-      imageCreditConsumed: true,
-      imageCreditConsumedBy: args.userId,
-    });
-
-    // Record the transaction
-    await ctx.db.insert("imageCreditTransactions", {
-      userId: args.userId,
-      type: "CONSUMED",
-      amount: 1,
-      source: "PREMIUM_GRANT", // This will be updated based on context
-      metadata: {
-        ...args.metadata,
-        duelId: args.duelId,
-        purpose: "duel_images",
-      },
-      createdAt: Date.now(),
-    });
-
-    return {
-      success: true,
-      alreadyConsumed: false,
-      reason: "Credit consumed successfully",
-    };
+    await refundToken(ctx, args.userId, args.wizardId);
+    return null;
   },
 });
+
 /**
  * Award image credits to a user
  */
@@ -294,7 +177,7 @@ export const awardImageCredit = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     if (args.amount <= 0) {
-      throw new Error("Credit amount must be positive");
+      throw new Error("Token amount must be positive");
     }
 
     const user = await ctx.db
@@ -407,7 +290,7 @@ export const processAdRewardCredit = mutation({
       return {
         success: false,
         creditsAwarded: 0,
-        message: "Invalid ad type for credit reward",
+        message: "Invalid ad type for token reward",
       };
     }
 
@@ -424,7 +307,7 @@ export const processAdRewardCredit = mutation({
       const timeSinceLastAd = Date.now() - lastAdReward.createdAt;
       if (timeSinceLastAd < COOLDOWN_PERIOD) {
         const remainingSeconds = Math.ceil(
-          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000
+          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000,
         );
         return {
           success: false,
@@ -477,7 +360,7 @@ export const processAdRewardCredit = mutation({
     return {
       success: true,
       creditsAwarded: creditsToAward,
-      message: `You earned ${creditsToAward} image credit!`,
+      message: `You earned ${creditsToAward} token!`,
     };
   },
 });
@@ -497,7 +380,7 @@ export const getImageCreditHistory = query({
       source: CreditSource,
       createdAt: v.number(),
       metadata: v.optional(v.record(v.string(), v.string())),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
@@ -576,7 +459,7 @@ export const adminGrantCredits = mutation({
     }
 
     if (args.amount <= 0) {
-      throw new Error("Credit amount must be positive");
+      throw new Error("Token amount must be positive");
     }
 
     // Find target user
@@ -603,7 +486,7 @@ export const adminGrantCredits = mutation({
       source: "ADMIN_GRANT",
       metadata: {
         grantedBy: identity.subject,
-        reason: args.reason || "Admin credit grant",
+        reason: args.reason || "Admin token grant",
       },
       createdAt: Date.now(),
     });
@@ -686,7 +569,7 @@ export const getCreditStatistics = query({
       (user) =>
         user.imageCredits > 0 ||
         (user.subscriptionTier === "PREMIUM" &&
-          user.subscriptionStatus === "ACTIVE")
+          user.subscriptionStatus === "ACTIVE"),
     ).length;
 
     return {
