@@ -20,8 +20,8 @@ export function DuelModeIndicator({
   if (!textOnlyMode) {
     return (
       <Badge
-        variant="default"
-        className={`bg-success/15 text-success ${className}`}
+        variant="outline"
+        className={`border-success/50 bg-success/15 text-foreground ${className}`}
       >
         <ImageIcon className="w-3 h-3 mr-1" />
         Image Mode

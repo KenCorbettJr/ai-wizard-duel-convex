@@ -742,3 +742,154 @@
     animation: none;
   }
 }
+
+/* Round reveal stages, driven by DuelRoundCard. Hidden stages keep their
+   space so the card doesn't grow while it plays. */
+.reveal-wait {
+  visibility: hidden;
+}
+@keyframes reveal-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.88);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) rotate(-2deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px) rotate(2deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-roll {
+  0% {
+    opacity: 0;
+    transform: rotate(-600deg) scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(20deg) scale(1.15);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes reveal-image {
+  0% {
+    opacity: 0;
+    filter: blur(18px) brightness(0.3) saturate(0.4);
+    transform: scale(1.08);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+@keyframes reveal-word {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+@keyframes reveal-impact {
+  0% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes reveal-glow {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--warning) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+}
+@keyframes reveal-cta {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+.reveal-pop {
+  animation: reveal-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.reveal-slide-left {
+  animation: reveal-slide-left 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+.reveal-slide-right {
+  animation: reveal-slide-right 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+.reveal-roll {
+  animation: reveal-roll 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.reveal-image {
+  animation: reveal-image 1.4s ease-out both;
+}
+.reveal-words > span {
+  animation: reveal-word 0.45s ease-out both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.reveal-impact {
+  animation: reveal-impact 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.reveal-winner {
+  animation: reveal-glow 1.2s ease-out 2;
+}
+.reveal-cta {
+  animation: reveal-cta 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pop,
+  .reveal-slide-left,
+  .reveal-slide-right,
+  .reveal-roll,
+  .reveal-image,
+  .reveal-words > span,
+  .reveal-impact,
+  .reveal-winner,
+  .reveal-cta {
+    animation: none;
+  }
+}

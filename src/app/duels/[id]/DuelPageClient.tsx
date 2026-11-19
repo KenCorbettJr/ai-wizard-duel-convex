@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { toast } from "sonner";
 import { ConvexError } from "convex/values";
 import {
@@ -33,6 +40,9 @@ import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { WizardCard } from "@/components/WizardCard";
 import { DuelRoundCard } from "@/components/DuelRoundCard";
 import { useConclusionReveal } from "@/hooks/useConclusionReveal";
+import { useReplayProgress } from "@/hooks/useReplayProgress";
+import { ReplayNextStep, type ReplayStep } from "@/components/ReplayNextStep";
+import { stopAllNarration } from "@/components/NarratedText";
 import { CastSpellModal, COMPOSER_ID } from "@/components/CastSpellModal";
 import { DuelScoreboard } from "@/components/DuelScoreboard";
 import { RoundTimeline } from "@/components/RoundTimeline";
@@ -134,16 +144,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   );
   const justCompleted =
     !!duel?.completedAt && duel.completedAt >= mountedAt - 3 * 60 * 1000;
-  const winnerGateOpen =
-    conclusionRevealed || !(hasConclusion || justCompleted);
-  // Once the result has been shown, a late-arriving conclusion round must not
-  // hide it again.
-  const [winnerShown, setWinnerShown] = useState(false);
-  useEffect(() => {
-    // Only latch once the duel is over, so a live viewer stays gated.
-    if (winnerGateOpen && duel?.status === "COMPLETED") setWinnerShown(true);
-  }, [winnerGateOpen, duel?.status]);
-  const showWinner = winnerGateOpen || winnerShown;
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const castSpell = useMutation(api.duels.castSpell);
@@ -204,11 +204,110 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     return done.length ? Math.max(...done.map((r) => r.roundNumber)) : 0;
   }, [duel?.rounds]);
 
+  const isPlayerInDuel = useMemo(
+    () => duel?.players.includes(user?.id || ""),
+    [duel?.players, user?.id],
+  );
+
+  // ---- Replay pacing ----
+  // Rounds are revealed one at a time. `revealedThrough` is the last round this
+  // viewer has watched; later rounds wait behind a "continue" step. A round
+  // that resolves while the viewer is caught up plays its reveal right away.
+  const { stored: storedProgress, save: saveProgress } = useReplayProgress(id);
+  const [revealedThrough, setRevealedThrough] = useState<number | null>(null);
+  // Highest resolved round the player has moved on from. The composer for the
+  // next round stays hidden until then.
+  const [ackedThrough, setAckedThrough] = useState(0);
+  const [animating, setAnimating] = useState<{
+    round: number;
+    token: number;
+    impact: boolean;
+    done: boolean;
+  } | null>(null);
+  // True once the viewer watched a round reveal here; the result then follows
+  // the rounds instead of sitting above them.
+  const [watchedHere, setWatchedHere] = useState(false);
+
+  useEffect(() => {
+    if (
+      revealedThrough !== null ||
+      storedProgress === undefined ||
+      !duel ||
+      !userLoaded
+    ) {
+      return;
+    }
+    const participant = !!user?.id && duel.players.includes(user.id);
+    const start =
+      storedProgress !== null
+        ? Math.min(storedProgress, lastResolvedNumber)
+        : participant || conclusionRevealed
+          ? lastResolvedNumber
+          : 0;
+    setRevealedThrough(start);
+    setAckedThrough(start);
+  }, [
+    revealedThrough,
+    storedProgress,
+    duel,
+    userLoaded,
+    user?.id,
+    lastResolvedNumber,
+    conclusionRevealed,
+  ]);
+
+  useEffect(() => {
+    if (revealedThrough !== null) saveProgress(revealedThrough);
+  }, [revealedThrough, saveProgress]);
+
+  const completedRoundNumbers = useMemo(
+    () =>
+      (duel?.rounds ?? [])
+        .filter(
+          (r) =>
+            r.roundNumber > 0 &&
+            r.type !== "CONCLUSION" &&
+            r.status === "COMPLETED",
+        )
+        .map((r) => r.roundNumber)
+        .sort((a, b) => a - b),
+    [duel?.rounds],
+  );
+  const conclusionRound = duel?.rounds?.find((r) => r.type === "CONCLUSION");
+  const conclusionRoundNo = conclusionRound?.roundNumber;
+  const caughtUp =
+    revealedThrough !== null && revealedThrough >= lastResolvedNumber;
+  // A regular round's reveal is still playing: hold back whatever comes next.
+  const revealPending =
+    !!animating &&
+    !animating.done &&
+    animating.round !== conclusionRound?.roundNumber;
+  const conclusionPlaying =
+    !!animating &&
+    !animating.done &&
+    animating.round === conclusionRound?.roundNumber;
+
+  const winnerGateOpen =
+    (conclusionRevealed || !(hasConclusion || justCompleted)) &&
+    caughtUp &&
+    !revealPending &&
+    !conclusionPlaying;
+  // Once the result has been shown, a late-arriving conclusion round must not
+  // hide it again.
+  const [winnerShown, setWinnerShown] = useState(false);
+  useEffect(() => {
+    // Only latch once the duel is over, so a live viewer stays gated.
+    if (winnerGateOpen && duel?.status === "COMPLETED") setWinnerShown(true);
+  }, [winnerGateOpen, duel?.status]);
+  const showWinner = winnerGateOpen || winnerShown;
+
   // Lock the introduction's initial open state once the duel has loaded, so it
   // doesn't collapse (and shift the layout) when the first round resolves.
+  // A viewer starting a replay from the top sees it open.
   useEffect(() => {
-    if (duel && introOpen === null) setIntroOpen(!hasResolvedRounds);
-  }, [duel, introOpen, hasResolvedRounds]);
+    if (duel && introOpen === null && revealedThrough !== null)
+      setIntroOpen(revealedThrough === 0 || !hasResolvedRounds);
+  }, [duel, introOpen, hasResolvedRounds, revealedThrough]);
 
   const hasUserCastSpell = useMemo(
     () =>
@@ -218,21 +317,17 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     [currentRound?.spells, userWizardId],
   );
 
-  const isPlayerInDuel = useMemo(
-    () => duel?.players.includes(user?.id || ""),
-    [duel?.players, user?.id],
-  );
-
   const status = duel?.status;
   const currentRoundNumber = duel?.currentRound;
   const focusComposer = useCallback(() => {
+    setAckedThrough((a) => Math.max(a, lastResolvedNumber));
     setComposerCollapsed(false);
     requestAnimationFrame(() => {
       document
         .querySelector<HTMLTextAreaElement>(`#${COMPOSER_ID} textarea`)
         ?.focus();
     });
-  }, []);
+  }, [lastResolvedNumber]);
   const scrollToRound = useCallback((roundNumber: number) => {
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -255,9 +350,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     if (currentRoundNumber !== undefined) scrollToRound(currentRoundNumber);
   }, [currentRoundNumber, scrollToRound]);
 
-  // Scroll to the active round on first load. After that, only offer a pill.
+  // Scroll to where the viewer is on first load. After that, only offer a pill.
   const [newRoundPill, setNewRoundPill] = useState<number | null>(null);
-  const lastSeenResolved = useRef<number | null>(null);
   const following = useRef(true);
   const scrolledOnce = useRef(false);
   useEffect(() => {
@@ -271,9 +365,41 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  const awaitingCastAck =
+    status === "IN_PROGRESS" &&
+    !!isPlayerInDuel &&
+    !!userWizardId &&
+    ackedThrough < lastResolvedNumber &&
+    currentRound?.status === "WAITING_FOR_SPELLS" &&
+    !hasUserCastSpell;
+  // Live: the round in play. Replaying: the last round watched (none at 0).
+  const initialScrollTarget =
+    revealedThrough === null
+      ? null
+      : !caughtUp
+        ? revealedThrough > 0
+          ? revealedThrough
+          : null
+        : status !== "IN_PROGRESS"
+          ? null
+          : awaitingCastAck
+            ? lastResolvedNumber
+            : (currentRoundNumber ?? null);
+  const initialScrollRef = useRef(initialScrollTarget);
+  useLayoutEffect(() => {
+    initialScrollRef.current = initialScrollTarget;
+  });
   useEffect(() => {
-    if (status !== "IN_PROGRESS" || !currentRoundNumber) return;
+    if (revealedThrough === null) return;
     if (!scrolledOnce.current) {
+      if (initialScrollRef.current === null) {
+        scrolledOnce.current = true;
+        return;
+      }
+      const go = () => {
+        if (initialScrollRef.current !== null)
+          scrollToRound(initialScrollRef.current);
+      };
       // First load: bring the active round into view.
       let interacted = false;
       const stop = () => {
@@ -285,12 +411,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       );
       const t = setTimeout(() => {
         scrolledOnce.current = true;
-        lastSeenResolved.current = lastResolvedNumber;
-        jumpToCurrentRound();
+        go();
       }, 300);
       // Images and narration can shift the layout, so settle once more.
       const t2 = setTimeout(() => {
-        if (!interacted) jumpToCurrentRound();
+        if (!interacted) go();
       }, 2000);
       return () => {
         clearTimeout(t);
@@ -298,26 +423,118 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         events.forEach((ev) => window.removeEventListener(ev, stop));
       };
     }
-  }, [status, currentRoundNumber, jumpToCurrentRound, lastResolvedNumber]);
+  }, [revealedThrough, scrollToRound]);
 
-  // When a round resolves, bring its result into view if the viewer is
-  // following along. Otherwise offer a pill, so nobody is pulled away from
-  // what they were reading.
-  useEffect(() => {
-    if (!scrolledOnce.current) return;
-    if (
-      lastSeenResolved.current === lastResolvedNumber ||
-      lastResolvedNumber === 0
-    ) {
+  const revealPendingRef = useRef(false);
+  const conclusionRoundNoRef = useRef<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    conclusionRoundNoRef.current = conclusionRoundNo;
+    revealPendingRef.current =
+      !!animating && !animating.done && animating.round !== conclusionRoundNo;
+  });
+  /** Reveal every round up to `n` and play the reveal of round `n`. */
+  const revealTo = useCallback(
+    (n: number) => {
+      stopAllNarration();
+      setRevealedThrough((prev) => Math.max(prev ?? 0, n));
+      setAnimating({ round: n, token: Date.now(), impact: false, done: false });
+      setWatchedHere(true);
+      setNewRoundPill(null);
+      scrollToRound(n);
+      // Older rounds collapse as the replay moves on, which can shift the
+      // page; correct once if the new round ended up out of place.
+      setTimeout(() => {
+        const top = document
+          .getElementById(`round-${n}`)
+          ?.getBoundingClientRect().top;
+        const sticky =
+          parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue(
+              "--duel-sticky-h",
+            ),
+          ) || 160;
+        if (top !== undefined && Math.abs(top - sticky) > 160) scrollToRound(n);
+      }, 900);
+    },
+    [scrollToRound],
+  );
+  const onRevealImpact = useCallback((n: number) => {
+    setAnimating((a) => (a && a.round === n ? { ...a, impact: true } : a));
+  }, []);
+  const onRevealComplete = useCallback((n: number) => {
+    setAnimating((a) =>
+      a && a.round === n ? { ...a, impact: true, done: true } : a,
+    );
+    if (n === conclusionRoundNoRef.current) {
+      // The ending lands: bring the result banner in and move focus to it.
+      setTimeout(() => {
+        const el = document.getElementById("duel-result");
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        el.focus({ preventScroll: true });
+      }, 300);
+    }
+  }, []);
+
+  // When a round resolves while the viewer is caught up, play its reveal and
+  // bring it into view if they're following along. Otherwise offer a pill, so
+  // nobody is pulled away from what they were reading. A layout effect, so the
+  // finished round never paints before its reveal starts.
+  const prevResolved = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (revealedThrough === null) return;
+    const prev = prevResolved.current;
+    prevResolved.current = lastResolvedNumber;
+    if (prev === null || lastResolvedNumber <= prev) return;
+    // Still replaying earlier rounds: the new one waits its turn.
+    if (revealedThrough < prev) return;
+    // Mid-reveal, or scrolled away reading: don't play it where it can't be
+    // seen. The "continue" step (and a pill) offer it instead.
+    const distance =
+      document.documentElement.scrollHeight -
+      (window.scrollY + window.innerHeight);
+    if (revealPendingRef.current || distance > window.innerHeight * 1.5) {
+      setNewRoundPill(lastResolvedNumber);
       return;
     }
-    lastSeenResolved.current = lastResolvedNumber;
-    if (following.current) {
-      setTimeout(() => scrollToRound(lastResolvedNumber), 400);
-    } else {
-      setNewRoundPill(lastResolvedNumber);
+    setRevealedThrough(lastResolvedNumber);
+    setAnimating({
+      round: lastResolvedNumber,
+      token: Date.now(),
+      impact: false,
+      done: false,
+    });
+    setWatchedHere(true);
+    setTimeout(() => scrollToRound(lastResolvedNumber), 400);
+  }, [lastResolvedNumber, revealedThrough, scrollToRound]);
+
+  // Health and points as of the rounds the viewer has seen, so the scoreboard
+  // doesn't give away rounds they haven't watched. The round being revealed
+  // counts once its damage lands.
+  const displayedThrough =
+    revealedThrough === null
+      ? lastResolvedNumber
+      : animating && !animating.impact
+        ? Math.min(revealedThrough, animating.round - 1)
+        : revealedThrough;
+  const { shownHitPoints, shownPoints } = useMemo(() => {
+    const hp: Record<string, number> = { ...(duel?.hitPoints ?? {}) };
+    const pts: Record<string, number> = { ...(duel?.points ?? {}) };
+    for (const r of duel?.rounds ?? []) {
+      if (
+        r.type === "CONCLUSION" ||
+        r.status !== "COMPLETED" ||
+        r.roundNumber <= displayedThrough
+      ) {
+        continue;
+      }
+      for (const [w, change] of Object.entries(r.outcome?.healthChange ?? {}))
+        hp[w] = (hp[w] ?? 100) - change;
+      for (const [w, change] of Object.entries(r.outcome?.pointsAwarded ?? {}))
+        pts[w] = (pts[w] ?? 0) - change;
     }
-  }, [lastResolvedNumber, scrollToRound]);
+    return { shownHitPoints: hp, shownPoints: pts };
+  }, [duel?.hitPoints, duel?.points, duel?.rounds, displayedThrough]);
 
   // Each new round starts with the composer tucked away on phones, so the
   // result the player is responding to stays readable.
@@ -419,7 +636,22 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   };
 
   const handleReveal = () => {
+    stopAllNarration();
+    setRevealedThrough(lastResolvedNumber);
     revealConclusion();
+    if (conclusionRound) {
+      // Play the ending; the result banner follows it.
+      setWatchedHere(true);
+      setAnimating({
+        round: conclusionRound.roundNumber,
+        token: Date.now(),
+        impact: false,
+        done: false,
+      });
+      scrollToRound(conclusionRound.roundNumber);
+      return;
+    }
+    setAnimating(null);
     // Bring the result into view once it has rendered.
     setTimeout(() => {
       const el = document.getElementById("duel-result");
@@ -649,8 +881,208 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           ? duel.numberOfRounds
           : undefined
       }
+      revealedThrough={revealedThrough === null ? undefined : displayedThrough}
+      onRevealTo={revealTo}
     />
   );
+
+  const winnerWizard =
+    duel.winners?.length === 1
+      ? duel.winners[0] === duel.wizards[0]
+        ? wizard1
+        : wizard2
+      : undefined;
+  const winnerIsAI = !!winnerWizard?.isAIPowered;
+
+  // Winner announcement for completed duels.
+  const resultCard = duel.status === "COMPLETED" &&
+    showWinner &&
+    duel.winners !== undefined && (
+      <Card
+        id="duel-result"
+        tabIndex={-1}
+        aria-live="polite"
+        className={`mb-8 outline-none animate-in fade-in zoom-in-95 duration-500 motion-reduce:animate-none ${
+          userDefeated
+            ? "border-2 border-destructive/40 bg-card"
+            : isDraw
+              ? "border-2 border-border bg-card"
+              : duel.isCampaignBattle
+                ? "bg-arcane-soft border-2 border-primary/50"
+                : "bg-linear-to-r from-warning/20 to-gold/10 border-2 border-warning/40"
+        } shadow-lg dark:shadow-xl`}
+      >
+        <CardHeader className="duel-reveal">
+          <CardTitle
+            className={`flex items-center justify-center gap-3 text-2xl ${
+              userDefeated
+                ? "text-destructive"
+                : isDraw
+                  ? "text-foreground"
+                  : duel.isCampaignBattle
+                    ? "text-primary"
+                    : "text-warning"
+            }`}
+          >
+            {userDefeated || isDraw ? (
+              <Swords
+                className={`h-8 w-8 ${userDefeated ? "text-destructive" : "text-muted-foreground"}`}
+              />
+            ) : duel.isCampaignBattle ? (
+              <Sparkles className="h-8 w-8 text-primary" />
+            ) : (
+              <Crown className="h-8 w-8 text-warning" />
+            )}
+            {duel.winners.length !== 1
+              ? "Draw!"
+              : userWizardId && !duel.winners.includes(userWizardId)
+                ? "Defeated"
+                : userWizardId
+                  ? duel.isCampaignBattle
+                    ? "Campaign Victory!"
+                    : "You won!"
+                  : duel.isCampaignBattle
+                    ? winnerIsAI
+                      ? "The AI prevails"
+                      : "Campaign Victory!"
+                    : "Victory!"}
+            {userDefeated || isDraw ? (
+              <Swords
+                className={`h-8 w-8 ${userDefeated ? "text-destructive" : "text-muted-foreground"}`}
+              />
+            ) : duel.isCampaignBattle ? (
+              <Sparkles className="h-8 w-8 text-primary" />
+            ) : (
+              <Crown className="h-8 w-8 text-warning" />
+            )}
+          </CardTitle>
+          <CardDescription
+            className={`text-center text-lg font-medium ${
+              userDefeated || isDraw
+                ? "text-foreground"
+                : duel.isCampaignBattle
+                  ? "text-primary"
+                  : "text-warning"
+            }`}
+          >
+            {duel.winners.length === 1 ? (
+              <>
+                {duel.wizards[0] === duel.winners[0]
+                  ? wizard1?.name
+                  : wizard2?.name}{" "}
+                {duel.isCampaignBattle
+                  ? userDefeated
+                    ? "wins this time. Try again!"
+                    : winnerIsAI
+                      ? "holds the line for the campaign!"
+                      : "defeats the AI opponent!"
+                  : "emerges victorious!"}
+              </>
+            ) : (
+              "The duel ends in an honorable draw!"
+            )}
+          </CardDescription>
+          {duel.winners.length === 1 && (
+            <p className="text-center text-sm text-foreground/80">
+              After {lastResolvedNumber} round
+              {lastResolvedNumber === 1 ? "" : "s"}. Final standing:{" "}
+              {duel.wizards
+                .slice(0, 2)
+                .map(
+                  (id, i) =>
+                    `${(i === 0 ? wizard1 : wizard2)?.name ?? "Wizard"} ${Math.max(0, duel.hitPoints[id] ?? 0)} HP, ${duel.points[id] ?? 0} pts`,
+                )
+                .join(" · ")}
+            </p>
+          )}
+          {duel.isCampaignBattle && isPlayerInDuel && (
+            <div className="flex justify-center pt-2">
+              <Button asChild size="lg">
+                <Link href="/campaign">
+                  {userDefeated ? "Try again" : "Continue the campaign"}
+                </Link>
+              </Button>
+            </div>
+          )}
+        </CardHeader>
+      </Card>
+    );
+
+  const replaying =
+    revealedThrough !== null &&
+    (!caughtUp || (duel.status === "COMPLETED" && !showWinner));
+
+  // The deliberate next step under the last round shown.
+  const nextUnwatched = completedRoundNumbers.find(
+    (n) => n > (revealedThrough ?? Infinity),
+  );
+  let nextStep: ReplayStep | null = null;
+  if (
+    revealedThrough !== null &&
+    !revealPending &&
+    (duel.status === "IN_PROGRESS" || duel.status === "COMPLETED")
+  ) {
+    if (nextUnwatched !== undefined) {
+      nextStep =
+        revealedThrough === 0
+          ? { kind: "begin" }
+          : { kind: "next", round: nextUnwatched };
+    } else if (duel.status === "COMPLETED" && !conclusionRevealed) {
+      if (hasConclusion) nextStep = { kind: "conclusion" };
+      else if (justCompleted) nextStep = { kind: "writing-conclusion" };
+    } else if (awaitingCastAck && userWizard) {
+      nextStep = {
+        kind: "cast",
+        round: duel.currentRound,
+        wizardName: userWizard.name,
+      };
+    }
+  }
+  const handleNextStep = () => {
+    if (!nextStep) return;
+    if (nextStep.kind === "begin" || nextStep.kind === "next") {
+      if (nextUnwatched !== undefined) revealTo(nextUnwatched);
+    } else if (nextStep.kind === "conclusion" && conclusionRound) {
+      stopAllNarration();
+      revealConclusion();
+      setWatchedHere(true);
+      setAnimating({
+        round: conclusionRound.roundNumber,
+        token: Date.now(),
+        impact: false,
+        done: false,
+      });
+      scrollToRound(conclusionRound.roundNumber);
+    } else if (nextStep.kind === "cast") {
+      focusComposer();
+    }
+  };
+  const skipToLatest =
+    nextStep &&
+    (nextStep.kind === "begin" || nextStep.kind === "next") &&
+    lastResolvedNumber > (nextUnwatched ?? 0)
+      ? () => revealTo(lastResolvedNumber)
+      : undefined;
+
+  const visibleRounds = (duel.rounds ?? [])
+    .filter((round: Doc<"duelRounds">) => round.roundNumber > 0)
+    .filter((round: Doc<"duelRounds">) => {
+      if (revealedThrough === null) return false;
+      if (round.type === "CONCLUSION") {
+        return caughtUp && conclusionRevealed && !revealPending;
+      }
+      if (round.status === "COMPLETED") {
+        return round.roundNumber <= revealedThrough;
+      }
+      // The round in play: only once the viewer is caught up and, for a
+      // player, has chosen to move on to it.
+      return (
+        duel.status === "IN_PROGRESS" &&
+        caughtUp &&
+        !revealPending &&
+        !awaitingCastAck
+      );
+    });
 
   return (
     <div className="min-h-screen">
@@ -709,7 +1141,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </div>
           </div>
 
-          {newRoundPill !== null && (
+          {newRoundPill !== null && !revealPending && (
             <div
               className="pointer-events-none fixed inset-x-0 z-[35] flex justify-center md:left-64"
               style={{ bottom: composerHeight + 16 }}
@@ -720,95 +1152,104 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 onClick={() => {
                   const target = newRoundPill;
                   setNewRoundPill(null);
-                  scrollToRound(target);
+                  if (target > (revealedThrough ?? 0) && !revealPending) {
+                    revealTo(target);
+                  } else {
+                    scrollToRound(target);
+                  }
                 }}
               >
-                Round {newRoundPill} resolved · View result
+                Round {newRoundPill} resolved · Watch it
               </Button>
             </div>
           )}
 
           {/* Sticky scoreboard: round, whose move it is, HP and points */}
-          {duel.wizards.length >= 1 && (wizard1 || wizard2) && (
-            <>
-              <DuelScoreboard
-                wizards={[wizard1, wizard2]}
-                wizardIds={duel.wizards}
-                hitPoints={duel.hitPoints}
-                points={duel.points}
-                userWizardId={userWizardId}
-                winnerIds={showWinner ? duel.winners : undefined}
-                duelStatus={duel.status}
-                currentRound={duel.currentRound}
-                numberOfRounds={duel.numberOfRounds}
-                roundStatus={currentRound?.status}
-                needActionsFrom={duel.needActionsFrom}
-                onJumpToComposer={focusComposer}
-                onUndo={handleUndo}
-                resolvedRound={lastResolvedNumber}
-                waitingSince={
-                  userWizardId
-                    ? currentRound?.spells?.[userWizardId]?.timestamp
-                    : undefined
-                }
-                viewerKnown={
-                  userLoaded &&
-                  (!duel.wizards[0] || wizard1 !== undefined) &&
-                  (!duel.wizards[1] || wizard2 !== undefined)
-                }
-                onJumpToCurrentRound={jumpToCurrentRound}
-                hideOutcome={!showWinner && duel.status === "COMPLETED"}
-                onReveal={
-                  !showWinner && duel.status === "COMPLETED"
-                    ? handleReveal
-                    : undefined
-                }
-              >
-                {timelineEl}
-              </DuelScoreboard>
-              <div className="mb-4 sm:hidden">{timelineEl}</div>
-              <details className="mb-6 group">
-                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 rounded">
-                  Wizard profiles
-                  <span className="ml-1 text-xs">
-                    (portraits, owners, full stats)
-                  </span>
-                </summary>
-                <div className="mt-4 flex flex-col items-stretch gap-4 md:flex-row">
-                  {wizard1 && (
-                    <WizardCard
-                      wizard={wizard1}
-                      points={duel.points[duel.wizards[0]] || 0}
-                      hitPoints={duel.hitPoints[duel.wizards[0]] ?? 100}
-                      isUserWizard={wizard1.owner === user?.id}
-                      isWinner={
-                        (showWinner &&
-                          duel.winners?.includes(duel.wizards[0])) ||
-                        false
-                      }
-                      showOwner={true}
-                    />
-                  )}
-                  {wizard2 && (
-                    <WizardCard
-                      wizard={wizard2}
-                      points={duel.points[duel.wizards[1]] || 0}
-                      hitPoints={duel.hitPoints[duel.wizards[1]] ?? 100}
-                      isUserWizard={wizard2.owner === user?.id}
-                      isWinner={
-                        (showWinner &&
-                          duel.winners?.includes(duel.wizards[1])) ||
-                        false
-                      }
-                      showOwner={true}
-                    />
-                  )}
-                </div>
-              </details>
-            </>
-          )}
+          {duel.wizards.length >= 1 &&
+            (wizard1 || wizard2) &&
+            revealedThrough !== null && (
+              <>
+                <DuelScoreboard
+                  wizards={[wizard1, wizard2]}
+                  wizardIds={duel.wizards}
+                  hitPoints={shownHitPoints}
+                  points={shownPoints}
+                  replay={
+                    replaying ? { round: revealedThrough ?? 0 } : undefined
+                  }
+                  userWizardId={userWizardId}
+                  winnerIds={showWinner ? duel.winners : undefined}
+                  duelStatus={duel.status}
+                  currentRound={duel.currentRound}
+                  numberOfRounds={duel.numberOfRounds}
+                  roundStatus={currentRound?.status}
+                  needActionsFrom={duel.needActionsFrom}
+                  onJumpToComposer={focusComposer}
+                  onUndo={handleUndo}
+                  resolvedRound={replaying ? undefined : lastResolvedNumber}
+                  waitingSince={
+                    userWizardId
+                      ? currentRound?.spells?.[userWizardId]?.timestamp
+                      : undefined
+                  }
+                  viewerKnown={
+                    userLoaded &&
+                    (!duel.wizards[0] || wizard1 !== undefined) &&
+                    (!duel.wizards[1] || wizard2 !== undefined)
+                  }
+                  onJumpToCurrentRound={jumpToCurrentRound}
+                  hideOutcome={!showWinner && duel.status === "COMPLETED"}
+                  onReveal={
+                    !showWinner && duel.status === "COMPLETED"
+                      ? handleReveal
+                      : undefined
+                  }
+                >
+                  {timelineEl}
+                </DuelScoreboard>
+                <div className="mb-4 sm:hidden">{timelineEl}</div>
+                <details className="mb-6 group">
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 rounded">
+                    Wizard profiles
+                    <span className="ml-1 text-xs">
+                      (portraits, owners, full stats)
+                    </span>
+                  </summary>
+                  <div className="mt-4 flex flex-col items-stretch gap-4 md:flex-row">
+                    {wizard1 && (
+                      <WizardCard
+                        wizard={wizard1}
+                        points={shownPoints[duel.wizards[0]] || 0}
+                        hitPoints={shownHitPoints[duel.wizards[0]] ?? 100}
+                        isUserWizard={wizard1.owner === user?.id}
+                        isWinner={
+                          (showWinner &&
+                            duel.winners?.includes(duel.wizards[0])) ||
+                          false
+                        }
+                        showOwner={true}
+                      />
+                    )}
+                    {wizard2 && (
+                      <WizardCard
+                        wizard={wizard2}
+                        points={shownPoints[duel.wizards[1]] || 0}
+                        hitPoints={shownHitPoints[duel.wizards[1]] ?? 100}
+                        isUserWizard={wizard2.owner === user?.id}
+                        isWinner={
+                          (showWinner &&
+                            duel.winners?.includes(duel.wizards[1])) ||
+                          false
+                        }
+                        showOwner={true}
+                      />
+                    )}
+                  </div>
+                </details>
+              </>
+            )}
 
-          {duel.status === "COMPLETED" && !showWinner && (
+          {duel.status === "COMPLETED" && !showWinner && !watchedHere && (
             <Card className="mb-8 border-2 border-primary/50 bg-card/95 text-center shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2 text-2xl">
@@ -819,12 +1260,41 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   The duel is over
                 </CardTitle>
                 <CardDescription>
-                  Catch up on the rounds first, or find out how it ended.
+                  {caughtUp
+                    ? "You've seen every round. Find out how it ended."
+                    : revealedThrough === 0
+                      ? "Relive it round by round, as it happened."
+                      : `You're on round ${revealedThrough}. Pick up where you left off, or skip to the end.`}
                 </CardDescription>
-                <div className="pt-2">
-                  <Button size="lg" onClick={handleReveal}>
-                    Reveal the result
-                  </Button>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  {caughtUp ? (
+                    <Button size="lg" onClick={handleReveal}>
+                      Reveal the result
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        size="lg"
+                        onClick={() =>
+                          revealedThrough === 0 && nextUnwatched !== undefined
+                            ? revealTo(nextUnwatched)
+                            : document
+                                .getElementById("replay-next")
+                                ?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                })
+                        }
+                      >
+                        {revealedThrough === 0
+                          ? "Watch the duel"
+                          : "Keep watching"}
+                      </Button>
+                      <Button size="lg" variant="ghost" onClick={handleReveal}>
+                        Skip to the result
+                      </Button>
+                    </>
+                  )}
                 </div>
               </CardHeader>
             </Card>
@@ -841,115 +1311,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </div>
           )}
 
-          {/* Winner Announcement for Completed Duels */}
-          {duel.status === "COMPLETED" &&
-            showWinner &&
-            duel.winners !== undefined && (
-              <Card
-                id="duel-result"
-                tabIndex={-1}
-                aria-live="polite"
-                className={`mb-8 outline-none animate-in fade-in zoom-in-95 duration-500 motion-reduce:animate-none ${
-                  userDefeated
-                    ? "border-2 border-destructive/40 bg-card"
-                    : isDraw
-                      ? "border-2 border-border bg-card"
-                      : duel.isCampaignBattle
-                        ? "bg-arcane-soft border-2 border-primary/50"
-                        : "bg-linear-to-r from-warning/20 to-gold/10 border-2 border-warning/40"
-                } shadow-lg dark:shadow-xl`}
-              >
-                <CardHeader className="duel-reveal">
-                  <CardTitle
-                    className={`flex items-center justify-center gap-3 text-2xl ${
-                      userDefeated
-                        ? "text-destructive"
-                        : isDraw
-                          ? "text-foreground"
-                          : duel.isCampaignBattle
-                            ? "text-primary"
-                            : "text-warning"
-                    }`}
-                  >
-                    {userDefeated || isDraw ? (
-                      <Swords
-                        className={`h-8 w-8 ${userDefeated ? "text-destructive" : "text-muted-foreground"}`}
-                      />
-                    ) : duel.isCampaignBattle ? (
-                      <Sparkles className="h-8 w-8 text-primary" />
-                    ) : (
-                      <Crown className="h-8 w-8 text-warning" />
-                    )}
-                    {duel.winners.length !== 1
-                      ? "Draw!"
-                      : userWizardId && !duel.winners.includes(userWizardId)
-                        ? "Defeated"
-                        : userWizardId
-                          ? duel.isCampaignBattle
-                            ? "Campaign Victory!"
-                            : "You won!"
-                          : duel.isCampaignBattle
-                            ? "Campaign Victory!"
-                            : "Victory!"}
-                    {userDefeated || isDraw ? (
-                      <Swords
-                        className={`h-8 w-8 ${userDefeated ? "text-destructive" : "text-muted-foreground"}`}
-                      />
-                    ) : duel.isCampaignBattle ? (
-                      <Sparkles className="h-8 w-8 text-primary" />
-                    ) : (
-                      <Crown className="h-8 w-8 text-warning" />
-                    )}
-                  </CardTitle>
-                  <CardDescription
-                    className={`text-center text-lg font-medium ${
-                      userDefeated || isDraw
-                        ? "text-foreground"
-                        : duel.isCampaignBattle
-                          ? "text-primary"
-                          : "text-warning"
-                    }`}
-                  >
-                    {duel.winners.length === 1 ? (
-                      <>
-                        {duel.wizards[0] === duel.winners[0]
-                          ? wizard1?.name
-                          : wizard2?.name}{" "}
-                        {duel.isCampaignBattle
-                          ? userDefeated
-                            ? "wins this time. Try again!"
-                            : "defeats the AI opponent!"
-                          : "emerges victorious!"}
-                      </>
-                    ) : (
-                      "The duel ends in an honorable draw!"
-                    )}
-                  </CardDescription>
-                  {duel.winners.length === 1 && (
-                    <p className="text-center text-sm text-foreground/80">
-                      After {lastResolvedNumber} round
-                      {lastResolvedNumber === 1 ? "" : "s"}. Final health:{" "}
-                      {duel.wizards
-                        .slice(0, 2)
-                        .map(
-                          (id, i) =>
-                            `${(i === 0 ? wizard1 : wizard2)?.name ?? "Wizard"} ${Math.max(0, duel.hitPoints[id] ?? 0)} HP`,
-                        )
-                        .join(" · ")}
-                    </p>
-                  )}
-                  {duel.isCampaignBattle && isPlayerInDuel && (
-                    <div className="flex justify-center pt-2">
-                      <Button asChild size="lg">
-                        <Link href="/campaign">
-                          {userDefeated ? "Try again" : "Continue the campaign"}
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
-                </CardHeader>
-              </Card>
-            )}
+          {!watchedHere && resultCard}
 
           {duel.status === "CANCELLED" && (
             <Card className="mb-8 border-destructive/40 bg-card/90 shadow-lg">
@@ -1162,6 +1524,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           {/* Cast Spell Modal */}
           {duel.status === "IN_PROGRESS" &&
             currentRound?.status === "WAITING_FOR_SPELLS" &&
+            caughtUp &&
+            !revealPending &&
+            !awaitingCastAck &&
             isPlayerInDuel &&
             userWizard &&
             userWizardId &&
@@ -1215,24 +1580,98 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           )}
 
           {/* Individual Round Cards */}
-          {duel.rounds && duel.rounds.length > 0 && (
+          {visibleRounds.length > 0 && (
             <div className="space-y-6">
-              {duel.rounds
-                .filter((round: Doc<"duelRounds">) => round.roundNumber > 0) // Exclude introduction round
-                .map((round: Doc<"duelRounds">) => (
-                  <DuelRoundCard
-                    key={round._id}
-                    round={round}
-                    duel={duel}
-                    wizard1={wizard1}
-                    wizard2={wizard2}
-                    isLatest={
-                      round.roundNumber === latestRoundNumber ||
-                      round.roundNumber >= lastResolvedNumber - 1
-                    }
-                  />
-                ))}
+              {visibleRounds.map((round: Doc<"duelRounds">) => (
+                <DuelRoundCard
+                  key={round._id}
+                  round={round}
+                  duel={duel}
+                  wizard1={wizard1}
+                  wizard2={wizard2}
+                  isLatest={
+                    round.roundNumber === latestRoundNumber ||
+                    round.roundNumber >=
+                      (revealedThrough ?? lastResolvedNumber) - 1
+                  }
+                  revealToken={
+                    animating?.round === round.roundNumber
+                      ? animating.token
+                      : undefined
+                  }
+                  onRevealImpact={onRevealImpact}
+                  onRevealComplete={onRevealComplete}
+                />
+              ))}
             </div>
+          )}
+
+          {nextStep && (
+            <div id="replay-next" className="scroll-mb-8">
+              <ReplayNextStep
+                step={nextStep}
+                onContinue={handleNextStep}
+                onSkipToLatest={skipToLatest}
+                skipLabel={
+                  duel.status === "COMPLETED"
+                    ? "Skip to the final round"
+                    : "Skip to the live round"
+                }
+                watched={displayedThrough}
+                total={
+                  typeof duel.numberOfRounds === "number"
+                    ? duel.numberOfRounds
+                    : undefined
+                }
+              />
+            </div>
+          )}
+
+          {watchedHere && resultCard}
+
+          {duel.status === "COMPLETED" && showWinner && !isPlayerInDuel && (
+            <section
+              aria-label="What next"
+              className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-border/50 bg-card/90 px-4 py-6 text-center shadow-lg"
+            >
+              <h3 className="font-display text-xl font-bold text-foreground">
+                Think you could do better?
+              </h3>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Create a wizard and step into the arena, or pass this duel on.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button asChild size="lg">
+                  <Link href="/wizards/create">
+                    <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Create your wizard
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={async () => {
+                    const url = window.location.href;
+                    try {
+                      if (navigator.share) {
+                        await navigator.share({ url, title: document.title });
+                      } else {
+                        await navigator.clipboard.writeText(url);
+                        toast.success("Duel link copied");
+                      }
+                    } catch {
+                      // Share sheet dismissed or clipboard blocked.
+                    }
+                  }}
+                >
+                  <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Share this duel
+                </Button>
+                <Button asChild size="lg" variant="ghost">
+                  <Link href="/duels/watch">Watch another duel</Link>
+                </Button>
+              </div>
+            </section>
           )}
 
           {/* Rematch, shown once the result has been revealed */}

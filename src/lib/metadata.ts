@@ -69,7 +69,7 @@ const DEFAULT_METADATA: MetadataConfig = {
  * Generates default metadata for fallback scenarios
  */
 export function generateDefaultMetadata(
-  overrides?: Partial<MetadataConfig>
+  overrides?: Partial<MetadataConfig>,
 ): MetadataConfig {
   return {
     ...DEFAULT_METADATA,
@@ -81,7 +81,7 @@ export function generateDefaultMetadata(
  * Generates complete default metadata for Next.js
  */
 export function generateCompleteDefaultMetadata(
-  overrides?: Partial<MetadataConfig>
+  overrides?: Partial<MetadataConfig>,
 ): CompleteMetadata {
   const config = generateDefaultMetadata(overrides);
 
@@ -131,7 +131,7 @@ export function generateCompleteDefaultMetadata(
  */
 export function validateImageDimensions(
   width: number,
-  height: number
+  height: number,
 ): {
   isValid: boolean;
   width: number;
@@ -211,7 +211,7 @@ export function validateImageUrl(imageUrl?: string): string | undefined {
  */
 export function formatDescription(
   description: string,
-  maxLength: number = 300
+  maxLength: number = 300,
 ): string {
   if (description.length <= maxLength) {
     return description;
@@ -233,7 +233,7 @@ export function formatDescription(
  */
 export function getSocialImage(
   type: "app" | "wizard" | "duel",
-  status?: "active" | "completed" | "waiting"
+  status?: "active" | "completed" | "waiting",
 ): string {
   switch (type) {
     case "app":
@@ -266,7 +266,7 @@ export function generateCacheKey(type: "wizard" | "duel", id: string): string {
  * Optimizes Convex storage URL for social media sharing
  */
 export function optimizeConvexImageUrl(
-  storageUrl: string | null | undefined
+  storageUrl: string | null | undefined,
 ): string | undefined {
   if (!storageUrl) {
     return undefined;
@@ -350,7 +350,7 @@ export function getDuelImageUrl(duel: {
  */
 export function resolveStorageUrl(
   storageId: string | undefined,
-  fallbackUrl: string
+  fallbackUrl: string,
 ): string {
   // This is a placeholder - the actual URL resolution happens in Convex queries
   // The storageId will be resolved to a full URL by the getOptimizedImageUrl query
@@ -362,7 +362,7 @@ export function resolveStorageUrl(
  */
 export function processImageForMetadata(
   imageUrl: string | undefined,
-  fallbackUrl: string
+  fallbackUrl: string,
 ): string {
   if (!imageUrl) {
     return validateImageUrl(fallbackUrl) || DEFAULT_SOCIAL_IMAGES.app;
@@ -516,7 +516,7 @@ export function canonicalizeUrl(url: string): {
     };
   } catch (error) {
     issues.push(
-      `Invalid URL format: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Invalid URL format: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
     return {
       canonicalUrl: url,
@@ -542,7 +542,7 @@ export function validateMetadataConfig(config: MetadataConfig): {
     issues.push("Title is required");
   } else if (config.title.length > 60) {
     warnings.push(
-      "Title is longer than 60 characters and may be truncated in search results"
+      "Title is longer than 60 characters and may be truncated in search results",
     );
   }
 
@@ -596,7 +596,7 @@ export function generateWizardMetadata(
     winRate: number;
     totalDuels: number;
   },
-  imageUrl?: string
+  imageUrl?: string,
 ): MetadataConfig {
   const wins = wizard.wins || 0;
   const losses = wizard.losses || 0;
@@ -655,7 +655,7 @@ export function generateCompleteWizardMetadata(
     winRate: number;
     totalDuels: number;
   },
-  imageUrl?: string
+  imageUrl?: string,
 ): CompleteMetadata {
   const config = generateWizardMetadata(wizard, imageUrl);
 
@@ -730,22 +730,15 @@ export function generateDuelMetadata(
     featuredIllustration?: string;
     latestRoundIllustration?: string;
   },
-  imageUrl?: string
+  imageUrl?: string,
 ): MetadataConfig {
   const wizardNames = duel.wizards.map((w) => w.name);
 
   // Create status-aware title
   let title: string;
-  if (duel.status === "COMPLETED" && duel.winners && duel.losers) {
-    const winnerNames = duel.winners
-      .map((winnerId) => duel.wizards.find((w) => w._id === winnerId)?.name)
-      .filter(Boolean)
-      .join(" & ");
-    const loserNames = duel.losers
-      .map((loserId) => duel.wizards.find((w) => w._id === loserId)?.name)
-      .filter(Boolean)
-      .join(" & ");
-    title = `Epic Duel: ${winnerNames} defeated ${loserNames}`;
+  if (duel.status === "COMPLETED") {
+    // Shared links are watched as replays, so the title keeps the winner secret.
+    title = `Epic Duel: ${wizardNames.join(" vs ")} · Who will prevail?`;
   } else if (duel.status === "IN_PROGRESS") {
     title = `Live Duel: ${wizardNames.join(" vs ")}`;
   } else if (duel.status === "WAITING_FOR_PLAYERS") {
@@ -820,7 +813,7 @@ export function generateCompleteDuelMetadata(
     featuredIllustration?: string;
     latestRoundIllustration?: string;
   },
-  imageUrl?: string
+  imageUrl?: string,
 ): CompleteMetadata {
   const config = generateDuelMetadata(duel, imageUrl);
 
@@ -888,7 +881,7 @@ export function generateCompleteDuelMetadata(
  * Maps duel status to social image status
  */
 function mapDuelStatus(
-  status: "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+  status: "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
 ): "active" | "completed" | "waiting" {
   switch (status) {
     case "COMPLETED":
@@ -919,7 +912,7 @@ export interface UserProfileMetadata {
  * Generates user profile metadata for social media sharing
  */
 export function generateUserProfileMetadata(
-  userProfile: UserProfileMetadata
+  userProfile: UserProfileMetadata,
 ): MetadataConfig {
   const displayName = userProfile.displayName || userProfile.userId;
   const wizardText = userProfile.totalWizards === 1 ? "wizard" : "wizards";
@@ -966,7 +959,7 @@ export function generateUserProfileMetadata(
  * Generates complete Next.js metadata for user profile pages
  */
 export function generateCompleteUserProfileMetadata(
-  userProfile: UserProfileMetadata
+  userProfile: UserProfileMetadata,
 ): CompleteMetadata {
   const config = generateUserProfileMetadata(userProfile);
 
@@ -975,7 +968,7 @@ export function generateCompleteUserProfileMetadata(
   if (!validation.isValid) {
     console.error(
       `User profile metadata validation failed:`,
-      validation.issues
+      validation.issues,
     );
   }
   if (validation.warnings.length > 0) {

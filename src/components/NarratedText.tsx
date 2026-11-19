@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { ChevronDown, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { api } from "../../convex/_generated/api";
@@ -15,6 +15,22 @@ export interface RoundNarration {
 
 const AUTOPLAY_KEY = "narrationAutoplay";
 const FRESH_MS = 90_000;
+/** Fired when a narration starts, so any other narration on the page pauses. */
+const PLAY_EVENT = "duel-narration-play";
+
+/**
+ * Asks the player to start from the beginning. `force` plays even when the
+ * viewer turned autoplay off (an explicit "replay this round").
+ */
+/** Fades out whatever narration is playing (e.g. when moving to the next round). */
+export function stopAllNarration() {
+  window.dispatchEvent(new CustomEvent(PLAY_EVENT, { detail: "" }));
+}
+
+export interface NarrationPlaySignal {
+  token: number;
+  force: boolean;
+}
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds)) return "0:00";
@@ -30,22 +46,30 @@ function formatTime(seconds: number) {
  */
 export function NarratedText({
   narration,
+  playSignal,
   children,
 }: {
   narration?: RoundNarration;
+  playSignal?: NarrationPlaySignal;
   children: ReactNode;
 }) {
   if (!narration || narration.status === "FAILED") {
     return <>{children}</>;
   }
-  return <NarrationPlayer narration={narration}>{children}</NarrationPlayer>;
+  return (
+    <NarrationPlayer narration={narration} playSignal={playSignal}>
+      {children}
+    </NarrationPlayer>
+  );
 }
 
 function NarrationPlayer({
   narration,
+  playSignal,
   children,
 }: {
   narration: RoundNarration;
+  playSignal?: NarrationPlaySignal;
   children: ReactNode;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -107,6 +131,43 @@ function NarrationPlayer({
     autoplayTried.current = true;
     audio.play().catch(() => setBlocked(true)); // browser blocked autoplay
   }, [url, autoplay, inView, narration.generatedAt]);
+
+  // A reveal or replay asked for the narration. Waits for the audio URL.
+  const handledSignal = useRef<number | null>(null);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!playSignal || !audio || !url) return;
+    if (handledSignal.current === playSignal.token) return;
+    handledSignal.current = playSignal.token;
+    autoplayTried.current = true;
+    if (!playSignal.force && !autoplay) return;
+    audio.currentTime = 0;
+    audio.play().catch(() => setBlocked(true));
+  }, [playSignal, url, autoplay]);
+
+  // Only one narration plays at a time.
+  const playerId = useId();
+  useEffect(() => {
+    const onOther = (e: Event) => {
+      const audio = audioRef.current;
+      if ((e as CustomEvent<string>).detail === playerId || !audio) return;
+      if (audio.paused) return;
+      // Fade out rather than cut the announcer off mid-word.
+      const start = audio.volume;
+      let step = 0;
+      const fade = setInterval(() => {
+        step++;
+        audio.volume = Math.max(0, start * (1 - step / 8));
+        if (step >= 8) {
+          clearInterval(fade);
+          audio.pause();
+          audio.volume = start;
+        }
+      }, 60);
+    };
+    window.addEventListener(PLAY_EVENT, onOther);
+    return () => window.removeEventListener(PLAY_EVENT, onOther);
+  }, [playerId]);
 
   const toggle = () => {
     const audio = audioRef.current;
@@ -190,7 +251,13 @@ function NarrationPlayer({
               ref={audioRef}
               src={url ?? undefined}
               preload="auto"
-              onPlay={() => setPlaying(true)}
+              onPlay={() => {
+                setPlaying(true);
+                setBlocked(false);
+                window.dispatchEvent(
+                  new CustomEvent(PLAY_EVENT, { detail: playerId }),
+                );
+              }}
               onPause={() => setPlaying(false)}
               onEnded={() => setPlaying(false)}
               onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}

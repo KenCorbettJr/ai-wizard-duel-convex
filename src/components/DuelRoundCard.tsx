@@ -10,12 +10,23 @@ import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Crown } from "@/components/ui/crown-icon";
 import { D20Die } from "@/components/ui/d20-die";
-import { Sparkles, RefreshCw, Scroll, ChevronDown, Check } from "lucide-react";
+import {
+  Sparkles,
+  RefreshCw,
+  Scroll,
+  ChevronDown,
+  Check,
+  RotateCcw,
+  FastForward,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Doc } from "../../convex/_generated/dataModel";
-import { memo, useState, useEffect, useRef } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
-import { NarratedText } from "@/components/NarratedText";
+import {
+  NarratedText,
+  type NarrationPlaySignal,
+} from "@/components/NarratedText";
 import { useConclusionReveal } from "@/hooks/useConclusionReveal";
 
 type RoundWizard = Doc<"wizards"> | null | undefined;
@@ -28,6 +39,73 @@ interface DuelRoundCardProps {
   wizard2?: RoundWizard;
   /** The newest round stays expanded. Older completed rounds start collapsed. */
   isLatest?: boolean;
+  /**
+   * Changing this to a new non-zero value plays the staged reveal of a
+   * completed round. Zero or undefined shows the round as-is.
+   */
+  revealToken?: number;
+  /** Called when the reveal reaches the damage step, so totals can update. */
+  onRevealImpact?: (roundNumber: number) => void;
+  /** Called when the staged reveal has finished or was skipped. */
+  onRevealComplete?: (roundNumber: number) => void;
+}
+
+/** Reveal steps, in order. */
+const STAGE = {
+  START: 0,
+  SPELL_A: 1,
+  SPELL_B: 2,
+  DICE: 3,
+  IMAGE: 4,
+  RESULT: 5,
+  IMPACT: 6,
+  DONE: 7,
+} as const;
+
+/** When each step starts, in ms from the start of the reveal. */
+function revealSchedule(
+  hasImage: boolean,
+  hasSpells: boolean,
+): Array<[number, number]> {
+  const imageGap = hasImage ? 1300 : 300;
+  const spells = 150;
+  // Rounds without spells (the conclusion) go straight to the scene.
+  const dice = hasSpells ? spells + 1100 : spells;
+  // Hold on the dice long enough to read them before the view moves on.
+  const image = hasSpells ? dice + 1300 : dice;
+  const result = image + imageGap;
+  const impact = result + 1300;
+  return [
+    [STAGE.SPELL_A, spells],
+    [STAGE.SPELL_B, spells + 450],
+    [STAGE.DICE, dice],
+    [STAGE.IMAGE, image],
+    [STAGE.RESULT, result],
+    [STAGE.IMPACT, impact],
+    [STAGE.DONE, impact + 700],
+  ];
+}
+
+/** The result line, one word at a time. Whitespace (and line breaks) kept. */
+function RevealWords({ text }: { text: string }) {
+  let i = 0;
+  return (
+    <span className="reveal-words">
+      {text.split(/(\s+)/).map((part, idx) =>
+        /^\s+$/.test(part) || !part ? (
+          part
+        ) : (
+          <span
+            key={idx}
+            className="inline-block"
+            style={{ "--i": i++ } as React.CSSProperties}
+          >
+            {part}
+          </span>
+        ),
+      )}
+    </span>
+  );
 }
 
 const PROCESSING_STAGES = [
@@ -112,6 +190,9 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   wizard1: wizard1Prop,
   wizard2: wizard2Prop,
   isLatest = true,
+  revealToken,
+  onRevealImpact,
+  onRevealComplete,
 }: DuelRoundCardProps) {
   const { user } = useUser();
   const [showReprocessButton, setShowReprocessButton] = useState(false);
@@ -149,6 +230,110 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     window.addEventListener("duel-expand-round", onExpand);
     return () => window.removeEventListener("duel-expand-round", onExpand);
   }, [round.roundNumber]);
+
+  // Staged reveal. `animated` stays true after a run so the classes that
+  // played don't snap back; a static card never sets it.
+  const [stage, setStage] = useState<number>(STAGE.DONE);
+  const [animated, setAnimated] = useState(false);
+  const [playSignal, setPlaySignal] = useState<NarrationPlaySignal>();
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const callbacks = useRef({ onRevealImpact, onRevealComplete });
+  useEffect(() => {
+    callbacks.current = { onRevealImpact, onRevealComplete };
+  });
+  const notify = useRef(false); // only page-driven runs report back
+  const pendingAudio = useRef<(() => void) | null>(null);
+  const hasImage = !!round.outcome?.illustration;
+  const clearTimers = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
+  const finish = useCallback(() => {
+    if (pendingAudio.current) {
+      // Skipped before the scene: still start the announcer.
+      pendingAudio.current();
+    }
+    clearTimers();
+    setStage(STAGE.DONE);
+    if (notify.current) {
+      notify.current = false;
+      callbacks.current.onRevealImpact?.(round.roundNumber);
+      callbacks.current.onRevealComplete?.(round.roundNumber);
+    }
+  }, [round.roundNumber]);
+  const startReveal = useCallback(
+    (fromPage: boolean, forceAudio: boolean) => {
+      clearTimers();
+      notify.current = fromPage;
+      const playAudio = () => {
+        pendingAudio.current = null;
+        setPlaySignal({ token: Date.now(), force: forceAudio });
+      };
+      pendingAudio.current = playAudio;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        playAudio();
+        finish();
+        return;
+      }
+      setAnimated(true);
+      setStage(STAGE.START);
+      // Follow the reveal down the card unless the viewer takes over scrolling.
+      let follow = true;
+      const stop = () => {
+        follow = false;
+      };
+      const events = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+      events.forEach((ev) =>
+        window.addEventListener(ev, stop, { passive: true, once: true }),
+      );
+      const followTo = (id: string, block: ScrollLogicalPosition) => {
+        if (!follow) return;
+        document
+          .getElementById(id)
+          ?.scrollIntoView({ behavior: "smooth", block });
+      };
+      timers.current.push(
+        setTimeout(
+          () => events.forEach((ev) => window.removeEventListener(ev, stop)),
+          8000,
+        ),
+      );
+      for (const [step, at] of revealSchedule(
+        hasImage,
+        Object.keys(round.spells ?? {}).length > 0,
+      )) {
+        timers.current.push(
+          setTimeout(() => {
+            if (step === STAGE.DONE) {
+              finish();
+              return;
+            }
+            setStage(step);
+            const base = `round-${round.roundNumber}`;
+            if (step === STAGE.IMAGE) {
+              // The announcer starts as the scene appears.
+              playAudio();
+              followTo(`${base}-art`, "center");
+            }
+            if (step === STAGE.RESULT) followTo(`${base}-result`, "nearest");
+            if (step === STAGE.IMPACT && notify.current) {
+              callbacks.current.onRevealImpact?.(round.roundNumber);
+            }
+          }, at),
+        );
+      }
+    },
+    [finish, hasImage, round.roundNumber, round.spells],
+  );
+  useEffect(() => clearTimers, []);
+  const completed = round.status === "COMPLETED";
+  useEffect(() => {
+    if (revealToken && completed) startReveal(true, false);
+  }, [revealToken, completed, startReveal]);
+  const revealing = animated && stage < STAGE.DONE;
+  /** Class for an element that appears at `at`: hidden before, animated on. */
+  const at = (step: number, anim = "reveal-pop") =>
+    !animated ? "" : stage < step ? "reveal-wait" : anim;
 
   // Flash the card briefly when a round resolves while the viewer is here.
   const prevStatus = useRef(round.status);
@@ -273,7 +458,10 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   };
 
   // Winner of this round: more points awarded, else the smaller health loss.
-  const isWinner = (wizardId: string) => {
+  // Hidden until the reveal reaches the damage step.
+  const isWinner = (wizardId: string) =>
+    (!animated || stage >= STAGE.IMPACT) && roundWinner(wizardId);
+  const roundWinner = (wizardId: string) => {
     const [a, b] = duel.wizards;
     const compare = (rec?: Record<string, number>) =>
       rec && rec[a] !== undefined && rec[b] !== undefined
@@ -344,26 +532,27 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     <Card
       id={`round-${round.roundNumber}`}
       tabIndex={-1}
-      data-resolved={justResolved ? "true" : undefined}
+      data-resolved={justResolved && !animated ? "true" : undefined}
+      aria-busy={revealing || undefined}
       className="mb-4 outline-none data-[resolved=true]:duel-flash w-full scroll-mt-[calc(var(--app-navbar-h)+var(--duel-sticky-h,10rem)+1rem)] md:scroll-mt-[calc(var(--duel-sticky-h,10rem)+1rem)] border-border/50 bg-card/90 shadow-lg backdrop-blur-sm"
     >
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="min-w-0">
           {canCollapse ? (
-            <h2 className="w-full">
+            <h2 className="w-full min-w-0">
               <button
                 type="button"
                 onClick={() => setExpandedOverride(!expanded)}
                 aria-expanded={expanded}
                 aria-controls={bodyId}
-                className="flex w-full items-center justify-between gap-3 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="flex w-full min-w-0 items-center justify-between gap-3 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary/40"
               >
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="block text-xl font-bold text-foreground sm:text-2xl">
                     {getRoundTitle()}
                   </span>
                   {!expanded && (
-                    <span className="mt-1 block truncate text-sm font-normal text-muted-foreground">
+                    <span className="mt-1 block truncate font-sans text-sm font-normal normal-case tracking-normal text-muted-foreground">
                       {[summary, round.outcome?.result]
                         .filter(Boolean)
                         .join(" — ") || "Round complete"}
@@ -498,7 +687,32 @@ export const DuelRoundCard = memo(function DuelRoundCard({
         )}
 
         {round.status === "COMPLETED" && !conclusionLocked && (
-          <div className="space-y-6 duel-reveal">
+          <div className="space-y-6">
+            <div className="-mt-2 flex justify-end">
+              {revealing ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={finish}
+                  data-reveal-skip=""
+                  className="text-muted-foreground"
+                >
+                  <FastForward className="mr-1 h-4 w-4" aria-hidden="true" />
+                  Skip
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => startReveal(false, true)}
+                  className="text-muted-foreground"
+                  aria-label={`Replay ${getRoundTitle().toLowerCase()}`}
+                >
+                  <RotateCcw className="mr-1 h-4 w-4" aria-hidden="true" />
+                  Replay round
+                </Button>
+              )}
+            </div>
             {/* Face-off: each wizard's action, luck roll and result */}
             {round.spells && duel.wizards.length >= 2 && (
               <div className="grid gap-3 md:grid-cols-2">
@@ -509,50 +723,60 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   const roll = round.outcome?.luckRolls?.[id];
                   const hp = round.outcome?.healthChange?.[id];
                   const pts = round.outcome?.pointsAwarded?.[id];
+                  const impact = animated && stage >= STAGE.IMPACT;
+                  const hurt = (hp ?? 0) < 0;
                   return (
                     <div
                       key={id}
-                      className={`rounded-lg border p-3 ${
+                      className={`rounded-lg border p-3 transition-colors duration-500 ${
                         isWinner(id)
                           ? "border-warning/60 bg-warning/10"
                           : "border-border/60 bg-muted/30"
-                      }`}
+                      } ${at(
+                        i === 0 ? STAGE.SPELL_A : STAGE.SPELL_B,
+                        i === 0 ? "reveal-slide-left" : "reveal-slide-right",
+                      )} ${impact && isWinner(id) ? "reveal-winner" : ""}`}
                     >
-                      <div className="mb-2 flex items-center gap-3">
-                        {renderWizardThumbnail(id)}
-                        <span className="min-w-0 flex-1 truncate font-semibold">
-                          {wiz?.name ?? "Wizard"}
-                        </span>
-                        {roll !== undefined && (
-                          <D20Die value={roll} size="sm" />
-                        )}
-                      </div>
-                      {spell && (
-                        <blockquote className="break-words border-l-2 border-info/60 pl-3 text-sm italic text-foreground/90">
-                          {spell.description}
-                        </blockquote>
-                      )}
-                      {(hp !== undefined || pts !== undefined) && (
-                        <div
-                          className="mt-3 flex flex-wrap gap-2 text-sm animate-in fade-in zoom-in-90 fill-mode-both motion-reduce:animate-none"
-                          style={{ animationDelay: "900ms" }}
-                        >
-                          {hp !== undefined && (
-                            <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
-                              <span className="text-muted-foreground">HP</span>
-                              <DeltaValue value={hp} />
-                            </span>
-                          )}
-                          {pts !== undefined && (
-                            <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
-                              <span className="text-muted-foreground">
-                                Points
-                              </span>
-                              <DeltaValue value={pts} />
-                            </span>
+                      <div className={impact && hurt ? "duel-hit" : ""}>
+                        <div className="mb-2 flex items-center gap-3">
+                          {renderWizardThumbnail(id)}
+                          <span className="min-w-0 flex-1 truncate font-semibold">
+                            {wiz?.name ?? "Wizard"}
+                          </span>
+                          {roll !== undefined && (
+                            <div className={at(STAGE.DICE, "reveal-roll")}>
+                              <D20Die value={roll} size="sm" />
+                            </div>
                           )}
                         </div>
-                      )}
+                        {spell && (
+                          <blockquote className="break-words border-l-2 border-info/60 pl-3 text-sm italic text-foreground/90">
+                            {spell.description}
+                          </blockquote>
+                        )}
+                        {(hp !== undefined || pts !== undefined) && (
+                          <div
+                            className={`mt-3 flex flex-wrap gap-2 text-sm ${at(STAGE.IMPACT, "reveal-impact")}`}
+                          >
+                            {hp !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
+                                <span className="text-muted-foreground">
+                                  HP
+                                </span>
+                                <DeltaValue value={hp} />
+                              </span>
+                            )}
+                            {pts !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
+                                <span className="text-muted-foreground">
+                                  Points
+                                </span>
+                                <DeltaValue value={pts} />
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -561,8 +785,12 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
             {/* Round Illustration or Text-Only Placeholder */}
             {round.outcome?.illustration ? (
-              <div className="bg-black aspect-square mb-4 max-w-2xl mx-auto rounded-lg overflow-hidden">
+              <div
+                id={`round-${round.roundNumber}-art`}
+                className={`bg-black aspect-square mb-4 max-w-2xl mx-auto rounded-lg overflow-hidden ${at(STAGE.IMAGE, "")}`}
+              >
                 <ConvexImage
+                  className={`w-full h-full object-cover ${at(STAGE.IMAGE, "reveal-image")}`}
                   storageId={round.outcome.illustration}
                   alt={
                     round.outcome.illustrationPrompt ||
@@ -570,11 +798,12 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   }
                   width={800}
                   height={800}
-                  className="w-full h-full object-cover"
                 />
               </div>
             ) : duel.textOnlyMode && round.outcome?.illustrationPrompt ? (
-              <div className="bg-linear-to-br from-warning/20 to-gold/10 border-2 border-dashed border-warning/40 aspect-square mb-4 max-w-2xl mx-auto rounded-lg flex items-center justify-center p-8">
+              <div
+                className={`${at(STAGE.IMAGE)} bg-linear-to-br from-warning/20 to-gold/10 border-2 border-dashed border-warning/40 aspect-square mb-4 max-w-2xl mx-auto rounded-lg flex items-center justify-center p-8`}
+              >
                 <div className="text-center">
                   <div className="text-6xl mb-4">📜</div>
                   <h3 className="text-lg font-semibold text-warning mb-2">
@@ -594,27 +823,43 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
             {/* Result teaser, always visible and not read aloud */}
             {round.outcome?.result && (
-              <div className="whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed">
-                {round.outcome.result}
+              <div
+                id={`round-${round.roundNumber}-result`}
+                className={`scroll-mb-6 whitespace-pre-line text-xl italic text-foreground/90 leading-relaxed ${
+                  animated && stage < STAGE.RESULT ? "reveal-wait" : ""
+                }`}
+              >
+                {animated && stage >= STAGE.RESULT && revealing ? (
+                  <RevealWords text={round.outcome.result} />
+                ) : (
+                  round.outcome.result
+                )}
               </div>
             )}
 
             {/* Narration audio, with the written text in a dropdown */}
             {round.outcome?.narrative && (
-              <NarratedText narration={round.narration}>
-                <div className="whitespace-pre-line">
-                  <div className="text-foreground/80 leading-relaxed">
-                    {round.outcome.narrative}
+              <div className={at(STAGE.RESULT, "reveal-pop")}>
+                <NarratedText
+                  narration={round.narration}
+                  playSignal={playSignal}
+                >
+                  <div className="whitespace-pre-line">
+                    <div className="text-foreground/80 leading-relaxed">
+                      {round.outcome.narrative}
+                    </div>
                   </div>
-                </div>
-              </NarratedText>
+                </NarratedText>
+              </div>
             )}
 
             {/* Outcome Table */}
             {(round.outcome?.pointsAwarded ||
               round.outcome?.healthChange ||
               round.outcome?.luckRolls) && (
-              <details className="rounded-lg border border-border/50 p-3">
+              <details
+                className={`rounded-lg border border-border/50 p-3 ${at(STAGE.IMPACT, "reveal-pop")}`}
+              >
                 <summary className="cursor-pointer font-semibold focus-visible:ring-2 focus-visible:ring-primary/40 rounded">
                   Outcome details
                 </summary>

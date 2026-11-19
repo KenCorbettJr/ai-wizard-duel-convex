@@ -55,6 +55,11 @@ interface DuelScoreboardProps {
   hideOutcome?: boolean;
   /** Rendered as the bottom row, e.g. the round timeline. */
   children?: ReactNode;
+  /**
+   * Set while the viewer is replaying rounds they haven't watched yet. Shows
+   * the round being watched instead of the live state, and hides live actions.
+   */
+  replay?: { round: number };
 }
 
 export function describeTurn(args: {
@@ -322,6 +327,7 @@ export const DuelScoreboard = memo(function DuelScoreboard({
   viewerKnown = true,
   hideOutcome = false,
   children,
+  replay,
 }: DuelScoreboardProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const [undoing, setUndoing] = useState(false);
@@ -345,17 +351,30 @@ export const DuelScoreboard = memo(function DuelScoreboard({
   }, []);
   const nameOf = (id: Id<"wizards">) =>
     wizards.find((w) => w?._id === id)?.name ?? "the other wizard";
-  const turn = describeTurn({
-    duelStatus,
-    roundStatus,
-    userWizardId,
-    needActionsFrom,
-    wizardIds,
-    nameOf,
-  });
-  const inRound = duelStatus === "IN_PROGRESS";
-  const roundLabel =
-    duelStatus === "WAITING_FOR_PLAYERS"
+  const turn: ReturnType<typeof describeTurn> = replay
+    ? {
+        text:
+          replay.round === 0
+            ? "Replay: the arena awaits"
+            : `Replay: watching round ${replay.round}`,
+        tone: "idle",
+      }
+    : describeTurn({
+        duelStatus,
+        roundStatus,
+        userWizardId,
+        needActionsFrom,
+        wizardIds,
+        nameOf,
+      });
+  const inRound = duelStatus === "IN_PROGRESS" && !replay;
+  const roundLabel = replay
+    ? replay.round === 0
+      ? "Introduction"
+      : typeof numberOfRounds === "number"
+        ? `Round ${replay.round} of ${numberOfRounds}`
+        : `Round ${replay.round} · To the death`
+    : duelStatus === "WAITING_FOR_PLAYERS"
       ? "Duel lobby"
       : duelStatus === "CANCELLED"
         ? "Cancelled"
@@ -450,7 +469,7 @@ export const DuelScoreboard = memo(function DuelScoreboard({
               )}
             </Button>
           )}
-        {duelStatus === "COMPLETED" && onReveal && (
+        {duelStatus === "COMPLETED" && onReveal && !replay && (
           <Button size="sm" onClick={onReveal}>
             Reveal<span className="hidden sm:inline"> the result</span>
           </Button>

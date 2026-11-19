@@ -92,58 +92,62 @@ export function D20Die({ value, className, size = "md" }: D20DieProps) {
         ...getColorStyle(value),
       }}
       title={`Luck Roll: ${value}/20`}
+      role="img"
+      aria-label={`Luck roll ${value} of 20`}
     >
-      <div
-        className="absolute w-full h-full transition-transform duration-500 ease-out cursor-pointer"
-        style={{
-          transformStyle: "preserve-3d",
-          transform: `${getDieRotation(value)}`,
-        }}
-      >
-        {/* Generate all 20 faces */}
-        {Array.from({ length: 20 }, (_, i) => {
-          const faceNumber = i + 1;
-          const isTargetFace = faceNumber === value;
-          const faceOpacity = isTargetFace ? 1 : 0.85; // Darken non-target faces
-          const textOpacity = isTargetFace ? 1 : 0.85; // Slightly darken text on non-target faces
+      <div aria-hidden="true" className="contents">
+        <div
+          className="absolute w-full h-full transition-transform duration-500 ease-out cursor-pointer"
+          style={{
+            transformStyle: "preserve-3d",
+            transform: `${getDieRotation(value)}`,
+          }}
+        >
+          {/* Generate all 20 faces */}
+          {Array.from({ length: 20 }, (_, i) => {
+            const faceNumber = i + 1;
+            const isTargetFace = faceNumber === value;
+            const faceOpacity = isTargetFace ? 1 : 0.85; // Darken non-target faces
+            const textOpacity = isTargetFace ? 1 : 0.85; // Slightly darken text on non-target faces
 
-          return (
-            <div
-              key={faceNumber}
-              className="absolute font-bold"
-              style={{
-                left: "50%",
-                top: "0",
-                marginLeft: `-${config.faceWidth / 2}px`,
-                width: "0",
-                height: "0",
-                borderLeft: `${config.faceWidth / 2}px solid transparent`,
-                borderRight: `${config.faceWidth / 2}px solid transparent`,
-                borderBottom: `${config.faceHeight}px solid var(--face-color)`,
-                transformStyle: "preserve-3d",
-                backfaceVisibility: "hidden",
-                opacity: faceOpacity,
-                ...getFaceTransform(faceNumber, config),
-              }}
-            >
-              <span
-                className="absolute font-bold text-center leading-none"
+            return (
+              <div
+                key={faceNumber}
+                className="absolute font-bold"
                 style={{
-                  top: `${config.faceHeight * 0.25}px`,
-                  left: `-${config.faceWidth}px`,
-                  width: `${config.faceWidth * 2}px`,
-                  height: `${config.faceHeight}px`,
-                  color: "var(--text-color)",
-                  fontSize: config.fontSize,
-                  lineHeight: `${config.faceHeight * 0.9}px`,
-                  opacity: textOpacity,
+                  left: "50%",
+                  top: "0",
+                  marginLeft: `-${config.faceWidth / 2}px`,
+                  width: "0",
+                  height: "0",
+                  borderLeft: `${config.faceWidth / 2}px solid transparent`,
+                  borderRight: `${config.faceWidth / 2}px solid transparent`,
+                  borderBottom: `${config.faceHeight}px solid var(--face-color)`,
+                  transformStyle: "preserve-3d",
+                  backfaceVisibility: "hidden",
+                  opacity: faceOpacity,
+                  ...getFaceTransform(faceNumber, config),
                 }}
               >
-                {faceNumber}
-              </span>
-            </div>
-          );
-        })}
+                <span
+                  className="absolute font-bold text-center leading-none"
+                  style={{
+                    top: `${config.faceHeight * 0.25}px`,
+                    left: `-${config.faceWidth}px`,
+                    width: `${config.faceWidth * 2}px`,
+                    height: `${config.faceHeight}px`,
+                    color: "var(--text-color)",
+                    fontSize: config.fontSize,
+                    lineHeight: `${config.faceHeight * 0.9}px`,
+                    opacity: textOpacity,
+                  }}
+                >
+                  {faceNumber}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

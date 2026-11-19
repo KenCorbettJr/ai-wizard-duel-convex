@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef } from "react";
-import { Check, Loader2, Clock } from "lucide-react";
+import { Check, Loader2, Clock, Eye } from "lucide-react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 
 interface RoundTimelineProps {
@@ -11,6 +11,12 @@ interface RoundTimelineProps {
   wizardNames: [string, string];
   /** Total rounds for fixed-length duels, to show upcoming rounds. */
   totalRounds?: number;
+  /**
+   * Rounds after this one haven't been watched yet. Their results are hidden
+   * and their chips skip ahead instead of jumping.
+   */
+  revealedThrough?: number;
+  onRevealTo?: (roundNumber: number) => void;
 }
 
 const fmt = (n: number) => (n > 0 ? `+${n}` : `${n}`);
@@ -22,6 +28,8 @@ export const RoundTimeline = memo(function RoundTimeline({
   currentRound,
   wizardNames,
   totalRounds,
+  revealedThrough,
+  onRevealTo,
 }: RoundTimelineProps) {
   const currentChip = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLOListElement>(null);
@@ -39,7 +47,7 @@ export const RoundTimeline = memo(function RoundTimeline({
     .sort((a, b) => a.roundNumber - b.roundNumber);
   if (items.length < 1 && totalRounds === undefined) return null;
   const short = wizardNames.map(
-    (n) => n.trim().split(/\s+/)[0].slice(0, 6) || "?",
+    (n) => n.trim().split(/\s+/)[0].slice(0, 7) || "?",
   ) as [string, string];
   if (short[0].toLowerCase() === short[1].toLowerCase()) {
     short[0] = "P1";
@@ -73,7 +81,25 @@ export const RoundTimeline = memo(function RoundTimeline({
     <nav aria-label="Round timeline" className="mt-3">
       <ol ref={list} className="relative flex gap-2 overflow-x-auto pb-1">
         {items.map((r) => {
-          const done = r.status === "COMPLETED";
+          const unseen =
+            revealedThrough !== undefined && r.roundNumber > revealedThrough;
+          const done = r.status === "COMPLETED" && !unseen;
+          if (unseen && r.status === "COMPLETED") {
+            return (
+              <li key={r._id} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onRevealTo?.(r.roundNumber)}
+                  aria-label={`Round ${r.roundNumber}, not watched yet. Skip ahead to it`}
+                  title="Not watched yet. Skip ahead"
+                  className="flex items-center gap-1.5 min-h-8 rounded-full border border-dashed border-border/60 bg-card/60 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground sm:px-3 focus-visible:ring-2 focus-visible:ring-primary/50"
+                >
+                  <span className="font-semibold">R{r.roundNumber}</span>
+                  <Eye className="h-3 w-3 opacity-60" aria-hidden="true" />
+                </button>
+              </li>
+            );
+          }
           const changes = wizardIds
             .slice(0, 2)
             .map((id) => r.outcome?.healthChange?.[id] ?? 0);
