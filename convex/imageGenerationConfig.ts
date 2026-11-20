@@ -9,12 +9,16 @@ export const getImageGenerationConfig = query({
   returns: v.object({
     useGemini: v.boolean(),
     hasGeminiApiKey: v.boolean(),
+    useBfl: v.boolean(),
+    hasBflApiKey: v.boolean(),
     hasFalApiKey: v.boolean(),
   }),
   handler: async () => {
     return {
       useGemini: process.env.USE_GEMINI_FOR_IMAGES === "true",
       hasGeminiApiKey: !!process.env.GOOGLE_API_KEY,
+      useBfl: process.env.USE_BFL_FOR_IMAGES === "true",
+      hasBflApiKey: !!process.env.BFL_API_KEY,
       hasFalApiKey: !!process.env.FAL_KEY,
     };
   },

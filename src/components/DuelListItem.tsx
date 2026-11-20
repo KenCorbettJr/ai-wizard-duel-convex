@@ -225,7 +225,7 @@ export function DuelListItem({
 
     return (
       <div
-        className={`flex items-center gap-3 p-2 border rounded ${bgClass}`}
+        className={`flex flex-wrap items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded ${bgClass}`}
         data-testid="duel-list-item"
       >
         {/* Wizard avatars or featured illustration */}
@@ -242,8 +242,8 @@ export function DuelListItem({
                     <ConvexImage
                       storageId={wizard.illustration}
                       alt={`${wizard.name} avatar`}
-                      width={32}
-                      height={32}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -264,8 +264,8 @@ export function DuelListItem({
               <ConvexImage
                 storageId={duel.featuredIllustration}
                 alt="Duel illustration"
-                width={48}
-                height={48}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -276,8 +276,8 @@ export function DuelListItem({
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+        <div className="flex-1 min-w-[9rem]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
             {getStatusBadge()}
             {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
               <code
@@ -302,8 +302,15 @@ export function DuelListItem({
         </div>
 
         {showActions && (
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/duels/${duel._id}`}>View</Link>
+          <Button
+            asChild
+            variant={duel.status === "IN_PROGRESS" ? "default" : "outline"}
+            size="sm"
+            className="ml-auto shrink-0"
+          >
+            <Link href={`/duels/${duel._id}`}>
+              {duel.status === "IN_PROGRESS" ? "Resume" : "View"}
+            </Link>
           </Button>
         )}
       </div>
@@ -323,8 +330,9 @@ export function DuelListItem({
             <ConvexImage
               storageId={duel.featuredIllustration}
               alt="Duel illustration"
-              width={500}
-              height={256}
+              width={800}
+              height={512}
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -341,8 +349,9 @@ export function DuelListItem({
                   <ConvexImage
                     storageId={wizards[0].illustration}
                     alt={`${wizards[0].name} avatar`}
-                    width={64}
-                    height={64}
+                    width={256}
+                    height={256}
+                    sizes="128px"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -370,8 +379,9 @@ export function DuelListItem({
                     <ConvexImage
                       storageId={wizards[1].illustration}
                       alt={`${wizards[1].name} avatar`}
-                      width={64}
-                      height={64}
+                      width={256}
+                      height={256}
+                      sizes="128px"
                       className="w-full h-full object-cover"
                     />
                   ) : (

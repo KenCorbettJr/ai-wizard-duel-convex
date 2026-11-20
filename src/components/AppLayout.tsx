@@ -10,7 +10,8 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
-  const isHomePage = pathname === "/";
+  // The dev-only home preview renders the dashboard, which brings its own sidebar.
+  const isHomePage = pathname === "/" || pathname === "/design/home";
 
   return (
     <>

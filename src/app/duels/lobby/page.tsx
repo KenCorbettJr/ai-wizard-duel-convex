@@ -111,7 +111,7 @@ export default function DuelLobbyPage() {
   if (userRecentDuel && !userLobbyStatus) {
     return (
       <MagicVortex className="min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="@container container mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
               <RuneSpinner size="md" label="Loading…" />
@@ -155,7 +155,7 @@ export default function DuelLobbyPage() {
       rangeRadius={1.5}
       className="min-h-screen"
     >
-      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="@container container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -207,7 +207,7 @@ export default function DuelLobbyPage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-6">
           {/* Join Lobby Section */}
           <Card className="bg-card/90 backdrop-blur-sm">
             <CardHeader>

@@ -214,8 +214,8 @@ function Combatant({
               <ConvexImage
                 storageId={wizard.illustration}
                 alt=""
-                width={80}
-                height={80}
+                width={160}
+                height={160}
                 className="h-full w-full object-cover object-top"
               />
             ) : (
@@ -240,7 +240,7 @@ function Combatant({
                 width={1024}
                 height={1024}
                 sizes="(min-width: 512px) 480px, 100vw"
-                quality={92}
+                quality={95}
                 className="h-full w-full object-cover object-top"
               />
             </div>
@@ -274,7 +274,7 @@ function Combatant({
             {name}
           </span>
           {isYou && (
-            <span className="shrink-0 rounded bg-info/20 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-info">
+            <span className="hidden shrink-0 rounded bg-info/20 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-info min-[420px]:inline">
               You
             </span>
           )}

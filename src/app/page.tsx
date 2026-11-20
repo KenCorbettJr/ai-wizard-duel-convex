@@ -63,6 +63,10 @@ function LandingPage() {
             <p className="text-2xl text-white mb-4">
               Where Wizards Clash and Legends Rise!
             </p>
+            <p className="text-lg text-white/90 mb-6">
+              Duel other players, or take on a ten-wizard campaign to earn a
+              permanent relic.
+            </p>
             <Show when="signed-out">
               <Button
                 asChild
@@ -118,6 +122,39 @@ function LandingPage() {
                 description="Experience the thrill of simultaneous spellcasting, where every decision counts."
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Campaign */}
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <h2 className="text-3xl font-bold mb-6 font-display">
+              Not Ready for Players? Take On the Campaign
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Face ten AI-powered wizards in order, from gentle apprentices to
+              archmages. Beat them all to earn a permanent relic that boosts
+              your luck in every duel, no other player required.
+            </p>
+          </div>
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+            <FeatureCard
+              icon={Trophy}
+              title="Ten Opponents"
+              description="Beginner, intermediate and advanced wizards, each with their own personality and spell style."
+            />
+            <FeatureCard
+              icon={Crown}
+              title="Earn a Relic"
+              description="Win the full campaign for a lasting Luck bonus that follows your wizard into every duel."
+            />
+            <FeatureCard
+              icon={Coins}
+              title="One Token a Battle"
+              description="Start with 10 free tokens. Lose a fight and you can try again whenever you like."
+            />
           </div>
         </div>
       </section>

@@ -28,6 +28,10 @@ if (process.env.ENV === "emulate") {
 const nextConfig: NextConfig = {
   images: {
     remotePatterns,
+    // Next 16 rejects any quality not listed here and falls back to 75, which
+    // visibly softens the already-compressed illustrations. 90 is the default
+    // for ConvexImage; 95 is for large hero art (round, intro, portrait dialog).
+    qualities: [75, 90, 95],
   },
   cacheComponents: true,
   reactCompiler: true,

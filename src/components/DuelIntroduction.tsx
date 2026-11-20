@@ -64,7 +64,7 @@ export const DuelIntroduction = memo(function DuelIntroduction({
             width={1024}
             height={1024}
             sizes="(min-width: 672px) 672px, 100vw"
-            quality={92}
+            quality={95}
             className="w-full h-full object-cover"
           />
         </div>

@@ -33,7 +33,7 @@ export default function DuelsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
+      <div className="@container container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <PageHeader
           title="Magical Duels"
           description="Manage your active duels, join existing battles, or create new
@@ -55,7 +55,7 @@ export default function DuelsPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid @3xl:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export default function DuelsPage() {
           </SuperAdminOnly>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid @5xl:grid-cols-2 gap-8">
           <div>
             <h3 className="text-2xl font-bold text-foreground mb-4 font-display">
               Your Duels

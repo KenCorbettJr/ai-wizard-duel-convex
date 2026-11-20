@@ -4,7 +4,23 @@ import { useWaitlistStatus } from "@/hooks/useWaitlistStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { ReactNode } from "react";
+import { createContext, ReactNode, useContext } from "react";
+
+/** Lets the dev-only /design/home preview render guarded content signed out. */
+const WaitlistGuardBypass = createContext(false);
+
+/** Client wrapper so server components can opt a subtree out of the guard. */
+export function WaitlistGuardBypassProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <WaitlistGuardBypass.Provider value>
+      {children}
+    </WaitlistGuardBypass.Provider>
+  );
+}
 
 export interface WaitlistGuardProps {
   children: ReactNode;
@@ -22,6 +38,9 @@ export interface WaitlistGuardProps {
  */
 export function WaitlistGuard({ children, fallback }: WaitlistGuardProps) {
   const { isApproved, isPending, isLoading } = useWaitlistStatus();
+  const bypass = useContext(WaitlistGuardBypass);
+
+  if (bypass) return <>{children}</>;
 
   // Show loading state while checking waitlist status
   if (isLoading) {

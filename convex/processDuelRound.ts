@@ -11,6 +11,7 @@ import { Id } from "./_generated/dataModel";
 import { api, internal } from "./_generated/api";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
+import { useReferenceImageProvider } from "./lib/imageProvider";
 import { Wizard } from "@/types/wizard";
 
 // Zod schema for structured AI output
@@ -335,8 +336,8 @@ export const processDuelRound = action({
 
       // Schedule round illustration generation (with credit checking)
       if (process.env.NODE_ENV !== "test" && battleResult.illustrationPrompt) {
-        // Check if we should use Gemini Nano Banana
-        const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+        // Check if we should use an AI reference-image provider (BFL or Gemini)
+        const useGemini = useReferenceImageProvider();
 
         // Determine which user should be charged for the image generation
         // Use the first player in the duel for credit consumption

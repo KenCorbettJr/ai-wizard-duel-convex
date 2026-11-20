@@ -132,8 +132,8 @@ export function CampaignPathMap({
                   <ConvexImage
                     storageId={portrait}
                     alt=""
-                    width={48}
-                    height={48}
+                    width={96}
+                    height={96}
                     className={cn(
                       "h-full w-full object-cover object-top",
                       status === "defeated" && "opacity-50",

@@ -243,6 +243,13 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   const notify = useRef(false); // only page-driven runs report back
   const pendingAudio = useRef<(() => void) | null>(null);
   const hasImage = !!round.outcome?.illustration;
+  // Read at the moment a reveal starts. Keeping these out of startReveal's
+  // dependencies stops images or spell data arriving mid-reveal from
+  // restarting it (and with it the narration).
+  const revealInputs = useRef({ hasImage, spells: round.spells });
+  useEffect(() => {
+    revealInputs.current = { hasImage, spells: round.spells };
+  });
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
@@ -297,9 +304,10 @@ export const DuelRoundCard = memo(function DuelRoundCard({
           8000,
         ),
       );
+      const { hasImage: withImage, spells } = revealInputs.current;
       for (const [step, at] of revealSchedule(
-        hasImage,
-        Object.keys(round.spells ?? {}).length > 0,
+        withImage,
+        Object.keys(spells ?? {}).length > 0,
       )) {
         timers.current.push(
           setTimeout(() => {
@@ -322,12 +330,17 @@ export const DuelRoundCard = memo(function DuelRoundCard({
         );
       }
     },
-    [finish, hasImage, round.roundNumber, round.spells],
+    [finish, round.roundNumber],
   );
   useEffect(() => clearTimers, []);
   const completed = round.status === "COMPLETED";
+  // Each reveal token starts one reveal, even if this effect re-runs.
+  const handledReveal = useRef<number | undefined>(undefined);
   useEffect(() => {
-    if (revealToken && completed) startReveal(true, false);
+    if (!revealToken || !completed) return;
+    if (handledReveal.current === revealToken) return;
+    handledReveal.current = revealToken;
+    startReveal(true, false);
   }, [revealToken, completed, startReveal]);
   const revealing = animated && stage < STAGE.DONE;
   /** Class for an element that appears at `at`: hidden before, animated on. */
@@ -491,8 +504,8 @@ export const DuelRoundCard = memo(function DuelRoundCard({
         <ConvexImage
           storageId={wizard.illustration}
           alt={wizard.name}
-          width={48}
-          height={48}
+          width={96}
+          height={96}
           className="w-full h-full object-cover"
         />
       </div>
@@ -698,7 +711,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
             </div>
             {/* Face-off: each wizard's action, luck roll and result */}
             {round.spells && duel.wizards.length >= 2 && (
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {[0, 1].map((i) => {
                   const id = duel.wizards[i];
                   const wiz = i === 0 ? wizard1 : wizard2;
@@ -711,7 +724,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   return (
                     <div
                       key={id}
-                      className={`rounded-lg border p-3 transition-colors duration-500 ${
+                      className={`min-w-0 rounded-lg border p-3 transition-colors duration-500 ${
                         isWinner(id)
                           ? "border-warning/60 bg-warning/10"
                           : "border-border/60 bg-muted/30"
@@ -782,7 +795,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   width={1024}
                   height={1024}
                   sizes="(min-width: 672px) 672px, 100vw"
-                  quality={92}
+                  quality={95}
                 />
               </div>
             ) : duel.textOnlyMode && round.outcome?.illustrationPrompt ? (

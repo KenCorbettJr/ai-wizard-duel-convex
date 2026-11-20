@@ -8,6 +8,7 @@ import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
+import { useReferenceImageProvider } from "./lib/imageProvider";
 import {
   generateObject,
   type AIObservabilityContext,
@@ -113,8 +114,8 @@ export const generateDuelIntroduction = action({
       if (introduction.illustrationPrompt && !textOnlyMode) {
         // Skip introduction illustration scheduling to avoid transaction escape errors in tests
         if (process.env.NODE_ENV !== "test") {
-          // Check if we should use Gemini Nano Banana
-          const useGemini = process.env.USE_GEMINI_FOR_IMAGES === "true";
+          // Check if we should use an AI reference-image provider (BFL or Gemini)
+          const useGemini = useReferenceImageProvider();
 
           await ctx.scheduler.runAfter(
             100, // Add small delay to ensure database transaction is committed

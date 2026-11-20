@@ -218,6 +218,19 @@
       );
     background-attachment: fixed;
   }
+  /* Nothing should ever make the page pannable sideways on a phone. `clip`
+     (unlike `hidden`) keeps position: sticky working. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+  /* Fixed backgrounds repaint on every scroll frame on mobile browsers and
+     jitter fixed headers while the address bar collapses. */
+  @media (max-width: 767px) {
+    body {
+      background-attachment: scroll;
+    }
+  }
   h1,
   h2,
   h3 {
@@ -715,7 +728,7 @@
 }
 
 :root {
-  --app-navbar-h: 77px;
+  --app-navbar-h: 61px;
 }
 
 /* Keep the sticky scoreboard short on phones while the composer is open. */

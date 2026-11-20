@@ -67,8 +67,8 @@ export function WizardSelectionCard({
                 <ConvexImage
                   storageId={wizard.illustration}
                   alt={wizard.name}
-                  width={64}
-                  height={64}
+                  width={128}
+                  height={128}
                   className="w-full h-full object-cover"
                 />
               ) : wizard.illustrationURL ? (
@@ -216,8 +216,8 @@ export function WizardSelectionCard({
               <ConvexImage
                 storageId={wizard.illustration}
                 alt={wizard.name}
-                width={48}
-                height={48}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             ) : wizard.illustrationURL ? (

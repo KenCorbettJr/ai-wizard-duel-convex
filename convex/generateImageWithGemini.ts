@@ -10,6 +10,8 @@ import { captureAIGeneration, captureServerEvent } from "./lib/posthog";
 import { generateObject } from "./aiTextGeneration";
 import { estimateTokenCostUsd } from "./lib/aiPricing";
 import { recordAIUsage } from "./lib/recordAIUsage";
+import { generateWithBfl, BFL_IMAGE_MODEL } from "./lib/bflImage";
+import { isBflEnabled } from "./lib/imageProvider";
 
 const GEMINI_IMAGE_MODEL = "gemini-nano-banana-2.1";
 
@@ -24,6 +26,7 @@ import { z } from "genkit/beta";
 // Attempt 1 uses the original prompt. Attempt 2 uses a prompt rewritten to
 // remove named/copyrighted characters, which is the most likely refusal cause.
 const GEMINI_MAX_ATTEMPTS = 2;
+const BFL_MAX_ATTEMPTS = 2;
 const MAX_FAL_REFERENCE_IMAGES = 4;
 
 type WizardDescription = { name: string; description: string };
@@ -92,7 +95,7 @@ export const generateImageWithGemini = action({
         }),
       ),
     ), // Wizard descriptions for context in subsequent rounds
-    useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
+    useGemini: v.optional(v.boolean()), // Whether to use an AI reference-image provider (BFL and/or Gemini) instead of FAL
     userId: v.optional(v.string()), // For cost tracking
     sessionId: v.optional(v.string()), // For cost tracking
     feature: v.optional(v.string()), // Cost-tracking feature name (default generate_wizard_image)
@@ -152,7 +155,81 @@ export const generateImageWithGemini = action({
       });
     };
 
-    if (!(useGemini && process.env.GOOGLE_API_KEY)) {
+    // Black Forest Labs FLUX 3 Klein goes first when enabled because it is the
+    // cheapest provider that accepts reference images. Gemini and then FAL
+    // remain as fallbacks.
+    const bflEnabled = useGemini && isBflEnabled();
+    if (bflEnabled) {
+      let lastBflError: unknown;
+      for (let attempt = 1; attempt <= BFL_MAX_ATTEMPTS; attempt++) {
+        try {
+          if (attempt > 1 && !rewritten) {
+            rewritten = await rewriteForImageSafety(
+              ctx,
+              usage,
+              prompt,
+              wizardDescriptions,
+            );
+          }
+          const result = isEmulatorMode()
+            ? generateMockImageBuffer()
+            : await generateWithBfl(
+                ctx,
+                {
+                  prompt: attempt > 1 && rewritten ? rewritten.prompt : prompt,
+                  previousImage,
+                  wizardImages,
+                  wizardImageLabels,
+                  wizardDescriptions:
+                    attempt > 1 && rewritten
+                      ? rewritten.descriptions
+                      : wizardDescriptions,
+                },
+                usage,
+              );
+          await captureServerEvent("image_generation_succeeded", {
+            ...baseProps,
+            provider: "bfl",
+            model: BFL_IMAGE_MODEL,
+            attempt,
+            usedRewrittenPrompt: attempt > 1 && !!rewritten,
+            durationMs: Date.now() - started,
+          });
+          return result;
+        } catch (error) {
+          lastBflError = error;
+          console.error(
+            `BFL attempt ${attempt}/${BFL_MAX_ATTEMPTS} failed:`,
+            error,
+          );
+          await captureServerEvent("image_generation_failed", {
+            ...baseProps,
+            provider: "bfl",
+            model: BFL_IMAGE_MODEL,
+            attempt,
+            usedRewrittenPrompt: attempt > 1 && !!rewritten,
+            willRetry: attempt < BFL_MAX_ATTEMPTS,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      console.log("BFL exhausted, trying the next provider");
+      await captureServerEvent("image_generation_fallback_from_bfl", {
+        ...baseProps,
+        bflError:
+          lastBflError instanceof Error
+            ? lastBflError.message
+            : String(lastBflError),
+      });
+    }
+
+    // Gemini runs when it is switched on. When BFL is the primary provider,
+    // Gemini is only a fallback if USE_GEMINI_FOR_IMAGES is also set.
+    const geminiEnabled =
+      useGemini &&
+      !!process.env.GOOGLE_API_KEY &&
+      (!bflEnabled || process.env.USE_GEMINI_FOR_IMAGES === "true");
+    if (!geminiEnabled) {
       return await runFal();
     }
 

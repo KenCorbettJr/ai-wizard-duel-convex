@@ -109,8 +109,8 @@ export function CampaignOpponentCard({
               <ConvexImage
                 storageId={opponent.illustration}
                 alt={opponent.name}
-                width={64}
-                height={64}
+                width={128}
+                height={128}
                 className={cn(
                   "h-full w-full object-cover",
                   isDefeated && "opacity-80",

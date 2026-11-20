@@ -229,8 +229,8 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
                         <ConvexImage
                           storageId={wizard.illustration}
                           alt={wizard.name}
-                          width={48}
-                          height={48}
+                          width={96}
+                          height={96}
                           className="w-full h-full object-cover"
                         />
                       ) : wizard.illustrationURL ? (

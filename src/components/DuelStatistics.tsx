@@ -124,9 +124,9 @@ export function DuelStatistics({
   const recentDuels = userId ? getRecentDuels() : [];
 
   return (
-    <div className="space-y-6">
+    <div className="@container space-y-6">
       {/* Main Statistics Cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid @2xl:grid-cols-2 @5xl:grid-cols-4 gap-4">
         {userId && playerStats && (
           <>
             <Card>

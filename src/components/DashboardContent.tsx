@@ -2,165 +2,316 @@
 
 import { useUser } from "@clerk/nextjs";
 import { LeftSidebar } from "@/components/LeftSidebar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { WizardCard } from "@/components/WizardCard";
+import { ConvexImage } from "@/components/ConvexImage";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { DuelListItem } from "@/components/DuelListItem";
+import { CreditDisplay } from "@/components/CreditDisplay";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { MigrationNotification } from "@/components/MigrationNotification";
 import { WaitlistGuard } from "@/components/WaitlistGuard";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Swords, Users, Wand2, BarChart3, Trophy } from "lucide-react";
+import {
+  ChevronRight,
+  Coins,
+  Crown,
+  Scroll,
+  Swords,
+  Users,
+  Wand2,
+  Trophy,
+} from "lucide-react";
+import { getCampaignSummary } from "@/lib/campaignStatus";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import {
+  CampaignHomeCard,
+  type CampaignHomeOpponent,
+  type CampaignHomeProgress,
+  type CampaignHomeWizard,
+} from "@/components/CampaignHomeCard";
 
-function ActiveDuelsCard({ userId }: { userId?: string }) {
-  const playerDuels = useQuery(api.duels.getPlayerDuels, userId ? {} : "skip");
+type PlayerDuels = FunctionReturnType<typeof api.duels.getPlayerDuels>;
+type CompletedDuels = FunctionReturnType<
+  typeof api.duels.getPlayerCompletedDuels
+>;
 
-  const activeDuels =
-    playerDuels?.filter(
-      (duel) =>
-        duel.status === "WAITING_FOR_PLAYERS" || duel.status === "IN_PROGRESS",
-    ) || [];
-
-  const handleCopyShortcode = async (shortcode: string) => {
-    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${shortcode}`;
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-    }
+/**
+ * Data overrides for the dev-only /design/home preview, so every state of the
+ * home screen can be rendered without signing in.
+ */
+export interface DashboardPreview {
+  wizards: Array<
+    CampaignHomeWizard & { wins?: number; losses?: number; description: string }
+  >;
+  tokens?: number;
+  activeDuels?: PlayerDuels;
+  completedDuels?: CompletedDuels;
+  campaign: {
+    season: {
+      name: string;
+      completionRelic: { name: string; luckBonus: number };
+    } | null;
+    opponents: CampaignHomeOpponent[];
+    progress: CampaignHomeProgress[];
   };
+}
 
+/** The one duel that needs the player, surfaced above everything else. */
+function ResumeDuelBanner({ duel }: { duel: PlayerDuels[number] }) {
+  const { user } = useUser();
+  const first = useQuery(
+    api.wizards.getWizardWithOwner,
+    duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
+  );
+  const second = useQuery(
+    api.wizards.getWizardWithOwner,
+    duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
+  );
+  const opponent = [first, second].find((w) => w && w.owner !== user?.id)?.name;
+  const waiting = duel.status === "WAITING_FOR_PLAYERS";
+  const rounds =
+    duel.numberOfRounds === "TO_THE_DEATH" ? "the death" : duel.numberOfRounds;
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <Link href="/duels" className="group">
-          <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors cursor-pointer">
-            <Swords className="h-5 w-5 text-warning" />
-            Active Duels
-            {activeDuels.length > 0 && (
-              <span className="bg-warning/15 text-warning text-xs px-2 py-1 rounded-full">
-                {activeDuels.length}
-              </span>
-            )}
-          </CardTitle>
-        </Link>
-        <CardDescription>Your ongoing magical duels</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {activeDuels.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="mb-4">
-              <Swords className="h-12 w-12 mx-auto text-muted-foreground/50" />
-            </div>
-            <p className="text-muted-foreground mb-4">
-              No active duels. Ready for battle?
-            </p>
-            <div className="space-y-2">
-              <Button asChild size="sm" className="w-full">
-                <Link href="/duels/lobby">
-                  <Users className="h-4 w-4 mr-2" />
-                  Quick Match
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="w-full">
-                <Link href="/duels/create">Create Duel</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="w-full">
-                <Link href="/duels/join">Join by Code</Link>
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {activeDuels.slice(0, 3).map((duel) => (
-              <DuelListItem
-                key={duel._id}
-                duel={duel}
-                variant="dashboard"
-                onCopyShortcode={handleCopyShortcode}
-              />
-            ))}
-            {activeDuels.length > 3 && (
-              <div className="text-center pt-2 border-t">
-                <Button asChild variant="outline" size="sm" className="mt-2">
-                  <Link href="/duels">View All ({activeDuels.length})</Link>
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-warning/60 bg-warning/15 px-3 py-2 sm:mb-5">
+      <p className="flex min-w-0 items-center gap-2 text-sm">
+        <Swords className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+        <span className="min-w-0 truncate">
+          <span className="font-semibold">
+            {waiting
+              ? "Waiting for an opponent"
+              : `${duel.isCampaignBattle ? "Campaign battle" : "Duel"} · your move${opponent ? ` vs ${opponent}` : ""}`}
+          </span>
+          {!waiting && (
+            <span className="text-muted-foreground">
+              {" "}
+              · round {duel.currentRound ?? 1} of {rounds}
+            </span>
+          )}
+        </span>
+      </p>
+      <Button asChild size="sm" variant="gold" className="shrink-0">
+        <Link href={`/duels/${duel._id}`}>{waiting ? "Open" : "Resume"}</Link>
+      </Button>
+    </div>
   );
 }
 
-function CompletedDuelsCard({ userId }: { userId?: string }) {
-  const completedDuels = useQuery(
-    api.duels.getPlayerCompletedDuels,
-    userId ? {} : "skip",
-  );
-
+/** Player-vs-player entry points and one merged list of the player's duels. */
+function DuelsSection({
+  loading,
+  firstDuel,
+}: {
+  loading: boolean;
+  firstDuel: boolean;
+}) {
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <Link href="/duels" className="group">
-          <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors cursor-pointer">
-            <Trophy className="h-5 w-5 text-gold" />
-            Recent Battles
-            {completedDuels && completedDuels.length > 0 && (
-              <span className="bg-warning/15 text-warning text-xs px-2 py-1 rounded-full">
-                {completedDuels.length}
-              </span>
-            )}
-          </CardTitle>
-        </Link>
-        <CardDescription>Your completed magical encounters</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!completedDuels || completedDuels.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="mb-4">
-              <Trophy className="h-12 w-12 mx-auto text-muted-foreground/50" />
-            </div>
-            <p className="text-muted-foreground mb-4">
-              No completed duels yet. Start your first battle!
-            </p>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/duels">Browse Duels</Link>
+    <section aria-labelledby="home-duels" className="mb-6 sm:mb-8">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2
+            id="home-duels"
+            className="flex items-center gap-2 font-display text-xl font-bold sm:text-2xl"
+          >
+            <Swords className="h-5 w-5 text-warning" aria-hidden="true" />
+            Duel other players
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {firstDuel
+              ? "No duels yet. Quick Match pairs you with a live opponent for 1 token."
+              : "1 token. Both wizards cast at once."}
+          </p>
+        </div>
+        <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
+          <WaitlistGuard>
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="col-span-3 border border-primary/40 font-semibold sm:col-span-1"
+            >
+              <Link href="/duels/lobby">
+                <Users className="mr-2 h-4 w-4" aria-hidden="true" />
+                Quick Match
+              </Link>
             </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {completedDuels.slice(0, 3).map((duel) => (
-              <DuelListItem key={duel._id} duel={duel} variant="dashboard" />
-            ))}
-            {completedDuels.length > 3 && (
-              <div className="text-center pt-2 border-t">
-                <Button asChild variant="outline" size="sm" className="mt-2">
-                  <Link href="/duels">View All ({completedDuels.length})</Link>
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </WaitlistGuard>
+          <WaitlistGuard>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/duels/create">Create</Link>
+            </Button>
+          </WaitlistGuard>
+          <WaitlistGuard>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/duels/join">Join by code</Link>
+            </Button>
+          </WaitlistGuard>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/duels/watch">Watch</Link>
+          </Button>
+        </div>
+      </div>
+
+      {loading && (
+        <div className="py-6 text-center">
+          <RuneSpinner size="sm" label="Loading duels" />
+        </div>
+      )}
+    </section>
   );
 }
 
-export default function DashboardContent() {
+/** The player's recent duels as plain rows. Hidden when there are none. */
+function DuelHistory({
+  active,
+  completed,
+  excludeId,
+  onCopyShortcode,
+}: {
+  active: PlayerDuels | undefined;
+  completed: CompletedDuels | undefined;
+  excludeId?: string;
+  onCopyShortcode: (shortcode: string) => void;
+}) {
+  const all = [
+    ...(active ?? []).map((duel) => ({ duel, isActive: true })),
+    ...(completed ?? []).map((duel) => ({ duel, isActive: false })),
+  ].filter(({ duel }) => duel._id !== excludeId);
+  const items = all.slice(0, 5);
+  if (items.length === 0) return null;
+
+  return (
+    <section aria-labelledby="home-history" className="mb-6 sm:mb-8">
+      <div className="mb-3 flex items-end justify-between gap-2">
+        <h2
+          id="home-history"
+          className="flex items-center gap-2 font-display text-xl font-bold sm:text-2xl"
+        >
+          <Trophy className="h-5 w-5 text-gold" aria-hidden="true" />
+          Your duels
+        </h2>
+        {all.length > items.length && (
+          <Link
+            href="/duels"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            View all ({all.length})
+          </Link>
+        )}
+      </div>
+      <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
+        {items.map(({ duel, isActive }, i) => (
+          <div key={duel._id} className={i >= 2 ? "hidden @3xl:block" : ""}>
+            <DuelListItem
+              duel={duel}
+              variant="dashboard"
+              onCopyShortcode={isActive ? onCopyShortcode : undefined}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** One wizard with its record, campaign chip and a single Duel action. */
+function WizardRow({
+  wizard,
+  progress,
+  className,
+}: {
+  wizard: {
+    _id: string;
+    name: string;
+    illustration?: string;
+    wins?: number;
+    losses?: number;
+  };
+  progress?: CampaignHomeProgress;
+  className?: string;
+}) {
+  const summary = getCampaignSummary(progress);
+  const record = (wizard.wins ?? 0) + (wizard.losses ?? 0);
+  return (
+    <li
+      className={`min-w-0 items-center gap-3 rounded-xl border bg-card/80 p-3 ${className ?? "flex"}`}
+    >
+      <Link
+        href={`/wizards/${wizard._id}`}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="relative size-12 shrink-0 overflow-hidden rounded-full border-2 border-border bg-muted"
+      >
+        {wizard.illustration ? (
+          <ConvexImage
+            storageId={wizard.illustration}
+            alt=""
+            width={96}
+            height={96}
+            sizes="48px"
+            className="h-full w-full object-cover object-top"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary to-gold font-bold text-white">
+            {wizard.name.charAt(0)}
+          </span>
+        )}
+      </Link>
+      <div className="min-w-0 flex-1">
+        <Link
+          href={`/wizards/${wizard._id}`}
+          className="block truncate font-semibold hover:underline"
+        >
+          {wizard.name}
+        </Link>
+        <p className="truncate text-xs text-muted-foreground">
+          {record > 0
+            ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L`
+            : "No duels yet"}
+        </p>
+        {summary.hasRelic && (
+          <Link
+            href={`/campaign/wizard/${wizard._id}`}
+            className={`mt-1 inline-flex min-h-9 max-w-full items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium hover:border-warning/60 focus-visible:ring-2 focus-visible:ring-primary/40 ${
+              summary.hasRelic
+                ? "border-warning/60 bg-warning/15 text-warning"
+                : "border-border/60 text-muted-foreground"
+            }`}
+          >
+            {summary.hasRelic ? (
+              <Crown className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <Scroll className="h-3 w-3" aria-hidden="true" />
+            )}
+            {summary.isCompleted
+              ? "Crowned"
+              : `Campaign ${summary.defeatedCount}/${summary.total}`}
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          </Link>
+        )}
+      </div>
+      <WaitlistGuard>
+        <Button asChild variant="outline" size="sm" className="shrink-0">
+          <Link href={`/duels/create?wizardId=${wizard._id}`}>
+            <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
+            Challenge
+          </Link>
+        </Button>
+      </WaitlistGuard>
+    </li>
+  );
+}
+
+export default function DashboardContent({
+  preview,
+}: {
+  preview?: DashboardPreview;
+}) {
   const { user } = useUser();
   const router = useRouter();
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -173,7 +324,58 @@ export default function DashboardContent() {
     isProfileComplete,
     getProfileCompletionPrompt,
   } = useProfileCompletion();
-  const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
+  const liveWizards = useQuery(
+    api.wizards.getUserWizards,
+    user?.id ? {} : "skip",
+  );
+  const liveSeason = useQuery(api.campaignSeasons.getActiveCampaignSeason);
+  const liveOpponents = useQuery(api.campaigns.getCampaignOpponents);
+  const liveProgress = useQuery(
+    api.campaigns.getUserCampaignProgress,
+    user?.id ? { userId: user.id } : "skip",
+  );
+  const livePlayerDuels = useQuery(
+    api.duels.getPlayerDuels,
+    user?.id ? {} : "skip",
+  );
+  const liveCompleted = useQuery(
+    api.duels.getPlayerCompletedDuels,
+    user?.id ? {} : "skip",
+  );
+
+  const liveCredits = useQuery(
+    api.imageCreditService.getUserImageCredits,
+    user?.id ? { userId: user.id } : "skip",
+  );
+  const liveUserInfo = useQuery(
+    api.users.getUserByClerkId,
+    user?.id ? { clerkId: user.id } : "skip",
+  );
+  const unlimited =
+    !preview &&
+    liveUserInfo?.subscriptionTier === "PREMIUM" &&
+    liveUserInfo?.subscriptionStatus === "ACTIVE";
+  const tokens = preview ? preview.tokens : liveCredits;
+
+  const wizards = (preview?.wizards ?? liveWizards) as
+    typeof liveWizards | undefined;
+  const season = preview ? preview.campaign.season : liveSeason;
+  const opponents = preview ? preview.campaign.opponents : liveOpponents;
+  const campaignProgress = preview ? preview.campaign.progress : liveProgress;
+  const activeDuels = preview
+    ? (preview.activeDuels ?? [])
+    : livePlayerDuels?.filter(
+        (duel) =>
+          duel.status === "WAITING_FOR_PLAYERS" ||
+          duel.status === "IN_PROGRESS",
+      );
+  const completedDuels = preview
+    ? (preview.completedDuels ?? [])
+    : liveCompleted;
+
+  const resumeDuel =
+    activeDuels?.find((duel) => duel.status === "IN_PROGRESS") ??
+    activeDuels?.[0];
 
   const totalWins =
     wizards?.reduce((sum, wizard) => sum + (wizard.wins || 0), 0) || 0;
@@ -188,6 +390,15 @@ export default function DashboardContent() {
       router.push("/wizards/create");
     } else {
       setShowProfilePrompt(true);
+    }
+  };
+
+  const handleCopyShortcode = async (shortcode: string) => {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${shortcode}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -226,265 +437,154 @@ export default function DashboardContent() {
     }
   };
 
+  const hasWizards = !!wizards && wizards.length > 0;
+  const bestCampaign = (campaignProgress ?? []).reduce(
+    (best, p) => Math.max(best, getCampaignSummary(p).defeatedCount),
+    0,
+  );
+  const anyCrown = (campaignProgress ?? []).some((p) => p.hasCompletionRelic);
+  const campaignLine = anyCrown
+    ? " · crowned"
+    : bestCampaign > 0
+      ? ` · campaign ${bestCampaign}/10`
+      : "";
+  const summaryLine =
+    wizards !== undefined && wizards.length === 0
+      ? "Let's make your first wizard"
+      : totalDuels === 0
+        ? "Ready for your first battle"
+        : `${wizards?.length ?? 0} ${wizards?.length === 1 ? "wizard" : "wizards"} · ${totalDuels} duels · ${winRate}% wins${campaignLine}`;
+
   return (
     <div className="min-h-screen">
       <LeftSidebar />
 
       {/* Main content area with left margin for desktop sidebar */}
-      <div className="md:ml-64">
+      <div className="pt-[var(--app-navbar-h)] md:ml-64 md:pt-0">
         <div className="min-h-screen">
-          <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
-            <div className="mb-6 sm:mb-8">
-              <div className="flex flex-col gap-4 mb-6">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold mb-2 font-display">
-                    Wizard Dashboard
-                  </h1>
-                  <p className="text-muted-foreground text-sm sm:text-base">
-                    Manage your magical adventures and view your duel history
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none"
-                    >
-                      <Link href="/leaderboard">
-                        <Trophy className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Leaderboard</span>
-                        <span className="sm:hidden">Leaders</span>
-                      </Link>
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none"
-                    >
-                      <Link href="/duels/watch">
-                        <Swords className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Watch Duels</span>
-                        <span className="sm:hidden">Watch</span>
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
+          <div className="@container container mx-auto px-4 sm:px-6 py-6 sm:py-12">
+            <header className="mb-6 flex items-start justify-between gap-3 sm:mb-8">
+              <div className="min-w-0 flex-1">
+                <h1 className="font-display text-xl font-bold sm:text-3xl">
+                  Wizard Dashboard
+                </h1>
+                <p className="text-sm text-muted-foreground sm:text-base">
+                  {summaryLine}
+                </p>
               </div>
-            </div>
-
-            {/* Overall Stats Card */}
-            <Card className="mb-6 sm:mb-8">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                  <BarChart3 className="h-5 w-5" />
-                  Your Magical Stats
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  Your overall magical prowess and achievements
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                  <div className="text-center p-2 sm:p-0">
-                    <div className="text-xl sm:text-2xl font-bold text-primary">
-                      {wizards?.length || 0}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      Wizards
-                    </div>
-                  </div>
-                  <div className="text-center p-2 sm:p-0">
-                    <div className="text-xl sm:text-2xl font-bold text-info">
-                      {totalDuels}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      Total Duels
-                    </div>
-                  </div>
-                  <div className="text-center p-2 sm:p-0">
-                    <div className="text-xl sm:text-2xl font-bold text-success">
-                      {totalWins}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      Victories
-                    </div>
-                  </div>
-                  <div className="text-center p-2 sm:p-0">
-                    <div className="text-xl sm:text-2xl font-bold text-warning">
-                      {winRate}%
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      Win Rate
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Duels Section */}
-            <Card className="mb-6 sm:mb-8 bg-linear-to-r from-warning/50 to-destructive/50 border-warning/40">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col gap-4 mb-6">
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-warning font-display">
-                      <Swords className="h-5 w-5 sm:h-6 sm:w-6" />
-                      Duels
-                    </h3>
-                    <p className="text-muted-foreground text-sm sm:text-base">
-                      Your magical battles and encounters
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none w-full sm:w-auto"
+              {preview ? (
+                preview.tokens !== undefined && (
+                  <Link
+                    href="/credits"
+                    className="shrink-0"
+                    aria-label={`${preview.tokens} tokens. Get more`}
+                  >
+                    <Badge
+                      variant={preview.tokens <= 2 ? "destructive" : "default"}
+                      className="gap-1 px-2.5 py-1.5 text-sm"
                     >
-                      <Link href="/duels">
-                        <Swords className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">View All</span>
-                        <span className="sm:hidden">All</span>
-                      </Link>
-                    </Button>
-                    <WaitlistGuard>
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 sm:flex-none w-full sm:w-auto"
-                      >
-                        <Link href="/duels/lobby">
-                          <Users className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Quick Match</span>
-                          <span className="sm:hidden">Lobby</span>
-                        </Link>
-                      </Button>
-                    </WaitlistGuard>
-                    <WaitlistGuard>
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 sm:flex-none w-full sm:w-auto"
-                      >
-                        <Link href="/duels/join">
-                          <Users className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Join Code</span>
-                          <span className="sm:hidden">Join</span>
-                        </Link>
-                      </Button>
-                    </WaitlistGuard>
-                    <WaitlistGuard>
-                      <Button
-                        asChild
-                        size="sm"
-                        className="flex-1 sm:flex-none w-full sm:w-auto"
-                      >
-                        <Link href="/duels/create">
-                          <Swords className="h-4 w-4 mr-2" />
-                          <span className="hidden sm:inline">Create Duel</span>
-                          <span className="sm:hidden">Create</span>
-                        </Link>
-                      </Button>
-                    </WaitlistGuard>
-                  </div>
-                </div>
+                      <Coins className="h-4 w-4 text-gold" aria-hidden="true" />
+                      {preview.tokens} tokens
+                    </Badge>
+                  </Link>
+                )
+              ) : (
+                <CreditDisplay showLabel={false} />
+              )}
+            </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <ActiveDuelsCard userId={user?.id} />
-                  <CompletedDuelsCard userId={user?.id} />
-                </div>
-              </CardContent>
-            </Card>
+            {resumeDuel && <ResumeDuelBanner duel={resumeDuel} />}
 
-            {/* Wizards Section */}
-            <Card className="mb-6 sm:mb-8 bg-arcane-soft border-primary/30">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-primary font-display">
-                      <Wand2 className="h-5 w-5 sm:h-6 sm:w-6" />
-                      Your Wizards
-                    </h3>
-                    <p className="text-muted-foreground text-sm sm:text-base">
-                      Manage your magical champions
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none w-full sm:w-auto"
-                    >
-                      <Link href="/wizards">
-                        <Wand2 className="h-4 w-4 mr-2" />
-                        View All
-                      </Link>
-                    </Button>
-                    <WaitlistGuard>
-                      <Button
-                        size="sm"
-                        onClick={handleCreateWizard}
-                        className="flex-1 sm:flex-none w-full sm:w-auto"
+            {/* Campaign: the single-player on-ramp, so it leads the page */}
+            {season && opponents && wizards && campaignProgress && (
+              <CampaignHomeCard
+                season={season}
+                opponents={opponents}
+                wizards={wizards}
+                progress={campaignProgress}
+                onCreateWizard={handleCreateWizard}
+                tokens={tokens}
+                unlimited={unlimited}
+                deferPrimary={!!resumeDuel}
+              />
+            )}
+
+            {wizards === undefined ? (
+              <div className="py-8 text-center">
+                <RuneSpinner size="md" label="Loading…" />
+              </div>
+            ) : !hasWizards ? null : (
+              <>
+                <DuelsSection
+                  loading={
+                    activeDuels === undefined || completedDuels === undefined
+                  }
+                  firstDuel={totalDuels === 0}
+                />
+                <section
+                  aria-labelledby="home-wizards"
+                  className="mb-6 sm:mb-8"
+                >
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2
+                        id="home-wizards"
+                        className="flex items-center gap-2 font-display text-xl font-bold sm:text-2xl"
                       >
-                        <Wand2 className="h-4 w-4 mr-2" />
-                        Create Wizard
-                      </Button>
-                    </WaitlistGuard>
-                  </div>
-                </div>
-
-                {wizards === undefined ? (
-                  <div className="text-center py-8">
-                    <RuneSpinner size="md" label="Loading…" />
-                    <p className="text-muted-foreground mt-2">
-                      Loading wizards...
-                    </p>
-                  </div>
-                ) : wizards.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <div className="mb-4">
-                        <Wand2 className="h-16 w-16 mx-auto text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2 font-display">
-                        No wizards yet!
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        Create your first wizard to start your magical journey.
-                      </p>
-                      <Button size="sm" onClick={handleCreateWizard}>
-                        Create Your First Wizard
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                      {wizards.slice(0, 6).map((wizard) => (
-                        <WizardCard key={wizard._id} wizard={wizard} />
-                      ))}
+                        <Wand2
+                          className="h-5 w-5 text-primary"
+                          aria-hidden="true"
+                        />
+                        Your wizards
+                      </h2>
                     </div>
-                    {wizards.length > 6 && (
-                      <div className="text-center mt-4 sm:mt-6">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href="/wizards">
-                            View All Wizards ({wizards.length})
-                          </Link>
+                    <div className="flex flex-wrap gap-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/wizards">View all ({wizards.length})</Link>
+                      </Button>
+                      <WaitlistGuard>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCreateWizard}
+                        >
+                          <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                          New wizard
                         </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                      </WaitlistGuard>
+                    </div>
+                  </div>
+                  <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
+                    {wizards.slice(0, 6).map((wizard, i) => (
+                      <WizardRow
+                        key={wizard._id}
+                        className={i >= 3 ? "hidden @xl:flex" : "flex"}
+                        wizard={wizard}
+                        progress={campaignProgress?.find(
+                          (p) => p.wizardId === wizard._id,
+                        )}
+                      />
+                    ))}
+                  </ul>
+                  {wizards.length > 6 && (
+                    <div className="mt-4 text-center sm:mt-6">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/wizards">
+                          View all wizards ({wizards.length})
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </section>
+
+                <DuelHistory
+                  active={activeDuels}
+                  completed={completedDuels}
+                  excludeId={resumeDuel?._id}
+                  onCopyShortcode={handleCopyShortcode}
+                />
+              </>
+            )}
 
             <ProfileCompletionPrompt
               open={showProfilePrompt}

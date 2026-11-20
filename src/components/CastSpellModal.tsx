@@ -147,8 +147,8 @@ export function CastSpellModal({
             isModalCollapsed ? () => setIsModalCollapsed(false) : undefined
           }
         >
-          <div className="flex items-center justify-between">
-            <CardTitle className="min-w-0 flex-1 text-lg text-foreground">
+          <div className="flex min-w-0 items-center justify-between gap-1">
+            <CardTitle className="min-w-0 flex-1 text-base text-foreground sm:text-lg">
               <button
                 ref={titleRef}
                 type="button"
@@ -158,17 +158,21 @@ export function CastSpellModal({
                 }}
                 aria-expanded={!isModalCollapsed}
                 aria-controls={`${COMPOSER_ID}-body`}
-                className="flex w-full items-center gap-2 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="flex w-full min-w-0 items-center gap-2 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <Sparkles
                   className="h-5 w-5 shrink-0 animate-pulse text-primary motion-reduce:animate-none"
                   aria-hidden="true"
                 />
                 <span className="truncate">Your move, {wizardName}</span>
-                <span className="shrink-0 text-sm font-normal text-muted-foreground">
-                  {isModalCollapsed
-                    ? `Round ${currentRound} · tap to write`
-                    : `Round ${currentRound}`}
+                <span className="shrink-0 font-sans text-xs font-normal normal-case tracking-normal text-muted-foreground sm:text-sm">
+                  Round {currentRound}
+                  {isModalCollapsed && (
+                    <span className="hidden min-[400px]:inline">
+                      {" "}
+                      · tap to write
+                    </span>
+                  )}
                 </span>
               </button>
             </CardTitle>

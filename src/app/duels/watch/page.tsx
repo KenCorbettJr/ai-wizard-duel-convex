@@ -29,7 +29,7 @@ export default function WatchDuelsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
+      <div className="@container container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8">
           <PageHeader
             className="mb-0"
@@ -66,7 +66,7 @@ export default function WatchDuelsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 @3xl:grid-cols-2 @6xl:grid-cols-3">
               {duels.map((duel) => (
                 <DuelListItem key={duel._id} duel={duel} variant="card" />
               ))}

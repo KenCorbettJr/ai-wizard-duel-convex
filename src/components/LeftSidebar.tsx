@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -300,6 +300,24 @@ interface LeftSidebarProps {
 
 export function LeftSidebar({ className }: LeftSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const mobileBarRef = useRef<HTMLDivElement>(null);
+
+  // Publish the mobile bar's real height so sticky headers and the drawer sit
+  // flush beneath it, whatever the text size or font scaling on the device.
+  useEffect(() => {
+    const el = mobileBarRef.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const update = () => {
+      const h =
+        el.offsetParent === null ? 0 : el.getBoundingClientRect().height;
+      if (h > 0) root.style.setProperty("--app-navbar-h", `${Math.ceil(h)}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const pathname = usePathname();
   const { isSuperAdmin } = useSuperAdmin();
   const { isPending: isWaitlistPending } = useWaitlistStatus();
@@ -333,13 +351,16 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
   return (
     <>
       {/* Mobile navbar - always visible on mobile */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur border-b border-border">
-        <div className="flex items-center justify-between p-4">
+      <div
+        ref={mobileBarRef}
+        className="md:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar border-b border-border"
+      >
+        <div className="flex items-center justify-between px-3 py-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className="mr-2 min-w-11"
+            className="min-w-11"
             aria-label="Open navigation menu"
             aria-expanded={isOpen}
           >
@@ -354,7 +375,7 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
               AI Wizard Duel
             </span>
           </Link>
-          <div className="w-10" /> {/* Spacer for centering */}
+          <div className="w-11" /> {/* Spacer for centering */}
         </div>
       </div>
 

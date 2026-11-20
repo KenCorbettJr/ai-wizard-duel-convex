@@ -1085,7 +1085,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
+      <div className="container mx-auto px-4 py-4 sm:px-6 sm:py-12">
         <div
           className="max-w-4xl mx-auto"
           style={{ paddingBottom: composerHeight ? composerHeight + 24 : 0 }}
@@ -1530,7 +1530,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               <summary className="flex cursor-pointer items-center gap-2 p-4 font-semibold text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 rounded-xl">
                 <ScrollText className="h-5 w-5 text-info" aria-hidden="true" />
                 Arena Introduction
-                <span className="ml-1 text-sm font-normal text-muted-foreground">
+                <span className="ml-1 hidden text-sm font-normal text-muted-foreground sm:inline">
                   The Arcane Arbiter introduces the combatants
                 </span>
               </summary>

@@ -92,8 +92,8 @@ export function TrophyHall({ wizardId }: TrophyHallProps) {
                       <ConvexImage
                         storageId={wizard.illustration}
                         alt={wizard.name}
-                        width={80}
-                        height={80}
+                        width={160}
+                        height={160}
                         className="w-full h-full object-cover"
                       />
                     ) : wizard.illustrationURL ? (
