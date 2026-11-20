@@ -188,6 +188,14 @@ export function JoinDuelForm({ onClose, onSuccess }: JoinDuelFormProps) {
                         {duel.wizards.length} wizard
                         {duel.wizards.length !== 1 ? "s" : ""}
                       </Badge>
+                      {duel.creatorCoversEntry && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-gold/20 text-foreground border-gold/50"
+                        >
+                          Free entry
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />

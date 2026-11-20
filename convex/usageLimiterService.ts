@@ -1,4 +1,5 @@
 import { query, mutation } from "./_generated/server";
+import { STARTING_TOKENS } from "./lib/pricing";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type {
@@ -14,7 +15,7 @@ import type {
 export const FREE_TIER_LIMITS = {
   WIZARDS_MAX: 3,
   DUELS_PER_DAY: 5, // Will be removed in future task (unlimited duels for all registered users)
-  INITIAL_IMAGE_CREDITS: 10,
+  INITIAL_IMAGE_CREDITS: STARTING_TOKENS,
   AD_REWARD_COOLDOWN: 300000, // 5 minutes in milliseconds
 } as const;
 

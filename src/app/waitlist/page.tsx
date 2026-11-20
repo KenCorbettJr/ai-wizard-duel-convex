@@ -1,6 +1,12 @@
 "use client";
 
 import { Waitlist } from "@clerk/nextjs";
+import {
+  STARTING_TOKENS,
+  TOKEN_PACKS,
+  formatCentsPerDuel,
+  formatPrice,
+} from "../../../convex/lib/pricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Sparkles,
@@ -142,7 +148,7 @@ export default function WaitlistPage() {
                 <CardContent>
                   <p className="text-muted-foreground">
                     Once approved, you&apos;ll have immediate access to all
-                    features and 10 free tokens.
+                    features and {STARTING_TOKENS} free tokens.
                   </p>
                 </CardContent>
               </Card>
@@ -279,8 +285,8 @@ export default function WaitlistPage() {
                   <p className="text-muted-foreground">
                     You&apos;ll receive an email notification and can
                     immediately sign in to access all features. You&apos;ll
-                    start with 10 free tokens to create your first wizards and
-                    duels.
+                    start with {STARTING_TOKENS} free tokens, and each token
+                    enters one duel.
                   </p>
                 </CardContent>
               </Card>
@@ -293,10 +299,13 @@ export default function WaitlistPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    No! AI Wizard Duel is free to play. You can create wizards,
-                    participate in unlimited duels, and earn additional image
-                    tokens by watching ads. Premium subscriptions are optional
-                    for unlimited features.
+                    Joining is free, and you start with {STARTING_TOKENS} free
+                    tokens. After that, one token enters one duel, whatever its
+                    length. Tokens come in packs from{" "}
+                    {formatPrice(TOKEN_PACKS[0].priceCents)}, about{" "}
+                    {formatCentsPerDuel(TOKEN_PACKS[TOKEN_PACKS.length - 1])} to{" "}
+                    {formatCentsPerDuel(TOKEN_PACKS[0])} a duel. No
+                    subscription.
                   </p>
                 </CardContent>
               </Card>

@@ -4,6 +4,7 @@ import type { TestConvex } from "convex-test";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
+import { TO_THE_DEATH_MAX_ROUNDS } from "./lib/pricing";
 import { ensureTestUser, withAuth, withSuperAdminAuth } from "./test_utils";
 
 describe("Duel tokens", () => {
@@ -219,6 +220,158 @@ describe("Duel tokens", () => {
 
     expect(await tokens("alice")).toBe(5);
     expect(await tokens("bob")).toBe(5);
+  });
+
+  describe("covered entry (creator pays for their opponent)", () => {
+    it("charges the creator 2 tokens and the joiner nothing", async () => {
+      const aliceWizard = await makeWizard("alice");
+      const bobWizard = await makeWizard("bob");
+      await ensureTestUser(t, "alice", 5);
+      await ensureTestUser(t, "bob", 0);
+
+      const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [aliceWizard],
+        coverOpponentEntry: true,
+      });
+      // Nothing is taken until the duel starts
+      expect(await tokens("alice")).toBe(5);
+
+      // Bob has no tokens but can still join
+      await withAuth(t, "bob").mutation(api.duels.joinDuel, {
+        duelId,
+        wizards: [bobWizard],
+      });
+
+      expect(await tokens("alice")).toBe(3);
+      expect(await tokens("bob")).toBe(0);
+      const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+      expect(duel?.tokensCharged).toEqual(["alice", "alice"]);
+      const covered = (await ledger("alice")).filter(
+        (row) => row.metadata?.coveredFor === "bob",
+      );
+      expect(covered).toHaveLength(1);
+      expect(await ledger("bob")).toHaveLength(0);
+    });
+
+    it("refuses to create a covered duel without 2 tokens", async () => {
+      const wizard = await makeWizard("alice");
+      await ensureTestUser(t, "alice", 1);
+
+      await expect(
+        withAuth(t, "alice").mutation(api.duels.createDuel, {
+          numberOfRounds: 3,
+          wizards: [wizard],
+          coverOpponentEntry: true,
+        }),
+      ).rejects.toThrow(/2 tokens/);
+    });
+
+    it("does not start if the creator can no longer cover the entry", async () => {
+      const aliceWizard = await makeWizard("alice");
+      const bobWizard = await makeWizard("bob");
+      await ensureTestUser(t, "alice", 2);
+      await ensureTestUser(t, "bob", 5);
+
+      const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [aliceWizard],
+        coverOpponentEntry: true,
+      });
+      await t.run(async (ctx) => {
+        const alice = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
+          .first();
+        await ctx.db.patch(alice!._id, { imageCredits: 1 });
+      });
+
+      await expect(
+        withAuth(t, "bob").mutation(api.duels.joinDuel, {
+          duelId,
+          wizards: [bobWizard],
+        }),
+      ).rejects.toThrow(/cover your entry/);
+      expect(await tokens("alice")).toBe(1);
+      expect(await tokens("bob")).toBe(5);
+    });
+
+    it("refunds both covered tokens to the creator on admin cancel", async () => {
+      const aliceWizard = await makeWizard("alice");
+      const bobWizard = await makeWizard("bob");
+      await ensureTestUser(t, "alice", 5);
+      await ensureTestUser(t, "bob", 0);
+
+      const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [aliceWizard],
+        coverOpponentEntry: true,
+      });
+      await withAuth(t, "bob").mutation(api.duels.joinDuel, {
+        duelId,
+        wizards: [bobWizard],
+      });
+
+      await ensureTestUser(t, "super-admin-user");
+      await t.run(async (ctx) => {
+        const admin = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", "super-admin-user"))
+          .first();
+        await ctx.db.patch(admin!._id, { role: "super_admin" });
+      });
+      await withSuperAdminAuth(t).mutation(api.duels.forceCancelDuel, {
+        duelId,
+        reason: "stuck",
+      });
+
+      expect(await tokens("alice")).toBe(5);
+      expect(await tokens("bob")).toBe(0);
+    });
+  });
+
+  it("ends a To the Death duel at the round cap, still for 1 token each", async () => {
+    const aliceWizard = await makeWizard("alice");
+    const bobWizard = await makeWizard("bob");
+    await ensureTestUser(t, "alice", 5);
+    await ensureTestUser(t, "bob", 5);
+
+    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
+      numberOfRounds: "TO_THE_DEATH",
+      wizards: [aliceWizard],
+    });
+    await withAuth(t, "bob").mutation(api.duels.joinDuel, {
+      duelId,
+      wizards: [bobWizard],
+    });
+
+    // Jump to the last allowed round, with both wizards healthy
+    const roundId = await t.run(async (ctx) => {
+      await ctx.db.patch(duelId, {
+        status: "IN_PROGRESS",
+        currentRound: TO_THE_DEATH_MAX_ROUNDS,
+      });
+      return await ctx.db.insert("duelRounds", {
+        duelId,
+        roundNumber: TO_THE_DEATH_MAX_ROUNDS,
+        type: "SPELL_CASTING",
+        status: "WAITING_FOR_SPELLS",
+      });
+    });
+    await t.mutation(api.duels.completeRound, {
+      roundId,
+      outcome: {
+        narrative: "Both wizards still stand.",
+        pointsAwarded: { [aliceWizard]: 6, [bobWizard]: 2 },
+        healthChange: { [aliceWizard]: -5, [bobWizard]: -5 },
+      },
+    });
+
+    const duel = await t.run(async (ctx) => ctx.db.get(duelId));
+    expect(duel?.status).toBe("COMPLETED");
+    expect(duel?.winners).toEqual([aliceWizard]);
+    expect(await tokens("alice")).toBe(4);
+    expect(await tokens("bob")).toBe(4);
   });
 
   describe("campaign battles", () => {

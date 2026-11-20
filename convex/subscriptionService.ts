@@ -1,4 +1,5 @@
 import { query, mutation, internalMutation } from "./_generated/server";
+import { STARTING_TOKENS } from "./lib/pricing";
 import { v } from "convex/values";
 
 // Types for subscription management
@@ -18,7 +19,7 @@ export type AIModelTier = "STANDARD" | "PREMIUM";
 const FREE_TIER_LIMITS = {
   WIZARDS_MAX: 3,
   DUELS_PER_DAY: 5, // Will be removed in future task
-  INITIAL_IMAGE_CREDITS: 10,
+  INITIAL_IMAGE_CREDITS: STARTING_TOKENS,
 } as const;
 
 /**
@@ -260,7 +261,7 @@ export const incrementUsage = mutation({
 /**
  * Update user subscription (for Stripe webhooks)
  */
-export const updateSubscription = mutation({
+export const updateSubscription = internalMutation({
   args: {
     clerkId: v.string(),
     subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),

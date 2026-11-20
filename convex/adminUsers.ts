@@ -857,6 +857,7 @@ export const getCreditHistory = query({
           v.literal("DUEL_REFUND"),
           v.literal("WIZARD_IMAGE"),
           v.literal("WIZARD_IMAGE_REFUND"),
+          v.literal("PURCHASE"),
         ),
         createdAt: v.number(),
         metadata: v.optional(v.record(v.string(), v.any())),

@@ -36,6 +36,8 @@ import {
   Star,
   Heart,
   LogIn,
+  Gift,
+  Coins,
 } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 
@@ -397,6 +399,38 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
             ) : (
               <>
                 {/* Duel Information - Compact Version */}
+                {canJoinDuel &&
+                  (duel.creatorCoversEntry ? (
+                    <div className="mb-6 flex items-center gap-3 rounded-xl border border-gold/60 bg-gold/10 p-4 text-foreground shadow-sm">
+                      <Gift
+                        className="h-6 w-6 shrink-0 text-gold"
+                        aria-hidden="true"
+                      />
+                      <p>
+                        <span className="font-semibold">
+                          Your entry is covered.
+                        </span>{" "}
+                        Your challenger paid your token, so this duel is free
+                        for you.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mb-6 flex items-center gap-3 rounded-xl border border-border/50 bg-card/90 p-4 text-sm text-muted-foreground shadow-sm">
+                      <Coins
+                        className="h-5 w-5 shrink-0 text-gold"
+                        aria-hidden="true"
+                      />
+                      <p>
+                        Joining costs{" "}
+                        <span className="font-medium text-foreground">
+                          1 token
+                        </span>
+                        , whatever the duel&apos;s length. New players start
+                        with free tokens.
+                      </p>
+                    </div>
+                  ))}
+
                 {canJoinDuel && (
                   <Card className="mb-6 bg-card/90 backdrop-blur-sm border-border/50 shadow-lg dark:shadow-xl">
                     <CardHeader>

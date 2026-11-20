@@ -96,6 +96,7 @@ export default defineSchema({
     imageCreditConsumedBy: v.optional(v.string()), // User ID who had the credit consumed for this duel
     tokensCharged: v.optional(v.array(v.string())), // Users who paid a token for this duel (Premium users are not charged)
     tokensRefunded: v.optional(v.boolean()), // True once those tokens have been given back
+    creatorCoversEntry: v.optional(v.boolean()), // Creator pays the joiner's token too (gifted entry)
     isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels
     rematchDuelId: v.optional(v.id("duels")), // Set when a player requests a rematch of this duel
   })
@@ -198,11 +199,28 @@ export default defineSchema({
       v.literal("DUEL_REFUND"),
       v.literal("WIZARD_IMAGE"),
       v.literal("WIZARD_IMAGE_REFUND"),
+      v.literal("PURCHASE"),
     ),
     relatedAdId: v.optional(v.id("adInteractions")),
     metadata: v.optional(v.record(v.string(), v.any())),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+  // Token pack purchases through Stripe Checkout. A row is created when
+  // checkout starts and completed (tokens granted) once, by the webhook.
+  tokenPurchases: defineTable({
+    userId: v.string(), // Clerk ID of the buyer
+    packId: v.string(),
+    tokens: v.number(),
+    amountCents: v.number(),
+    currency: v.string(),
+    stripeSessionId: v.string(),
+    stripePaymentIntentId: v.optional(v.string()),
+    status: v.union(v.literal("PENDING"), v.literal("COMPLETED")),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_session", ["stripeSessionId"])
+    .index("by_user", ["userId"]),
   // One row per AI provider call, used to track generation costs
   aiUsage: defineTable({
     feature: v.string(), // e.g. generate_duel_round, generate_wizard_image

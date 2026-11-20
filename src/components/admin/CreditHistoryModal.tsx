@@ -209,6 +209,11 @@ export function CreditHistoryModal({
           label: "Illustration Refund",
           icon: <Coins className="h-3 w-3" />,
         };
+      case "PURCHASE":
+        return {
+          label: "Token Purchase",
+          icon: <Coins className="h-3 w-3" />,
+        };
       default:
         return {
           label: source.replace(/_/g, " "),

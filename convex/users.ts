@@ -1,4 +1,5 @@
 import { query, mutation, internalMutation } from "./_generated/server";
+import { STARTING_TOKENS } from "./lib/pricing";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
@@ -42,7 +43,7 @@ export const getOrCreateUser = mutation({
       name,
       subscriptionTier: "FREE",
       subscriptionStatus: "ACTIVE",
-      imageCredits: 10, // Initial 10 credits for new users
+      imageCredits: STARTING_TOKENS,
       monthlyUsage: {
         duelsPlayed: 0,
         wizardsCreated: 0,
@@ -57,7 +58,7 @@ export const getOrCreateUser = mutation({
     // Grant initial credits and record the transaction
     await ctx.runMutation(internal.imageCreditService.grantInitialCredits, {
       userId: clerkId,
-      amount: 10,
+      amount: STARTING_TOKENS,
     });
 
     return userId;
@@ -222,7 +223,7 @@ export const listUsers = query({
   },
 });
 // Internal function to update user subscription (for testing and webhooks)
-export const updateUserSubscription = mutation({
+export const updateUserSubscription = internalMutation({
   args: {
     userId: v.id("users"),
     subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),

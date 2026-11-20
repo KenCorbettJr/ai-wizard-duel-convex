@@ -53,7 +53,7 @@ describe("UsageLimiterService", () => {
 
     test("should allow unlimited wizards for premium users", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -119,7 +119,7 @@ describe("UsageLimiterService", () => {
 
     test("should allow unlimited duels for premium users", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -167,7 +167,7 @@ describe("UsageLimiterService", () => {
     test("should deny image generation when no credits", async () => {
       // Consume all credits
       for (let i = 0; i < 10; i++) {
-        await t.mutation(api.imageCreditService.consumeImageCredit, {
+        await t.mutation(internal.imageCreditService.consumeImageCredit, {
           userId: testClerkId,
         });
       }
@@ -184,7 +184,7 @@ describe("UsageLimiterService", () => {
 
     test("should allow unlimited image generation for premium users", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -192,7 +192,7 @@ describe("UsageLimiterService", () => {
 
       // Even with 0 credits, premium users can generate images
       for (let i = 0; i < 10; i++) {
-        await t.mutation(api.imageCreditService.consumeImageCredit, {
+        await t.mutation(internal.imageCreditService.consumeImageCredit, {
           userId: testClerkId,
         });
       }
@@ -295,7 +295,7 @@ describe("UsageLimiterService", () => {
 
     test("should return comprehensive usage status for premium user", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",

@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
+import { STARTING_TOKENS } from "./lib/pricing";
 
 test("user creation and retrieval", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
@@ -27,7 +28,7 @@ test("user creation and retrieval", async () => {
   expect(user?.role).toBe("user");
   expect(user?.subscriptionTier).toBe("FREE");
   expect(user?.subscriptionStatus).toBe("ACTIVE");
-  expect(user?.imageCredits).toBe(10); // Initial credits
+  expect(user?.imageCredits).toBe(STARTING_TOKENS);
 
   // Test that calling getOrCreateUser again returns the same user
   const sameUserId = await t.mutation(api.users.getOrCreateUser, {
@@ -58,7 +59,7 @@ test("user creation with minimal info", async () => {
   expect(user?.clerkId).toBe("minimal_user_456");
   expect(user?.email).toBeUndefined();
   expect(user?.name).toBeUndefined();
-  expect(user?.imageCredits).toBe(10); // Should still get initial credits
+  expect(user?.imageCredits).toBe(STARTING_TOKENS);
 });
 
 test("getUserImageCredits works after user creation", async () => {
@@ -76,5 +77,5 @@ test("getUserImageCredits works after user creation", async () => {
     userId: "credit_test_user",
   });
 
-  expect(credits).toBe(10); // Should have initial 10 credits
+  expect(credits).toBe(STARTING_TOKENS);
 });

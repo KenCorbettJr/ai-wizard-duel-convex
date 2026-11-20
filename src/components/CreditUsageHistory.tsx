@@ -59,8 +59,7 @@ export function CreditUsageHistory({
         )}
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground text-center py-8">
-            No token activity yet. Start earning tokens by watching ads or
-            upgrade to Premium!
+            No token activity yet. Every duel you play will show up here.
           </p>
         </CardContent>
       </Card>
@@ -69,6 +68,8 @@ export function CreditUsageHistory({
 
   const getTransactionIcon = (type: string, source: string) => {
     if (type === "EARNED") {
+      if (source === "PURCHASE")
+        return <Coins className="h-4 w-4 text-gold" />;
       if (source === "AD_REWARD")
         return <Gift className="h-4 w-4 text-success" />;
       if (source === "SIGNUP_BONUS")
@@ -119,6 +120,8 @@ export function CreditUsageHistory({
         return "Wizard Illustration";
       case "WIZARD_IMAGE_REFUND":
         return "Illustration Refund";
+      case "PURCHASE":
+        return "Token Purchase";
       default:
         return source.replace("_", " ");
     }

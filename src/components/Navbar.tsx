@@ -55,6 +55,15 @@ export function Navbar({
       </div>
       <div className="flex items-center gap-1 sm:gap-3">
         <Link
+          href="/#pricing"
+          className={cn(
+            "rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 inline-flex items-center",
+            transparent ? "text-white" : "text-foreground",
+          )}
+        >
+          Pricing
+        </Link>
+        <Link
           href="/leaderboard"
           className={cn(
             "rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 inline-flex items-center",

@@ -2,8 +2,9 @@ import { ConvexError } from "convex/values";
 import type { MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 
-/** Tokens a player pays to redo a wizard's illustration. */
-export const WIZARD_IMAGE_TOKEN_COST = 1;
+import { WIZARD_IMAGE_TOKEN_COST } from "./pricing";
+
+export { WIZARD_IMAGE_TOKEN_COST };
 
 export const INSUFFICIENT_WIZARD_TOKENS_ERROR =
   "You need at least 1 token to regenerate this wizard's illustration.";

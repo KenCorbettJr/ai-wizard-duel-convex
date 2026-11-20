@@ -1,5 +1,12 @@
 import { Show } from "@clerk/nextjs";
-import { MountedPricingTable } from "@/components/MountedPricingTable";
+import { TokenPacks } from "@/components/TokenPacks";
+import {
+  STARTING_TOKENS,
+  TOKEN_PACKS,
+  TO_THE_DEATH_MAX_ROUNDS,
+  formatCentsPerDuel,
+  formatPrice,
+} from "../../convex/lib/pricing";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +26,10 @@ import {
   Zap,
   Coins,
   Gift,
+  Swords,
   Crown,
   Laugh,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
 import DashboardContent from "@/components/DashboardContent";
@@ -66,6 +75,13 @@ function LandingPage() {
             <p className="text-lg text-white/90 mb-6">
               Duel other players, or take on a ten-wizard campaign to earn a
               permanent relic.
+            </p>
+            <p className="text-sm text-white/80 mb-6">
+              {STARTING_TOKENS} free duels to start, then from{" "}
+              {formatCentsPerDuel(TOKEN_PACKS[TOKEN_PACKS.length - 1])} a duel.{" "}
+              <Link href="#pricing" className="underline underline-offset-2">
+                See pricing
+              </Link>
             </p>
             <Show when="signed-out">
               <Button
@@ -153,7 +169,7 @@ function LandingPage() {
             <FeatureCard
               icon={Coins}
               title="One Token a Battle"
-              description="Start with 10 free tokens. Lose a fight and you can try again whenever you like."
+              description={`Every battle costs one token, win or lose. Start with ${STARTING_TOKENS} free, and retry a lost fight whenever you like.`}
             />
           </div>
         </div>
@@ -287,69 +303,48 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Image Credits System */}
-      <section className="bg-secondary/30 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <Coins className="w-12 h-12 mb-4 text-gold inline-block" />
-            <h2 className="text-3xl font-bold mb-6 font-display">
-              Bring Your Spells to Life
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Every duel features stunning AI-generated artwork that visualizes
-              your magical creations. Use tokens to generate unique
-              illustrations for your spells and wizards.
-            </p>
-          </div>
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
-            <FeatureCard
-              icon={Gift}
-              title="Free Tokens"
-              description="Start with 10 free tokens when you sign up. Perfect for trying out the magic!"
-            />
-            <FeatureCard
-              icon={Sparkles}
-              title="Earn More Tokens"
-              description="Watch short video ads to earn additional tokens. One ad = one token, with a 5-minute cooldown."
-            />
-            <FeatureCard
-              icon={Crown}
-              title="Included with Premium"
-              description="Premium players are not charged tokens for duels, plus exclusive features and faster processing."
-            />
-          </div>
-          <div className="text-center mt-8">
-            <p className="text-sm text-muted-foreground">
-              <strong>Prefer a story-only duel?</strong> You can turn off
-              AI-generated images when you create a duel. It still costs 1 token
-              to enter.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing */}
-      <section className="bg-background py-16">
+      <section id="pricing" className="bg-secondary/30 py-16 scroll-mt-20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
+            <Coins
+              className="w-12 h-12 mb-4 text-gold inline-block"
+              aria-hidden="true"
+            />
             <h2 className="text-3xl font-bold mb-6 font-display">
-              Choose Your Path
+              Simple Arcade Pricing
             </h2>
             <p className="text-lg text-muted-foreground">
-              Start free and upgrade when you&apos;re ready to unleash your full
-              magical potential.
+              <strong className="text-foreground">One token = one duel.</strong>{" "}
+              Any length, any opponent, AI artwork included. No subscription.
+              Buy a bigger pack and every duel costs less, from{" "}
+              {formatCentsPerDuel(TOKEN_PACKS[0])} down to{" "}
+              {formatCentsPerDuel(TOKEN_PACKS[TOKEN_PACKS.length - 1])}.
             </p>
           </div>
-          <div className="max-w-4xl mx-auto">
-            {/* 
-              Clerk PricingTable component - requires pricing plans to be configured in Clerk Dashboard
-              Go to: Clerk Dashboard > Billing > Pricing Plans to set up your plans
-              Plans should include:
-              1. Free Wizard - $0/month with basic features
-              2. Premium Wizard - $9.99/month with unlimited features
-            */}
-            <MountedPricingTable />
+          <TokenPacks mode="display" className="mx-auto max-w-5xl" />
+          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+            <FeatureCard
+              icon={Gift}
+              title={`${STARTING_TOKENS} Free Tokens`}
+              description={`Every new wizard starts with ${STARTING_TOKENS} free tokens. That's ${STARTING_TOKENS} duels or campaign battles to try the magic.`}
+            />
+            <FeatureCard
+              icon={Swords}
+              title="Cover a Friend"
+              description="Challenging someone new? Pay their token when you create the duel and they play free."
+            />
+            <FeatureCard
+              icon={InfinityIcon}
+              title="Tokens Never Expire"
+              description="You're only charged when a duel actually starts, and cancelled duels are refunded."
+            />
           </div>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Duels can be 3, 5 or 10 rounds, or To the Death (up to{" "}
+            {TO_THE_DEATH_MAX_ROUNDS} rounds). Story-only duels without images
+            cost the same 1 token.
+          </p>
         </div>
       </section>
 
@@ -375,7 +370,8 @@ function LandingPage() {
                 Sign Up Free
               </h3>
               <p className="text-muted-foreground">
-                Create your account and get 10 free tokens to start
+                Create your account and get {STARTING_TOKENS} free tokens to
+                start
               </p>
             </div>
             <div className="text-center space-y-4">
@@ -422,114 +418,6 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* What Players Are Saying */}
-      <section className="bg-background py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-6 font-display">
-              What Players Are Saying
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Join thousands of wizards already casting spells and having epic
-              duels
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="bg-background">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div
-                    className="flex text-warning"
-                    aria-label="5 out of 5 stars"
-                    role="img"
-                  >
-                    {"★".repeat(5)}
-                  </div>
-                  <p className="text-muted-foreground italic">
-                    &ldquo;The creativity this game unleashes is incredible!
-                    I&apos;ve never had so much fun coming up with magical
-                    spells. The AI artwork makes every duel feel like an epic
-                    fantasy movie.&rdquo;
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-arcane rounded-full flex items-center justify-center text-white font-bold">
-                      M
-                    </div>
-                    <div>
-                      <div className="font-semibold">MysticMage47</div>
-                      <div className="text-sm text-muted-foreground">
-                        Premium Wizard
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-background">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div
-                    className="flex text-warning"
-                    aria-label="5 out of 5 stars"
-                    role="img"
-                  >
-                    {"★".repeat(5)}
-                  </div>
-                  <p className="text-muted-foreground italic">
-                    &ldquo;Way better than rock-paper-scissors! My friends and I
-                    use this to settle everything now. The simultaneous spell
-                    casting keeps everyone on their toes. So much fun!&rdquo;
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-arcane rounded-full flex items-center justify-center text-white font-bold">
-                      S
-                    </div>
-                    <div>
-                      <div className="font-semibold">SpellSlinger</div>
-                      <div className="text-sm text-muted-foreground">
-                        Free Wizard
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-background">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div
-                    className="flex text-warning"
-                    aria-label="5 out of 5 stars"
-                    role="img"
-                  >
-                    {"★".repeat(5)}
-                  </div>
-                  <p className="text-muted-foreground italic">
-                    &ldquo;The free tier is generous enough to really enjoy the
-                    game, but Premium is totally worth it for unlimited image
-                    generation. The AI creates such beautiful and unique
-                    artwork!&rdquo;
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-arcane rounded-full flex items-center justify-center text-white font-bold">
-                      A
-                    </div>
-                    <div>
-                      <div className="font-semibold">ArcaneArtist</div>
-                      <div className="text-sm text-muted-foreground">
-                        Premium Wizard
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       {/* Leaderboard */}
       <section className="bg-secondary/30 py-16">
         <div className="container mx-auto px-4 text-center">
@@ -567,11 +455,10 @@ function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Tokens pay for AI-powered duels and artwork. Each player
-                  spends 1 token to enter a duel against another player, and 1
-                  token starts a campaign battle. You start with 10 free tokens
-                  and can earn more by watching ads. Premium players are not
-                  charged for duels.
+                  Tokens are how you play. Each player spends 1 token to enter a
+                  duel, whatever its length, and 1 token starts a campaign
+                  battle. The AI story and artwork are included. You start with{" "}
+                  {STARTING_TOKENS} free tokens.
                 </p>
               </CardContent>
             </Card>
@@ -579,14 +466,19 @@ function LandingPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">
-                  Can I play without spending money?
+                  How much does it cost?
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Yes. You start with 10 free tokens and can earn more by
-                  watching short video ads. Premium is optional and adds
-                  convenience and extra features.
+                  Signing up is free and comes with {STARTING_TOKENS} tokens.
+                  After that, tokens come in packs:{" "}
+                  {TOKEN_PACKS.map(
+                    (pack) =>
+                      `${pack.tokens} for ${formatPrice(pack.priceCents)}`,
+                  ).join(", ")}
+                  . That&apos;s {formatCentsPerDuel(TOKEN_PACKS[0])} a duel or
+                  less. There&apos;s no subscription, and tokens never expire.
                 </p>
               </CardContent>
             </Card>
@@ -608,16 +500,14 @@ function LandingPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">
-                  What makes Premium worth it?
+                  Can I pay for a friend to play?
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Premium removes all limitations: unlimited image generation,
-                  unlimited wizards, faster AI processing, advanced
-                  customization options, and an ad-free experience. Perfect for
-                  serious wizards who want to duel frequently with stunning
-                  visuals.
+                  Yes. When you create a duel, turn on &ldquo;Cover my
+                  opponent&apos;s entry&rdquo; and you pay both tokens. Your
+                  friend joins from your link without spending any.
                 </p>
               </CardContent>
             </Card>

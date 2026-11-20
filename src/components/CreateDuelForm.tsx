@@ -19,7 +19,18 @@ import { Id, Doc } from "../../convex/_generated/dataModel";
 import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
-import { Image as ImageIcon, Type, AlertTriangle, Info } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Type,
+  AlertTriangle,
+  Info,
+  Gift,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  DUEL_TOKEN_COST,
+  TO_THE_DEATH_MAX_ROUNDS,
+} from "../../convex/lib/pricing";
 import posthog from "posthog-js";
 
 interface CreateDuelFormProps {
@@ -42,6 +53,7 @@ export function CreateDuelForm({
     3,
   );
   const [enableImageGeneration, setEnableImageGeneration] = useState(true);
+  const [coverOpponentEntry, setCoverOpponentEntry] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -51,7 +63,12 @@ export function CreateDuelForm({
 
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
 
-  // Entering a duel costs 1 token (Premium is included)
+  const tokenBalance = useQuery(
+    api.imageCreditService.getUserImageCredits,
+    user?.id ? { userId: user.id } : "skip",
+  );
+
+  // Entering a duel costs 1 token (legacy Premium subscribers are included)
   const hasImageCredits = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
     user?.id ? { userId: user.id } : "skip",
@@ -98,10 +115,12 @@ export function CreateDuelForm({
         numberOfRounds,
         wizards: [selectedWizard],
         enableImageGeneration,
+        coverOpponentEntry: coversEntry,
       });
       posthog.capture("duel_created", {
         round_count: numberOfRounds,
         image_generation_enabled: enableImageGeneration,
+        covers_opponent_entry: coversEntry,
       });
       onSuccess(duelId);
     } catch (error) {
@@ -115,6 +134,10 @@ export function CreateDuelForm({
   const isPremium =
     userInfo?.subscriptionTier === "PREMIUM" &&
     userInfo?.subscriptionStatus === "ACTIVE";
+
+  const canAffordCover =
+    isPremium || (tokenBalance ?? 0) >= DUEL_TOKEN_COST * 2;
+  const coversEntry = coverOpponentEntry && canAffordCover;
 
   const profilePrompt = getProfileCompletionPrompt("create duels");
 
@@ -217,6 +240,35 @@ export function CreateDuelForm({
                 />
               </div>
 
+              {/* Gift the opponent's entry */}
+              <div className="flex items-center justify-between gap-3 p-4 border rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Gift
+                    className={`h-5 w-5 flex-shrink-0 ${coversEntry ? "text-gold" : "text-muted-foreground"}`}
+                    aria-hidden="true"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor="cover-opponent-entry"
+                      className="font-medium text-foreground"
+                    >
+                      Cover my opponent&apos;s entry
+                    </label>
+                    <p className="text-sm text-muted-foreground">
+                      {canAffordCover
+                        ? "Pay 1 extra token so your friend can play without spending one."
+                        : "You need 2 tokens to cover your opponent's entry."}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="cover-opponent-entry"
+                  checked={coversEntry}
+                  disabled={!canAffordCover}
+                  onCheckedChange={setCoverOpponentEntry}
+                />
+              </div>
+
               {/* Token Information */}
               <div className="space-y-3">
                 {isPremium ? (
@@ -230,8 +282,10 @@ export function CreateDuelForm({
                   <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/40 rounded-lg">
                     <Info className="h-4 w-4 text-success" />
                     <span className="text-sm text-success">
-                      Entering a duel costs 1 token. It is refunded if the duel
-                      is cancelled before an opponent joins.
+                      {coversEntry
+                        ? "This duel costs you 2 tokens: yours and your opponent's."
+                        : "This duel costs 1 token, whatever its length."}{" "}
+                      You&apos;re only charged when your opponent joins.
                     </span>
                   </div>
                 ) : (
@@ -243,8 +297,13 @@ export function CreateDuelForm({
                           No tokens available
                         </p>
                         <p className="text-sm text-warning">
-                          You need 1 token to start a duel. You can earn tokens
-                          by watching ads or upgrading to Premium.
+                          You need 1 token to start a duel.{" "}
+                          <Link
+                            href="/credits"
+                            className="font-medium underline underline-offset-2"
+                          >
+                            Get more tokens
+                          </Link>
                         </p>
                       </div>
                     </div>
@@ -295,7 +354,7 @@ export function CreateDuelForm({
               >
                 <div className="font-medium text-foreground">To the Death</div>
                 <div className="text-sm text-muted-foreground">
-                  Until one falls
+                  Until one falls (max {TO_THE_DEATH_MAX_ROUNDS})
                 </div>
               </button>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { STARTING_TOKENS } from "../../convex/lib/pricing";
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -51,14 +52,13 @@ export function RegistrationPrompt({
 
       case "premium_features":
         return {
-          title: "🌟 Unlock Premium Features",
-          description:
-            "Create an account to access advanced wizard customization and premium content.",
+          title: "🌟 Create Your Wizard",
+          description: `Create an account to design wizards, take on the campaign and duel friends. You start with ${STARTING_TOKENS} free tokens.`,
           benefits: [
-            "Advanced wizard customization",
-            "Premium spell templates",
-            "Exclusive magical items",
-            "Ad-free experience",
+            "AI-illustrated wizards",
+            "A ten-wizard campaign",
+            "Duels with friends",
+            "One token per duel, no subscription",
           ],
         };
 

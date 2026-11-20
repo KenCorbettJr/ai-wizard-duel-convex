@@ -27,7 +27,7 @@ describe("Text-Only Mode Functionality", () => {
 
     // Test credit consumption
     const consumed = await t.mutation(
-      api.imageCreditService.consumeImageCredit,
+      internal.imageCreditService.consumeImageCredit,
       {
         userId: "user456",
         metadata: { purpose: "test" },
@@ -72,7 +72,7 @@ describe("Text-Only Mode Functionality", () => {
 
     // Test credit consumption for premium user
     const consumed = await t.mutation(
-      api.imageCreditService.consumeImageCredit,
+      internal.imageCreditService.consumeImageCredit,
       {
         userId: "premium123",
         metadata: { purpose: "premium_test" },

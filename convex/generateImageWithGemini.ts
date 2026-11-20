@@ -13,7 +13,9 @@ import { recordAIUsage } from "./lib/recordAIUsage";
 import { generateWithBfl, BFL_IMAGE_MODEL } from "./lib/bflImage";
 import { isBflEnabled } from "./lib/imageProvider";
 
-const GEMINI_IMAGE_MODEL = "gemini-nano-banana-2.1";
+const GEMINI_IMAGE_MODEL = "gemini-3.1-flash-lite-image";
+// The smallest generated image is several hundred tokens (1K is 1120).
+const MIN_IMAGE_TOKENS = 256;
 
 interface UsageContext {
   userId?: string;
@@ -428,10 +430,22 @@ async function generateWithGeminiFlash(
     }
 
     // Tokens are billed even when no image comes back (e.g. a safety refusal).
+    // Image data is billed at a higher rate than the other output tokens, and
+    // genkit reports it separately. Values below MIN_IMAGE_TOKENS are an image
+    // count rather than tokens, so ignore them.
+    const reportedImageTokens = response.usage?.outputImages;
     const costUsd = estimateTokenCostUsd(
       GEMINI_IMAGE_MODEL,
       response.usage?.inputTokens,
       response.usage?.outputTokens,
+      {
+        thinkingTokens: response.usage?.thoughtsTokens,
+        imageOutputTokens:
+          reportedImageTokens !== undefined &&
+          reportedImageTokens >= MIN_IMAGE_TOKENS
+            ? reportedImageTokens
+            : undefined,
+      },
     );
     const returnedImage = !!response.message?.content?.some(
       (item) => item.media || item.text,

@@ -2,8 +2,9 @@ import { ConvexError } from "convex/values";
 import type { MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 
-/** Tokens a player pays to enter a PvP duel or start a campaign battle. */
-export const DUEL_TOKEN_COST = 1;
+import { DUEL_TOKEN_COST } from "./pricing";
+
+export { DUEL_TOKEN_COST };
 
 export const INSUFFICIENT_TOKENS_ERROR =
   "You need at least 1 token to start a duel.";
@@ -27,22 +28,32 @@ async function getUserByClerkId(ctx: MutationCtx, userId: string) {
 /**
  * Throw unless the player could pay for a duel right now, without charging.
  * Used when a duel is created. The token is only taken when the duel starts,
- * so a waiting duel never holds one.
+ * so a waiting duel never holds one. `seats` is 2 when the creator also
+ * covers their opponent's entry.
  */
 export async function assertCanAffordDuelToken(
   ctx: MutationCtx,
   userId: string,
   who: "you" | "creator" = "you",
+  seats = 1,
 ): Promise<void> {
   const user = await getUserByClerkId(ctx, userId);
   if (!user) {
     throw new Error("User not found");
   }
-  if (!isActivePremium(user) && user.imageCredits < DUEL_TOKEN_COST) {
+  const needed = DUEL_TOKEN_COST * seats;
+  if (!isActivePremium(user) && user.imageCredits < needed) {
+    if (who === "creator") {
+      throw new ConvexError(
+        seats > 1
+          ? "The duel's creator no longer has enough tokens to cover your entry, so this duel can't start."
+          : "The duel's creator no longer has a token, so this duel can't start.",
+      );
+    }
     throw new ConvexError(
-      who === "you"
-        ? INSUFFICIENT_TOKENS_ERROR
-        : "The duel's creator no longer has a token, so this duel can't start.",
+      seats > 1
+        ? `You need ${needed} tokens to cover your opponent's entry as well as your own.`
+        : INSUFFICIENT_TOKENS_ERROR,
     );
   }
 }
@@ -52,12 +63,14 @@ export async function assertCanAffordDuelToken(
  * the calling mutation rolls back. Active Premium subscribers are not charged
  * (same as before tokens), but the entry is still written to the ledger.
  * The charge is recorded on the duel so it can be refunded exactly once.
+ * `coveredFor` is set when this token pays for another player's entry.
  */
 export async function chargeDuelToken(
   ctx: MutationCtx,
   userId: string,
   duelId: Id<"duels">,
   purpose: "pvp_duel" | "campaign_battle",
+  coveredFor?: string,
 ): Promise<void> {
   const user = await getUserByClerkId(ctx, userId);
   if (!user) {
@@ -90,7 +103,9 @@ export async function chargeDuelToken(
     type: "CONSUMED",
     amount: premium ? 0 : DUEL_TOKEN_COST,
     source: "DUEL_ENTRY",
-    metadata: { duelId, purpose },
+    metadata: coveredFor
+      ? { duelId, purpose, coveredFor }
+      : { duelId, purpose },
     createdAt: now,
   });
 }

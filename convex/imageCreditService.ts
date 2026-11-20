@@ -12,6 +12,7 @@ const CreditSource = v.union(
   v.literal("DUEL_REFUND"),
   v.literal("WIZARD_IMAGE"),
   v.literal("WIZARD_IMAGE_REFUND"),
+  v.literal("PURCHASE"),
 );
 
 // Transaction types
@@ -79,7 +80,7 @@ export const hasImageCreditsForDuel = query({
 /**
  * Consume an image credit for AI generation
  */
-export const consumeImageCredit = mutation({
+export const consumeImageCredit = internalMutation({
   args: {
     userId: v.string(),
     metadata: v.optional(v.record(v.string(), v.string())),
@@ -166,7 +167,7 @@ export const refundWizardImageToken = internalMutation({
 /**
  * Award image credits to a user
  */
-export const awardImageCredit = mutation({
+export const awardImageCredit = internalMutation({
   args: {
     userId: v.string(),
     amount: v.number(),
@@ -210,160 +211,6 @@ export const awardImageCredit = mutation({
   },
 });
 
-/**
- * Check if user can earn credits from watching an ad (cooldown check)
- */
-export const canEarnCreditFromAd = query({
-  args: {
-    userId: v.string(),
-  },
-  returns: v.object({
-    canEarn: v.boolean(),
-    cooldownRemaining: v.number(), // Seconds remaining
-    lastAdWatched: v.optional(v.number()),
-  }),
-  handler: async (ctx, args) => {
-    const COOLDOWN_PERIOD = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-    // Get the most recent ad reward transaction
-    const lastAdReward = await ctx.db
-      .query("imageCreditTransactions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.eq(q.field("source"), "AD_REWARD"))
-      .order("desc")
-      .first();
-
-    if (!lastAdReward) {
-      return {
-        canEarn: true,
-        cooldownRemaining: 0,
-      };
-    }
-
-    const timeSinceLastAd = Date.now() - lastAdReward.createdAt;
-    const canEarn = timeSinceLastAd >= COOLDOWN_PERIOD;
-    const cooldownRemaining = canEarn
-      ? 0
-      : Math.ceil((COOLDOWN_PERIOD - timeSinceLastAd) / 1000);
-
-    return {
-      canEarn,
-      cooldownRemaining,
-      lastAdWatched: lastAdReward.createdAt,
-    };
-  },
-});
-
-/**
- * Process ad reward credit earning
- */
-export const processAdRewardCredit = mutation({
-  args: {
-    userId: v.string(),
-    adInteractionId: v.id("adInteractions"),
-  },
-  returns: v.object({
-    success: v.boolean(),
-    creditsAwarded: v.number(),
-    message: v.string(),
-  }),
-  handler: async (ctx, args) => {
-    // Verify the ad interaction exists and is a completion
-    const adInteraction = await ctx.db.get(args.adInteractionId);
-    if (!adInteraction) {
-      return {
-        success: false,
-        creditsAwarded: 0,
-        message: "Ad interaction not found",
-      };
-    }
-
-    if (adInteraction.action !== "COMPLETION") {
-      return {
-        success: false,
-        creditsAwarded: 0,
-        message: "Ad was not completed",
-      };
-    }
-
-    if (adInteraction.adType !== "VIDEO_REWARD") {
-      return {
-        success: false,
-        creditsAwarded: 0,
-        message: "Invalid ad type for token reward",
-      };
-    }
-
-    // Check cooldown
-    const lastAdReward = await ctx.db
-      .query("imageCreditTransactions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.eq(q.field("source"), "AD_REWARD"))
-      .order("desc")
-      .first();
-
-    if (lastAdReward) {
-      const COOLDOWN_PERIOD = 5 * 60 * 1000; // 5 minutes
-      const timeSinceLastAd = Date.now() - lastAdReward.createdAt;
-      if (timeSinceLastAd < COOLDOWN_PERIOD) {
-        const remainingSeconds = Math.ceil(
-          (COOLDOWN_PERIOD - timeSinceLastAd) / 1000,
-        );
-        return {
-          success: false,
-          creditsAwarded: 0,
-          message: `Please wait ${remainingSeconds} seconds before watching another ad`,
-        };
-      }
-    }
-
-    // Get user to update credits
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
-      .first();
-
-    if (!user) {
-      return {
-        success: false,
-        creditsAwarded: 0,
-        message: "User not found",
-      };
-    }
-
-    // Award 1 credit for watching a reward ad
-    const creditsToAward = 1;
-
-    await ctx.db.patch(user._id, {
-      imageCredits: user.imageCredits + creditsToAward,
-      monthlyUsage: {
-        ...user.monthlyUsage,
-        adsWatched: user.monthlyUsage.adsWatched + 1,
-      },
-      updatedAt: Date.now(),
-    });
-
-    // Record the transaction
-    await ctx.db.insert("imageCreditTransactions", {
-      userId: args.userId,
-      type: "EARNED",
-      amount: creditsToAward,
-      source: "AD_REWARD",
-      relatedAdId: args.adInteractionId,
-      metadata: {
-        adType: adInteraction.adType,
-        placement: adInteraction.placement,
-      },
-      createdAt: Date.now(),
-    });
-
-    return {
-      success: true,
-      creditsAwarded: creditsToAward,
-      message: `You earned ${creditsToAward} token!`,
-    };
-  },
-});
 /**
  * Get user's image credit transaction history
  */

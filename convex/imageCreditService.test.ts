@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
+import { STARTING_TOKENS } from "./lib/pricing";
 
 test("image credit service functionality", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
@@ -20,7 +21,7 @@ test("image credit service functionality", async () => {
       userId: "test_user_123",
     }
   );
-  expect(initialCredits).toBe(10); // Initial credits from user creation
+  expect(initialCredits).toBe(STARTING_TOKENS); // Initial credits from user creation
 
   // Test checking if user has credits for duel
   const hasCredits = await t.query(
@@ -33,7 +34,7 @@ test("image credit service functionality", async () => {
 
   // Test consuming a credit
   const consumeResult = await t.mutation(
-    api.imageCreditService.consumeImageCredit,
+    internal.imageCreditService.consumeImageCredit,
     {
       userId: "test_user_123",
       metadata: { reason: "test_duel_image" },
@@ -48,10 +49,10 @@ test("image credit service functionality", async () => {
       userId: "test_user_123",
     }
   );
-  expect(creditsAfterConsume).toBe(9);
+  expect(creditsAfterConsume).toBe(STARTING_TOKENS - 1);
 
   // Test awarding credits
-  await t.mutation(api.imageCreditService.awardImageCredit, {
+  await t.mutation(internal.imageCreditService.awardImageCredit, {
     userId: "test_user_123",
     amount: 5,
     source: "ADMIN_GRANT",
@@ -64,7 +65,7 @@ test("image credit service functionality", async () => {
       userId: "test_user_123",
     }
   );
-  expect(creditsAfterAward).toBe(14);
+  expect(creditsAfterAward).toBe(STARTING_TOKENS + 4);
 
   // Test credit history
   const history = await t.query(api.imageCreditService.getImageCreditHistory, {
@@ -74,16 +75,6 @@ test("image credit service functionality", async () => {
   expect(history.length).toBeGreaterThan(0);
   expect(history[0].type).toBe("EARNED"); // Most recent should be the award
   expect(history[0].amount).toBe(5);
-
-  // Test cooldown check for ad rewards
-  const cooldownCheck = await t.query(
-    api.imageCreditService.canEarnCreditFromAd,
-    {
-      userId: "test_user_123",
-    }
-  );
-  expect(cooldownCheck.canEarn).toBe(true);
-  expect(cooldownCheck.cooldownRemaining).toBe(0);
 });
 
 test("premium user unlimited credits", async () => {
@@ -120,7 +111,7 @@ test("premium user unlimited credits", async () => {
 
   // Test consuming credits as premium user (should always succeed)
   const consumeResult = await t.mutation(
-    api.imageCreditService.consumeImageCredit,
+    internal.imageCreditService.consumeImageCredit,
     {
       userId: "premium_user_123",
       metadata: { reason: "premium_test" },
@@ -135,63 +126,7 @@ test("premium user unlimited credits", async () => {
       userId: "premium_user_123",
     }
   );
-  expect(creditsAfter).toBe(10); // Should still have initial credits
-});
-
-test("ad reward processing", async () => {
-  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
-
-  // Create a test user
-  await t.mutation(api.users.getOrCreateUser, {
-    clerkId: "ad_user_123",
-    email: "aduser@example.com",
-    name: "Ad User",
-  });
-
-  // Create a completed video reward ad interaction
-  const adInteractionId = await t.mutation(api.adService.trackAdInteraction, {
-    userId: "ad_user_123",
-    sessionId: "test_session_456",
-    adType: "VIDEO_REWARD",
-    placement: "CREDIT_REWARD",
-    action: "COMPLETION",
-    adNetworkId: "test_network",
-    revenue: 100, // 1 dollar in cents
-  });
-
-  // Process the ad reward
-  const rewardResult = await t.mutation(
-    api.imageCreditService.processAdRewardCredit,
-    {
-      userId: "ad_user_123",
-      adInteractionId,
-    }
-  );
-
-  expect(rewardResult.success).toBe(true);
-  expect(rewardResult.creditsAwarded).toBe(1);
-  expect(rewardResult.message).toContain("earned");
-
-  // Check that credits were added
-  const creditsAfterReward = await t.query(
-    api.imageCreditService.getUserImageCredits,
-    {
-      userId: "ad_user_123",
-    }
-  );
-  expect(creditsAfterReward).toBe(11); // 10 initial + 1 from ad
-
-  // Test cooldown - immediate second attempt should fail
-  const secondRewardResult = await t.mutation(
-    api.imageCreditService.processAdRewardCredit,
-    {
-      userId: "ad_user_123",
-      adInteractionId,
-    }
-  );
-
-  expect(secondRewardResult.success).toBe(false);
-  expect(secondRewardResult.message).toContain("wait");
+  expect(creditsAfter).toBe(STARTING_TOKENS); // Should still have initial credits
 });
 
 test("credit consumption when out of credits", async () => {
@@ -205,8 +140,8 @@ test("credit consumption when out of credits", async () => {
   });
 
   // Consume all initial credits
-  for (let i = 0; i < 10; i++) {
-    await t.mutation(api.imageCreditService.consumeImageCredit, {
+  for (let i = 0; i < STARTING_TOKENS; i++) {
+    await t.mutation(internal.imageCreditService.consumeImageCredit, {
       userId: "broke_user_123",
     });
   }
@@ -219,7 +154,7 @@ test("credit consumption when out of credits", async () => {
 
   // Test that user cannot consume more credits
   const consumeResult = await t.mutation(
-    api.imageCreditService.consumeImageCredit,
+    internal.imageCreditService.consumeImageCredit,
     {
       userId: "broke_user_123",
     }

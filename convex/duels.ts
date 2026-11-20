@@ -15,6 +15,7 @@ import {
   chargeDuelToken,
   refundDuelTokens,
 } from "./lib/duelTokens";
+import { TO_THE_DEATH_MAX_ROUNDS } from "./lib/pricing";
 import { scheduleRoundNarration } from "./lib/scheduleNarration";
 import {
   verifySuperAdmin,
@@ -62,6 +63,7 @@ export const getPlayerDuels = query({
       imageCreditConsumedBy: v.optional(v.string()),
       tokensCharged: v.optional(v.array(v.string())),
       tokensRefunded: v.optional(v.boolean()),
+      creatorCoversEntry: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
     }),
@@ -157,6 +159,7 @@ export const getDuelInternal = internalQuery({
       imageCreditConsumedBy: v.optional(v.string()),
       tokensCharged: v.optional(v.array(v.string())),
       tokensRefunded: v.optional(v.boolean()),
+      creatorCoversEntry: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
       rounds: v.array(
@@ -289,16 +292,24 @@ async function insertWaitingDuel(
     numberOfRounds,
     wizards,
     enableImageGeneration,
+    coverOpponentEntry = false,
   }: {
     userId: string;
     numberOfRounds: number | "TO_THE_DEATH";
     wizards: Id<"wizards">[];
     enableImageGeneration: boolean;
+    coverOpponentEntry?: boolean;
   },
 ): Promise<Id<"duels">> {
   // A token is only taken when a second player joins and the duel starts.
-  // Until then, just make sure the creator could pay for it.
-  await assertCanAffordDuelToken(ctx, userId);
+  // Until then, just make sure the creator could pay for it (and for their
+  // opponent's entry, when they offered to cover it).
+  await assertCanAffordDuelToken(
+    ctx,
+    userId,
+    "you",
+    coverOpponentEntry ? 2 : 1,
+  );
 
   const players = [userId];
   // Initialize points and hit points for all wizards
@@ -335,6 +346,7 @@ async function insertWaitingDuel(
     shortcode,
     textOnlyMode: !enableImageGeneration,
     textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
+    creatorCoversEntry: coverOpponentEntry || undefined,
   });
 }
 
@@ -344,10 +356,17 @@ export const createDuel = mutation({
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
     enableImageGeneration: v.optional(v.boolean()),
+    // Creator pays their opponent's token too, so a friend can play free
+    coverOpponentEntry: v.optional(v.boolean()),
   },
   handler: async (
     ctx,
-    { numberOfRounds, wizards, enableImageGeneration = true },
+    {
+      numberOfRounds,
+      wizards,
+      enableImageGeneration = true,
+      coverOpponentEntry = false,
+    },
   ) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -367,6 +386,7 @@ export const createDuel = mutation({
       numberOfRounds,
       wizards,
       enableImageGeneration,
+      coverOpponentEntry,
     });
 
     return duelId;
@@ -386,12 +406,22 @@ async function addPlayerToDuel(
   // The duel starts when the second player joins, so both players pay now.
   // Any failure here throws and rolls the whole join back.
   if (duel.players.length + 1 >= 2) {
-    // Joiner first: the message is about them. Then re-check the creator,
-    // who may have spent their tokens while the duel was waiting.
-    await chargeDuelToken(ctx, userId, duelId, "pvp_duel");
-    for (const playerId of duel.players) {
-      await assertCanAffordDuelToken(ctx, playerId, "creator");
-      await chargeDuelToken(ctx, playerId, duelId, "pvp_duel");
+    if (duel.creatorCoversEntry) {
+      // The creator gifted this entry: they pay both tokens and the joiner
+      // pays nothing. Re-check, since they may have spent tokens meanwhile.
+      for (const playerId of duel.players) {
+        await assertCanAffordDuelToken(ctx, playerId, "creator", 2);
+        await chargeDuelToken(ctx, playerId, duelId, "pvp_duel");
+        await chargeDuelToken(ctx, playerId, duelId, "pvp_duel", userId);
+      }
+    } else {
+      // Joiner first: the message is about them. Then re-check the creator,
+      // who may have spent their tokens while the duel was waiting.
+      await chargeDuelToken(ctx, userId, duelId, "pvp_duel");
+      for (const playerId of duel.players) {
+        await assertCanAffordDuelToken(ctx, playerId, "creator");
+        await chargeDuelToken(ctx, playerId, duelId, "pvp_duel");
+      }
     }
   }
 
@@ -907,11 +937,13 @@ function checkDuelEndConditions(
     };
   }
 
-  // Check if we've reached the maximum number of rounds (if not "TO_THE_DEATH")
-  if (
-    typeof duel.numberOfRounds === "number" &&
-    duel.currentRound >= duel.numberOfRounds
-  ) {
+  // Check if we've reached the maximum number of rounds. "To the Death"
+  // duels are capped too, so a token always covers a known cost.
+  const maxRounds =
+    typeof duel.numberOfRounds === "number"
+      ? duel.numberOfRounds
+      : TO_THE_DEATH_MAX_ROUNDS;
+  if (duel.currentRound >= maxRounds) {
     // Determine winner by points, then by hit points
     const wizardScores = duel.wizards.map((wizardId: Id<"wizards">) => ({
       wizardId,
@@ -1011,6 +1043,7 @@ export const getActiveDuels = query({
       imageCreditConsumedBy: v.optional(v.string()),
       tokensCharged: v.optional(v.array(v.string())),
       tokensRefunded: v.optional(v.boolean()),
+      creatorCoversEntry: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
     }),
@@ -1068,6 +1101,7 @@ export const getWatchableDuels = query({
         imageCreditConsumedBy: v.optional(v.string()),
         tokensCharged: v.optional(v.array(v.string())),
         tokensRefunded: v.optional(v.boolean()),
+        creatorCoversEntry: v.optional(v.boolean()),
         isCampaignBattle: v.optional(v.boolean()),
         rematchDuelId: v.optional(v.id("duels")),
       }),

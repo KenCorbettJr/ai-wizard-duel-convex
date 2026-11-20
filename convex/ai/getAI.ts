@@ -31,7 +31,7 @@ export function getGeminiImageAI() {
   if (process.env.ENV === "emulate") {
     return genkit({
       plugins: [googleAI({ apiKey: "mock-api-key-for-emulator" })],
-      model: googleAI.model("gemini-nano-banana-2.1"),
+      model: googleAI.model("gemini-3.1-flash-lite-image"),
     });
   }
 
@@ -41,6 +41,6 @@ export function getGeminiImageAI() {
 
   return genkit({
     plugins: [googleAI({ apiKey: GOOGLE_API_KEY })],
-    model: googleAI.model("gemini-nano-banana-2.1"),
+    model: googleAI.model("gemini-3.1-flash-lite-image"),
   });
 }

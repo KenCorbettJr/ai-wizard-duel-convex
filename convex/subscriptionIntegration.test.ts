@@ -116,7 +116,7 @@ describe("Subscription Integration Tests", () => {
         );
         expect(canGenerate.canGenerate).toBe(true);
 
-        await t.mutation(api.imageCreditService.consumeImageCredit, {
+        await t.mutation(internal.imageCreditService.consumeImageCredit, {
           userId: freeClerkId,
         });
         // Note: consumeImageCredit already tracks the usage, no need to call trackImageGeneration
@@ -254,7 +254,7 @@ describe("Subscription Integration Tests", () => {
       expect(beforeUpgrade!.duels.canStart).toBe(false);
 
       // 3. Upgrade to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: freeClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -326,7 +326,7 @@ describe("Subscription Integration Tests", () => {
       expect(beforeDowngrade!.wizards.limit).toBe("UNLIMITED");
 
       // 3. Downgrade to free
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: premiumClerkId,
         subscriptionTier: "FREE",
         subscriptionStatus: "ACTIVE",
@@ -498,7 +498,7 @@ describe("Subscription Integration Tests", () => {
 
     test("should handle subscription update errors", async () => {
       await expect(
-        t.mutation(api.subscriptionService.updateSubscription, {
+        t.mutation(internal.subscriptionService.updateSubscription, {
           clerkId: "non-existent-user",
           subscriptionTier: "PREMIUM",
           subscriptionStatus: "ACTIVE",

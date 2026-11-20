@@ -63,7 +63,7 @@ describe("SubscriptionService", () => {
 
     test("should grant premium features for premium users", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -82,7 +82,7 @@ describe("SubscriptionService", () => {
 
     test("should deny premium features for canceled premium users", async () => {
       // Upgrade user to premium but cancel
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "CANCELED",
@@ -111,7 +111,7 @@ describe("SubscriptionService", () => {
 
     test("should return PREMIUM for premium users", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -168,7 +168,7 @@ describe("SubscriptionService", () => {
 
     test("should allow unlimited wizards for premium users", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -203,20 +203,20 @@ describe("SubscriptionService", () => {
 
     test("should deny image generation when no credits", async () => {
       // Consume all credits
-      await t.mutation(api.users.updateUserSubscription, {
+      await t.mutation(internal.users.updateUserSubscription, {
         userId: testUserId,
         subscriptionTier: "FREE",
         subscriptionStatus: "ACTIVE",
       });
 
       // Manually set credits to 0
-      await t.mutation(api.imageCreditService.consumeImageCredit, {
+      await t.mutation(internal.imageCreditService.consumeImageCredit, {
         userId: testClerkId,
       });
       // Consume remaining credits
       for (let i = 0; i < 10; i++) {
         try {
-          await t.mutation(api.imageCreditService.consumeImageCredit, {
+          await t.mutation(internal.imageCreditService.consumeImageCredit, {
             userId: testClerkId,
           });
         } catch {
@@ -322,7 +322,7 @@ describe("SubscriptionService", () => {
         clerkId: "expired-user",
       });
 
-      await t.mutation(api.users.updateUserSubscription, {
+      await t.mutation(internal.users.updateUserSubscription, {
         userId: expiredUser!._id,
         subscriptionTier: "FREE",
         subscriptionStatus: "ACTIVE",
@@ -348,7 +348,7 @@ describe("SubscriptionService", () => {
 
   describe("updateSubscription", () => {
     test("should update user subscription tier", async () => {
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",
@@ -372,7 +372,7 @@ describe("SubscriptionService", () => {
 
     test("should throw error for non-existent user", async () => {
       await expect(
-        t.mutation(api.subscriptionService.updateSubscription, {
+        t.mutation(internal.subscriptionService.updateSubscription, {
           clerkId: "non-existent-user",
           subscriptionTier: "PREMIUM",
           subscriptionStatus: "ACTIVE",
@@ -398,7 +398,7 @@ describe("SubscriptionService", () => {
 
     test("should return unlimited limits for premium user", async () => {
       // Upgrade user to premium
-      await t.mutation(api.subscriptionService.updateSubscription, {
+      await t.mutation(internal.subscriptionService.updateSubscription, {
         clerkId: testClerkId,
         subscriptionTier: "PREMIUM",
         subscriptionStatus: "ACTIVE",

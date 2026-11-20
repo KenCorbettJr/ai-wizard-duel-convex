@@ -65,7 +65,7 @@ export function DuelModeIndicator({
               </div>
               {textOnlyReason === "insufficient_credits" && (
                 <div className="text-xs text-warning mt-1">
-                  Watch ads or upgrade to premium for illustrated duels
+                  Get more tokens on the Tokens page for illustrated duels
                 </div>
               )}
             </div>
