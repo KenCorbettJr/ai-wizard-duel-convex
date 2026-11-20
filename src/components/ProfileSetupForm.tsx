@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -14,6 +14,10 @@ import {
   CardTitle,
 } from "./ui/card";
 import posthog from "posthog-js";
+import {
+  WatcherDialog,
+  type WatcherRejection,
+} from "./watcher/WatcherDialog";
 
 interface ProfileSetupFormProps {
   onComplete: (userId: string) => void;
@@ -39,7 +43,9 @@ export function ProfileSetupForm({
     userId.length >= 3 ? { userId } : "skip",
   );
 
-  const setUserIdMutation = useMutation(api.userProfiles.setUserId);
+  const setUserIdAction = useAction(api.watcher.setUserId);
+  const [watcherRejection, setWatcherRejection] =
+    useState<WatcherRejection | null>(null);
 
   // Debounced availability checking
   useEffect(() => {
@@ -99,10 +105,15 @@ export function ProfileSetupForm({
 
     setIsSubmitting(true);
     try {
-      await setUserIdMutation({
+      const result = await setUserIdAction({
         userId,
         displayName: displayName.trim() || undefined,
       });
+      if (!result.success) {
+        if (result.rejection) setWatcherRejection(result.rejection);
+        else setValidationError(result.error || "Failed to create profile.");
+        return;
+      }
       posthog.capture("profile_completed");
       onComplete(userId);
     } catch (error) {
@@ -197,6 +208,11 @@ export function ProfileSetupForm({
           <Button type="submit" className="w-full" disabled={!canSubmit}>
             {isSubmitting ? "Creating Profile..." : "Complete Profile"}
           </Button>
+          <WatcherDialog
+            rejection={watcherRejection}
+            onClose={() => setWatcherRejection(null)}
+            retryLabel="Choose another name"
+          />
         </form>
       </CardContent>
     </Card>

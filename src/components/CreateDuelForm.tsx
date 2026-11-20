@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Info,
   Gift,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -54,6 +55,7 @@ export function CreateDuelForm({
   );
   const [enableImageGeneration, setEnableImageGeneration] = useState(true);
   const [coverOpponentEntry, setCoverOpponentEntry] = useState(false);
+  const [enableChat, setEnableChat] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -116,8 +118,10 @@ export function CreateDuelForm({
         wizards: [selectedWizard],
         enableImageGeneration,
         coverOpponentEntry: coversEntry,
+        enableChat,
       });
       posthog.capture("duel_created", {
+        chat_enabled: enableChat,
         round_count: numberOfRounds,
         image_generation_enabled: enableImageGeneration,
         covers_opponent_entry: coversEntry,
@@ -237,6 +241,34 @@ export function CreateDuelForm({
                 <Switch
                   checked={enableImageGeneration}
                   onCheckedChange={setEnableImageGeneration}
+                />
+              </div>
+
+              {/* Duelist chat */}
+              <div className="flex items-center justify-between gap-3 p-4 border rounded-lg">
+                <div className="flex items-start gap-3">
+                  <MessageCircle
+                    className={`h-5 w-5 flex-shrink-0 ${enableChat ? "text-primary" : "text-muted-foreground"}`}
+                    aria-hidden="true"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor="enable-duel-chat"
+                      className="font-medium text-foreground"
+                    >
+                      Duel chat
+                    </label>
+                    <p className="text-sm text-muted-foreground">
+                      {enableChat
+                        ? "You and your opponent can trade words during the duel. Either of you can turn it off."
+                        : "No messages between duelists. Watchers can still react."}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="enable-duel-chat"
+                  checked={enableChat}
+                  onCheckedChange={setEnableChat}
                 />
               </div>
 

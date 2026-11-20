@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ConvexImage } from "@/components/ConvexImage";
-import { WaitlistGuard } from "@/components/WaitlistGuard";
 import {
   CAMPAIGN_TOTAL_OPPONENTS,
   difficultyLabel,
@@ -308,16 +307,14 @@ export function CampaignHomeCard({
           earned={false}
         />
         <div className="flex flex-col gap-2 @xl:flex-row @xl:items-center">
-          <WaitlistGuard>
-            <Button
-              onClick={onCreateWizard}
-              size="lg"
-              className="w-full @xl:w-auto"
-            >
-              <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-              Create your wizard to begin
-            </Button>
-          </WaitlistGuard>
+          <Button
+            onClick={onCreateWizard}
+            size="lg"
+            className="w-full @xl:w-auto"
+          >
+            <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            Create your wizard to begin
+          </Button>
           <Button
             asChild
             variant="outline"
@@ -479,40 +476,38 @@ export function CampaignHomeCard({
         </div>
 
         <div className="flex flex-col gap-2 @xl:w-56">
-          <WaitlistGuard>
-            <Button
-              asChild
-              variant={deferPrimary ? "outline" : "default"}
-              className={cn(
-                "w-full",
-                deferPrimary && "border-2 border-primary/70 font-semibold",
-              )}
-            >
-              <Link
-                className="h-auto min-h-9 whitespace-normal py-2 text-center"
-                href={
-                  outOfTokens
-                    ? "/credits"
-                    : summary.isCompleted
-                      ? unfinishedOther
-                        ? `/campaign/wizard/${unfinishedOther._id}`
-                        : "/leaderboard"
-                      : href
-                }
-              >
-                <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
-                {outOfTokens
-                  ? "Get tokens to continue"
+          <Button
+            asChild
+            variant={deferPrimary ? "outline" : "default"}
+            className={cn(
+              "w-full",
+              deferPrimary && "border-2 border-primary/70 font-semibold",
+            )}
+          >
+            <Link
+              className="h-auto min-h-9 whitespace-normal py-2 text-center"
+              href={
+                outOfTokens
+                  ? "/credits"
                   : summary.isCompleted
                     ? unfinishedOther
-                      ? `Play ${unfinishedOther.name.split(" ")[0]}'s campaign`
-                      : "Climb the leaderboard"
-                    : summary.isFresh
-                      ? "Begin campaign"
-                      : "Continue campaign"}
-              </Link>
-            </Button>
-          </WaitlistGuard>
+                      ? `/campaign/wizard/${unfinishedOther._id}`
+                      : "/leaderboard"
+                    : href
+              }
+            >
+              <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
+              {outOfTokens
+                ? "Get tokens to continue"
+                : summary.isCompleted
+                  ? unfinishedOther
+                    ? `Play ${unfinishedOther.name.split(" ")[0]}'s campaign`
+                    : "Climb the leaderboard"
+                  : summary.isFresh
+                    ? "Begin campaign"
+                    : "Continue campaign"}
+            </Link>
+          </Button>
           {!tokenNote && summary.isFresh && (
             <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
               <Coins

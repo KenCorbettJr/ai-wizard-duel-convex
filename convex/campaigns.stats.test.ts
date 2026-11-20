@@ -22,7 +22,7 @@ describe("Campaign Statistics", () => {
 
     // Create a test wizard with authentication
     const wizardId = await withAuth(t, userId).mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Test Wizard",
         description: "A test wizard for statistics",
@@ -77,7 +77,7 @@ describe("Campaign Statistics", () => {
 
     // Create a test wizard
     const wizardId = await withAuth(t, userId).mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Lucky Wizard",
         description: "A wizard with a relic",
@@ -146,7 +146,7 @@ describe("Campaign Statistics", () => {
 
     // Create a test wizard
     const wizardId = await withAuth(t, userId).mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Battle Wizard",
         description: "A wizard for battle testing",
@@ -204,7 +204,7 @@ describe("Campaign Statistics", () => {
 
     // User 1: Complete campaign
     const wizard1 = await withAuth(t, user1).mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Champion Wizard",
         description: "A champion wizard",
@@ -230,7 +230,7 @@ describe("Campaign Statistics", () => {
 
     // User 2: Partial progress
     const wizard2 = await withAuth(t, user2).mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Novice Wizard",
         description: "A novice wizard",

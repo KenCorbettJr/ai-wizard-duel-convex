@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { WaitlistGuardBypassProvider } from "@/components/WaitlistGuard";
 import DashboardContent, {
   type DashboardPreview,
 } from "@/components/DashboardContent";
@@ -147,11 +146,7 @@ async function Preview({
   searchParams: Promise<{ state?: string }>;
 }) {
   const { state = "returning" } = await searchParams;
-  return (
-    <WaitlistGuardBypassProvider>
-      <DashboardContent preview={STATES[state] ?? STATES.returning} />
-    </WaitlistGuardBypassProvider>
-  );
+  return <DashboardContent preview={STATES[state] ?? STATES.returning} />;
 }
 
 export default function HomePreviewPage({

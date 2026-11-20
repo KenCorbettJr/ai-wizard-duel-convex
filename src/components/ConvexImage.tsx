@@ -34,7 +34,13 @@ export const ConvexImage = memo(function ConvexImage({
     return (
       <div
         className={`bg-muted animate-pulse rounded-lg ${className}`}
-        style={{ width, height }}
+        // Height comes from the ratio, so a class like h-auto or h-full still
+        // applies and the box never overflows a narrower container.
+        style={{
+          width,
+          maxWidth: "100%",
+          aspectRatio: `${width} / ${height}`,
+        }}
       />
     );
   }

@@ -11,7 +11,18 @@ import { generateObject } from "./aiTextGeneration";
 import { estimateTokenCostUsd } from "./lib/aiPricing";
 import { recordAIUsage } from "./lib/recordAIUsage";
 import { generateWithBfl, BFL_IMAGE_MODEL } from "./lib/bflImage";
-import { isBflEnabled } from "./lib/imageProvider";
+import {
+  isBflEnabled,
+  imageAspectRatioValidator,
+  type ImageAspectRatio,
+} from "./lib/imageProvider";
+import {
+  wizardReferenceInstructions,
+  wizardDescriptionsLine,
+  falReferenceSuffix,
+  referenceStyleValidator,
+  type ReferenceStyle,
+} from "./lib/referenceImageRules";
 
 const GEMINI_IMAGE_MODEL = "gemini-3.1-flash-lite-image";
 // The smallest generated image is several hundred tokens (1K is 1120).
@@ -101,6 +112,9 @@ export const generateImageWithGemini = action({
     userId: v.optional(v.string()), // For cost tracking
     sessionId: v.optional(v.string()), // For cost tracking
     feature: v.optional(v.string()), // Cost-tracking feature name (default generate_wizard_image)
+    aspectRatio: v.optional(imageAspectRatioValidator), // Default 1:1
+    // "scene" lets the wizards change pose and form; default "exact"
+    referenceStyle: v.optional(referenceStyleValidator),
   },
   returns: v.bytes(),
   handler: async (
@@ -115,6 +129,8 @@ export const generateImageWithGemini = action({
       userId,
       sessionId,
       feature,
+      aspectRatio = "1:1",
+      referenceStyle = "exact",
     },
   ): Promise<ArrayBuffer> => {
     const usage: UsageContext = { userId, sessionId, feature };
@@ -147,13 +163,14 @@ export const generateImageWithGemini = action({
       return await ctx.runAction(api.generateImage.generateImage, {
         prompt:
           referenceImageUrls.length > 0
-            ? `${falPrompt} Keep each wizard's appearance exactly as in the reference images. Low poly art style.`
+            ? `${falPrompt} ${falReferenceSuffix(referenceStyle)} Low poly art style.`
             : falPrompt,
         referenceImageUrls:
           referenceImageUrls.length > 0 ? referenceImageUrls : undefined,
         skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
         userId,
         sessionId,
+        aspectRatio,
       });
     };
 
@@ -186,6 +203,8 @@ export const generateImageWithGemini = action({
                     attempt > 1 && rewritten
                       ? rewritten.descriptions
                       : wizardDescriptions,
+                  aspectRatio,
+                  referenceStyle,
                 },
                 usage,
               );
@@ -257,6 +276,8 @@ export const generateImageWithGemini = action({
             : wizardDescriptions,
           wizardImageLabels,
           usage,
+          aspectRatio,
+          referenceStyle,
         );
         await captureServerEvent("image_generation_succeeded", {
           ...baseProps,
@@ -322,6 +343,8 @@ async function generateWithGeminiFlash(
   wizardDescriptions?: Array<{ name: string; description: string }>,
   wizardImageLabels?: string[],
   usage: UsageContext = {},
+  aspectRatio: ImageAspectRatio = "1:1",
+  referenceStyle: ReferenceStyle = "exact",
 ): Promise<ArrayBuffer> {
   // Check if we're in emulator mode
   if (isEmulatorMode()) {
@@ -358,7 +381,9 @@ async function generateWithGeminiFlash(
       const media = await loadStorageImageAsMedia(ctx, previousImage);
       if (media) {
         hasPreviousScene = true;
-        parts.push({ text: "Previous scene of the duel (for setting and continuity only, do not repeat its camera angle):" });
+        parts.push({
+          text: "Previous scene of the duel (for setting and continuity only, do not repeat its camera angle):",
+        });
         parts.push({ media });
       }
     }
@@ -367,9 +392,7 @@ async function generateWithGeminiFlash(
     if (parts.length > 0) {
       const instructions: string[] = [prompt];
       if (hasWizardRefs) {
-        instructions.push(
-          "Create ONE single full-frame illustration of ONE scene, as described above, with the wizard(s) drawn from the appearance reference image(s). Keep each wizard's face, fur or skin, hair, clothing, colors, props and overall design exactly as in their reference. Change only the pose, lighting and surroundings. The reference images only show what the character looks like: do NOT reproduce their layout, white or gray background, or framing. Do NOT make a character sheet, turnaround, multiple views, panels, collage, labels, or any text. The scene background must fill the entire image edge to edge.",
-        );
+        instructions.push(wizardReferenceInstructions(referenceStyle));
       }
       if (hasPreviousScene) {
         instructions.push(
@@ -377,10 +400,9 @@ async function generateWithGeminiFlash(
         );
       }
       if (wizardDescriptions && wizardDescriptions.length > 0) {
-        const wizardContext = wizardDescriptions
-          .map((w) => `${w.name}: ${w.description}`)
-          .join(". ");
-        instructions.push(`The wizards are: ${wizardContext}.`);
+        instructions.push(
+          wizardDescriptionsLine(wizardDescriptions, referenceStyle),
+        );
       }
       instructions.push("Generate a new image in low poly art style.");
       enhancedPrompt = instructions.join(" ");
@@ -401,6 +423,8 @@ async function generateWithGeminiFlash(
           temperature: 0.8,
           maxOutputTokens: 4096,
           responseModalities: ["IMAGE"],
+          // The lite image model defaults to 16:9, so always set the shape.
+          imageConfig: { aspectRatio },
         },
       });
     } catch (error) {

@@ -906,3 +906,28 @@
     animation: none;
   }
 }
+
+/* Spell reactions: someone else's emoji floats up from the spell. */
+@keyframes reaction-float {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(calc(var(--drift) * 0.2), -20px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), -110px) scale(1);
+  }
+}
+.reaction-float {
+  animation: reaction-float 1.8s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reaction-float {
+    animation-duration: 1.2s;
+    animation-name: fadeIn;
+  }
+}

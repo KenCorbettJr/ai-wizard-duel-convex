@@ -13,6 +13,7 @@ import {
   generateObject,
   type AIObservabilityContext,
 } from "./aiTextGeneration";
+import { CONTENT_STANDARDS } from "./lib/contentStandards";
 
 // Zod schema for structured AI output
 const IntroductionResponseSchema = z.object({
@@ -119,7 +120,7 @@ export const generateDuelIntroduction = action({
 
           await ctx.scheduler.runAfter(
             100, // Add small delay to ensure database transaction is committed
-            api.generateRoundIllustration.generateRoundIllustration,
+            internal.generateRoundIllustration.generateRoundIllustration,
             {
               illustrationPrompt: introduction.illustrationPrompt,
               duelId,
@@ -133,7 +134,9 @@ export const generateDuelIntroduction = action({
       }
 
       // Start the duel (move to first actual round)
-      await ctx.runMutation(api.duels.startDuelAfterIntroduction, { duelId });
+      await ctx.runMutation(internal.duels.startDuelAfterIntroduction, {
+        duelId,
+      });
 
       return { success: true, introRoundId, textOnlyMode };
     } catch (error) {
@@ -177,7 +180,9 @@ The two wizards for this duel are:
 ## Duel Structure
 - The duel will be ${duelType}
 - Each wizard begins with 100 health points
-- A wizard losing all health points results in immediate defeat`;
+- A wizard losing all health points results in immediate defeat
+
+${CONTENT_STANDARDS}`;
 
     const prompt = `Introduce the two wizards, ${wizard1.name} and ${wizard2.name}, for their upcoming ${duelType} duel in the Enchanted Arena. In the illustration prompt, show the wizards about 50 feet apart in a vast arena, viewed from the spectator stands. Create a dramatic but brief introduction (about 80 to 110 words) that sets the stage for magical combat.`;
 

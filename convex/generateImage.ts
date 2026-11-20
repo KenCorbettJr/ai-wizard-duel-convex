@@ -7,6 +7,13 @@ import { api } from "./_generated/api";
 import { captureServerEvent } from "./lib/posthog";
 import { estimateImageCostUsd } from "./lib/aiPricing";
 import { recordAIUsage } from "./lib/recordAIUsage";
+import { imageAspectRatioValidator } from "./lib/imageProvider";
+
+// flux/schnell takes a size rather than a ratio.
+const SCHNELL_SIZES = {
+  "1:1": "square_hd", // 1024x1024
+  "3:2": { width: 1152, height: 768 },
+} as const;
 
 export const generateImage = action({
   args: {
@@ -15,11 +22,19 @@ export const generateImage = action({
     referenceImageUrls: v.optional(v.array(v.string())), // Character/scene references; switches to a reference-image model
     userId: v.optional(v.string()), // For cost tracking
     sessionId: v.optional(v.string()), // For cost tracking
+    aspectRatio: v.optional(imageAspectRatioValidator), // Default 1:1
   },
   returns: v.bytes(),
   handler: async (
     ctx,
-    { prompt, skipResize = false, referenceImageUrls, userId, sessionId },
+    {
+      prompt,
+      skipResize = false,
+      referenceImageUrls,
+      userId,
+      sessionId,
+      aspectRatio = "1:1",
+    },
   ): Promise<ArrayBuffer> => {
     const hasReferences = !!referenceImageUrls?.length;
     const model = hasReferences
@@ -54,7 +69,7 @@ export const generateImage = action({
             input: {
               prompt: prompt,
               image_urls: referenceImageUrls,
-              aspect_ratio: "1:1",
+              aspect_ratio: aspectRatio,
               num_images: 1,
               output_format: "png",
               safety_tolerance: "5",
@@ -63,7 +78,7 @@ export const generateImage = action({
         : await fal.subscribe("fal-ai/flux/schnell", {
             input: {
               prompt: prompt,
-              image_size: "square_hd", // 1024x1024
+              image_size: SCHNELL_SIZES[aspectRatio],
               num_inference_steps: 4,
               num_images: 1,
               enable_safety_checker: true,

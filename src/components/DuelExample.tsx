@@ -3,11 +3,13 @@ import Image from "next/image";
 interface DuelExampleProps {
   imageUrl: string;
   description: string;
+  captionClassName?: string;
 }
 
 export default function DuelExample({
   imageUrl,
   description,
+  captionClassName = "text-muted-foreground",
 }: DuelExampleProps) {
   return (
     <div className="relative">
@@ -20,7 +22,7 @@ export default function DuelExample({
           className="object-cover"
         />
       </div>
-      <p className="text-sm text-muted-foreground text-center mt-2 italic">
+      <p className={`text-sm text-center mt-2 italic ${captionClassName}`}>
         {description}
       </p>
     </div>

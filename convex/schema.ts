@@ -70,6 +70,36 @@ export default defineSchema({
   })
     .index("by_owner", ["owner"])
     .index("by_campaign_opponent", ["isCampaignOpponent", "opponentNumber"]),
+  // Materialized all-time multiplayer record per wizard (campaign battles
+  // excluded). Maintained when a duel completes so the leaderboard can read an
+  // index instead of scanning every duel.
+  wizardStats: defineTable({
+    wizardId: v.id("wizards"),
+    wins: v.number(),
+    losses: v.number(),
+    totalDuels: v.number(),
+    winRate: v.number(),
+  })
+    .index("by_wizard", ["wizardId"])
+    .index("by_win_rate_and_wins_and_total_duels", [
+      "winRate",
+      "wins",
+      "totalDuels",
+    ]),
+  // Private AI rating of a completed multiplayer duel, used from the admin
+  // dashboard to find duels worth highlighting. Scores are 1-10.
+  duelRatings: defineTable({
+    duelId: v.id("duels"),
+    cool: v.number(),
+    funny: v.number(),
+    engaging: v.number(),
+    unpredictable: v.number(),
+    overall: v.number(), // mean of the four scores, one decimal place
+    summary: v.string(), // one-sentence reason from the rater
+    ratedAt: v.number(),
+  })
+    .index("by_duel", ["duelId"])
+    .index("by_overall", ["overall"]),
   duels: defineTable({
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
@@ -89,6 +119,7 @@ export default defineSchema({
     featuredIllustration: v.optional(v.string()),
     winners: v.optional(v.array(v.id("wizards"))),
     losers: v.optional(v.array(v.id("wizards"))),
+    highlightedAt: v.optional(v.number()), // Set by an admin to feature the duel on the homepage
     shortcode: v.optional(v.string()), // 6-character shortcode for sharing
     textOnlyMode: v.optional(v.boolean()), // Whether this duel is in text-only mode due to insufficient credits
     textOnlyReason: v.optional(v.string()), // Reason for text-only mode (insufficient_credits, image_generation_failed, etc.)
@@ -99,11 +130,13 @@ export default defineSchema({
     creatorCoversEntry: v.optional(v.boolean()), // Creator pays the joiner's token too (gifted entry)
     isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels
     rematchDuelId: v.optional(v.id("duels")), // Set when a player requests a rematch of this duel
+    chatEnabled: v.optional(v.boolean()), // Duelist chat. Missing means on; a duelist can switch it off mid-duel
   })
     .index("by_status", ["status"])
     .index("by_player", ["players"])
     .index("by_shortcode", ["shortcode"])
-    .index("by_completed_at", ["completedAt"]),
+    .index("by_completed_at", ["completedAt"])
+    .index("by_highlighted_at", ["highlightedAt"]),
   duelRounds: defineTable({
     duelId: v.id("duels"),
     roundNumber: v.number(),
@@ -140,7 +173,42 @@ export default defineSchema({
       v.literal("COMPLETED"),
     ),
     narration: v.optional(narrationValidator), // Audio narration of the outcome
+    // Round image generation state. Absent once the image is stored, for
+    // text-only duels, and for rounds from before this was tracked.
+    illustrationStatus: v.optional(
+      v.union(v.literal("PENDING"), v.literal("FAILED")),
+    ),
   }).index("by_duel", ["duelId"]),
+  // Duelist chat. `afterRound` is how many rounds had resolved when a message
+  // was sent, and `postDuel` marks messages sent after the duel ended, so a
+  // replay can show each one only once the viewer reaches it.
+  duelMessages: defineTable({
+    duelId: v.id("duels"),
+    userId: v.string(), // Clerk subject of the sender
+    body: v.string(),
+    wizardId: v.optional(v.id("wizards")), // The sender's wizard in this duel
+    afterRound: v.number(),
+    postDuel: v.optional(v.boolean()),
+    createdAt: v.number(),
+  })
+    .index("by_duel_and_created_at", ["duelId", "createdAt"])
+    .index("by_duel_and_user_and_created_at", [
+      "duelId",
+      "userId",
+      "createdAt",
+    ]),
+  // Emoji reactions to a wizard's spell in a round. One row per viewer, spell
+  // and emoji; reacting again with the same emoji removes it.
+  spellReactions: defineTable({
+    duelId: v.id("duels"),
+    roundId: v.id("duelRounds"),
+    wizardId: v.id("wizards"), // Whose spell
+    userId: v.string(), // Clerk subject of the viewer reacting
+    emoji: v.string(), // One of SPELL_REACTIONS in lib/spellReactions.ts
+    createdAt: v.number(),
+  })
+    .index("by_duel", ["duelId"])
+    .index("by_round_and_user", ["roundId", "userId"]),
   duelLobby: defineTable({
     userId: v.string(), // Clerk user ID
     wizardId: v.id("wizards"),
@@ -234,6 +302,24 @@ export default defineSchema({
     userId: v.optional(v.string()),
     sessionId: v.optional(v.string()),
     success: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_created_at", ["createdAt"])
+    .index("by_user_id_and_created_at", ["userId", "createdAt"]),
+  // One row per text the Watcher rejected. Each row is a strike.
+  moderationEvents: defineTable({
+    userId: v.string(), // Clerk subject
+    surface: v.union(
+      v.literal("spell"),
+      v.literal("wizard"),
+      v.literal("profile"),
+      v.literal("chat"),
+    ),
+    category: v.string(), // See WATCHER_CATEGORIES in lib/watcherRules.ts
+    source: v.union(v.literal("wordlist"), v.literal("ai")),
+    text: v.string(), // The rejected text, truncated, for admin review
+    reason: v.optional(v.string()), // The AI's note for reviewers
+    duelId: v.optional(v.id("duels")),
     createdAt: v.number(),
   })
     .index("by_created_at", ["createdAt"])

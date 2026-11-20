@@ -26,6 +26,10 @@ if (process.env.ENV === "emulate") {
 }
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    // The waitlist is gone; keep old links working.
+    return [{ source: "/waitlist", destination: "/sign-up", permanent: false }];
+  },
   images: {
     remotePatterns,
     // Next 16 rejects any quality not listed here and falls back to 75, which

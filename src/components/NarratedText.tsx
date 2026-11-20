@@ -6,6 +6,7 @@ import { ChevronDown, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { transformConvexImageUrl } from "@/lib/convex-image-proxy";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { MediaRetryButton } from "@/components/MediaRetryButton";
 
 export interface RoundNarration {
   status: "PENDING" | "READY" | "FAILED";
@@ -47,12 +48,32 @@ function formatTime(seconds: number) {
 export function NarratedText({
   narration,
   playSignal,
+  onRetry,
   children,
 }: {
   narration?: RoundNarration;
   playSignal?: NarrationPlaySignal;
+  /** Offered when the narration failed. Omit to just show the text. */
+  onRetry?: () => Promise<unknown>;
   children: ReactNode;
 }) {
+  if (narration?.status === "FAILED" && onRetry) {
+    return (
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-card/70 p-3">
+          <VolumeX
+            className="h-5 w-5 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <span className="flex-1 text-sm text-muted-foreground">
+            The announcer lost his voice.
+          </span>
+          <MediaRetryButton onRetry={onRetry} />
+        </div>
+        <div className="space-y-6">{children}</div>
+      </div>
+    );
+  }
   if (!narration || narration.status === "FAILED") {
     return <>{children}</>;
   }

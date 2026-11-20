@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
@@ -15,7 +15,7 @@ describe("Wizards - Advanced Tests", () => {
   describe("Wizard Creation", () => {
     test("should create wizard with default values", async () => {
       const wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Test Wizard",
           description: "A test wizard",
@@ -40,7 +40,7 @@ describe("Wizards - Advanced Tests", () => {
 
     test("should create AI-powered wizard", async () => {
       const wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "AI Wizard",
           description: "An AI-generated wizard",
@@ -63,7 +63,7 @@ describe("Wizards - Advanced Tests", () => {
 
     test("should handle wizard creation with special characters", async () => {
       const wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Wizard™ 🧙‍♂️",
           description: "A wizard with émojis and spëcial characters",
@@ -85,7 +85,7 @@ describe("Wizards - Advanced Tests", () => {
       const longDescription = "A".repeat(1000);
 
       const wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Verbose Wizard",
           description: longDescription,
@@ -106,7 +106,7 @@ describe("Wizards - Advanced Tests", () => {
 
     beforeEach(async () => {
       wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Updatable Wizard",
           description: "A wizard that can be updated",
@@ -115,7 +115,7 @@ describe("Wizards - Advanced Tests", () => {
     });
 
     test("should update wizard name and description", async () => {
-      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+      await withAuth(t, "test-user-1").mutation(internal.wizards.updateWizard, {
         wizardId,
         name: "Updated Wizard",
         description: "An updated description",
@@ -136,7 +136,7 @@ describe("Wizards - Advanced Tests", () => {
         { wizardId }
       );
 
-      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+      await withAuth(t, "test-user-1").mutation(internal.wizards.updateWizard, {
         wizardId,
         name: "New Name Only",
       });
@@ -156,7 +156,7 @@ describe("Wizards - Advanced Tests", () => {
         { wizardId }
       );
 
-      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+      await withAuth(t, "test-user-1").mutation(internal.wizards.updateWizard, {
         wizardId,
         description: "New description only",
       });
@@ -188,7 +188,7 @@ describe("Wizards - Advanced Tests", () => {
       });
 
       await expect(
-        withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+        withAuth(t, "test-user-1").mutation(internal.wizards.updateWizard, {
           wizardId: tempId,
           name: "Should not work",
         })
@@ -198,7 +198,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should prevent updating wizard owned by different user", async () => {
       // Create wizard with different user
       const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Other User Wizard",
           description: "Owned by different user",
@@ -206,7 +206,7 @@ describe("Wizards - Advanced Tests", () => {
       );
 
       await expect(
-        withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+        withAuth(t, "test-user-1").mutation(internal.wizards.updateWizard, {
           wizardId: otherUserWizardId,
           name: "Hacked name",
         })
@@ -219,7 +219,7 @@ describe("Wizards - Advanced Tests", () => {
 
     beforeEach(async () => {
       wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Stats Wizard",
           description: "A wizard for testing stats",
@@ -335,7 +335,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should prevent updating stats for wizard owned by different user", async () => {
       // Create wizard with different user
       const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Other User Wizard",
           description: "Owned by different user",
@@ -358,15 +358,15 @@ describe("Wizards - Advanced Tests", () => {
     beforeEach(async () => {
       // Create wizards for user 1
       user1Wizards = await Promise.all([
-        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+        withAuth(t, "test-user-1").mutation(internal.wizards.createWizard, {
           name: "Wizard A",
           description: "First wizard",
         }),
-        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+        withAuth(t, "test-user-1").mutation(internal.wizards.createWizard, {
           name: "Wizard B",
           description: "Second wizard",
         }),
-        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+        withAuth(t, "test-user-1").mutation(internal.wizards.createWizard, {
           name: "Wizard C",
           description: "Third wizard",
         }),
@@ -374,11 +374,11 @@ describe("Wizards - Advanced Tests", () => {
 
       // Create wizards for user 2
       user2Wizards = await Promise.all([
-        withAuth(t, "test-user-2").mutation(api.wizards.createWizard, {
+        withAuth(t, "test-user-2").mutation(internal.wizards.createWizard, {
           name: "Wizard X",
           description: "User2's first wizard",
         }),
-        withAuth(t, "test-user-2").mutation(api.wizards.createWizard, {
+        withAuth(t, "test-user-2").mutation(internal.wizards.createWizard, {
           name: "Wizard Y",
           description: "User2's second wizard",
         }),
@@ -473,7 +473,7 @@ describe("Wizards - Advanced Tests", () => {
 
     beforeEach(async () => {
       wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Deletable Wizard",
           description: "A wizard that can be deleted",
@@ -523,7 +523,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should prevent deleting wizard owned by different user", async () => {
       // Create wizard with different user
       const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Other User Wizard",
           description: "Owned by different user",
@@ -543,7 +543,7 @@ describe("Wizards - Advanced Tests", () => {
 
     beforeEach(async () => {
       wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Illustrated Wizard",
           description: "A wizard with illustrations",
@@ -608,7 +608,7 @@ describe("Wizards - Advanced Tests", () => {
     test("should prevent regenerating illustration for wizard owned by different user", async () => {
       // Create wizard with different user
       const otherUserWizardId = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Other User Wizard",
           description: "Owned by different user",
@@ -631,7 +631,7 @@ describe("Wizards - Advanced Tests", () => {
   describe("Data Integrity", () => {
     test("should handle concurrent wizard creation", async () => {
       const wizardPromises = Array.from({ length: 5 }, (_, i) =>
-        withAuth(t, "test-user-1").mutation(api.wizards.createWizard, {
+        withAuth(t, "test-user-1").mutation(internal.wizards.createWizard, {
           name: `Concurrent Wizard ${i}`,
           description: `Description ${i}`,
         })
@@ -651,7 +651,7 @@ describe("Wizards - Advanced Tests", () => {
 
     test("should handle concurrent stat updates correctly", async () => {
       const wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Concurrent Stats Wizard",
           description: "For testing concurrent updates",
@@ -681,7 +681,7 @@ describe("Wizards - Advanced Tests", () => {
 
     test("should maintain data consistency during updates", async () => {
       const wizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Consistency Wizard",
           description: "For testing data consistency",
@@ -689,7 +689,7 @@ describe("Wizards - Advanced Tests", () => {
       );
 
       // Perform mixed updates
-      await withAuth(t, "test-user-1").mutation(api.wizards.updateWizard, {
+      await withAuth(t, "test-user-1").mutation(internal.wizards.updateWizard, {
         wizardId,
         name: "Updated Name",
       });

@@ -358,7 +358,7 @@ describe("Duel tokens", () => {
         status: "WAITING_FOR_SPELLS",
       });
     });
-    await t.mutation(api.duels.completeRound, {
+    await t.mutation(internal.duels.completeRound, {
       roundId,
       outcome: {
         narrative: "Both wizards still stand.",
@@ -385,7 +385,7 @@ describe("Duel tokens", () => {
 
     const startBattle = async (userId: string) => {
       const wizardId = await withAuth(t, userId).mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         { name: "Campaign Wizard", description: "Fights the campaign" },
       );
       await withAuth(t, userId).mutation(
@@ -448,7 +448,7 @@ describe("Wizard illustration tokens", () => {
 
   it("creating a wizard is free", async () => {
     await ensureTestUser(t, "alice", 3);
-    await withAuth(t, "alice").mutation(api.wizards.createWizard, {
+    await withAuth(t, "alice").mutation(internal.wizards.createWizard, {
       name: "Free Wizard",
       description: "First look is free",
     });
@@ -539,7 +539,7 @@ describe("Wizard illustration tokens", () => {
     await ensureTestUser(t, "alice", 3);
     const wizardId = await makeWizard("alice", true);
 
-    await withAuth(t, "alice").mutation(api.wizards.updateWizard, {
+    await withAuth(t, "alice").mutation(internal.wizards.updateWizard, {
       wizardId,
       name: "Renamed",
       description: "New description",

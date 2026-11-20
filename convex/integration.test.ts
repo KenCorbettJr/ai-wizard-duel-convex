@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
 
@@ -65,7 +65,7 @@ describe("Integration Tests", () => {
     });
 
     // Complete the round with an outcome
-    await t.mutation(api.duels.completeRound, {
+    await t.mutation(internal.duels.completeRound, {
       roundId,
       outcome: {
         narrative: "Gandalf casts a powerful lightning spell!",

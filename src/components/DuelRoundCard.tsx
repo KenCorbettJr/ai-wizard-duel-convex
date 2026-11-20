@@ -27,6 +27,8 @@ import {
   type NarrationPlaySignal,
 } from "@/components/NarratedText";
 import { useConclusionReveal } from "@/hooks/useConclusionReveal";
+import { MediaRetryButton } from "@/components/MediaRetryButton";
+import { SpellReactions } from "@/components/SpellReactions";
 
 type RoundWizard = Doc<"wizards"> | null | undefined;
 
@@ -203,6 +205,9 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   );
 
   const triggerRoundProcessing = useMutation(api.duels.triggerRoundProcessing);
+  const retryNarration = useMutation(api.roundMedia.retryRoundNarration);
+  const retryIllustration = useMutation(api.roundMedia.retryRoundIllustration);
+  const isDuelist = !!user?.id && duel.players.includes(user.id);
 
   // Fetch wizard data for each wizard in the duel
   const fetched1 = useQuery(
@@ -332,10 +337,19 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     },
     [finish, round.roundNumber],
   );
-  useEffect(() => clearTimers, []);
   const completed = round.status === "COMPLETED";
   // Each reveal token starts one reveal, even if this effect re-runs.
   const handledReveal = useRef<number | undefined>(undefined);
+  // Unmounting cancels the reveal's timers, so forget the token too. A newly
+  // resolved round mounts with its token already set, and Strict Mode then
+  // unmounts and remounts it: the reveal has to start again, not stall.
+  useEffect(
+    () => () => {
+      clearTimers();
+      handledReveal.current = undefined;
+    },
+    [],
+  );
   useEffect(() => {
     if (!revealToken || !completed) return;
     if (handledReveal.current === revealToken) return;
@@ -750,6 +764,18 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                             {spell.description}
                           </blockquote>
                         )}
+                        {/* After the reveal, so counts don't jump ahead of it */}
+                        {spell && !revealing && (
+                          <SpellReactions
+                            duelId={duel._id}
+                            roundId={round._id}
+                            wizardId={id}
+                            wizardName={wiz?.name ?? "this wizard"}
+                            signedIn={!!user}
+                            ownSpell={!!user && wiz?.owner === user.id}
+                            className={animated ? "reveal-pop" : undefined}
+                          />
+                        )}
                         {(hp !== undefined || pts !== undefined) && (
                           <div
                             className={`mt-3 flex flex-wrap gap-2 text-sm ${at(STAGE.IMPACT, "reveal-impact")}`}
@@ -783,24 +809,48 @@ export const DuelRoundCard = memo(function DuelRoundCard({
             {round.outcome?.illustration ? (
               <div
                 id={`round-${round.roundNumber}-art`}
-                className={`bg-black aspect-square mb-4 max-w-2xl mx-auto rounded-lg overflow-hidden ${at(STAGE.IMAGE, "")}`}
+                className={`bg-black mb-4 max-w-2xl mx-auto rounded-lg overflow-hidden ${at(STAGE.IMAGE, "")}`}
               >
                 <ConvexImage
-                  className={`w-full h-full object-cover ${at(STAGE.IMAGE, "reveal-image")}`}
+                  // Shown at its own shape, never cropped: new scenes are 3:2,
+                  // but older ones are square or 16:9 with wizards at the edges.
+                  className={`w-full h-auto ${at(STAGE.IMAGE, "reveal-image")}`}
                   storageId={round.outcome.illustration}
                   alt={
                     round.outcome.illustrationPrompt ||
                     `Round ${round.roundNumber} illustration`
                   }
-                  width={1024}
-                  height={1024}
+                  width={1152}
+                  height={768}
                   sizes="(min-width: 672px) 672px, 100vw"
                   quality={95}
                 />
               </div>
+            ) : round.illustrationStatus === "PENDING" ? (
+              <div
+                id={`round-${round.roundNumber}-art`}
+                className={`${at(STAGE.IMAGE)} mb-4 max-w-2xl mx-auto flex items-center justify-center gap-3 rounded-lg border border-dashed border-border/60 bg-card/50 p-6`}
+              >
+                <RuneSpinner size="sm" label="Painting the scene" />
+                <span className="text-sm text-muted-foreground">
+                  Painting the scene...
+                </span>
+              </div>
+            ) : round.illustrationStatus === "FAILED" && isDuelist ? (
+              <div
+                id={`round-${round.roundNumber}-art`}
+                className={`${at(STAGE.IMAGE)} mb-4 max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-3 rounded-lg border border-dashed border-border/60 bg-card/50 p-6`}
+              >
+                <span className="text-sm text-muted-foreground">
+                  The scene for this round couldn&apos;t be painted.
+                </span>
+                <MediaRetryButton
+                  onRetry={() => retryIllustration({ roundId: round._id })}
+                />
+              </div>
             ) : duel.textOnlyMode && round.outcome?.illustrationPrompt ? (
               <div
-                className={`${at(STAGE.IMAGE)} bg-linear-to-br from-warning/20 to-gold/10 border-2 border-dashed border-warning/40 aspect-square mb-4 max-w-2xl mx-auto rounded-lg flex items-center justify-center p-8`}
+                className={`${at(STAGE.IMAGE)} bg-linear-to-br from-warning/20 to-gold/10 border-2 border-dashed border-warning/40 aspect-[3/2] mb-4 max-w-2xl mx-auto rounded-lg flex items-center justify-center p-8`}
               >
                 <div className="text-center">
                   <div className="text-6xl mb-4">📜</div>
@@ -841,6 +891,11 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                 <NarratedText
                   narration={round.narration}
                   playSignal={playSignal}
+                  onRetry={
+                    isDuelist
+                      ? () => retryNarration({ roundId: round._id })
+                      : undefined
+                  }
                 >
                   <div className="whitespace-pre-line">
                     <div className="text-foreground/80 leading-relaxed">

@@ -61,12 +61,12 @@ export const WizardCard = memo(function WizardCard({
   return (
     <div className={`flex flex-1 flex-col ${className}`}>
       <Card
-        className={`overflow-hidden bg-card/90 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex ${getBorderClasses()}`}
+        className={`overflow-hidden bg-card/90 backdrop-blur-sm shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 group cursor-pointer hover:scale-[1.02] flex-1 pt-0 flex ${getBorderClasses()}`}
       >
         <Link
           href={`/wizards/${wizard._id}`}
           aria-label={`View ${wizard.name}`}
-          className="absolute inset-0 z-0 rounded-xl"
+          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <div className="relative">
           {wizard.illustration && (
@@ -77,7 +77,7 @@ export const WizardCard = memo(function WizardCard({
                 width={768}
                 height={480}
                 sizes="(min-width: 768px) 50vw, 100vw"
-                className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
               />
             </div>
           )}
@@ -143,7 +143,7 @@ export const WizardCard = memo(function WizardCard({
             )}
           </div>
           {showOwner && wizard.ownerUserId && (
-            <div className="mt-2">
+            <div className="relative z-20 mt-2">
               <UserIdDisplay
                 userId={wizard.ownerUserId}
                 displayName={wizard.ownerDisplayName}
@@ -185,14 +185,14 @@ export const WizardCard = memo(function WizardCard({
                 asChild
                 variant="outline"
                 size="sm"
-                className="relative z-10 flex-1"
+                className="relative z-20 flex-1"
               >
                 <Link href={`/campaign/wizard/${wizard._id}`}>
                   <Scroll className="h-3 w-3 mr-1" aria-hidden="true" />
                   Campaign
                 </Link>
               </Button>
-              <Button asChild size="sm" className="relative z-10 flex-1">
+              <Button asChild size="sm" className="relative z-20 flex-1">
                 <Link href={`/duels/create?wizardId=${wizard._id}`}>
                   <Swords className="h-3 w-3 mr-1" aria-hidden="true" />
                   Duel

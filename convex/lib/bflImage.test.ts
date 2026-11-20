@@ -132,6 +132,31 @@ describe("generateWithBfl", () => {
     expect(body.images).toBeUndefined();
   });
 
+  it("asks for the requested aspect ratio", async () => {
+    const { ctx } = makeCtx();
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({ polling_url: "https://poll.test/1" }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          status: "Ready",
+          result: { sample: "https://cdn.test/o.png" },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(IMAGE_BYTES));
+
+    const promise = generateWithBfl(ctx, {
+      prompt: "Two wizards face off.",
+      aspectRatio: "3:2",
+    });
+    await vi.advanceTimersByTimeAsync(2000);
+    await promise;
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.aspect_ratio).toBe("3:2");
+  });
+
   it("records a failed, uncharged attempt when the request is moderated", async () => {
     const { ctx, runMutation } = makeCtx();
     fetchMock

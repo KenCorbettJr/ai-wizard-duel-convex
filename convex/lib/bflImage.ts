@@ -3,6 +3,12 @@ import type { Id } from "../_generated/dataModel";
 import { api } from "../_generated/api";
 import { estimateImageCostUsd } from "./aiPricing";
 import { recordAIUsage } from "./recordAIUsage";
+import type { ImageAspectRatio } from "./imageProvider";
+import {
+  wizardReferenceInstructions,
+  wizardDescriptionsLine,
+  type ReferenceStyle,
+} from "./referenceImageRules";
 
 // Black Forest Labs FLUX 3 Image Klein: text-to-image plus editing with up to
 // 10 reference images, billed per image with references included.
@@ -21,6 +27,8 @@ export interface BflImageParams {
   wizardImages?: string[]; // Storage IDs of plain-background wizard images
   wizardImageLabels?: string[]; // Wizard names, parallel to wizardImages
   wizardDescriptions?: Array<{ name: string; description: string }>;
+  aspectRatio?: ImageAspectRatio; // Default 1:1
+  referenceStyle?: ReferenceStyle; // Default "exact"
 }
 
 export interface BflUsageContext {
@@ -98,7 +106,7 @@ async function buildRequest(ctx: ActionCtx, params: BflImageParams) {
   const instructions: string[] = [prompt, ...notes];
   if (hasWizardRefs) {
     instructions.push(
-      "Create ONE single full-frame illustration of ONE scene, as described above, with the wizard(s) drawn from the appearance reference image(s). Keep each wizard's face, fur or skin, hair, clothing, colors, props and overall design exactly as in their reference. Change only the pose, lighting and surroundings. The wizard reference images only show what the character looks like: do NOT reproduce their layout, white or gray background, or framing. Do NOT make a character sheet, turnaround, multiple views, panels, collage, labels, or any text. The scene background must fill the entire image edge to edge.",
+      wizardReferenceInstructions(params.referenceStyle ?? "exact"),
     );
   }
   if (hasPreviousScene) {
@@ -107,10 +115,12 @@ async function buildRequest(ctx: ActionCtx, params: BflImageParams) {
     );
   }
   if (params.wizardDescriptions?.length) {
-    const context = params.wizardDescriptions
-      .map((w) => `${w.name}: ${w.description}`)
-      .join(". ");
-    instructions.push(`The wizards are: ${context}.`);
+    instructions.push(
+      wizardDescriptionsLine(
+        params.wizardDescriptions,
+        params.referenceStyle ?? "exact",
+      ),
+    );
   }
   instructions.push("Generate a new image in low poly art style.");
   return { prompt: instructions.join(" "), images };
@@ -186,7 +196,7 @@ export async function generateWithBfl(
       body: JSON.stringify({
         prompt,
         ...(images.length > 0 ? { images } : {}),
-        aspect_ratio: "1:1",
+        aspect_ratio: params.aspectRatio ?? "1:1",
         resolution: "1k",
         output_format: "png",
       }),

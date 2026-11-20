@@ -1,11 +1,12 @@
 "use node";
 
-import { action, ActionCtx } from "./_generated/server";
+import { internalAction, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+import { DUEL_SCENE_ASPECT_RATIO } from "./lib/imageProvider";
 
-export const generateRoundIllustration = action({
+export const generateRoundIllustration = internalAction({
   args: {
     illustrationPrompt: v.string(),
     duelId: v.id("duels"),
@@ -25,6 +26,13 @@ export const generateRoundIllustration = action({
       skipImageGeneration = false,
     },
   ) => {
+    const setStatus = (status: "PENDING" | "FAILED" | null) =>
+      ctx.runMutation(internal.roundMedia.setRoundIllustrationStatus, {
+        duelId,
+        roundNumber: Number(roundNumber),
+        status,
+      });
+
     console.log(
       `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"} ${skipImageGeneration ? "(text-only mode)" : ""}`,
     );
@@ -43,6 +51,8 @@ export const generateRoundIllustration = action({
         );
         return { success: true, textOnlyMode: true };
       }
+
+      await setStatus("PENDING");
 
       // Players already paid a token when the duel started, so there is no
       // per-image credit check here.
@@ -66,6 +76,8 @@ export const generateRoundIllustration = action({
               userId,
               sessionId: `duel-${duelId}`,
               feature: "generate_duel_illustration",
+              aspectRatio: DUEL_SCENE_ASPECT_RATIO,
+              referenceStyle: "scene",
             },
           );
         } else {
@@ -92,6 +104,8 @@ export const generateRoundIllustration = action({
               userId,
               sessionId: `duel-${duelId}`,
               feature: "generate_duel_illustration",
+              aspectRatio: DUEL_SCENE_ASPECT_RATIO,
+              referenceStyle: "scene",
             },
           );
         }
@@ -102,6 +116,7 @@ export const generateRoundIllustration = action({
           skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
           userId,
           sessionId: `duel-${duelId}`,
+          aspectRatio: DUEL_SCENE_ASPECT_RATIO,
         });
       }
 
@@ -143,10 +158,11 @@ export const generateRoundIllustration = action({
           roundId: targetRound._id,
           illustration: storageId,
         });
+        await setStatus(null);
 
         // If this is the introduction round, also set it as the featured illustration
         if (roundNumber === "0") {
-          await ctx.runMutation(api.duels.updateFeaturedIllustration, {
+          await ctx.runMutation(internal.duels.updateFeaturedIllustration, {
             duelId,
             illustration: storageId,
           });
@@ -162,6 +178,13 @@ export const generateRoundIllustration = action({
         `Error generating illustration for duel ${duelId}, round ${roundNumber}:`,
         error,
       );
+
+      // Mark the round so the duelists can retry it from the duel page.
+      try {
+        await setStatus("FAILED");
+      } catch (statusError) {
+        console.error("Could not mark illustration as failed:", statusError);
+      }
 
       // If image generation fails, fall back to text-only mode instead of throwing error
       console.log(

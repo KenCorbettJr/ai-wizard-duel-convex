@@ -8,6 +8,8 @@ import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { chargeWizardImageToken } from "./lib/wizardImageTokens";
 import { Wizard } from "@/types/wizard";
+import { computeWinRate, recordWizardResult } from "./lib/wizardStats";
+import type { Id } from "./_generated/dataModel";
 
 // Get all wizards for the authenticated user with campaign relic status
 export const getUserWizards = query({
@@ -162,8 +164,8 @@ export const getWizard = query({
   },
 });
 
-// Create a new wizard
-export const createWizard = mutation({
+// Create a new wizard. Called by watcher.createWizard after the Watcher approves.
+export const createWizard = internalMutation({
   args: {
     name: v.string(),
     description: v.string(),
@@ -260,6 +262,7 @@ export const updateWizardStatsInternal = internalMutation({
         wins: won ? currentWins + 1 : currentWins,
         losses: won ? currentLosses : currentLosses + 1,
       });
+      await recordWizardResult(ctx, wizardId, won);
     }
 
     // Campaign battle stats are tracked separately in the campaign system
@@ -326,8 +329,9 @@ export const scheduleWizardIllustrationInternal = internalMutation({
   },
 });
 
-// Update wizard details (only for owned wizards)
-export const updateWizard = mutation({
+// Update wizard details (only for owned wizards). Called by watcher.updateWizard
+// after the Watcher approves.
+export const updateWizard = internalMutation({
   args: {
     wizardId: v.id("wizards"),
     name: v.optional(v.string()),
@@ -444,6 +448,13 @@ export const deleteWizard = mutation({
       throw new Error("Not authorized to delete this wizard");
     }
 
+    const stats = await ctx.db
+      .query("wizardStats")
+      .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+      .unique();
+    if (stats) {
+      await ctx.db.delete(stats._id);
+    }
     await ctx.db.delete(wizardId);
   },
 });
@@ -570,100 +581,110 @@ export const getWizardLeaderboard = query({
     }),
   ),
   handler: async (ctx, { limit = 50, minDuels = 1 }) => {
-    // Get all wizards
-    const wizards = await ctx.db.query("wizards").collect();
+    // Read the materialized `wizardStats` index, best first: win rate, then
+    // wins, then total duels. Only the wizards that make the cut are loaded.
+    // Wizards with no completed duel have no stats row, so the effective
+    // minimum is 1.
+    const minimum = Math.max(1, minDuels);
+    const results = [];
 
-    // Calculate win rates and filter by minimum duels, excluding campaign battles
-    const wizardStats = await Promise.all(
-      wizards.map(async (wizard) => {
-        // Get campaign progress for relic status
-        const campaignProgress = await ctx.db
-          .query("wizardCampaignProgress")
-          .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
-          .unique();
+    for await (const stats of ctx.db
+      .query("wizardStats")
+      .withIndex("by_win_rate_and_wins_and_total_duels")
+      .order("desc")) {
+      if (results.length >= limit) break;
+      if (stats.totalDuels < minimum) continue;
 
-        const hasCompletionRelic =
-          campaignProgress?.hasCompletionRelic || false;
-        const baseLuck = 10;
-        const effectiveLuckScore = Math.min(
-          20,
-          baseLuck + (hasCompletionRelic ? 1 : 0),
-        );
+      const wizard = await ctx.db.get(stats.wizardId);
+      if (!wizard) continue;
 
-        // Calculate multiplayer-only stats (excluding campaign battles)
-        const allMultiplayerDuels = await ctx.db
-          .query("duels")
-          .filter((q) => q.eq(q.field("status"), "COMPLETED"))
-          .filter((q) => q.neq(q.field("isCampaignBattle"), true))
-          .collect();
+      const campaignProgress = await ctx.db
+        .query("wizardCampaignProgress")
+        .withIndex("by_wizard", (q) => q.eq("wizardId", wizard._id))
+        .unique();
+      const hasCompletionRelic = campaignProgress?.hasCompletionRelic || false;
+      const effectiveLuckScore = Math.min(
+        20,
+        10 + (hasCompletionRelic ? 1 : 0),
+      );
 
-        const wizardMultiplayerDuels = allMultiplayerDuels.filter((duel) =>
-          duel.wizards.includes(wizard._id),
-        );
+      const owner = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
+        .first();
 
-        let wins = 0;
-        let losses = 0;
+      results.push({
+        ...wizard,
+        wins: stats.wins,
+        losses: stats.losses,
+        winRate: stats.winRate,
+        totalDuels: stats.totalDuels,
+        rank: results.length + 1,
+        ownerUserId: owner?.userId,
+        ownerDisplayName: owner?.displayName,
+        hasCompletionRelic,
+        effectiveLuckScore,
+        ownerSubscriptionTier: owner?.subscriptionTier,
+      });
+    }
 
-        wizardMultiplayerDuels.forEach((duel) => {
-          if (duel.winners?.includes(wizard._id)) {
-            wins++;
-          } else if (duel.losers?.includes(wizard._id)) {
-            losses++;
-          }
-        });
+    return results;
+  },
+});
 
-        const totalDuels = wins + losses;
-        const winRate = totalDuels > 0 ? wins / totalDuels : 0;
+/**
+ * Rebuild `wizardStats` from the duel history. Idempotent. Run once after
+ * deploy, and again any time the table is suspected to have drifted:
+ *   npx convex run wizards:backfillWizardStats
+ */
+export const backfillWizardStats = internalMutation({
+  args: {},
+  returns: v.object({ wizardsWithStats: v.number(), rowsRemoved: v.number() }),
+  handler: async (ctx) => {
+    const tally = new Map<Id<"wizards">, { wins: number; losses: number }>();
+    const bump = (id: Id<"wizards">, won: boolean) => {
+      const entry = tally.get(id) ?? { wins: 0, losses: 0 };
+      if (won) entry.wins++;
+      else entry.losses++;
+      tally.set(id, entry);
+    };
 
-        return {
-          ...wizard,
-          wins,
-          losses,
-          winRate,
-          totalDuels,
-          rank: 0, // Will be set after sorting
-          hasCompletionRelic,
-          effectiveLuckScore,
-        };
-      }),
-    );
-
-    // Filter by minimum duels
-    const filteredStats = wizardStats.filter(
-      (wizard) => wizard.totalDuels >= minDuels,
-    );
-
-    // Sort by win rate (descending), then by total wins (descending), then by total duels (descending)
-    filteredStats.sort((a, b) => {
-      if (a.winRate !== b.winRate) {
-        return b.winRate - a.winRate;
+    for await (const duel of ctx.db
+      .query("duels")
+      .withIndex("by_status", (q) => q.eq("status", "COMPLETED"))) {
+      if (duel.isCampaignBattle) continue;
+      for (const id of duel.wizards) {
+        if (duel.winners?.includes(id)) bump(id, true);
+        else if (duel.losers?.includes(id)) bump(id, false);
       }
-      if (a.wins !== b.wins) {
-        return b.wins - a.wins;
+    }
+
+    let rowsRemoved = 0;
+    for await (const row of ctx.db.query("wizardStats")) {
+      if (!tally.has(row.wizardId)) {
+        await ctx.db.delete(row._id);
+        rowsRemoved++;
       }
-      return b.totalDuels - a.totalDuels;
-    });
+    }
 
-    // Assign ranks and get owner information
-    const wizardsWithOwners = await Promise.all(
-      filteredStats.map(async (wizard, index) => {
-        const owner = await ctx.db
-          .query("users")
-          .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
-          .first();
+    for (const [wizardId, { wins, losses }] of tally) {
+      if (!(await ctx.db.get(wizardId))) continue; // wizard was deleted
+      const totalDuels = wins + losses;
+      const fields = {
+        wins,
+        losses,
+        totalDuels,
+        winRate: computeWinRate(wins, totalDuels),
+      };
+      const existing = await ctx.db
+        .query("wizardStats")
+        .withIndex("by_wizard", (q) => q.eq("wizardId", wizardId))
+        .unique();
+      if (existing) await ctx.db.patch(existing._id, fields);
+      else await ctx.db.insert("wizardStats", { wizardId, ...fields });
+    }
 
-        return {
-          ...wizard,
-          rank: index + 1,
-          ownerUserId: owner?.userId,
-          ownerDisplayName: owner?.displayName,
-          ownerSubscriptionTier: owner?.subscriptionTier,
-        };
-      }),
-    );
-
-    // Apply limit
-    return wizardsWithOwners.slice(0, limit);
+    return { wizardsWithStats: tally.size, rowsRemoved };
   },
 });
 

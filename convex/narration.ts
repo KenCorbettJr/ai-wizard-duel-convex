@@ -12,7 +12,9 @@ import { captureServerEvent } from "./lib/posthog";
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta";
 const TTS_MODEL = process.env.GEMINI_TTS_MODEL ?? "gemini-3.8-flash-tts";
 const FALLBACK_VOICE = "Charon";
-const MAX_ATTEMPTS = 2;
+const MAX_ATTEMPTS = 3;
+/** Pause before retrying, so brief "high demand" spikes can pass. */
+const RETRY_DELAY_MS = 3000;
 
 let cachedVoice: string | undefined;
 
@@ -185,6 +187,9 @@ export const generateRoundNarration = internalAction({
         } catch (error) {
           lastError = error;
           console.error(`Narration attempt ${attempt} failed:`, error);
+          if (attempt < MAX_ATTEMPTS) {
+            await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+          }
         }
       }
       throw lastError;

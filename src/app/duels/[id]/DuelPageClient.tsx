@@ -4,7 +4,7 @@ import { use } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id, Doc } from "../../../../convex/_generated/dataModel";
 import {
@@ -43,9 +43,14 @@ import { useReplayProgress } from "@/hooks/useReplayProgress";
 import { ReplayNextStep, type ReplayStep } from "@/components/ReplayNextStep";
 import { stopAllNarration } from "@/components/NarratedText";
 import { CastSpellModal, COMPOSER_ID } from "@/components/CastSpellModal";
+import {
+  WatcherDialog,
+  type WatcherRejection,
+} from "@/components/watcher/WatcherDialog";
 import { DuelScoreboard } from "@/components/DuelScoreboard";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { DuelModeIndicator } from "@/components/DuelModeIndicator";
+import { DuelChat } from "@/components/DuelChat";
 import { safeConvexId } from "../../../lib/utils";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import posthog from "posthog-js";
@@ -145,7 +150,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     !!duel?.completedAt && duel.completedAt >= mountedAt - 3 * 60 * 1000;
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  const castSpell = useMutation(api.duels.castSpell);
+  const castSpell = useAction(api.watcher.castSpell);
+  const [watcherRejection, setWatcherRejection] =
+    useState<WatcherRejection | null>(null);
   const undoSpell = useMutation(api.duels.undoSpell);
   const joinDuel = useMutation(api.duels.joinDuel);
   const requestRematch = useMutation(api.duels.requestRematch);
@@ -603,11 +610,20 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     setCastError(null);
     const submitted = spellDescription.trim();
     try {
-      await castSpell({
+      const result = await castSpell({
         duelId: duel._id,
         wizardId: userWizardId,
         spellDescription: spellDescription.trim(),
       });
+      if (!result.ok) {
+        // The Watcher rejected it. Keep the draft so the player can rework it.
+        setWatcherRejection(result.rejection);
+        posthog.capture("spell_rejected_by_watcher", {
+          category: result.rejection.category,
+          round_number: duel.currentRound,
+        });
+        return;
+      }
       posthog.capture("spell_submitted", {
         round_number: duel.currentRound,
         is_campaign_battle: duel.isCampaignBattle,
@@ -1482,6 +1498,38 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </Card>
           )}
 
+          <WatcherDialog
+            rejection={watcherRejection}
+            onClose={() => setWatcherRejection(null)}
+            retryLabel="Rework my spell"
+          />
+
+          {/* Duelist chat and crowd reactions, revealed in step with replays */}
+          {!duel.isCampaignBattle &&
+            duel.players.length >= 2 &&
+            duel.status !== "CANCELLED" && (
+              <DuelChat
+                duel={duel}
+                wizardNames={Object.fromEntries(
+                  [wizard1, wizard2]
+                    .filter((w): w is NonNullable<typeof w> => !!w)
+                    .map((w) => [w._id, w.name]),
+                )}
+                userId={user?.id}
+                userLoaded={userLoaded}
+                watchedThrough={
+                  revealedThrough === null ? null : displayedThrough
+                }
+                resultShown={showWinner}
+                live={
+                  caughtUp &&
+                  !revealPending &&
+                  (duel.status !== "COMPLETED" || showWinner)
+                }
+                bottomOffset={composerHeight}
+              />
+            )}
+
           {/* Cast Spell Modal */}
           {duel.status === "IN_PROGRESS" &&
             currentRound?.status === "WAITING_FOR_SPELLS" &&
@@ -1493,6 +1541,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             userWizardId &&
             !hasUserCastSpell && (
               <CastSpellModal
+                duelId={duel._id}
                 currentRound={duel.currentRound}
                 wizardName={userWizard.name}
                 spellDescription={spellDescription}
@@ -1505,14 +1554,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 error={castError}
                 collapsed={composerCollapsed}
                 onCollapsedChange={setComposerCollapsed}
-                lastRoundResult={
-                  [...(duel.rounds ?? [])]
-                    .filter(
-                      (r) => r.roundNumber > 0 && r.status === "COMPLETED",
-                    )
-                    .sort((a, b) => b.roundNumber - a.roundNumber)[0]?.outcome
-                    ?.result
-                }
                 onHeightChange={setComposerHeight}
               />
             )}

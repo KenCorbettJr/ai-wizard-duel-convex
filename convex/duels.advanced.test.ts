@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
@@ -16,7 +16,7 @@ describe("Duels - Advanced Tests", () => {
 
     // Create test wizards
     wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Gandalf",
         description: "A wise wizard",
@@ -24,7 +24,7 @@ describe("Duels - Advanced Tests", () => {
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Saruman",
         description: "A powerful wizard",
@@ -32,7 +32,7 @@ describe("Duels - Advanced Tests", () => {
     );
 
     wizard3Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Merlin",
         description: "An ancient wizard",
@@ -122,7 +122,7 @@ describe("Duels - Advanced Tests", () => {
     test("should successfully join a duel", async () => {
       // Create wizards for different users
       const user2Wizard = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "User2 Wizard",
           description: "A wizard owned by user 2",
@@ -154,7 +154,7 @@ describe("Duels - Advanced Tests", () => {
     test("should prevent joining a duel that's not waiting for players", async () => {
       // Create a wizard for test-user-2
       const user2WizardId = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "User2 Wizard",
           description: "A wizard for user 2",
@@ -202,7 +202,7 @@ describe("Duels - Advanced Tests", () => {
     test("should handle joining with multiple wizards", async () => {
       // Create wizards for different users
       const user2Wizard1 = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "User2 Wizard 1",
           description: "First wizard owned by user 2",
@@ -210,7 +210,7 @@ describe("Duels - Advanced Tests", () => {
       );
 
       const user2Wizard2 = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "User2 Wizard 2",
           description: "Second wizard owned by user 2",
@@ -242,7 +242,7 @@ describe("Duels - Advanced Tests", () => {
     test("should remain in WAITING_FOR_PLAYERS status when 2 players join (auto-start scheduled)", async () => {
       // Create wizards for different users
       const user2Wizard = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "User2 Wizard",
           description: "A wizard owned by user 2",
@@ -298,7 +298,7 @@ describe("Duels - Advanced Tests", () => {
         });
       });
 
-      await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+      await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
         duelId,
         wizardId: wizard1Id,
         spellDescription: "Fireball of destruction",
@@ -325,7 +325,7 @@ describe("Duels - Advanced Tests", () => {
 
       // Duel is still WAITING_FOR_PLAYERS
       await expect(
-        withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+        withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Premature spell",
@@ -359,7 +359,7 @@ describe("Duels - Advanced Tests", () => {
       });
 
       await expect(
-        withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+        withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Late spell",
@@ -369,7 +369,7 @@ describe("Duels - Advanced Tests", () => {
 
     test("should prevent casting spells with wizards not in duel", async () => {
       const outsideWizard = await withAuth(t, "test-user-2").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Outside Wizard",
           description: "Not in this duel",
@@ -401,7 +401,7 @@ describe("Duels - Advanced Tests", () => {
       });
 
       await expect(
-        withAuth(t, "test-user-2").mutation(api.duels.castSpell, {
+        withAuth(t, "test-user-2").mutation(internal.duels.castSpell, {
           duelId,
           wizardId: outsideWizard,
           spellDescription: "Unauthorized spell",
@@ -435,7 +435,7 @@ describe("Duels - Advanced Tests", () => {
       });
 
       // Cast first spell
-      await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+      await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
         duelId,
         wizardId: wizard1Id,
         spellDescription: "First spell",
@@ -443,7 +443,7 @@ describe("Duels - Advanced Tests", () => {
 
       // Try to cast second spell with same wizard
       await expect(
-        withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+        withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Second spell",
@@ -487,7 +487,7 @@ describe("Duels - Advanced Tests", () => {
 
       // Try to cast spell on cancelled duel
       await expect(
-        withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+        withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Spell on cancelled duel",

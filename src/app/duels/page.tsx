@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
-import { WaitlistGuard } from "@/components/WaitlistGuard";
 import { AdDisplay } from "@/components/AdDisplay";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { Swords, Users, Search, Shield } from "lucide-react";
@@ -68,11 +67,9 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               {user ? (
-                <WaitlistGuard>
-                  <Button asChild className="w-full">
-                    <Link href="/duels/lobby">Join Lobby</Link>
-                  </Button>
-                </WaitlistGuard>
+                <Button asChild className="w-full">
+                  <Link href="/duels/lobby">Join Lobby</Link>
+                </Button>
               ) : (
                 <Button disabled className="w-full">
                   Sign up to join
@@ -93,11 +90,9 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               {user ? (
-                <WaitlistGuard>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href="/duels/create">Create Duel</Link>
-                  </Button>
-                </WaitlistGuard>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/duels/create">Create Duel</Link>
+                </Button>
               ) : (
                 <Button disabled variant="outline" className="w-full">
                   Sign up to create
@@ -118,11 +113,9 @@ export default function DuelsPage() {
             </CardHeader>
             <CardContent>
               {user ? (
-                <WaitlistGuard>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href="/duels/join">Join by Code</Link>
-                  </Button>
-                </WaitlistGuard>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/duels/join">Join by Code</Link>
+                </Button>
               ) : (
                 <Button disabled variant="outline" className="w-full">
                   Sign up to join
@@ -170,19 +163,17 @@ export default function DuelsPage() {
                 title="No duels yet!"
                 description="Create or join a duel to start your magical battles."
                 action={
-                  <WaitlistGuard>
-                    <div className="flex gap-2 justify-center flex-wrap">
-                      <Button asChild>
-                        <Link href="/duels/lobby">Quick Match</Link>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link href="/duels/create">Create Duel</Link>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link href="/duels/join">Join by Code</Link>
-                      </Button>
-                    </div>
-                  </WaitlistGuard>
+                  <div className="flex gap-2 justify-center flex-wrap">
+                    <Button asChild>
+                      <Link href="/duels/lobby">Quick Match</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href="/duels/create">Create Duel</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href="/duels/join">Join by Code</Link>
+                    </Button>
+                  </div>
                 }
               />
             ) : (
@@ -219,16 +210,14 @@ export default function DuelsPage() {
                   <p className="text-muted-foreground mb-4">
                     Be the first to create a new duel!
                   </p>
-                  <WaitlistGuard>
-                    <div className="flex gap-2 justify-center">
-                      <Button asChild>
-                        <Link href="/duels/lobby">Quick Match</Link>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link href="/duels/create">Create Duel</Link>
-                      </Button>
-                    </div>
-                  </WaitlistGuard>
+                  <div className="flex gap-2 justify-center">
+                    <Button asChild>
+                      <Link href="/duels/lobby">Quick Match</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href="/duels/create">Create Duel</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (

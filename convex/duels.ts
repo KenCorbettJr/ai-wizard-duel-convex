@@ -5,6 +5,7 @@ import {
   internalMutation,
   MutationCtx,
 } from "./_generated/server";
+import { scheduleDuelRating } from "./lib/scheduleDuelRating";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 
@@ -66,6 +67,7 @@ export const getPlayerDuels = query({
       creatorCoversEntry: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
+      chatEnabled: v.optional(v.boolean()),
     }),
   ),
   handler: async (ctx) => {
@@ -162,6 +164,7 @@ export const getDuelInternal = internalQuery({
       creatorCoversEntry: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
+      chatEnabled: v.optional(v.boolean()),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -201,6 +204,9 @@ export const getDuelInternal = internalQuery({
             v.literal("COMPLETED"),
           ),
           narration: v.optional(narrationValidator),
+          illustrationStatus: v.optional(
+            v.union(v.literal("PENDING"), v.literal("FAILED")),
+          ),
         }),
       ),
     }),
@@ -293,12 +299,14 @@ async function insertWaitingDuel(
     wizards,
     enableImageGeneration,
     coverOpponentEntry = false,
+    chatEnabled = true,
   }: {
     userId: string;
     numberOfRounds: number | "TO_THE_DEATH";
     wizards: Id<"wizards">[];
     enableImageGeneration: boolean;
     coverOpponentEntry?: boolean;
+    chatEnabled?: boolean;
   },
 ): Promise<Id<"duels">> {
   // A token is only taken when a second player joins and the duel starts.
@@ -347,6 +355,7 @@ async function insertWaitingDuel(
     textOnlyMode: !enableImageGeneration,
     textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
     creatorCoversEntry: coverOpponentEntry || undefined,
+    chatEnabled,
   });
 }
 
@@ -358,6 +367,8 @@ export const createDuel = mutation({
     enableImageGeneration: v.optional(v.boolean()),
     // Creator pays their opponent's token too, so a friend can play free
     coverOpponentEntry: v.optional(v.boolean()),
+    // Lets the two duelists chat. Either of them can still turn it off later.
+    enableChat: v.optional(v.boolean()),
   },
   handler: async (
     ctx,
@@ -366,6 +377,7 @@ export const createDuel = mutation({
       wizards,
       enableImageGeneration = true,
       coverOpponentEntry = false,
+      enableChat = true,
     },
   ) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -387,6 +399,7 @@ export const createDuel = mutation({
       wizards,
       enableImageGeneration,
       coverOpponentEntry,
+      chatEnabled: enableChat,
     });
 
     return duelId;
@@ -564,6 +577,7 @@ export const requestRematch = mutation({
       enableImageGeneration: !(
         duel.textOnlyMode && duel.textOnlyReason === "user_preference"
       ),
+      chatEnabled: duel.chatEnabled !== false,
     });
     await ctx.db.patch(duelId, { rematchDuelId: rematchId });
     return rematchId;
@@ -591,7 +605,8 @@ export const startDuel = mutation({
 });
 
 // Cast a spell in the current round
-export const castSpell = mutation({
+// Called by watcher.castSpell after the Watcher approves the text.
+export const castSpell = internalMutation({
   args: {
     duelId: v.id("duels"),
     wizardId: v.id("wizards"),
@@ -675,7 +690,7 @@ export const castSpell = mutation({
       if (process.env.NODE_ENV !== "test") {
         await ctx.scheduler.runAfter(
           100,
-          api.processDuelRound.processDuelRound,
+          internal.processDuelRound.processDuelRound,
           {
             duelId,
             roundId: currentRound._id,
@@ -777,7 +792,7 @@ export const undoSpell = mutation({
 });
 
 // Complete a round with outcome
-export const completeRound = mutation({
+export const completeRound = internalMutation({
   args: {
     roundId: v.id("duelRounds"),
     outcome: v.object({
@@ -863,6 +878,11 @@ export const completeRound = mutation({
             isCampaignBattle: duel.isCampaignBattle || false,
           });
         }
+      }
+
+      // Rate finished player duels so admins can pick highlights
+      if (!duel.isCampaignBattle) {
+        await scheduleDuelRating(ctx, duel._id);
       }
 
       // Handle campaign battle completion
@@ -1046,6 +1066,7 @@ export const getActiveDuels = query({
       creatorCoversEntry: v.optional(v.boolean()),
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
+      chatEnabled: v.optional(v.boolean()),
     }),
   ),
   handler: async (ctx) => {
@@ -1104,6 +1125,7 @@ export const getWatchableDuels = query({
         creatorCoversEntry: v.optional(v.boolean()),
         isCampaignBattle: v.optional(v.boolean()),
         rematchDuelId: v.optional(v.id("duels")),
+        chatEnabled: v.optional(v.boolean()),
       }),
     ),
     total: v.number(),
@@ -1129,7 +1151,7 @@ export const getWatchableDuels = query({
 });
 
 // Update duel featured illustration
-export const updateFeaturedIllustration = mutation({
+export const updateFeaturedIllustration = internalMutation({
   args: {
     duelId: v.id("duels"),
     illustration: v.string(),
@@ -1143,7 +1165,7 @@ export const updateFeaturedIllustration = mutation({
 });
 
 // Update duel text-only mode status
-export const updateDuelTextOnlyMode = mutation({
+export const updateDuelTextOnlyMode = internalMutation({
   args: {
     duelId: v.id("duels"),
     textOnlyMode: v.boolean(),
@@ -1324,7 +1346,7 @@ export const scheduleRoundIllustration = mutation({
     if (process.env.NODE_ENV !== "test") {
       await ctx.scheduler.runAfter(
         100, // Add small delay to ensure database transaction is committed
-        api.generateRoundIllustration.generateRoundIllustration,
+        internal.generateRoundIllustration.generateRoundIllustration,
         {
           illustrationPrompt,
           duelId,
@@ -1339,7 +1361,7 @@ export const scheduleRoundIllustration = mutation({
 });
 
 // Start duel after introduction (move to round 1)
-export const startDuelAfterIntroduction = mutation({
+export const startDuelAfterIntroduction = internalMutation({
   args: { duelId: v.id("duels") },
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -1393,10 +1415,14 @@ export const triggerRoundProcessing = mutation({
 
     // Schedule round processing
     if (process.env.NODE_ENV !== "test") {
-      await ctx.scheduler.runAfter(100, api.processDuelRound.processDuelRound, {
-        duelId,
-        roundId,
-      });
+      await ctx.scheduler.runAfter(
+        100,
+        internal.processDuelRound.processDuelRound,
+        {
+          duelId,
+          roundId,
+        },
+      );
     }
 
     return roundId;
@@ -1943,7 +1969,7 @@ export const castSpellForCampaignOpponent = internalMutation({
       if (process.env.NODE_ENV !== "test") {
         await ctx.scheduler.runAfter(
           100,
-          api.processDuelRound.processDuelRound,
+          internal.processDuelRound.processDuelRound,
           {
             duelId,
             roundId: currentRound._id,

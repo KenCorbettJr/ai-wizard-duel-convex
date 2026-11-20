@@ -18,8 +18,7 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "cypress:emulate": "npm run set-emulate-envs && start-server-and-test emulate http://localhost:3000 cypress:run",
-    "cypress:emulate:open": "npm run set-emulate-envs && start-server-and-test emulate http://localhost:3000 cypress:open",
-    "migrate:waitlist": "node scripts/migrate-waitlist-users.js"
+    "cypress:emulate:open": "npm run set-emulate-envs && start-server-and-test emulate http://localhost:3000 cypress:open"
   },
   "dependencies": {
     "@clerk/backend": "^3.26.5",

@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { withAuth, withSuperAdminAuth, createTestUser } from "./test_utils";
 
@@ -14,7 +14,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Test Wizard 1",
         description: "A test wizard",
@@ -22,7 +22,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Test Wizard 2",
         description: "Another test wizard",
@@ -93,7 +93,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Analytics Wizard 1",
         description: "A test wizard for analytics",
@@ -101,7 +101,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Analytics Wizard 2",
         description: "Another test wizard for analytics",
@@ -159,7 +159,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Monitor Wizard 1",
         description: "A test wizard for monitoring",
@@ -167,7 +167,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Monitor Wizard 2",
         description: "Another test wizard for monitoring",
@@ -239,7 +239,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Cancel Wizard 1",
         description: "A test wizard for cancellation",
@@ -247,7 +247,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Cancel Wizard 2",
         description: "Another test wizard for cancellation",
@@ -293,7 +293,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Complete Wizard 1",
         description: "A test wizard",
@@ -301,7 +301,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Complete Wizard 2",
         description: "Another test wizard",
@@ -329,16 +329,16 @@ describe("Duel Admin Functions", () => {
     });
 
     // Start actual duel
-    await t.mutation(api.duels.startDuelAfterIntroduction, { duelId });
+    await t.mutation(internal.duels.startDuelAfterIntroduction, { duelId });
 
     // Cast spells for both wizards
-    await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+    await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
       duelId,
       wizardId: wizard1Id,
       spellDescription: "Test spell 1",
     });
 
-    await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+    await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
       duelId,
       wizardId: wizard2Id,
       spellDescription: "Test spell 2",
@@ -349,7 +349,7 @@ describe("Duel Admin Functions", () => {
     const activeRound = currentRound.find((r) => r.roundNumber === 1);
 
     if (activeRound) {
-      await t.mutation(api.duels.completeRound, {
+      await t.mutation(internal.duels.completeRound, {
         roundId: activeRound._id,
         outcome: {
           narrative: "Test battle outcome",
@@ -390,7 +390,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Page Wizard 1",
         description: "A test wizard for pagination",
@@ -398,7 +398,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Page Wizard 2",
         description: "Another test wizard for pagination",
@@ -453,7 +453,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Date Wizard 1",
         description: "A test wizard for date filtering",
@@ -461,7 +461,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Date Wizard 2",
         description: "Another test wizard for date filtering",
@@ -509,7 +509,7 @@ describe("Duel Admin Functions", () => {
 
     // Create test wizards
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Stats Wizard 1",
         description: "A test wizard for stats",
@@ -517,7 +517,7 @@ describe("Duel Admin Functions", () => {
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Stats Wizard 2",
         description: "Another test wizard for stats",
@@ -590,7 +590,7 @@ describe("Duel Admin Functions", () => {
 
     // Create a test duel first
     const wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Test Wizard",
         description: "A test wizard",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useMutation } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
@@ -22,6 +22,10 @@ import {
 import { Save, X, Plus } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import posthog from "posthog-js";
+import {
+  WatcherDialog,
+  type WatcherRejection,
+} from "@/components/watcher/WatcherDialog";
 
 interface WizardFormData {
   name: string;
@@ -47,8 +51,10 @@ export function WizardForm({
   inModal = false,
 }: WizardFormProps) {
   const { user } = useUser();
-  const createWizard = useMutation(api.wizards.createWizard);
-  const updateWizard = useMutation(api.wizards.updateWizard);
+  const createWizard = useAction(api.watcher.createWizard);
+  const updateWizard = useAction(api.watcher.updateWizard);
+  const [watcherRejection, setWatcherRejection] =
+    useState<WatcherRejection | null>(null);
   const regenerateIllustration = useMutation(
     api.wizards.regenerateIllustration,
   );
@@ -70,17 +76,24 @@ export function WizardForm({
 
     setIsSubmitting(true);
     try {
-      if (mode === "create") {
-        await createWizard({
-          name: formData.name.trim(),
-          description: formData.description.trim(),
+      const fields = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+      };
+      const result =
+        mode === "create"
+          ? await createWizard(fields)
+          : wizardId
+            ? await updateWizard({ wizardId, ...fields })
+            : null;
+      if (!result) return;
+      if (!result.ok) {
+        setWatcherRejection(result.rejection);
+        posthog.capture("wizard_rejected_by_watcher", {
+          category: result.rejection.category,
+          mode,
         });
-      } else if (mode === "edit" && wizardId) {
-        await updateWizard({
-          wizardId,
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-        });
+        return;
       }
 
       posthog.capture(mode === "create" ? "wizard_created" : "wizard_updated");
@@ -93,7 +106,6 @@ export function WizardForm({
         `Error ${mode === "create" ? "creating" : "updating"} wizard:`,
         error,
       );
-      // You might want to show a toast notification here
       toast.error(
         `Error ${mode === "create" ? "creating" : "updating"} wizard. Please try again.`,
       );
@@ -182,7 +194,6 @@ export function WizardForm({
           </div>
         </div>
       )}
-
       <div className="flex gap-3 pt-4">
         <Button
           type="submit"
@@ -214,6 +225,11 @@ export function WizardForm({
           Cancel
         </Button>
       </div>
+      <WatcherDialog
+        rejection={watcherRejection}
+        onClose={() => setWatcherRejection(null)}
+        retryLabel="Rework my wizard"
+      />
     </form>
   );
 

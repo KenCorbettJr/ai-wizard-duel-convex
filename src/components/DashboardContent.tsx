@@ -13,7 +13,6 @@ import { api } from "../../convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { MigrationNotification } from "@/components/MigrationNotification";
-import { WaitlistGuard } from "@/components/WaitlistGuard";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -128,29 +127,23 @@ function DuelsSection({
           </p>
         </div>
         <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
-          <WaitlistGuard>
-            <Button
-              asChild
-              variant="secondary"
-              size="sm"
-              className="col-span-3 border border-primary/40 font-semibold sm:col-span-1"
-            >
-              <Link href="/duels/lobby">
-                <Users className="mr-2 h-4 w-4" aria-hidden="true" />
-                Quick Match
-              </Link>
-            </Button>
-          </WaitlistGuard>
-          <WaitlistGuard>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/duels/create">Create</Link>
-            </Button>
-          </WaitlistGuard>
-          <WaitlistGuard>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/duels/join">Join by code</Link>
-            </Button>
-          </WaitlistGuard>
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className="col-span-3 border border-primary/40 font-semibold sm:col-span-1"
+          >
+            <Link href="/duels/lobby">
+              <Users className="mr-2 h-4 w-4" aria-hidden="true" />
+              Quick Match
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/duels/create">Create</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/duels/join">Join by code</Link>
+          </Button>
           <Button asChild variant="outline" size="sm">
             <Link href="/duels/watch">Watch</Link>
           </Button>
@@ -295,14 +288,12 @@ function WizardRow({
           </Link>
         )}
       </div>
-      <WaitlistGuard>
-        <Button asChild variant="outline" size="sm" className="shrink-0">
-          <Link href={`/duels/create?wizardId=${wizard._id}`}>
-            <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
-            Challenge
-          </Link>
-        </Button>
-      </WaitlistGuard>
+      <Button asChild variant="outline" size="sm" className="shrink-0">
+        <Link href={`/duels/create?wizardId=${wizard._id}`}>
+          <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
+          Challenge
+        </Link>
+      </Button>
     </li>
   );
 }
@@ -542,16 +533,14 @@ export default function DashboardContent({
                       <Button asChild variant="outline" size="sm">
                         <Link href="/wizards">View all ({wizards.length})</Link>
                       </Button>
-                      <WaitlistGuard>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleCreateWizard}
-                        >
-                          <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                          New wizard
-                        </Button>
-                      </WaitlistGuard>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCreateWizard}
+                      >
+                        <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                        New wizard
+                      </Button>
                     </div>
                   </div>
                   <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">

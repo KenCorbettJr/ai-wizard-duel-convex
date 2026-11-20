@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
-import { WaitlistGuard } from "@/components/WaitlistGuard";
 import { CampaignErrorBoundary } from "@/components/CampaignErrorBoundary";
 import { CampaignLoadingState } from "@/components/CampaignLoadingState";
 import { CampaignSeasonOverview } from "@/components/CampaignSeasonOverview";
@@ -274,19 +273,17 @@ export default function CampaignPage() {
                 opponents. Each wizard progresses individually through the
                 campaign.
               </p>
-              <WaitlistGuard>
-                <div className="flex justify-center gap-4">
-                  <Button asChild>
-                    <Link href="/wizards/create">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Wizard
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href="/wizards">View Wizards</Link>
-                  </Button>
-                </div>
-              </WaitlistGuard>
+              <div className="flex justify-center gap-4">
+                <Button asChild>
+                  <Link href="/wizards/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Wizard
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/wizards">View Wizards</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -403,14 +400,13 @@ export default function CampaignPage() {
             </p>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {wizardsWithProgress.map((wizardData) => (
-                <WaitlistGuard key={wizardData.wizard._id}>
-                  <CampaignWizardCard
-                    wizardData={wizardData}
-                    battle={battle}
-                    opponentNames={opponentNames}
-                    isMostRecent={wizardData.wizard._id === recentId}
-                  />
-                </WaitlistGuard>
+                <CampaignWizardCard
+                  key={wizardData.wizard._id}
+                  wizardData={wizardData}
+                  battle={battle}
+                  opponentNames={opponentNames}
+                  isMostRecent={wizardData.wizard._id === recentId}
+                />
               ))}
             </div>
           </section>

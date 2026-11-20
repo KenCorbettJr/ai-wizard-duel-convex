@@ -69,8 +69,6 @@ export async function generateMetadata({
             images: [
               {
                 url: imageUrl,
-                width: 1024,
-                height: 1024,
                 alt: `Epic duel between ${wizard1?.name || "wizard"} and ${wizard2?.name || "wizard"}`,
               },
             ],

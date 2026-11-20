@@ -1,13 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import posthog from "posthog-js";
+import {
+  WatcherDialog,
+  type WatcherRejection,
+} from "./watcher/WatcherDialog";
 
 interface ProfileEditFormProps {
   onSuccess?: () => void;
@@ -21,7 +25,9 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
 
   // Get current user profile status to populate form
   const profileStatus = useQuery(api.userProfiles.getCurrentUserProfileStatus);
-  const updateProfile = useMutation(api.userProfiles.updateUserProfile);
+  const updateProfile = useAction(api.watcher.updateUserProfile);
+  const [watcherRejection, setWatcherRejection] =
+    useState<WatcherRejection | null>(null);
 
   // Initialize form with current display name when data loads
   React.useEffect(() => {
@@ -48,6 +54,8 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
           setSuccess(false);
           onSuccess?.();
         }, 2000);
+      } else if (result.rejection) {
+        setWatcherRejection(result.rejection);
       } else {
         setError(result.error || "Failed to update profile");
       }
@@ -145,6 +153,11 @@ export function ProfileEditForm({ onSuccess }: ProfileEditFormProps) {
           >
             {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
+          <WatcherDialog
+            rejection={watcherRejection}
+            onClose={() => setWatcherRejection(null)}
+            retryLabel="Choose another name"
+          />
         </form>
       </CardContent>
     </Card>

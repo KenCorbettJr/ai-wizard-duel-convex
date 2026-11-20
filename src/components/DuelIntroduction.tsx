@@ -57,15 +57,16 @@ export const DuelIntroduction = memo(function DuelIntroduction({
     <div className="space-y-6">
       {/* Introduction Illustration */}
       {introRound.outcome.illustration && (
-        <div className="relative w-full aspect-square max-w-2xl mx-auto rounded-lg overflow-hidden">
+        <div className="relative w-full max-w-2xl mx-auto rounded-lg overflow-hidden bg-black">
+          {/* Shown at its own shape: new scenes are 3:2, older ones vary. */}
           <ConvexImage
             storageId={introRound.outcome.illustration}
             alt="Duel Introduction"
-            width={1024}
-            height={1024}
+            width={1152}
+            height={768}
             sizes="(min-width: 672px) 672px, 100vw"
             quality={95}
-            className="w-full h-full object-cover"
+            className="w-full h-auto"
           />
         </div>
       )}

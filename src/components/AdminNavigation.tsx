@@ -19,6 +19,8 @@ import {
   Crown,
   Users,
   Coins,
+  Star,
+  Eye,
 } from "lucide-react";
 
 interface AdminNavItem {
@@ -161,6 +163,16 @@ const adminNavItems: AdminNavItem[] = [
     href: "/admin/duels",
     label: "Duel Management",
     icon: Swords,
+  },
+  {
+    href: "/admin/duel-ratings",
+    label: "Duel Ratings",
+    icon: Star,
+  },
+  {
+    href: "/admin/moderation",
+    label: "The Watcher",
+    icon: Eye,
   },
   {
     href: "/admin/dev-tools",

@@ -18,7 +18,7 @@ describe("Duel Introduction", () => {
 
     // Create test wizards
     wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Gandalf the Grey",
         description: "A wise wizard with a long grey beard and staff",
@@ -26,7 +26,7 @@ describe("Duel Introduction", () => {
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Saruman the White",
         description:
@@ -113,7 +113,7 @@ describe("Duel Introduction", () => {
     test("should include wizard stats in introduction", async () => {
       // Create wizards with different stats
       const veteranWizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Merlin",
           description: "Ancient wizard of legend",
@@ -129,7 +129,7 @@ describe("Duel Introduction", () => {
       });
 
       const rookieWizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Young Apprentice",
           description: "A novice wizard learning the arts",
@@ -208,7 +208,7 @@ describe("Duel Introduction", () => {
 
     test("should handle fallback with wizard names containing special characters", async () => {
       const specialWizard1Id = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Wizard™ 🧙‍♂️",
           description: "A wizard with special characters",
@@ -216,7 +216,7 @@ describe("Duel Introduction", () => {
       );
 
       const specialWizard2Id = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Mágico Español",
           description: "A wizard with accented characters",
@@ -353,7 +353,7 @@ describe("Duel Introduction", () => {
     test("should handle duel with null wizard data", async () => {
       // Create duel with valid wizard IDs but then delete one wizard
       const tempWizardId = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Temp Wizard",
           description: "Temporary wizard",
@@ -438,7 +438,7 @@ describe("Duel Introduction", () => {
 
     test("should handle wizards with zero stats", async () => {
       const newWizard1Id = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Fresh Wizard",
           description: "Brand new to magic",
@@ -446,7 +446,7 @@ describe("Duel Introduction", () => {
       );
 
       const newWizard2Id = await withAuth(t, "test-user-1").mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Another Newbie",
           description: "Also new to magic",
@@ -612,7 +612,7 @@ describe("Duel Introduction", () => {
       );
 
       // Cast a spell for the human player
-      await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+      await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
         duelId: battleResult.duelId,
         wizardId: wizard1Id,
         spellDescription: "Lightning bolt!",

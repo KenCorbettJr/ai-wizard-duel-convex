@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
@@ -16,7 +16,7 @@ describe("Luck Rolls", () => {
 
     // Create test wizards
     wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Gandalf",
         description: "A wise wizard with a long beard",
@@ -24,7 +24,7 @@ describe("Luck Rolls", () => {
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Saruman",
         description: "A powerful wizard with dark magic",
@@ -50,7 +50,7 @@ describe("Luck Rolls", () => {
     });
 
     // Complete the round with luck rolls
-    await t.mutation(api.duels.completeRound, {
+    await t.mutation(internal.duels.completeRound, {
       roundId,
       outcome: {
         narrative: "The wizards clash with magical force!",
@@ -93,7 +93,7 @@ describe("Luck Rolls", () => {
     });
 
     // Complete the round without luck rolls (old format)
-    await t.mutation(api.duels.completeRound, {
+    await t.mutation(internal.duels.completeRound, {
       roundId,
       outcome: {
         narrative: "The wizards clash with magical force!",
@@ -131,7 +131,7 @@ describe("Luck Rolls", () => {
     });
 
     // Test with valid D20 values (1-20)
-    await t.mutation(api.duels.completeRound, {
+    await t.mutation(internal.duels.completeRound, {
       roundId,
       outcome: {
         narrative: "The wizards clash with magical force!",

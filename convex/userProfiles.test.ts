@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import schema from "./schema";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { withAuth, createTestUser } from "./test_utils";
 
 test("user ID availability checking", async () => {
@@ -57,7 +57,7 @@ test("user ID assignment", async () => {
 
   // Test successful user ID assignment
   const result1 = await withAuth(t, clerkId).mutation(
-    api.userProfiles.setUserId,
+    internal.userProfiles.setUserId,
     {
       userId: "testuser123",
       displayName: "Test Display Name",
@@ -69,7 +69,7 @@ test("user ID assignment", async () => {
 
   // Test that user ID cannot be changed once set
   const result2 = await withAuth(t, clerkId).mutation(
-    api.userProfiles.setUserId,
+    internal.userProfiles.setUserId,
     {
       userId: "newtestuser",
       displayName: "New Display Name",
@@ -88,7 +88,7 @@ test("get user profile", async () => {
 
   // Set user ID
   const setResult = await withAuth(t, clerkId).mutation(
-    api.userProfiles.setUserId,
+    internal.userProfiles.setUserId,
     {
       userId: "testuser456",
       displayName: "Test Display Name 2",
@@ -123,7 +123,7 @@ test("get user wizards", async () => {
   await createTestUser(t, clerkId);
 
   // Set user ID
-  await withAuth(t, clerkId).mutation(api.userProfiles.setUserId, {
+  await withAuth(t, clerkId).mutation(internal.userProfiles.setUserId, {
     userId: "testuser789",
     displayName: "Test Display Name 3",
   });
@@ -150,7 +150,7 @@ test("update user profile", async () => {
 
   // Set user ID first
   const setResult = await withAuth(t, clerkId).mutation(
-    api.userProfiles.setUserId,
+    internal.userProfiles.setUserId,
     {
       userId: "testuser999",
       displayName: "Original Display Name",
@@ -160,7 +160,7 @@ test("update user profile", async () => {
 
   // Test successful profile update
   const updateResult = await withAuth(t, clerkId).mutation(
-    api.userProfiles.updateUserProfile,
+    internal.userProfiles.updateUserProfile,
     {
       displayName: "Updated Display Name",
     }
@@ -176,7 +176,7 @@ test("update user profile", async () => {
 
   // Test validation - empty display name
   const emptyResult = await withAuth(t, clerkId).mutation(
-    api.userProfiles.updateUserProfile,
+    internal.userProfiles.updateUserProfile,
     {
       displayName: "",
     }
@@ -186,7 +186,7 @@ test("update user profile", async () => {
 
   // Test validation - display name too long
   const longResult = await withAuth(t, clerkId).mutation(
-    api.userProfiles.updateUserProfile,
+    internal.userProfiles.updateUserProfile,
     {
       displayName: "a".repeat(51),
     }
@@ -199,7 +199,7 @@ test("update user profile", async () => {
   await createTestUser(t, newClerkId);
 
   const noSetupResult = await withAuth(t, newClerkId).mutation(
-    api.userProfiles.updateUserProfile,
+    internal.userProfiles.updateUserProfile,
     {
       displayName: "Should Fail",
     }

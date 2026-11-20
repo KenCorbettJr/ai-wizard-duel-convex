@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe, beforeEach, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { withAuth } from "./test_utils";
@@ -23,7 +23,7 @@ describe("Process Duel Round", () => {
 
     // Create test wizards
     wizard1Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Gandalf",
         description: "A wise wizard with a long beard",
@@ -31,7 +31,7 @@ describe("Process Duel Round", () => {
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
-      api.wizards.createWizard,
+      internal.wizards.createWizard,
       {
         name: "Saruman",
         description: "A powerful wizard with dark magic",
@@ -95,7 +95,7 @@ describe("Process Duel Round", () => {
       });
 
       const result = await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -164,7 +164,7 @@ describe("Process Duel Round", () => {
       });
 
       await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -232,7 +232,7 @@ describe("Process Duel Round", () => {
       });
 
       await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -278,7 +278,7 @@ describe("Process Duel Round", () => {
       mockGenerateObject.mockRejectedValue(new Error("Invalid JSON"));
 
       const result = await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -324,7 +324,7 @@ describe("Process Duel Round", () => {
       mockGenerateObject.mockRejectedValue(new Error("AI service unavailable"));
 
       const result = await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -380,7 +380,7 @@ describe("Process Duel Round", () => {
       });
 
       await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -426,7 +426,7 @@ describe("Process Duel Round", () => {
 
       await expect(
         withAuth(t, "test-user-1").action(
-          api.processDuelRound.processDuelRound,
+          internal.processDuelRound.processDuelRound,
           {
             duelId,
             roundId: tempRoundId,
@@ -479,7 +479,7 @@ describe("Process Duel Round", () => {
 
       await expect(
         withAuth(t, "test-user-1").action(
-          api.processDuelRound.processDuelRound,
+          internal.processDuelRound.processDuelRound,
           {
             duelId: badDuelId,
             roundId: badRoundId,
@@ -516,7 +516,7 @@ describe("Process Duel Round", () => {
 
       await expect(
         withAuth(t, "test-user-1").action(
-          api.processDuelRound.processDuelRound,
+          internal.processDuelRound.processDuelRound,
           {
             duelId: singleWizardDuelId,
             roundId: singleWizardRoundId,
@@ -553,7 +553,7 @@ describe("Process Duel Round", () => {
       });
 
       const result = await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -603,7 +603,7 @@ describe("Process Duel Round", () => {
       });
 
       const result = await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -671,7 +671,7 @@ describe("Process Duel Round", () => {
       });
 
       await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId: deathDuelId,
           roundId,
@@ -738,7 +738,7 @@ describe("Process Duel Round", () => {
       });
 
       await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId,
@@ -823,7 +823,7 @@ describe("Process Duel Round", () => {
       });
 
       const result = await withAuth(t, "test-user-1").action(
-        api.processDuelRound.processDuelRound,
+        internal.processDuelRound.processDuelRound,
         {
           duelId,
           roundId: currentRoundId,

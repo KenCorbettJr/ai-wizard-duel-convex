@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 import { withAuth } from "./test_utils";
@@ -454,14 +454,14 @@ test("should allow undoing a spell while waiting for other wizards", async () =>
 
   // Start the duel
   await withAuth(t, "test-user-1").mutation(
-    api.duels.startDuelAfterIntroduction,
+    internal.duels.startDuelAfterIntroduction,
     {
       duelId,
     }
   );
 
   // Cast spell with first wizard
-  await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+  await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
     duelId,
     wizardId: wizard1Id,
     spellDescription: "Fireball!",
@@ -541,7 +541,7 @@ test("should not allow undoing a spell if wizard hasn't cast one", async () => {
 
   // Start the duel
   await withAuth(t, "test-user-1").mutation(
-    api.duels.startDuelAfterIntroduction,
+    internal.duels.startDuelAfterIntroduction,
     {
       duelId,
     }
@@ -601,20 +601,20 @@ test("should not allow undoing a spell after round processing has started", asyn
 
   // Start the duel
   await withAuth(t, "test-user-1").mutation(
-    api.duels.startDuelAfterIntroduction,
+    internal.duels.startDuelAfterIntroduction,
     {
       duelId,
     }
   );
 
   // Cast spells with both wizards (this will trigger processing)
-  await withAuth(t, "test-user-1").mutation(api.duels.castSpell, {
+  await withAuth(t, "test-user-1").mutation(internal.duels.castSpell, {
     duelId,
     wizardId: wizard1Id,
     spellDescription: "Fireball!",
   });
 
-  await withAuth(t, "test-user-2").mutation(api.duels.castSpell, {
+  await withAuth(t, "test-user-2").mutation(internal.duels.castSpell, {
     duelId,
     wizardId: wizard2Id,
     spellDescription: "Ice Shard!",

@@ -1,29 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useAction } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
+import {
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  Lightbulb,
+  RotateCw,
+} from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 export const COMPOSER_ID = "spell-composer";
 export const MAX_SPELL_LENGTH = 500;
 
-const suggestionsFor = (name: string, lastResult?: string) => [
-  ...(lastResult
-    ? [
-        `${name} answers back after: "${lastResult
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 80)}"`,
-      ]
-    : []),
-  `${name} conjures a wall of flame to block their attack`,
-  `${name} summons a gust of wind to throw them off balance`,
-  `${name} raises a shimmering shield, then counter-strikes with lightning`,
-];
-
 interface CastSpellModalProps {
+  duelId: Id<"duels">;
   currentRound: number;
   wizardName: string;
   spellDescription: string;
@@ -35,13 +32,12 @@ interface CastSpellModalProps {
   /** Collapse state lives in the parent so it survives between rounds. */
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
-  /** Teaser from the previous round, used for a contextual suggestion. */
-  lastRoundResult?: string;
   /** Reports the panel height so the page can reserve exactly that much space. */
   onHeightChange?: (height: number) => void;
 }
 
 export function CastSpellModal({
+  duelId,
   currentRound,
   wizardName,
   spellDescription,
@@ -51,9 +47,27 @@ export function CastSpellModal({
   error,
   collapsed: isModalCollapsed,
   onCollapsedChange: setIsModalCollapsed,
-  lastRoundResult,
   onHeightChange,
 }: CastSpellModalProps) {
+  const suggestSpellIdeas = useAction(api.spellIdeas.suggestSpellIdeas);
+  // Ideas are only generated when the player asks, and belong to one round.
+  const [ideas, setIdeas] = useState<{ round: number; list: string[] }>();
+  const [loadingIdeas, setLoadingIdeas] = useState(false);
+  const [ideasError, setIdeasError] = useState(false);
+  const roundIdeas = ideas?.round === currentRound ? ideas.list : null;
+  const loadIdeas = async () => {
+    setLoadingIdeas(true);
+    setIdeasError(false);
+    try {
+      const list = await suggestSpellIdeas({ duelId });
+      setIdeas({ round: currentRound, list });
+    } catch (err) {
+      console.error("Couldn't get spell ideas:", err);
+      setIdeasError(true);
+    } finally {
+      setLoadingIdeas(false);
+    }
+  };
   const panelRef = useRef<HTMLElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLButtonElement>(null);
@@ -222,10 +236,9 @@ export function CastSpellModal({
                 className="h-24 w-full resize-none rounded-lg border border-input/50 bg-background/50 p-3 text-sm text-foreground backdrop-blur-sm transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus-visible:outline-none dark:placeholder:text-muted-foreground/50"
                 disabled={isCasting}
               />
-              <div className="flex flex-wrap gap-2" aria-label="Ideas">
-                {suggestionsFor(wizardName, lastRoundResult)
-                  .slice(0, 3)
-                  .map((s) => (
+              {roundIdeas ? (
+                <div className="flex flex-wrap gap-2" aria-label="Ideas">
+                  {roundIdeas.map((s) => (
                     <button
                       key={s}
                       type="button"
@@ -241,12 +254,47 @@ export function CastSpellModal({
                         );
                         textareaRef.current?.focus();
                       }}
-                      className="rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-left text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       {s}
                     </button>
                   ))}
-              </div>
+                  <button
+                    type="button"
+                    onClick={loadIdeas}
+                    disabled={loadingIdeas || isCasting}
+                    aria-label="More ideas"
+                    title="More ideas"
+                    className="inline-flex items-center rounded-full px-2 py-1 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <RotateCw
+                      className={`h-3.5 w-3.5 ${loadingIdeas ? "animate-spin" : ""}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={loadIdeas}
+                    disabled={loadingIdeas || isCasting}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60"
+                  >
+                    {loadingIdeas ? (
+                      <RuneSpinner size="sm" label="Thinking of ideas" />
+                    ) : (
+                      <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+                    {loadingIdeas ? "Thinking..." : "Need ideas?"}
+                  </button>
+                  {ideasError && (
+                    <span className="text-destructive">
+                      Couldn&apos;t get ideas. Try again.
+                    </span>
+                  )}
+                </div>
+              )}
               <div
                 id={`${COMPOSER_ID}-hint`}
                 className="flex items-center justify-between text-xs text-muted-foreground"

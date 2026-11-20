@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { convexTest } from "convex-test";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { withAuth, generateTestId } from "./test_utils";
 
@@ -125,7 +125,7 @@ describe("generateWizardIllustration", () => {
 
   it("should generate enhanced prompt and illustration for wizard", async () => {
     // Create a test wizard first with authentication
-    const wizardId = await withAuth(t).mutation(api.wizards.createWizard, {
+    const wizardId = await withAuth(t).mutation(internal.wizards.createWizard, {
       name: "Flame Master Zara",
       description:
         "A powerful fire wizard with crimson robes and a phoenix familiar",
@@ -173,7 +173,7 @@ describe("generateWizardIllustration", () => {
     ];
 
     for (const wizard of wizardTypes) {
-      const wizardId = await withAuth(t).mutation(api.wizards.createWizard, {
+      const wizardId = await withAuth(t).mutation(internal.wizards.createWizard, {
         name: wizard.name,
         description: wizard.description,
       });

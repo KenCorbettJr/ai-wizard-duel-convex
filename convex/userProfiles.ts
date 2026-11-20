@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 // Reserved words that cannot be used as user IDs
@@ -378,7 +378,8 @@ export const checkUserIdAvailability = query({
 /**
  * Set user ID and display name for authenticated user (one-time only)
  */
-export const setUserId = mutation({
+// Called by watcher.setUserId after the Watcher approves.
+export const setUserId = internalMutation({
   args: {
     userId: v.string(),
     displayName: v.optional(v.string()),
@@ -612,7 +613,8 @@ export const getUserWizards = query({
  * Update user profile (display name and other editable fields)
  * Note: userId is immutable and cannot be changed after creation
  */
-export const updateUserProfile = mutation({
+// Called by watcher.updateUserProfile after the Watcher approves.
+export const updateUserProfile = internalMutation({
   args: {
     displayName: v.string(),
   },

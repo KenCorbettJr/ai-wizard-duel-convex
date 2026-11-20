@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { withAuth, createTestUser } from "./test_utils";
 
@@ -32,7 +32,7 @@ describe("User Profile Integration Tests", () => {
 
       // Step 4: Set user ID and complete profile setup
       const profileSetup = await withAuth(t, clerkId).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "johndoe",
           displayName: "John Doe",
@@ -75,7 +75,7 @@ describe("User Profile Integration Tests", () => {
 
       // First user claims the handle
       const firstUserSetup = await withAuth(t, clerkId1).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "testhandle",
           displayName: "First User",
@@ -96,7 +96,7 @@ describe("User Profile Integration Tests", () => {
 
       // Second user setup should fail
       const secondUserSetup = await withAuth(t, clerkId2).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "testhandle",
           displayName: "Second User",
@@ -116,7 +116,7 @@ describe("User Profile Integration Tests", () => {
 
       // First user claims handle in lowercase
       const firstUserSetup = await withAuth(t, clerkId1).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "testhandle",
           displayName: "First User",
@@ -136,7 +136,7 @@ describe("User Profile Integration Tests", () => {
         expect(availabilityCheck.error).toBe("This user ID is already taken");
 
         const setupAttempt = await withAuth(t, clerkId2).mutation(
-          api.userProfiles.setUserId,
+          internal.userProfiles.setUserId,
           {
             userId: variation,
             displayName: "Second User",
@@ -154,14 +154,14 @@ describe("User Profile Integration Tests", () => {
 
       // Setup user with profile
       await createTestUser(t, clerkId);
-      await withAuth(t, clerkId).mutation(api.userProfiles.setUserId, {
+      await withAuth(t, clerkId).mutation(internal.userProfiles.setUserId, {
         userId: "gamemaster",
         displayName: "Game Master",
       });
 
       // Create wizards for the user
       const wizard1Id = await withAuth(t, clerkId).mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Fire Mage",
           description: "A powerful fire wizard",
@@ -169,7 +169,7 @@ describe("User Profile Integration Tests", () => {
       );
 
       const wizard2Id = await withAuth(t, clerkId).mutation(
-        api.wizards.createWizard,
+        internal.wizards.createWizard,
         {
           name: "Ice Sorceress",
           description: "Master of ice magic",
@@ -269,7 +269,7 @@ describe("User Profile Integration Tests", () => {
       await createTestUser(t, clerkId);
 
       // Create a wizard for this user (should still work)
-      await withAuth(t, clerkId).mutation(api.wizards.createWizard, {
+      await withAuth(t, clerkId).mutation(internal.wizards.createWizard, {
         name: "Test Wizard",
         description: "A test wizard",
       });
@@ -349,7 +349,7 @@ describe("User Profile Integration Tests", () => {
       await createTestUser(t, clerkId);
 
       // Claim a user ID
-      await withAuth(t, clerkId).mutation(api.userProfiles.setUserId, {
+      await withAuth(t, clerkId).mutation(internal.userProfiles.setUserId, {
         userId: "popular",
         displayName: "Popular User",
       });
@@ -379,7 +379,7 @@ describe("User Profile Integration Tests", () => {
 
       // Set initial user ID
       const initialSetup = await withAuth(t, clerkId).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "originalhandle",
           displayName: "Original Name",
@@ -389,7 +389,7 @@ describe("User Profile Integration Tests", () => {
 
       // Try to change user ID
       const changeAttempt = await withAuth(t, clerkId).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "newhandle",
           displayName: "New Name",
@@ -418,11 +418,11 @@ describe("User Profile Integration Tests", () => {
 
       // Both users try to claim the same handle simultaneously
       const [result1, result2] = await Promise.all([
-        withAuth(t, clerkId1).mutation(api.userProfiles.setUserId, {
+        withAuth(t, clerkId1).mutation(internal.userProfiles.setUserId, {
           userId: "contested",
           displayName: "User One",
         }),
-        withAuth(t, clerkId2).mutation(api.userProfiles.setUserId, {
+        withAuth(t, clerkId2).mutation(internal.userProfiles.setUserId, {
           userId: "contested",
           displayName: "User Two",
         }),
@@ -450,14 +450,14 @@ describe("User Profile Integration Tests", () => {
       await createTestUser(t, clerkId);
 
       // Complete initial profile setup
-      await withAuth(t, clerkId).mutation(api.userProfiles.setUserId, {
+      await withAuth(t, clerkId).mutation(internal.userProfiles.setUserId, {
         userId: "editableuser",
         displayName: "Original Name",
       });
 
       // Update display name
       const updateResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "Updated Name",
         }
@@ -484,14 +484,14 @@ describe("User Profile Integration Tests", () => {
       const clerkId = "test-user-validation";
 
       await createTestUser(t, clerkId);
-      await withAuth(t, clerkId).mutation(api.userProfiles.setUserId, {
+      await withAuth(t, clerkId).mutation(internal.userProfiles.setUserId, {
         userId: "validationuser",
         displayName: "Valid Name",
       });
 
       // Test empty display name
       const emptyResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "",
         }
@@ -501,7 +501,7 @@ describe("User Profile Integration Tests", () => {
 
       // Test too long display name
       const tooLongResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "a".repeat(51),
         }
@@ -513,7 +513,7 @@ describe("User Profile Integration Tests", () => {
 
       // Test whitespace handling
       const whitespaceResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "  Trimmed Name  ",
         }
@@ -536,7 +536,7 @@ describe("User Profile Integration Tests", () => {
 
       // Try to update profile before completing setup
       const updateResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "New Name",
         }
@@ -560,7 +560,7 @@ describe("User Profile Integration Tests", () => {
       expect(statusResult.hasProfile).toBe(false);
 
       // These should fail gracefully or return appropriate errors
-      const setUserIdResult = await t.mutation(api.userProfiles.setUserId, {
+      const setUserIdResult = await t.mutation(internal.userProfiles.setUserId, {
         userId: "testhandle",
         displayName: "Test User",
       });
@@ -568,7 +568,7 @@ describe("User Profile Integration Tests", () => {
       expect(setUserIdResult.error).toBe("Not authenticated");
 
       const updateResult = await t.mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "New Name",
         }
@@ -583,7 +583,7 @@ describe("User Profile Integration Tests", () => {
 
       // Try operations with authenticated but non-existent user
       const setUserIdResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.setUserId,
+        internal.userProfiles.setUserId,
         {
           userId: "testhandle",
           displayName: "Test User",
@@ -593,7 +593,7 @@ describe("User Profile Integration Tests", () => {
       expect(setUserIdResult.error).toBe("User record not found");
 
       const updateResult = await withAuth(t, clerkId).mutation(
-        api.userProfiles.updateUserProfile,
+        internal.userProfiles.updateUserProfile,
         {
           displayName: "New Name",
         }

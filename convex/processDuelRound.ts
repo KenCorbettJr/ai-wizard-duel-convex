@@ -1,7 +1,7 @@
 "use node";
 
 import type { Doc } from "../convex/_generated/dataModel";
-import { action, ActionCtx } from "./_generated/server";
+import { internalAction, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import {
   generateObject,
@@ -13,6 +13,7 @@ import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
 import { useReferenceImageProvider } from "./lib/imageProvider";
 import { Wizard } from "@/types/wizard";
+import { CONTENT_STANDARDS } from "./lib/contentStandards";
 
 // Zod schema for structured AI output
 const BattleRoundResponseSchema = z.object({
@@ -29,7 +30,7 @@ const BattleRoundResponseSchema = z.object({
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round. Include wizard appearances, spell effects, action and motion, and keep the arena consistent with previous rounds.",
+      "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round. Include how each wizard looks in this exact moment (pose, form, what they hold), spell effects, action and motion, and keep the arena consistent with previous rounds.",
     ),
   damageSummary: z
     .string()
@@ -105,7 +106,7 @@ const ARENA_SCALE =
 // Camera shots and the arena scale push wizards far apart. When an attack
 // actually lands, the picture must show it landing on the target.
 const ILLUSTRATION_RULES =
-  "ILLUSTRATION RULES: Pick the moment of impact, and show both wizards clearly in frame. Name each wizard and say who is attacking whom. If an attack hits (the target loses health), the attacker's move must be aimed AT the target, and the prompt must show the target being struck, with the target clearly visible and not tiny or in the background. A leaping, flying or swinging attacker travels toward the target, never toward the camera, the crowd or the stands. If the attack is blocked or dodged, show the attack meeting the defense. Wizards may be at any distance from each other, so place them where this round's actions put them, and let the camera shot frame them. Say which direction each wizard is facing and moving.";
+  "ILLUSTRATION RULES: Pick the moment of impact, and show both wizards clearly in frame. Name each wizard and say who is attacking whom. If an attack hits (the target loses health), the attacker's move must be aimed AT the target, and the prompt must show the target being struck, with the target clearly visible and not tiny or in the background. A leaping, flying or swinging attacker travels toward the target, never toward the camera, the crowd or the stands. If the attack is blocked or dodged, show the attack meeting the defense. Wizards may be at any distance from each other, so place them where this round's actions put them, and let the camera shot frame them. Say which direction each wizard is facing and moving. Describe each wizard's body as this moment requires: their pose, their form, and what is in their hands (or that their hands are empty). If a wizard transformed or changed shape this round, describe ONLY the new form in full (for example, curled into a spinning ball, or a robot dinosaur in their colors) and say they are no longer in their usual form; never call it partial unless their spell says so. Do not mention their usual outfit, staff or props when the action changes or drops them.";
 
 // The introduction (round 0) is the wide establishing shot. Every battle round
 // gets a different camera angle. The order is shuffled per
@@ -233,7 +234,7 @@ function validateBattleResponse(response: unknown): BattleRoundResponse | null {
 }
 
 // Process a duel round using AI
-export const processDuelRound = action({
+export const processDuelRound = internalAction({
   args: {
     duelId: v.id("duels"),
     roundId: v.id("duelRounds"),
@@ -313,7 +314,7 @@ export const processDuelRound = action({
       const wizard2Luck = battleResult.wizard2Luck || generateLuck();
 
       // Update the round with the outcome
-      await ctx.runMutation(api.duels.completeRound, {
+      await ctx.runMutation(internal.duels.completeRound, {
         roundId,
         outcome: {
           narrative: battleResult.narration,
@@ -659,9 +660,9 @@ When judging each round, consider:
   - State how many points they will earn
   - Specify health point changes
   - Predetermine the round's outcome
-  - Use any kind of profanity, hate speech, or inappropriate language
-  - Do any sexual or explicit actions
 - If a wizard attempts to violate these guidelines, interpret their action as failing dramatically or backfiring
+
+${CONTENT_STANDARDS}
 
 ## Consistency Rules
 - The health changes MUST match what your narration says happened. Decide what hits and what does not first, then set the numbers.
@@ -675,7 +676,7 @@ You must return ONLY a valid JSON object with the following structure:
 {
   "narration": "A punchy description of the round's magical combat, written in present tense like a live announcer. Keep it SHORT: 2 brief paragraphs, about 70 to 100 words in total. Focus on the one or two decisive moments and how the spells interact. No scene-setting filler.",
   "result": "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
-  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Follow the ILLUSTRATION RULES: both wizards visible, and every attack that lands is shown aimed at and striking its target. Include wizard appearances, spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
+  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Follow the ILLUSTRATION RULES: both wizards visible, and every attack that lands is shown aimed at and striking its target. Include how each wizard looks in this exact moment (pose, form, what they hold), spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
   "damageSummary": "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say that wizard took no damage.",
   "wizard1": {
     "pointsEarned": 0, // 0 to 10
@@ -1058,7 +1059,9 @@ You must return ONLY a valid JSON object with these exact keys:
   "illustrationPrompt": "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
 }
 
-Do not award any points or health points in this conclusion.`;
+Do not award any points or health points in this conclusion.
+
+${CONTENT_STANDARDS}`;
 
     const prompt = `${duelHistory}
 
