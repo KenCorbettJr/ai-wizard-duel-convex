@@ -33,7 +33,7 @@ export default function CampaignStatsPage() {
             <Button
               asChild
               variant="ghost"
-              className="mb-4 campaign-card-hover"
+              className="mb-4 campaign-card-hover hidden md:inline-flex"
             >
               <Link href="/campaign">
                 <ArrowLeft className="h-4 w-4 mr-2" />

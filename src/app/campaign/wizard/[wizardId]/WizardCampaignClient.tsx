@@ -173,9 +173,9 @@ export default function WizardCampaignClient() {
         <div className="max-w-7xl mx-auto space-y-8">
           <nav
             aria-label="Breadcrumb"
-            className="flex items-center justify-between"
+            className="flex items-center justify-end md:justify-between"
           >
-            <Button asChild variant="ghost">
+            <Button asChild variant="ghost" className="hidden md:inline-flex">
               <Link href="/campaign">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 All campaign wizards

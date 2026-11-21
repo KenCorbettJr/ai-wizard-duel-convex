@@ -158,7 +158,7 @@ export default function DuelLobbyPage() {
       <div className="@container container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="hidden md:flex items-center gap-4 mb-4">
             <Button asChild variant="outline" size="sm">
               <Link href="/duels">
                 <ArrowLeft className="h-4 w-4 mr-2" />

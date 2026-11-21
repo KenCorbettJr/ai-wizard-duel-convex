@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { SignInButton, UserButton, useAuth, useClerk } from "@clerk/nextjs";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useQuery } from "convex/react";
-import { LogIn, LogOut, Menu, X } from "lucide-react";
+import { ChevronLeft, LogIn, LogOut, Menu, X } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,8 +14,11 @@ import { CreditDisplay } from "@/components/CreditDisplay";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { cn } from "@/lib/utils";
+import { startTopLoader } from "./TopLoader";
 import {
+  getBackFallback,
   getVisibleGroups,
+  isTopLevelRoute,
   signedInTabs,
   signedOutTabs,
   type TabItem,
@@ -53,11 +56,20 @@ function LobbyDot() {
   );
 }
 
-function Tab({ tab, active }: { tab: TabItem; active: boolean }) {
+function Tab({
+  tab,
+  active,
+  onSelect,
+}: {
+  tab: TabItem;
+  active: boolean;
+  onSelect: () => void;
+}) {
   const Icon = tab.icon;
   return (
     <Link
       href={tab.href}
+      onClick={onSelect}
       aria-current={active ? "page" : undefined}
       className={cn(
         tabClass,
@@ -89,8 +101,31 @@ function Tab({ tab, active }: { tab: TabItem; active: boolean }) {
  * the main areas, and a "More" bottom sheet with everything else. Hidden at
  * md and up, where the sidebar takes over.
  */
+/**
+ * Tracks the in-app pages visited this session, so "back" can tell whether
+ * popping browser history stays inside the app or would leave it (a page
+ * opened from a shared link has nothing in-app to go back to).
+ */
+function useInAppHistory(pathname: string) {
+  const stack = useRef<string[]>([]);
+  useEffect(() => {
+    const s = stack.current;
+    if (s.length >= 2 && s[s.length - 2] === pathname) s.pop();
+    else if (s[s.length - 1] !== pathname) s.push(pathname);
+  }, [pathname]);
+  return () => stack.current.length > 1;
+}
+
 export function MobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const canGoBack = useInAppHistory(pathname);
+  const showBack = !isTopLevelRoute(pathname);
+  const goBack = () => {
+    startTopLoader();
+    if (canGoBack()) router.back();
+    else router.push(getBackFallback(pathname));
+  };
   const { isLoaded, isSignedIn } = useAuth();
   const { signOut } = useClerk();
   const { isSuperAdmin } = useSuperAdmin();
@@ -113,11 +148,15 @@ export function MobileNav() {
     return () => ro.disconnect();
   }, []);
 
+  // The tab just tapped, highlighted right away while its page loads.
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+
   // Close the sheet whenever the route changes (link taps, back button).
   const [sheetPath, setSheetPath] = useState(pathname);
   if (sheetPath !== pathname) {
     setSheetPath(pathname);
     setSheetOpen(false);
+    setPendingTab(null);
   }
 
   const tabs = isSignedIn ? signedInTabs : signedOutTabs;
@@ -127,7 +166,9 @@ export function MobileNav() {
     isSuperAdmin: !!isSuperAdmin,
     exclude: tabHrefs,
   });
-  const activeTab = tabs.find((t) => t.isActive(pathname));
+  const activeTab =
+    tabs.find((t) => t.href === pendingTab) ??
+    tabs.find((t) => t.isActive(pathname));
   const moreActive = isLoaded && !activeTab && !sheetOpen;
 
   return (
@@ -137,12 +178,29 @@ export function MobileNav() {
         ref={topBarRef}
         className="fixed inset-x-0 top-0 z-50 border-b border-border bg-sidebar md:hidden"
       >
-        <div className="flex min-h-14 items-center justify-between gap-2 px-4 py-1.5">
-          <Link href="/" className="inline-flex min-h-11 items-center">
-            <span className="block whitespace-nowrap font-display text-base font-bold tracking-wide text-gold-gradient">
-              AI Wizard Duel
-            </span>
-          </Link>
+        <div
+          className={cn(
+            "flex min-h-14 items-center justify-between gap-2 py-1.5 pr-4",
+            showBack ? "pl-1" : "pl-4",
+          )}
+        >
+          <div className="flex min-w-0 items-center">
+            {showBack && (
+              <button
+                type="button"
+                onClick={goBack}
+                aria-label="Back"
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-foreground transition-colors active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <ChevronLeft className="h-6 w-6" aria-hidden="true" />
+              </button>
+            )}
+            <Link href="/" className="inline-flex min-h-11 items-center">
+              <span className="block whitespace-nowrap font-display text-base font-bold tracking-wide text-gold-gradient">
+                AI Wizard Duel
+              </span>
+            </Link>
+          </div>
           {/* Signed-out visitors get Sign In as a tab instead. */}
           {isSignedIn && (
             <div className="flex items-center gap-3">
@@ -168,7 +226,14 @@ export function MobileNav() {
           {isLoaded && (
             <>
               {tabs.map((tab) => (
-                <Tab key={tab.href} tab={tab} active={tab === activeTab} />
+                <Tab
+                  key={tab.href}
+                  tab={tab}
+                  active={tab === activeTab}
+                  onSelect={() =>
+                    setPendingTab(tab.isActive(pathname) ? null : tab.href)
+                  }
+                />
               ))}
               {!isSignedIn && (
                 <SignInButton>

@@ -173,8 +173,8 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
 
   return (
     <div className="min-h-screen">
-      {/* Back button */}
-      <div className="p-6">
+      {/* Back button (phones use the one in the top bar) */}
+      <div className="hidden p-6 md:block">
         <Button
           variant="ghost"
           size="sm"

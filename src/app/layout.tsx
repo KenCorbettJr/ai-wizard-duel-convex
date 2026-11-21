@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
 import { Toaster } from "sonner";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { TopLoader } from "@/components/navigation/TopLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,6 +82,7 @@ export default function RootLayout({
           >
             Skip to main content
           </a>
+          <TopLoader />
           <ClerkProvider>
             <ConvexClientProvider>
               <Suspense

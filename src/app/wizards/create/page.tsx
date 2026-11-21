@@ -66,7 +66,7 @@ export default function CreateWizardPage() {
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8">
           {!isFirstWizard && (
-            <div className="flex items-center gap-4 mb-6">
+            <div className="hidden md:flex items-center gap-4 mb-6">
               <Button
                 asChild
                 variant="ghost"

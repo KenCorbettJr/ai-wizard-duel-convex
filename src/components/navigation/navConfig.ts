@@ -183,3 +183,42 @@ export const signedOutTabs: TabItem[] = [
     isActive: (p) => startsWithSegment(p, "/leaderboard"),
   },
 ];
+
+/**
+ * Section roots: reachable straight from the nav, so they need no back button.
+ * Anything else (a wizard, a duel, a form) counts as a sub-page.
+ */
+const TOP_LEVEL_ROUTES = [
+  "/",
+  "/profile",
+  "/credits",
+  "/leaderboard",
+  "/wizards",
+  "/campaign",
+  "/duels",
+  "/duels/watch",
+  "/duels/lobby",
+  "/rules",
+  "/admin",
+];
+
+const normalize = (pathname: string) =>
+  pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+
+export function isTopLevelRoute(pathname: string): boolean {
+  return TOP_LEVEL_ROUTES.includes(normalize(pathname));
+}
+
+/**
+ * Where "back" goes when there's no in-app history to pop (e.g. the page was
+ * opened from a shared link): the nearest top-level ancestor, else home.
+ */
+export function getBackFallback(pathname: string): string {
+  const segments = normalize(pathname).split("/").filter(Boolean);
+  while (segments.length > 0) {
+    segments.pop();
+    const candidate = `/${segments.join("/")}`;
+    if (isTopLevelRoute(candidate)) return candidate;
+  }
+  return "/";
+}

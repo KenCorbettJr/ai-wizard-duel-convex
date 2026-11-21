@@ -50,7 +50,7 @@ export default function ProfileEditPage() {
           <ProfileEditForm onSuccess={handleSuccess} />
 
           {/* Navigation */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 hidden text-center md:block">
             <Button variant="ghost" onClick={() => router.back()}>
               ← Back to Profile
             </Button>
