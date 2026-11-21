@@ -11,12 +11,15 @@ interface NavbarProps {
   className?: string;
   showBackButton?: boolean;
   onBackClick?: () => void;
+  /** Signed-out homepage: adds sign-in links and drops the theme toggle. */
+  landing?: boolean;
 }
 
 export function Navbar({
   transparent = false,
   className,
   showBackButton = false,
+  landing = false,
   onBackClick,
 }: NavbarProps) {
   return (
@@ -45,7 +48,7 @@ export function Navbar({
         <Link href="/" className="inline-flex min-h-11 items-center">
           <span
             className={cn(
-              "block text-lg sm:text-2xl font-bold font-display",
+              "block whitespace-nowrap text-lg sm:text-2xl font-bold font-display",
               transparent ? "text-white" : "",
             )}
           >
@@ -57,7 +60,7 @@ export function Navbar({
         <Link
           href="/#pricing"
           className={cn(
-            "rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 inline-flex items-center",
+            "rounded-lg px-2 sm:px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 inline-flex items-center",
             transparent ? "text-white" : "text-foreground",
           )}
         >
@@ -66,7 +69,7 @@ export function Navbar({
         <Link
           href="/leaderboard"
           className={cn(
-            "rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 inline-flex items-center",
+            "hidden sm:inline-flex rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 items-center",
             transparent ? "text-white" : "text-foreground",
           )}
         >
@@ -75,13 +78,31 @@ export function Navbar({
         <Link
           href="/duels/watch"
           className={cn(
-            "hidden sm:inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11",
+            "inline-flex items-center rounded-lg px-2 sm:px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11",
             transparent ? "text-white" : "text-foreground",
           )}
         >
-          Watch Duels
+          <span className="sm:hidden">Watch</span>
+          <span className="hidden sm:inline">Watch Duels</span>
         </Link>
-        <ThemeToggle />
+        {landing ? (
+          <>
+            <Link
+              href="/sign-in"
+              className={cn(
+                "inline-flex min-h-11 items-center rounded-lg px-2 sm:px-3 py-2 text-sm font-semibold hover:underline underline-offset-4",
+                transparent ? "text-white" : "text-foreground",
+              )}
+            >
+              Sign In
+            </Link>
+            <Button asChild variant="gold" size="sm" className="hidden sm:inline-flex">
+              <Link href="/sign-up">Play Free</Link>
+            </Button>
+          </>
+        ) : (
+          <ThemeToggle />
+        )}
       </div>
     </nav>
   );

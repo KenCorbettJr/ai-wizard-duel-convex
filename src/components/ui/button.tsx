@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-arcane text-primary-foreground shadow-md shadow-primary/30 ring-1 ring-inset ring-white/15 hover:brightness-110 hover:shadow-lg hover:shadow-primary/40",
-        gold: "bg-linear-to-b from-[color-mix(in_oklab,var(--gold)_75%,white)] via-gold to-[color-mix(in_oklab,var(--gold)_82%,black)] text-gold-foreground font-bold shadow-lg shadow-gold/40 ring-1 ring-inset ring-white/50 [text-shadow:0_1px_0_rgb(255_255_255/0.35)] hover:-translate-y-0.5 hover:brightness-110 hover:shadow-xl hover:shadow-gold/50",
+        gold: "bg-linear-to-b from-amber-200 via-amber-300 to-amber-500 text-amber-950 font-bold shadow-lg shadow-amber-500/40 ring-1 ring-inset ring-white/60 [text-shadow:0_1px_0_rgb(255_255_255/0.4)] hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-amber-500/50",
         success:
           "bg-success text-success-foreground shadow-xs hover:bg-success/90",
         destructive:

@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Crown, Dices, Gem, Swords, Zap } from "lucide-react";
+import { ArrowRight, Crown, Swords, Zap } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import { useConvexImage } from "@/hooks/useConvexImage";
@@ -18,7 +19,7 @@ const TIERS = [
     key: "BEGINNER",
     label: "Apprentices",
     range: "1–3",
-    luck: "They roll −2 luck",
+    luck: "they roll −2 luck",
     ring: "ring-emerald-400/80",
     pill: "bg-emerald-400/15 text-emerald-300 border-emerald-400/40",
   },
@@ -26,7 +27,7 @@ const TIERS = [
     key: "INTERMEDIATE",
     label: "Adepts",
     range: "4–7",
-    luck: "An even fight",
+    luck: "an even fight",
     ring: "ring-sky-400/80",
     pill: "bg-sky-400/15 text-sky-300 border-sky-400/40",
   },
@@ -34,7 +35,7 @@ const TIERS = [
     key: "ADVANCED",
     label: "Archmages",
     range: "8–10",
-    luck: "They roll +2 luck",
+    luck: "they roll +2 luck",
     ring: "ring-rose-400/80",
     pill: "bg-rose-400/15 text-rose-300 border-rose-400/40",
   },
@@ -43,12 +44,6 @@ const TIERS = [
 function tierFor(opponent: Opponent) {
   return TIERS.find((t) => t.key === opponent.difficulty) ?? TIERS[1];
 }
-
-const FEATURED: Record<number, string> = {
-  1: "“I read the manual, I swear!” Nervous and fumbling, he may be his own worst enemy.",
-  8: "“Your shadow already works for me.” Distrust any spell that looks too easy.",
-  10: "“I was old when your kingdom was young.” The final boss stands between you and the relic.",
-};
 
 function Portrait({
   opponent,
@@ -82,84 +77,82 @@ function Portrait({
   );
 }
 
-/** The ten-step ladder of opponent portraits ending at the relic. */
+/** Opponents 1–9 as a path of portraits leading to the boss. */
 function Ladder({ opponents }: { opponents: Opponent[] }) {
   return (
-    <ol className="relative mx-auto grid max-w-5xl grid-cols-5 gap-x-2 gap-y-6 sm:gap-x-4 md:grid-cols-10">
-      {opponents.map((opponent) => {
-        const number = opponent.opponentNumber ?? 0;
-        const isBoss = number === CAMPAIGN_TOTAL_OPPONENTS;
-        const tier = tierFor(opponent);
-        return (
-          <li key={opponent._id} className="flex flex-col items-center gap-2">
-            <div className="relative">
-              <Portrait
-                opponent={opponent}
-                sizes="80px"
-                className={cn(
-                  "size-14 rounded-full ring-2 ring-offset-2 ring-offset-[oklch(0.17_0.05_285)] sm:size-16",
-                  tier.ring,
-                  isBoss &&
-                    "ring-[3px] ring-amber-300 shadow-[0_0_24px_4px] shadow-amber-400/50",
-                )}
-              />
-              <span
-                className={cn(
-                  "absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full text-xs font-bold shadow",
-                  isBoss
-                    ? "bg-amber-300 text-amber-950"
-                    : "bg-white text-[oklch(0.2_0.05_285)]",
-                )}
-              >
-                {isBoss ? <Crown className="size-3.5" aria-hidden /> : number}
+    <div className="relative -mx-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-auto md:max-w-5xl md:overflow-visible md:px-0">
+      <ol className="relative flex w-max gap-4 md:grid md:w-auto md:grid-cols-9 md:gap-3">
+        {/* The path */}
+        <li
+          aria-hidden
+          className="absolute left-10 right-10 top-10 h-1 rounded-full bg-linear-to-r from-emerald-400/60 via-sky-400/60 to-rose-400/70"
+        />
+        {opponents.map((opponent) => {
+          const number = opponent.opponentNumber ?? 0;
+          const tier = tierFor(opponent);
+          return (
+            <li
+              key={opponent._id}
+              className="relative flex w-20 flex-col items-center gap-2 md:w-auto"
+            >
+              <div className="relative">
+                <Portrait
+                  opponent={opponent}
+                  sizes="96px"
+                  className={cn(
+                    "size-20 rounded-full ring-[3px] ring-offset-4 ring-offset-[oklch(0.17_0.05_285)]",
+                    tier.ring,
+                  )}
+                />
+                <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-white text-xs font-bold text-[oklch(0.2_0.05_285)] shadow">
+                  {number}
+                </span>
+              </div>
+              <span className="line-clamp-2 text-center text-xs leading-tight text-white/80">
+                {opponent.name}
               </span>
-            </div>
-            <span className="line-clamp-2 text-center text-[11px] leading-tight text-white/70 sm:text-xs">
-              {opponent.name}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-2 text-center text-xs text-white/50 md:hidden">
+        Swipe to see the whole ladder →
+      </p>
+    </div>
   );
 }
 
-function FeaturedCard({ opponent }: { opponent: Opponent }) {
-  const number = opponent.opponentNumber ?? 0;
-  const isBoss = number === CAMPAIGN_TOTAL_OPPONENTS;
-  const tier = tierFor(opponent);
+/** A low-poly gold d20 with the relic's bonus on its face. */
+function RelicDie({ bonus, rolling }: { bonus: number; rolling: boolean }) {
   return (
-    <div
-      className={cn(
-        "group overflow-hidden rounded-2xl border bg-[oklch(0.21_0.06_288)] shadow-xl",
-        isBoss
-          ? "border-amber-300/60 shadow-amber-400/20"
-          : "border-white/10 shadow-black/30",
-      )}
-    >
-      <div className="relative">
-        <Portrait
-          opponent={opponent}
-          sizes="(min-width: 768px) 33vw, 100vw"
-          className="aspect-[4/3] w-full transition-transform duration-500 group-hover:scale-[1.03]"
+    <div className="relative flex size-40 shrink-0 items-center justify-center">
+      <div
+        aria-hidden
+        className="animate-rune-pulse absolute inset-2 rounded-full bg-amber-300/40 blur-2xl"
+      />
+      <div
+        className={cn(
+          "relative flex size-32 items-center justify-center bg-linear-to-br from-amber-100 via-amber-400 to-amber-700 shadow-2xl shadow-amber-500/60",
+          rolling ? "animate-relic-roll" : "opacity-0 motion-reduce:opacity-100",
+        )}
+        style={{
+          clipPath:
+            "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)",
+        }}
+      >
+        {/* Facets */}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(150deg,rgba(255,255,255,0.55)_0%,transparent_35%),linear-gradient(30deg,transparent_60%,rgba(120,53,15,0.35)_100%)]"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-[oklch(0.21_0.06_288)] via-transparent to-transparent" />
-        <span
-          className={cn(
-            "absolute left-3 top-3 rounded-full border px-2.5 py-0.5 text-xs font-semibold backdrop-blur-sm",
-            isBoss
-              ? "border-amber-300/70 bg-amber-300 text-amber-950"
-              : tier.pill,
-          )}
-        >
-          {isBoss ? "Final Boss" : `Opponent ${number} · ${tier.label}`}
+        <div
+          aria-hidden
+          className="absolute inset-[18%] bg-amber-300/60"
+          style={{ clipPath: "polygon(50% 0%, 100% 85%, 0% 85%)" }}
+        />
+        <span className="relative font-display text-4xl font-bold text-amber-950 [text-shadow:0_1px_0_rgba(255,255,255,0.6)]">
+          +{bonus}
         </span>
-      </div>
-      <div className="space-y-2 p-5 pt-1">
-        <h3 className="font-display text-xl font-bold text-white">
-          {opponent.name}
-        </h3>
-        <p className="text-sm text-white/70">{FEATURED[number]}</p>
       </div>
     </div>
   );
@@ -169,15 +162,42 @@ export default function CampaignShowcase() {
   const opponents = useQuery(api.campaigns.getCampaignOpponents);
   const season = useQuery(api.campaignSeasons.getActiveCampaignSeason);
 
+  // Roll the relic die once the reward panel scrolls into view, then reveal
+  // the boosted roll after it lands.
+  const relicRef = useRef<HTMLDivElement>(null);
+  const [rolling, setRolling] = useState(false);
+  const [landed, setLanded] = useState(false);
+  useEffect(() => {
+    const el = relicRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setRolling(true);
+        observer.disconnect();
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!rolling) return;
+    const t = setTimeout(() => setLanded(true), 1000);
+    return () => clearTimeout(t);
+  }, [rolling]);
+
   const relicName = season?.completionRelic.name ?? "Arcane Mastery";
   const luckBonus = season?.completionRelic.luckBonus ?? 1;
-  const featured = (opponents ?? []).filter(
-    (o) => o.opponentNumber && FEATURED[o.opponentNumber],
+  const boss = opponents?.find(
+    (o) => o.opponentNumber === CAMPAIGN_TOTAL_OPPONENTS,
+  );
+  const path = (opponents ?? []).filter(
+    (o) => o.opponentNumber !== CAMPAIGN_TOTAL_OPPONENTS,
   );
 
   return (
-    <section className="relative overflow-hidden bg-[oklch(0.17_0.05_285)] py-20 text-white">
-      {/* Ambient glow */}
+    <section className="relative overflow-hidden bg-[oklch(0.17_0.05_285)] py-14 sm:py-20 text-white">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.5_0.22_293/0.35),transparent_60%),radial-gradient(ellipse_at_bottom_right,oklch(0.8_0.15_85/0.18),transparent_55%)]"
@@ -193,27 +213,25 @@ export default function CampaignShowcase() {
             <span className="text-gold-gradient">Luckier Forever.</span>
           </h2>
           <p className="text-lg text-white/75">
-            No friends online? Climb a ladder of AI rivals, from fumbling
-            apprentices to an ancient archmage. Each one has a personality and
-            casts like it. Lost a fight? Try again. Each battle costs one token.
+            No one online? Climb a ladder of AI rivals, each with a personality
+            and a spell style to match. Lost a fight? Try again. Each battle
+            costs one token.
           </p>
         </div>
 
-        {/* Ladder */}
         {opponents === undefined ? (
-          <div className="mx-auto grid max-w-5xl grid-cols-5 gap-4 md:grid-cols-10">
-            {Array.from({ length: 10 }).map((_, i) => (
+          <div className="mx-auto grid max-w-5xl grid-cols-3 gap-6 sm:grid-cols-5 md:grid-cols-9">
+            {Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
-                className="mx-auto size-14 animate-pulse rounded-full bg-white/10 sm:size-16"
+                className="mx-auto size-20 animate-pulse rounded-full bg-white/10"
               />
             ))}
           </div>
         ) : (
-          opponents.length > 0 && <Ladder opponents={opponents} />
+          path.length > 0 && <Ladder opponents={path} />
         )}
 
-        {/* Tier legend */}
         <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-2">
           {TIERS.map((tier) => (
             <span
@@ -228,53 +246,63 @@ export default function CampaignShowcase() {
           ))}
         </div>
 
-        {/* Featured opponents */}
-        {featured.length > 0 && (
-          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
-            {featured.map((o) => (
-              <FeaturedCard key={o._id} opponent={o} />
-            ))}
-          </div>
-        )}
-
-        {/* The reward */}
-        <div className="mx-auto mt-14 max-w-4xl overflow-hidden rounded-3xl border border-amber-300/40 bg-linear-to-br from-amber-300/15 via-[oklch(0.22_0.07_290)] to-[oklch(0.2_0.06_288)] p-6 shadow-2xl shadow-amber-500/10 sm:p-10">
-          <div className="flex flex-col items-center gap-8 md:flex-row">
-            <div className="relative flex size-32 shrink-0 items-center justify-center">
-              <div
-                aria-hidden
-                className="animate-rune-pulse absolute inset-0 rounded-full bg-amber-300/30 blur-2xl"
-              />
-              <div className="relative flex size-24 items-center justify-center rounded-full bg-linear-to-b from-amber-200 via-amber-400 to-amber-600 shadow-lg shadow-amber-500/50 ring-4 ring-amber-200/40">
-                <Gem className="size-11 text-amber-950" aria-hidden />
+        {/* Boss → relic */}
+        <div
+          ref={relicRef}
+          className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-3xl border border-amber-300/40 bg-linear-to-br from-[oklch(0.24_0.08_290)] via-[oklch(0.2_0.06_288)] to-amber-300/15 shadow-2xl shadow-amber-500/10">
+          <div className="grid items-center gap-8 p-6 sm:p-10 md:grid-cols-[auto_auto_1fr]">
+            {boss && (
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="relative">
+                  <Portrait
+                    opponent={boss}
+                    sizes="176px"
+                    className="size-36 rounded-2xl ring-4 ring-amber-300 shadow-[0_0_40px_6px] shadow-amber-400/40 sm:size-44"
+                  />
+                  <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-amber-300 px-2.5 py-0.5 text-xs font-bold text-amber-950 shadow">
+                    <Crown className="size-3.5" aria-hidden />
+                    Final Boss
+                  </span>
+                </div>
+                <div>
+                  <p className="font-display text-lg font-bold">{boss.name}</p>
+                  <p className="max-w-48 text-sm italic text-white/70">
+                    &ldquo;I was old when your kingdom was young.&rdquo;
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="text-center md:text-left">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-amber-200">
-                Your reward for beating the final boss
-              </p>
-              <h3 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
-                The {relicName} Relic
-              </h3>
-              <p className="mb-5 text-white/80">
-                Every round of every duel, both wizards roll a d20 for luck, and
-                the AI factors it into who lands their spell. The relic adds{" "}
-                <strong className="text-amber-200">+{luckBonus}</strong> to
-                every luck roll your wizard makes, permanently: in friend duels,
-                rematches, and every campaign to come.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3 text-sm md:justify-start">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-white/70">
-                  <Dices className="size-4" aria-hidden />
-                  Everyone: d20
-                </span>
-                <span className="text-white/40" aria-hidden>
-                  →
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-300/15 px-3 py-1.5 font-semibold text-amber-100">
-                  <Crown className="size-4" aria-hidden />
-                  Relic holders: d20 + {luckBonus}
-                </span>
+            )}
+            <ArrowRight
+              className="mx-auto size-8 rotate-90 text-amber-300/70 md:rotate-0"
+              aria-hidden
+            />
+            <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left md:flex-col md:items-start lg:flex-row lg:items-center">
+              <RelicDie bonus={luckBonus} rolling={rolling} />
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-amber-200">
+                  Defeat the boss to claim
+                </p>
+                <h3 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+                  The {relicName} Relic
+                </h3>
+                <p className="mb-4 text-white/80">
+                  Every round, both wizards roll a d20 for luck. With the relic,
+                  your d20 becomes a{" "}
+                  <strong className="text-amber-200">d20+{luckBonus}</strong>.
+                  In every duel, forever, friends included.
+                </p>
+                <p className="inline-flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-300/10 px-3 py-1.5 text-sm text-amber-100">
+                  You roll 13
+                  <ArrowRight className="size-3.5" aria-hidden />
+                  <strong
+                    className={cn(
+                      "inline-block tabular-nums transition-all duration-500",
+                      landed && "scale-110 text-amber-200",
+                    )}
+                  >
+                    {landed ? `it counts as ${13 + luckBonus}` : "…"}
+                  </strong>
+                </p>
               </div>
             </div>
           </div>

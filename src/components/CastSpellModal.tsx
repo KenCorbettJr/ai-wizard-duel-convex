@@ -15,6 +15,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { consumePendingSpell } from "@/lib/pendingSpell";
 
 export const COMPOSER_ID = "spell-composer";
 export const MAX_SPELL_LENGTH = 500;
@@ -73,6 +74,15 @@ export function CastSpellModal({
   const titleRef = useRef<HTMLButtonElement>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+
+  // Drop in a spell the player wrote on the homepage before signing up.
+  useEffect(() => {
+    if (spellDescription) return;
+    const pending = consumePendingSpell();
+    if (pending) onSpellDescriptionChange(pending);
+    // Only on first mount: later rounds start empty as usual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep the panel above the on-screen keyboard (iOS keeps fixed elements put).
   useEffect(() => {

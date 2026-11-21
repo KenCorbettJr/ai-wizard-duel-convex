@@ -1,22 +1,34 @@
 import { Show } from "@clerk/nextjs";
-import { TokenPacks } from "@/components/TokenPacks";
 import {
   STARTING_TOKENS,
   TOKEN_PACKS,
   TO_THE_DEATH_MAX_ROUNDS,
   formatCentsPerDuel,
+  formatPrice,
 } from "../../convex/lib/pricing";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
-import FeatureCard from "@/components/FeatureCard";
-import DuelExample from "@/components/DuelExample";
+import HeroSpellCard from "@/components/HeroSpellCard";
+import HeroSpellForm from "@/components/HeroSpellForm";
 import RoundReplay from "@/components/RoundReplay";
 import TopWizards from "@/components/TopWizards";
 import HighlightedDuels from "@/components/HighlightedDuels";
 import CampaignShowcase from "@/components/CampaignShowcase";
-import { Eye, Zap, Coins, Laugh, Share2 } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  Coins,
+  Eye,
+  Laugh,
+  Share2,
+  Sparkles,
+  Swords,
+  Wand2,
+  Zap,
+} from "lucide-react";
+import Image from "next/image";
+import StickySignupBar from "@/components/StickySignupBar";
 import type { Metadata } from "next";
 import DashboardContent from "@/components/DashboardContent";
 
@@ -39,258 +51,254 @@ export default function Home() {
   );
 }
 
+const FAQS: Array<{ q: string; a: React.ReactNode }> = [
+  {
+    q: "Is it free to start?",
+    a: `Yes. Sign up and you get ${STARTING_TOKENS} free tokens, enough for that many duels or campaign battles. You can also watch public duels without an account. Buy more tokens only if you want them.`,
+  },
+  {
+    q: "Is there a limit to what I can cast, and is it fair?",
+    a: "Cast anything you can describe. The AI scores creativity and strategy, and each wizard also gets a luck roll, so a clever spell can beat a bigger one and nobody wins on size alone.",
+  },
+  {
+    q: "Is it safe for kids?",
+    a: (
+      <>
+        Yes. Everything stays PG-13. Every spell, wizard and username is
+        checked by a word filter and an AI moderator before anyone sees it, and
+        the AI storyteller follows the same rules. There is no chat between
+        players.{" "}
+        <Link
+          href="/rules"
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          See the rules and how moderation works
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    q: "Can other people see my duels?",
+    a: "Yes. Player duels appear on the public Watch page so anyone can follow along. Campaign battles against AI wizards are not listed.",
+  },
+  {
+    q: "Can I pay for a friend to play?",
+    a: "Yes. When you create a duel, turn on \u201cCover my opponent\u2019s entry\u201d and you pay both tokens. Your friend joins from your link without spending any.",
+  },
+];
+
+const STEPS = [
+  { icon: Wand2, title: "Create a wizard" },
+  { icon: Sparkles, title: "Cast anything" },
+  { icon: Swords, title: "Watch it painted" },
+];
+
+function ArtCard({
+  image,
+  icon: Icon,
+  title,
+  text,
+  children,
+}: {
+  image: string;
+  icon: typeof Zap;
+  title: string;
+  text: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="group relative isolate min-h-64 overflow-hidden rounded-2xl border border-white/10 shadow-xl shadow-black/30">
+      <Image
+        src={image}
+        alt=""
+        fill
+        sizes="(min-width: 768px) 50vw, 100vw"
+        className="-z-10 object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 -z-10 bg-linear-to-t from-black/95 via-black/60 to-black/10" />
+      <div className="flex h-full min-h-64 flex-col justify-end p-6">
+        {children}
+        <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-arcane text-white shadow-md shadow-primary/40 ring-1 ring-white/20">
+          <Icon className="size-5" aria-hidden="true" />
+        </div>
+        <h3 className="mb-1 font-display text-2xl font-bold text-white">
+          {title}
+        </h3>
+        <p className="text-white/80">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 function LandingPage() {
   return (
-    <div className="min-h-screen">
+    <div className="dark min-h-screen bg-background text-foreground">
       {/* Navigation */}
       <div className="absolute top-0 left-0 right-0 z-50">
-        <Navbar transparent />
+        <Navbar transparent landing />
       </div>
 
       {/* Hero Section */}
-      <section className="hero bg-linear-to-b from-background to-secondary/30 dark:from-background dark:to-secondary relative">
+      <section
+        className="hero relative"
+        style={{ backgroundBlendMode: "normal" }}
+      >
         <div className="absolute inset-0 hero-gradient" />
-        <div className="container mx-auto min-h-[85vh] relative z-10 flex items-end">
-          <div className="text-center max-w-2xl mx-auto p-4 pt-40 pb-10">
-            <h1 className="mb-6 text-5xl font-bold text-white font-display sm:text-6xl">
-              Type Any Spell. An AI Tells the Story.
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.35),rgba(0,0,0,0.55)_40%,rgba(0,0,0,0.25))] lg:bg-[radial-gradient(ellipse_45%_40%_at_28%_50%,rgba(0,0,0,0.45),transparent_75%)]"
+        />
+        <div className="container relative z-10 mx-auto grid min-h-[88vh] items-center gap-10 px-4 pt-24 pb-14 sm:pt-32 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
+          <div className="text-center lg:text-left">
+            <h1 className="mb-5 font-display text-4xl font-bold text-white sm:text-6xl [text-shadow:0_2px_24px_rgba(0,0,0,0.6)]">
+              Cast Any Spell You Can Imagine.{" "}
+              <span className="text-gold-gradient">Outwit Your Rival.</span>
             </h1>
-            <p className="text-xl text-white mb-8">
-              You and your rival each write a spell in secret. The AI narrates
-              both at once, paints the scene, and decides who walks away.
+            <p className="mx-auto mb-8 max-w-xl text-lg text-white/90 sm:text-xl lg:mx-0">
+              You each write a spell in secret. The AI narrates the collision,
+              paints the scene, and picks a winner.
             </p>
-            <div className="flex flex-wrap justify-center gap-3 mb-3">
-              <Button asChild size="lg" variant="gold" className="text-lg">
-                <Link href="/sign-up">
-                  <Zap aria-hidden="true" />
-                  Sign Up Free
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="text-lg border-white/30 bg-[oklch(0.22_0.07_290)] text-white shadow-lg shadow-black/40 hover:border-white/50 hover:bg-[oklch(0.28_0.09_291)] hover:text-white dark:bg-[oklch(0.22_0.07_290)] dark:hover:bg-[oklch(0.28_0.09_291)]"
+            <HeroSpellForm />
+            <p className="mt-3 text-sm text-white/85">
+              Free account, {STARTING_TOKENS} duels, no card. We&apos;ll save
+              your spell for your first duel.
+            </p>
+            <p className="mt-3 text-sm">
+              <Link
+                href="/duels/watch"
+                className="inline-flex items-center gap-1 font-semibold text-white underline underline-offset-4"
               >
-                <Link href="/duels/watch">
-                  <Eye aria-hidden="true" />
-                  Watch a Duel, No Signup
-                </Link>
-              </Button>
-            </div>
-            <p className="text-sm text-white/80 mb-8">
-              Your first {STARTING_TOKENS} duels are on us. No card needed to
-              start.
+                <Eye className="size-4" aria-hidden="true" />
+                Or watch a duel, no signup
+              </Link>
             </p>
-            <div className="mx-auto max-w-md">
-              <DuelExample
-                imageUrl="/images/epic-duel.jpeg"
-                description="Every spell you cast becomes an AI-painted scene"
-                captionClassName="text-white/80"
-              />
-            </div>
+          </div>
+          <div className="mx-auto w-full max-w-xl">
+            <HeroSpellCard />
           </div>
         </div>
       </section>
 
       {/* Example duel */}
-      <section className="bg-background py-16">
-        <div className="container mx-auto px-4">
+      <section className="relative overflow-hidden bg-[oklch(0.15_0.04_285)] pt-14 pb-10 sm:pt-20 sm:pb-12 text-white">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,oklch(0.5_0.22_293/0.3),transparent_55%)]"
+        />
+        <div className="container relative mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-10">
-            <h2 className="text-3xl font-bold mb-4 font-display">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-sky-300/40 bg-sky-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-sky-200">
+              <Sparkles className="size-3.5" aria-hidden />
+              Try a round
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-display">
               One Round, Two Spells, One Wild Story
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Wizard A has already cast. Choose your spell, then see what the AI
-              does when they collide.
+            <p className="text-lg text-white/75">
+              Your rival has already cast. Pick your counter and see how the AI
+              resolves the collision.
             </p>
           </div>
           <RoundReplay />
-          <div className="mx-auto mt-12 max-w-3xl">
-            <h3 className="mb-6 text-center text-2xl font-bold font-display">
-              Settle Any Argument With Magic
-            </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FeatureCard
-                icon={Share2}
-                title="Challenge by Link"
-                description="Send a link to a friend. Both cast blind, and you can cover their entry so they play free."
-              />
-              <FeatureCard
-                icon={Laugh}
-                title="Clever Beats Big"
-                description="The AI judges creativity and strategy, then adds a luck roll. A tiny wizard with a giant umbrella can beat a dragon."
-              />
-            </div>
-          </div>
-          <div className="mt-10 text-center">
+          <p className="mt-8 text-center">
             <Link
               href="/duels/watch"
-              className="inline-flex items-center gap-2 font-semibold underline underline-offset-4"
+              className="inline-flex items-center gap-2 font-semibold text-white/85 underline underline-offset-4 hover:text-white"
             >
               <Eye className="size-4" aria-hidden="true" />
               Or watch a real AI-narrated duel
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="bg-secondary/30 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4 font-display">
-              From Zero to Casting in Minutes
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              No rules to memorise. If you can describe it, you can cast it.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              {
-                title: "Sign Up Free",
-                text: `Create your account and get ${STARTING_TOKENS} free tokens to start.`,
-              },
-              {
-                title: "Create Your Wizard",
-                text: "Name them, describe them, and get AI-generated artwork.",
-              },
-              {
-                title: "Cast Anything",
-                text: "Summon creatures, bend the elements, invent new magic. No spell list.",
-              },
-              {
-                title: "Watch It Unfold",
-                text: "Both spells collide in a narrated story with illustrations.",
-              },
-            ].map((step, i) => (
-              <div key={step.title} className="text-center space-y-4">
-                <div className="w-16 h-16 bg-arcane rounded-full flex items-center justify-center mx-auto shadow-lg shadow-primary/30 ring-2 ring-gold/50">
-                  <span className="text-2xl font-bold font-display text-white">
-                    {i + 1}
-                  </span>
-                </div>
-                <h3 className="text-xl font-semibold font-display">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground">{step.text}</p>
-              </div>
-            ))}
-          </div>
+          </p>
         </div>
       </section>
 
       {/* Admin-picked duels (hidden until some are highlighted) */}
       <HighlightedDuels />
 
-      {/* Top wizards (hidden until the leaderboard has entries) */}
-      <TopWizards />
+      {/* Ways to play + how it works */}
+      <section className="bg-background py-14 sm:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-display">
+              Settle Any Argument With Magic
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              No rules to memorise. If you can describe it, you can cast it.
+            </p>
+          </div>
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
+            <ArtCard
+              image="/images/epic-duel.jpeg"
+              icon={Share2}
+              title="Challenge a Friend by Link"
+              text="Your friend casts from their phone, you cast from yours, and you both watch it get painted. You can even cover their entry."
+            >
+              <div
+                aria-hidden
+                className="mb-auto flex items-center gap-2 self-end rounded-xl border border-white/20 bg-black/60 p-1.5 pl-3 text-sm shadow-lg backdrop-blur-md"
+              >
+                <span className="truncate font-mono text-white/80">
+                  …/join/K7QX2M
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-300 px-2.5 py-1 text-xs font-bold text-amber-950">
+                  <Share2 className="size-3" />
+                  Copy link
+                </span>
+              </div>
+            </ArtCard>
+            <ArtCard
+              image="/images/demo/spell-mirrors.jpg"
+              icon={Laugh}
+              title="Clever Beats Big"
+              text="A thousand tiny mirrors versus an ice phoenix. The AI scores creativity and strategy first, then the dice decide."
+            />
+          </div>
+          <ol className="mx-auto mt-10 flex w-fit flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-2">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="flex items-center gap-2">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-arcane text-white ring-2 ring-amber-300/50">
+                  <step.icon className="size-4" aria-hidden />
+                </span>
+                <span className="font-semibold">{step.title}</span>
+                {i < STEPS.length - 1 && (
+                  <ArrowRight
+                    className="ml-2 hidden size-4 text-muted-foreground sm:block"
+                    aria-hidden
+                  />
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
       {/* Campaign */}
       <CampaignShowcase />
 
-      {/* FAQ */}
-      <section className="bg-background py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4 font-display">
-              Questions, Answered
-            </h2>
-          </div>
-          <div className="max-w-3xl mx-auto space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Is it free to start?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Yes. Sign up and you get {STARTING_TOKENS} free tokens, enough
-                  for that many duels or campaign battles. You can also watch
-                  public duels without an account. Buy more tokens only if you
-                  want them.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  Is there a limit to what I can cast, and is it fair?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Cast anything you can describe. The AI scores creativity and
-                  strategy, and each wizard also gets a luck roll, so a clever
-                  spell can beat a bigger one and nobody wins on size alone.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Is it safe for kids?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Yes. Everything stays PG-13. Every spell, wizard and username
-                  is checked by a word filter and an AI moderator before anyone
-                  sees it, and the AI storyteller follows the same rules. There
-                  is no chat between players.{" "}
-                  <Link
-                    href="/rules"
-                    className="text-primary underline-offset-4 hover:underline"
-                  >
-                    See the rules and how moderation works
-                  </Link>
-                  .
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  Can other people see my duels?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Yes. Player duels appear on the public Watch page so anyone
-                  can follow along. Campaign battles against AI wizards are not
-                  listed.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  Can I pay for a friend to play?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Yes. When you create a duel, turn on &ldquo;Cover my
-                  opponent&apos;s entry&rdquo; and you pay both tokens. Your
-                  friend joins from your link without spending any.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      {/* Top wizards (hidden until the leaderboard has entries) */}
+      <TopWizards />
 
       {/* Pricing */}
-      <section id="pricing" className="bg-secondary/30 py-16 scroll-mt-20">
+      <section
+        id="pricing"
+        className="relative isolate overflow-hidden py-14 sm:py-20 scroll-mt-20"
+      >
+        <Image
+          src="/images/duel-bg.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="-z-10 object-cover opacity-25"
+        />
+        <div className="absolute inset-0 -z-10 bg-linear-to-b from-background via-background/70 to-background" />
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <Coins
               className="w-12 h-12 mb-4 text-gold inline-block"
               aria-hidden="true"
             />
-            <h2 className="text-3xl font-bold mb-4 font-display">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-display">
               Simple Arcade Pricing
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -301,7 +309,35 @@ function LandingPage() {
               AI artwork included, no subscription, tokens never expire.
             </p>
           </div>
-          <TokenPacks mode="display" className="mx-auto max-w-5xl" />
+          <div className="mx-auto mb-10 flex max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border border-amber-300/50 bg-amber-300/10 p-6 text-center sm:flex-row sm:text-left">
+            <div>
+              <p className="font-display text-2xl font-bold">
+                Start with {STARTING_TOKENS} free duels
+              </p>
+              <p className="text-muted-foreground">
+                No card needed. Packs are only for when you want more.
+              </p>
+            </div>
+            <Button asChild size="lg" variant="gold" className="shrink-0">
+              <Link href="/sign-up">
+                <Zap aria-hidden="true" />
+                Sign Up Free
+              </Link>
+            </Button>
+          </div>
+          <p className="mb-4 text-center text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Want more after that?
+          </p>
+          <ul className="mx-auto flex max-w-3xl flex-col items-center gap-x-8 gap-y-1 text-lg sm:flex-row sm:justify-center">
+            {TOKEN_PACKS.map((pack) => (
+              <li key={pack.id} className="whitespace-nowrap">
+                <b>{formatPrice(pack.priceCents)}</b>{" "}
+                <span className="text-muted-foreground">
+                  · {pack.tokens} duels
+                </span>
+              </li>
+            ))}
+          </ul>
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Duels can be 3, 5 or 10 rounds, or To the Death (up to{" "}
             {TO_THE_DEATH_MAX_ROUNDS} rounds). You&apos;re only charged when a
@@ -310,32 +346,92 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="bg-background py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4 font-display">
-            Your First {STARTING_TOKENS} Duels Are Free
+      {/* FAQ */}
+      <section className="relative bg-[oklch(0.17_0.05_288)] py-14 sm:py-20">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,oklch(0.5_0.22_293/0.22),transparent_60%)]"
+        />
+        <div className="container mx-auto px-4">
+          <h2 className="relative text-3xl sm:text-4xl font-bold mb-10 text-center font-display">
+            Questions, Answered
           </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Write a spell no one has thought of yet and see what the AI makes of
-            it. Sign up free and start casting.
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Button asChild variant="outline" size="lg">
-              <Link href="/duels/watch">
-                <Eye aria-hidden="true" />
-                Watch a Duel First
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="gold">
-              <Link href="/sign-up">
-                <Zap aria-hidden="true" />
-                Sign Up Free
-              </Link>
-            </Button>
+          <div className="relative mx-auto max-w-3xl divide-y rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm">
+            {FAQS.map((faq) => (
+              <details key={faq.q} className="group px-5 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-base font-semibold sm:text-lg">
+                  {faq.q}
+                  <ChevronDown
+                    className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <p className="pb-5 text-muted-foreground">{faq.a}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* Call to Action */}
+      <section id="final-cta" className="relative isolate overflow-hidden py-24 text-white">
+        <Image
+          src="/images/duel-bg.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="-z-10 object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-[oklch(0.12_0.04_285)]/80" />
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-5xl font-bold mb-4 font-display">
+            Your First {STARTING_TOKENS} Duels Are Free.
+            <br />
+            <span className="text-gold-gradient">Who Will You Challenge?</span>
+          </h2>
+          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+            Write a spell no one has thought of yet and see what the AI makes of
+            it.
+          </p>
+          <HeroSpellForm className="mx-auto w-full max-w-xl" />
+          <p className="mt-4">
+            <Link
+              href="/duels/watch"
+              className="inline-flex items-center gap-2 font-semibold text-white/85 underline underline-offset-4 hover:text-white"
+            >
+              <Eye className="size-4" aria-hidden="true" />
+              Watch a duel first
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      <footer className="border-t bg-background py-10">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground sm:flex-row">
+          <span className="font-display text-base font-bold text-foreground">
+            AI Wizard Duel
+          </span>
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <Link href="/duels/watch" className="hover:text-foreground">
+              Watch Duels
+            </Link>
+            <Link href="/leaderboard" className="hover:text-foreground">
+              Leaderboard
+            </Link>
+            <Link href="/#pricing" className="hover:text-foreground">
+              Pricing
+            </Link>
+            <Link href="/rules" className="hover:text-foreground">
+              Rules &amp; Safety
+            </Link>
+            <Link href="/sign-in" className="hover:text-foreground">
+              Sign In
+            </Link>
+          </nav>
+        </div>
+      </footer>
+
+      <StickySignupBar freeDuels={STARTING_TOKENS} />
     </div>
   );
 }
