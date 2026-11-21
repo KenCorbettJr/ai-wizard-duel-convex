@@ -451,7 +451,7 @@ export default function DashboardContent({
       <LeftSidebar />
 
       {/* Main content area with left margin for desktop sidebar */}
-      <div className="pt-[var(--app-navbar-h)] md:ml-64 md:pt-0">
+      <div className="pt-[var(--app-navbar-h)] pb-[var(--app-bottomnav-h)] md:ml-64 md:pt-0 md:pb-0">
         <div className="min-h-screen">
           <div className="@container container mx-auto px-4 sm:px-6 py-6 sm:py-12">
             <header className="mb-6 flex items-start justify-between gap-3 sm:mb-8">

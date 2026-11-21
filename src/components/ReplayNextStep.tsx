@@ -174,7 +174,7 @@ export function ReplayNextStep({
         )}
       </section>
       {!inlineVisible && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:left-64 animate-in fade-in slide-in-from-bottom-4 duration-300 motion-reduce:animate-none">
+        <div className="pointer-events-none fixed inset-x-0 bottom-[var(--app-bottomnav-h)] z-30 flex justify-center px-4 pb-4 md:bottom-0 md:pb-[max(1rem,env(safe-area-inset-bottom))] md:left-64 animate-in fade-in slide-in-from-bottom-4 duration-300 motion-reduce:animate-none">
           <Button
             size="lg"
             tabIndex={-1}

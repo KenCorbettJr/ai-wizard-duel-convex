@@ -25,10 +25,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="min-h-screen">
           <LeftSidebar />
 
-          {/* Main content area with left margin for desktop sidebar and top padding for mobile navbar */}
+          {/* Left margin for the desktop sidebar; top/bottom padding for the phone top bar and tab bar */}
           <main
             id="main-content"
-            className="md:ml-64 pt-[var(--app-navbar-h)] md:pt-0"
+            className="md:ml-64 pt-[var(--app-navbar-h)] pb-[var(--app-bottomnav-h)] md:pt-0 md:pb-0"
           >
             {children}
           </main>

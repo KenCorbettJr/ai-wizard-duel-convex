@@ -729,6 +729,44 @@
 
 :root {
   --app-navbar-h: 61px;
+  /* Phone bottom tab bar: bar height, and total including the safe area. */
+  --app-bottomnav-bar-h: 3.75rem;
+  --app-bottomnav-h: 0px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --app-bottomnav-h: calc(
+      var(--app-bottomnav-bar-h) + env(safe-area-inset-bottom)
+    );
+  }
+
+  /* The spell composer owns the bottom of the screen during a duel. */
+  html:has(#spell-composer) {
+    --app-bottomnav-h: 0px;
+  }
+  html:has(#spell-composer) .app-bottom-nav {
+    display: none;
+  }
+
+  /* Don't float the tab bar above the on-screen keyboard while typing. */
+  html:has(
+      :is(
+          input:not(
+              [type="checkbox"],
+              [type="radio"],
+              [type="button"],
+              [type="submit"],
+              [type="range"],
+              [type="file"]
+            ),
+          textarea,
+          [contenteditable="true"]
+        ):focus
+    )
+    .app-bottom-nav {
+    display: none;
+  }
 }
 
 /* Keep the sticky scoreboard short on phones while the composer is open. */
