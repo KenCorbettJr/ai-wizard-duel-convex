@@ -2,6 +2,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { STARTING_TOKENS } from "./lib/pricing";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { recordReferral } from "./referrals";
 
 // Get or create user record
 export const getOrCreateUser = mutation({
@@ -9,9 +10,17 @@ export const getOrCreateUser = mutation({
     clerkId: v.string(),
     email: v.optional(v.string()),
     name: v.optional(v.string()),
+    /** Handle from an invite link; only used when the account is new. */
+    referralHandle: v.optional(v.string()),
   },
   returns: v.id("users"),
-  handler: async (ctx, { clerkId, email, name }) => {
+  handler: async (ctx, { clerkId, email, name, referralHandle }) => {
+    // Callers may only create or update their own record.
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== clerkId) {
+      throw new Error("Not authorized");
+    }
+
     // Check if user already exists
     const existingUser = await ctx.db
       .query("users")
@@ -31,7 +40,6 @@ export const getOrCreateUser = mutation({
     }
 
     // Create new user with role from Clerk metadata or default to "user"
-    const identity = await ctx.auth.getUserIdentity();
     const clerkRole = (identity?.publicMetadata as { role?: string })?.role;
     const role =
       clerkRole === "super_admin" || clerkRole === "admin" ? clerkRole : "user";
@@ -60,6 +68,10 @@ export const getOrCreateUser = mutation({
       userId: clerkId,
       amount: STARTING_TOKENS,
     });
+
+    if (referralHandle) {
+      await recordReferral(ctx, clerkId, referralHandle);
+    }
 
     return userId;
   },

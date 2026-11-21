@@ -13,6 +13,7 @@ import {
   Shield,
   ShieldCheck,
   KeyRound,
+  Gift,
 } from "lucide-react";
 
 export interface NavItem {
@@ -20,6 +21,8 @@ export interface NavItem {
   label: string;
   icon: ComponentType<{ className?: string }>;
   requiresAuth?: boolean;
+  /** Only for players with the invite perk (they've bought tokens). */
+  requiresInvitePerk?: boolean;
   showStatus?: boolean;
 }
 
@@ -34,6 +37,13 @@ export const navGroups: NavGroup[] = [
       { href: "/", label: "Home", icon: Home },
       { href: "/profile", label: "Profile", icon: User, requiresAuth: true },
       { href: "/credits", label: "Tokens", icon: Coins, requiresAuth: true },
+      {
+        href: "/invite",
+        label: "Invite Friends",
+        icon: Gift,
+        requiresAuth: true,
+        requiresInvitePerk: true,
+      },
     ],
   },
   {
@@ -102,10 +112,12 @@ const adminGroup: NavGroup = {
 export function getVisibleGroups({
   isSignedIn,
   isSuperAdmin,
+  hasInvitePerk = false,
   exclude = [],
 }: {
   isSignedIn: boolean;
   isSuperAdmin: boolean;
+  hasInvitePerk?: boolean;
   exclude?: string[];
 }): NavGroup[] {
   const groups = isSuperAdmin ? [...navGroups, adminGroup] : navGroups;
@@ -114,7 +126,9 @@ export function getVisibleGroups({
       ...group,
       items: group.items.filter(
         (item) =>
-          (isSignedIn || !item.requiresAuth) && !exclude.includes(item.href),
+          (isSignedIn || !item.requiresAuth) &&
+          (hasInvitePerk || !item.requiresInvitePerk) &&
+          !exclude.includes(item.href),
       ),
     }))
     .filter((group) => group.items.length > 0);
@@ -192,6 +206,7 @@ const TOP_LEVEL_ROUTES = [
   "/",
   "/profile",
   "/credits",
+  "/invite",
   "/leaderboard",
   "/wizards",
   "/campaign",

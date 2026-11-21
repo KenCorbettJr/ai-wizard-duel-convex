@@ -72,6 +72,8 @@ export function CreditUsageHistory({
         return <Coins className="h-4 w-4 text-gold" />;
       if (source === "AD_REWARD")
         return <Gift className="h-4 w-4 text-success" />;
+      if (source === "REFERRAL_BONUS")
+        return <Gift className="h-4 w-4 text-gold" />;
       if (source === "SIGNUP_BONUS")
         return <Gift className="h-4 w-4 text-info" />;
       if (source === "ADMIN_GRANT")
@@ -122,6 +124,8 @@ export function CreditUsageHistory({
         return "Illustration Refund";
       case "PURCHASE":
         return "Token Purchase";
+      case "REFERRAL_BONUS":
+        return "Invite Bonus";
       default:
         return source.replace("_", " ");
     }

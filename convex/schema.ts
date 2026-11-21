@@ -277,11 +277,25 @@ export default defineSchema({
       v.literal("WIZARD_IMAGE"),
       v.literal("WIZARD_IMAGE_REFUND"),
       v.literal("PURCHASE"),
+      v.literal("REFERRAL_BONUS"),
     ),
     relatedAdId: v.optional(v.id("adInteractions")),
     metadata: v.optional(v.record(v.string(), v.any())),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+  // A player who signed up through someone's invite link. Both get a token
+  // bonus once, when the new player finishes their first duel.
+  referrals: defineTable({
+    referrerId: v.string(), // Clerk ID of the player who shared the link
+    referredId: v.string(), // Clerk ID of the new player
+    createdAt: v.number(),
+    // Set when the new player finished their first duel and got their bonus.
+    rewardedAt: v.optional(v.number()),
+    // Whether the referrer got theirs too (false once they hit a cap).
+    referrerRewarded: v.optional(v.boolean()),
+  })
+    .index("by_referred", ["referredId"])
+    .index("by_referrer", ["referrerId"]),
   // Token pack purchases through Stripe Checkout. A row is created when
   // checkout starts and completed (tokens granted) once, by the webhook.
   tokenPurchases: defineTable({

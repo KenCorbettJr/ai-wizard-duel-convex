@@ -61,6 +61,7 @@ import type * as narration from "../narration.js";
 import type * as payments from "../payments.js";
 import type * as processDuelRound from "../processDuelRound.js";
 import type * as promoteUser from "../promoteUser.js";
+import type * as referrals from "../referrals.js";
 import type * as roundMedia from "../roundMedia.js";
 import type * as seasonHelpers from "../seasonHelpers.js";
 import type * as sessionService from "../sessionService.js";
@@ -140,6 +141,7 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   processDuelRound: typeof processDuelRound;
   promoteUser: typeof promoteUser;
+  referrals: typeof referrals;
   roundMedia: typeof roundMedia;
   seasonHelpers: typeof seasonHelpers;
   sessionService: typeof sessionService;

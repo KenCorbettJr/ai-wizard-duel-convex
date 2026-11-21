@@ -6,6 +6,7 @@ import {
   MutationCtx,
 } from "./_generated/server";
 import { scheduleDuelRating } from "./lib/scheduleDuelRating";
+import { rewardReferralsForCompletedDuel } from "./referrals";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 
@@ -879,6 +880,9 @@ export const completeRound = internalMutation({
           });
         }
       }
+
+      // A new player's first finished duel unlocks any referral bonus.
+      await rewardReferralsForCompletedDuel(ctx, duel.players);
 
       // Rate finished player duels so admins can pick highlights
       if (!duel.isCampaignBattle) {

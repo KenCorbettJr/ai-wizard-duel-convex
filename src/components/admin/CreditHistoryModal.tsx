@@ -214,6 +214,11 @@ export function CreditHistoryModal({
           label: "Token Purchase",
           icon: <Coins className="h-3 w-3" />,
         };
+      case "REFERRAL_BONUS":
+        return {
+          label: "Invite Bonus",
+          icon: <Coins className="h-3 w-3" />,
+        };
       default:
         return {
           label: source.replace(/_/g, " "),

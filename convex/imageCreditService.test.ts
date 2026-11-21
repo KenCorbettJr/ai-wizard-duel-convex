@@ -8,7 +8,9 @@ test("image credit service functionality", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a test user first
-  await t.mutation(api.users.getOrCreateUser, {
+  await t
+    .withIdentity({ subject: "test_user_123" })
+    .mutation(api.users.getOrCreateUser, {
     clerkId: "test_user_123",
     email: "test@example.com",
     name: "Test User",
@@ -81,7 +83,9 @@ test("premium user unlimited credits", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a premium user
-  await t.mutation(api.users.getOrCreateUser, {
+  await t
+    .withIdentity({ subject: "premium_user_123" })
+    .mutation(api.users.getOrCreateUser, {
     clerkId: "premium_user_123",
     email: "premium@example.com",
     name: "Premium User",
@@ -133,7 +137,9 @@ test("credit consumption when out of credits", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a user with no credits
-  await t.mutation(api.users.getOrCreateUser, {
+  await t
+    .withIdentity({ subject: "broke_user_123" })
+    .mutation(api.users.getOrCreateUser, {
     clerkId: "broke_user_123",
     email: "broke@example.com",
     name: "Broke User",

@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { useInvitePerk } from "@/hooks/useInvitePerk";
 import { cn } from "@/lib/utils";
 import { startTopLoader } from "./TopLoader";
 import {
@@ -129,6 +130,7 @@ export function MobileNav() {
   const { isLoaded, isSignedIn } = useAuth();
   const { signOut } = useClerk();
   const { isSuperAdmin } = useSuperAdmin();
+  const hasInvitePerk = useInvitePerk();
   const [sheetOpen, setSheetOpen] = useState(false);
   const topBarRef = useRef<HTMLDivElement>(null);
 
@@ -164,6 +166,7 @@ export function MobileNav() {
   const sheetGroups = getVisibleGroups({
     isSignedIn: !!isSignedIn,
     isSuperAdmin: !!isSuperAdmin,
+    hasInvitePerk,
     exclude: tabHrefs,
   });
   const activeTab =

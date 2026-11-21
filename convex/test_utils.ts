@@ -124,6 +124,7 @@ export async function createTestUser(
   role: "user" | "admin" | "super_admin" = "user",
 ) {
   return await t
+    .withIdentity({ subject: clerkId })
     .mutation(api.users.getOrCreateUser, {
       clerkId,
       email: `${clerkId}@test.com`,

@@ -4,8 +4,10 @@ import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
+import Link from "next/link";
 import {
   CheckCircle2,
+  ChevronRight,
   Coins,
   Gift,
   Infinity as InfinityIcon,
@@ -16,6 +18,7 @@ import posthog from "posthog-js";
 import { api } from "../../../convex/_generated/api";
 import {
   DUEL_TOKEN_COST,
+  REFERRAL_BONUS_TOKENS,
   TO_THE_DEATH_MAX_ROUNDS,
 } from "../../../convex/lib/pricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +36,10 @@ export function CreditsPageClient() {
   const tokens = useQuery(
     api.imageCreditService.getUserImageCredits,
     user?.id ? { userId: user.id } : "skip",
+  );
+  const referral = useQuery(
+    api.referrals.getMyReferralInfo,
+    user?.id ? {} : "skip",
   );
   const purchaseStatus = useQuery(
     api.payments.getMyPurchaseStatus,
@@ -116,6 +123,47 @@ export function CreditsPageClient() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Joined through an invite: their bonus waits on a first duel. */}
+        {referral?.invitedBy && !referral.invitedBy.rewarded && (
+          <div className="flex items-start gap-3 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm">
+            <Swords
+              className="mt-0.5 h-5 w-5 shrink-0 text-gold"
+              aria-hidden="true"
+            />
+            <p>
+              You joined through{" "}
+              <strong>
+                {referral.invitedBy.displayName || referral.invitedBy.handle}
+              </strong>
+              &apos;s invite. Finish your first duel or campaign battle to get{" "}
+              {REFERRAL_BONUS_TOKENS} bonus tokens.
+            </p>
+          </div>
+        )}
+
+        {/* Thank-you perk for players who have bought tokens. */}
+        {referral?.eligible && (
+          <Link
+            href="/invite"
+            className="flex items-center gap-4 rounded-xl border border-gold/40 bg-gold/10 p-4 transition-colors hover:bg-gold/15"
+          >
+            <Gift className="h-6 w-6 shrink-0 text-gold" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold">
+                Supporter perk: invite friends
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Thanks for buying tokens! When a friend you invite finishes
+                their first duel, you both get {REFERRAL_BONUS_TOKENS} tokens.
+              </div>
+            </div>
+            <ChevronRight
+              className="h-5 w-5 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
+          </Link>
+        )}
 
         {/* Packs */}
         <section aria-labelledby="buy-tokens" className="space-y-6">

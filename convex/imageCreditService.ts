@@ -13,6 +13,7 @@ const CreditSource = v.union(
   v.literal("WIZARD_IMAGE"),
   v.literal("WIZARD_IMAGE_REFUND"),
   v.literal("PURCHASE"),
+  v.literal("REFERRAL_BONUS"),
 );
 
 // Transaction types

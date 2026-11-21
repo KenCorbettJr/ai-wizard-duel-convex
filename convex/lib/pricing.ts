@@ -21,6 +21,20 @@ export const WIZARD_IMAGE_TOKEN_COST = 1;
 export const STARTING_TOKENS = 3;
 
 /**
+ * Bonus tokens a referred player and their referrer each get once the new
+ * player finishes their first duel.
+ */
+export const REFERRAL_BONUS_TOKENS = 5;
+
+/**
+ * Invite bonuses are a thank-you for players who have bought tokens. Each can
+ * earn the referrer bonus this many times per calendar month (UTC)...
+ */
+export const REFERRAL_MONTHLY_CAP = 10;
+/** ...and this many times in total. */
+export const REFERRAL_LIFETIME_CAP = 50;
+
+/**
  * "To the Death" duels end after this many rounds even if both wizards are
  * still standing (winner by points), so one token always has a known cost.
  */

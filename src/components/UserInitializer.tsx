@@ -1,10 +1,11 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "../../convex/_generated/api";
+import { clearReferral, readReferral } from "@/lib/referral";
 
 /**
  * Component that automatically creates user records in Convex database
@@ -13,6 +14,8 @@ import { api } from "../../convex/_generated/api";
  */
 export function UserInitializer() {
   const { user, isLoaded } = useUser();
+  // Convex must hold the Clerk token before it can create the user record.
+  const { isAuthenticated: convexReady } = useConvexAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -23,16 +26,20 @@ export function UserInitializer() {
   );
 
   useEffect(() => {
-    if (isLoaded && user) {
+    if (isLoaded && user && convexReady) {
       getOrCreateUser({
         clerkId: user.id,
         email: user.emailAddresses[0]?.emailAddress,
         name: user.fullName || user.firstName || undefined,
-      }).catch((error) => {
-        console.error("Failed to create/update user record:", error);
-      });
+        // Invite link they arrived through; only counts for a new account.
+        referralHandle: readReferral(),
+      })
+        .then(clearReferral)
+        .catch((error) => {
+          console.error("Failed to create/update user record:", error);
+        });
     }
-  }, [isLoaded, user, getOrCreateUser]);
+  }, [isLoaded, user, convexReady, getOrCreateUser]);
 
   useEffect(() => {
     // Only check profile status after user is loaded and we have profile data

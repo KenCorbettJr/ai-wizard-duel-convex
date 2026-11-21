@@ -10,6 +10,7 @@ import { CreditDisplay } from "@/components/CreditDisplay";
 import { MobileNav } from "@/components/navigation/MobileNav";
 import { getVisibleGroups } from "@/components/navigation/navConfig";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { useInvitePerk } from "@/hooks/useInvitePerk";
 import { cn } from "@/lib/utils";
 
 interface LeftSidebarProps {
@@ -24,9 +25,11 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
   const { isSuperAdmin } = useSuperAdmin();
+  const hasInvitePerk = useInvitePerk();
   const groups = getVisibleGroups({
     isSignedIn: !!isSignedIn,
     isSuperAdmin: !!isSuperAdmin,
+    hasInvitePerk,
   });
 
   return (
