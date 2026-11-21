@@ -129,6 +129,9 @@ function WatchedRow({
               >
                 {STATUS_LABEL[row.status] ?? row.status}
               </Badge>
+              {row.isCampaignBattle && (
+                <Badge variant="outline">Campaign</Badge>
+              )}
               {highlighted && <Badge variant="gold">Highlighted</Badge>}
               <OnlookerBadge duelId={row.duelId} />
             </div>
@@ -167,7 +170,7 @@ function WatchedRow({
           />
         </div>
 
-        {row.status === "COMPLETED" && (
+        {row.status === "COMPLETED" && !row.isCampaignBattle && (
           <Button
             variant={highlighted ? "outline" : "gold"}
             disabled={pending}

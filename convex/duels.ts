@@ -1100,11 +1100,16 @@ export const getActiveDuels = query({
   },
 });
 
-// Get watchable duels (excludes campaign battles)
+// Get watchable duels: player-vs-player duels, campaign battles, or both.
+// With an opponent, only campaign battles against that campaign wizard.
 export const getWatchableDuels = query({
   args: {
     limit: v.number(),
     offset: v.number(),
+    kind: v.optional(
+      v.union(v.literal("all"), v.literal("players"), v.literal("campaign")),
+    ),
+    opponentId: v.optional(v.id("wizards")),
   },
   returns: v.object({
     duels: v.array(
@@ -1145,11 +1150,24 @@ export const getWatchableDuels = query({
     total: v.number(),
     hasMore: v.boolean(),
   }),
-  handler: async (ctx, { limit, offset }) => {
-    // Get all duels excluding campaign battles
+  handler: async (ctx, { limit, offset, kind = "all", opponentId }) => {
     const allDuels = await ctx.db.query("duels").collect();
     const watchableDuels = allDuels
-      .filter((duel) => !duel.isCampaignBattle)
+      .filter((duel) => {
+        if (opponentId) {
+          return (
+            !!duel.isCampaignBattle &&
+            duel.status !== "CANCELLED" &&
+            duel.wizards.includes(opponentId)
+          );
+        }
+        if (kind === "players") return !duel.isCampaignBattle;
+        if (kind === "campaign") {
+          // A cancelled campaign battle never had anything to watch.
+          return !!duel.isCampaignBattle && duel.status !== "CANCELLED";
+        }
+        return !duel.isCampaignBattle || duel.status !== "CANCELLED";
+      })
       .sort((a, b) => b.createdAt - a.createdAt);
 
     const total = watchableDuels.length;

@@ -3,7 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Crown, Lock, Swords } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle, Crown, Eye, Lock, Swords } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import type { useStartCampaignBattle } from "@/hooks/useStartCampaignBattle";
@@ -182,6 +183,22 @@ export function CampaignOpponentCard({
           >
             <Swords className="mr-2 h-4 w-4" aria-hidden />
             {starting ? "Entering the arena..." : "Battle Now"}
+          </Button>
+        )}
+
+        {/* Locked opponents stay a mystery, so only revealed ones link out */}
+        {!isLocked && (
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className={cn("w-full", !isCurrent && "mt-auto")}
+          >
+            <Link href={`/duels/watch?opponent=${opponent._id}`}>
+              <Eye className="mr-2 h-4 w-4" aria-hidden />
+              Watch battles
+              <span className="sr-only"> against {opponent.name}</span>
+            </Link>
           </Button>
         )}
       </CardContent>

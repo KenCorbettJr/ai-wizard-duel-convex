@@ -97,22 +97,28 @@ describe("recordDuelView", () => {
     expect(await stats(t, duelId)).toMatchObject({ views: 1, liveViews: 0 });
   });
 
-  test("duelists and campaign battles aren't counted", async () => {
+  test("duelists aren't counted", async () => {
     const t = setup();
     const duelId = await makeDuel(t);
-    const campaignId = await makeDuel(t, { isCampaignBattle: true });
 
     await withAuth(t, "duelist-1").mutation(api.duelViews.recordDuelView, {
       duelId,
       viewerId: "user:duelist-1",
     });
+
+    expect(await stats(t, duelId)).toBeNull();
+  });
+
+  test("onlookers of campaign battles are counted", async () => {
+    const t = setup();
+    const campaignId = await makeDuel(t, { isCampaignBattle: true });
+
     await t.mutation(api.duelViews.recordDuelView, {
       duelId: campaignId,
       viewerId: ANON,
     });
 
-    expect(await stats(t, duelId)).toBeNull();
-    expect(await stats(t, campaignId)).toBeNull();
+    expect(await stats(t, campaignId)).toMatchObject({ views: 1 });
   });
 
   test("nobody can record views as another account", async () => {

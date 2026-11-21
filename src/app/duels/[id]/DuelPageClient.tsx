@@ -1135,13 +1135,15 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   textOnlyMode={duel.textOnlyMode}
                   textOnlyReason={duel.textOnlyReason}
                 />
-                {!duel.isCampaignBattle && duel.status !== "CANCELLED" && (
+                {duel.status !== "CANCELLED" && (
                   <OnlookerCount
                     duelId={duel._id}
                     viewerId={user?.id}
                     players={duel.players}
                     showOpponent={
-                      !!isPlayerInDuel && duel.status === "IN_PROGRESS"
+                      !!isPlayerInDuel &&
+                      !duel.isCampaignBattle &&
+                      duel.status === "IN_PROGRESS"
                     }
                   />
                 )}

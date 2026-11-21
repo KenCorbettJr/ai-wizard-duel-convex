@@ -14,6 +14,7 @@ import {
   Sparkles,
   Star,
   Swords,
+  Shield,
   Crown,
   X,
   Calendar,
@@ -39,6 +40,7 @@ interface DuelListItemProps {
     losers?: Id<"wizards">[];
     points?: Record<string, number>;
     hitPoints?: Record<string, number>;
+    isCampaignBattle?: boolean;
   };
   variant?: "compact" | "card" | "dashboard";
   showActions?: boolean;
@@ -415,6 +417,12 @@ export function DuelListItem({
             <div className="flex items-center gap-2">
               {showOnlookers && (
                 <OnlookerBadge duelId={duel._id as Id<"duels">} />
+              )}
+              {duel.isCampaignBattle && (
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Shield className="h-3 w-3" aria-hidden="true" />
+                  Campaign
+                </Badge>
               )}
               {getStatusBadge()}
             </div>

@@ -5,8 +5,9 @@
  *
  * A "visit" is an onlooker opening a duel page. Opening it again within
  * VISIT_GAP_MS (a refresh, a quick tab switch) is the same visit. Duelists
- * viewing their own duel aren't counted. Anonymous viewer IDs come from the
- * browser, so treat anonymous numbers as indicative, not audited.
+ * viewing their own duel aren't counted; onlookers of campaign battles are.
+ * Anonymous viewer IDs come from the browser, so treat anonymous numbers as
+ * indicative, not audited.
  */
 
 import { v } from "convex/values";
@@ -21,7 +22,7 @@ export const recordDuelView = mutation({
   handler: async (ctx, { duelId, viewerId }) => {
     await assertViewerId(ctx, viewerId);
     const duel = await ctx.db.get(duelId);
-    if (!duel || duel.isCampaignBattle || duel.status === "CANCELLED") return;
+    if (!duel || duel.status === "CANCELLED") return;
     if (duel.players.some((p) => userPresenceId(p) === viewerId)) return;
 
     const now = Date.now();
@@ -140,6 +141,7 @@ export const getMostViewedDuels = query({
           createdAt: duel.createdAt,
           featuredIllustration: duel.featuredIllustration,
           highlightedAt: duel.highlightedAt,
+          isCampaignBattle: duel.isCampaignBattle ?? false,
           aiRating: rating?.overall,
         };
       }),
