@@ -16,6 +16,7 @@ import { MigrationNotification } from "@/components/MigrationNotification";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { peekPendingWizard } from "@/lib/pendingWizard";
 import {
   ChevronRight,
   Coins,
@@ -394,6 +395,14 @@ export default function DashboardContent({
   };
 
   const profilePrompt = getProfileCompletionPrompt("create wizards");
+
+  // A visitor who described a wizard on the homepage before signing up goes
+  // straight to creating it, even if sign-up dropped them here instead.
+  useEffect(() => {
+    if (!preview && isSignedIn && peekPendingWizard()) {
+      router.replace("/wizards/create");
+    }
+  }, [preview, isSignedIn, router]);
 
   // Show migration notification for existing users without profiles
   useEffect(() => {

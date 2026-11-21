@@ -99,8 +99,8 @@ export default function TopWizards() {
             Wizards to Beat
           </h2>
           <p className="text-lg text-muted-foreground">
-            The top wizards on the leaderboard right now, ranked by win rate.
-            Think you can dethrone them?
+            Every one of these started as a few sentences. Now they top the
+            leaderboard. Can your wizard dethrone them?
           </p>
         </div>
         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">

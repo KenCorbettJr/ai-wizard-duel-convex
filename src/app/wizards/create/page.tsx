@@ -11,11 +11,22 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  clearPendingWizard,
+  peekPendingWizard,
+} from "@/lib/pendingWizard";
 
 export default function CreateWizardPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  // A description written on the homepage before signing up.
+  const [pendingDescription] = useState(() =>
+    typeof window === "undefined" ? null : peekPendingWizard(),
+  );
+  useEffect(() => {
+    if (pendingDescription) clearPendingWizard();
+  }, [pendingDescription]);
 
   const { isProfileComplete, getProfileCompletionPrompt } =
     useProfileCompletion();
@@ -84,8 +95,19 @@ export default function CreateWizardPage() {
         </div>
 
         <div className="max-w-2xl mx-auto">
+          {pendingDescription && (
+            <p className="mb-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
+              We saved your description from the homepage. Give your wizard a
+              name, then create them to see their portrait.
+            </p>
+          )}
           <WizardForm
             mode="create"
+            initialData={
+              pendingDescription
+                ? { name: "", description: pendingDescription }
+                : undefined
+            }
             onClose={handleClose}
             onSuccess={handleSuccess}
             inModal={false}

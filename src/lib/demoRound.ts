@@ -54,34 +54,3 @@ export const SPELLS_B: ReadonlyArray<{
     b: { creativity: 8, strategy: 9, luck: 8 },
   },
 ];
-
-/** Separate matchups for the looping hero card, so it doesn't spoil the demo. */
-export const HERO_ROUNDS: ReadonlyArray<{
-  rival: string;
-  spell: string;
-  image: string;
-  alt: string;
-  verdict: string;
-}> = [
-  {
-    rival: "A storm giant made of thunderclouds.",
-    spell: "A tiny goblin with an absolutely enormous vacuum cleaner.",
-    image: "/images/demo/hero-vacuum.jpg",
-    alt: "A goblin vacuums up a thundercloud giant in a packed arena",
-    verdict: "You win the round. The giant is now mostly in the bag.",
-  },
-  {
-    rival: "A meteor shower raining fire on the arena.",
-    spell: "Turn the whole arena floor into a giant trampoline.",
-    image: "/images/demo/hero-trampoline.jpg",
-    alt: "Meteors bounce off a purple trampoline arena floor back at a wizard",
-    verdict: "Every meteor bounces back. Your rival takes 3 damage.",
-  },
-  {
-    rival: "A swarm of shadow bats that blot out the light.",
-    spell: "A giant disco ball. Everybody dance.",
-    image: "/images/demo/hero-disco.jpg",
-    alt: "A disco ball floods the arena with light while shadow bats dance",
-    verdict: "The bats can't resist the beat. You take the round.",
-  },
-];

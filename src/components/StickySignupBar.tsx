@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CREATE_WIZARD_SIGN_UP_URL } from "@/lib/pendingWizard";
 
 /**
  * Phone-only sign-up bar that slides in once the visitor has scrolled past the
@@ -51,9 +52,9 @@ export default function StickySignupBar({
           className="shrink-0"
           tabIndex={visible ? 0 : -1}
         >
-          <Link href="/sign-up">
+          <Link href={CREATE_WIZARD_SIGN_UP_URL}>
             <Wand2 aria-hidden="true" />
-            Cast It Free
+            Create My Wizard
           </Link>
         </Button>
       </div>

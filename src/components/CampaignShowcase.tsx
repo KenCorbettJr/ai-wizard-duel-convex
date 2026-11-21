@@ -11,6 +11,7 @@ import { useConvexImage } from "@/hooks/useConvexImage";
 import { Button } from "@/components/ui/button";
 import { CAMPAIGN_TOTAL_OPPONENTS } from "@/lib/campaignStatus";
 import { cn } from "@/lib/utils";
+import { CREATE_WIZARD_SIGN_UP_URL } from "@/lib/pendingWizard";
 
 type Opponent = Doc<"wizards">;
 
@@ -209,13 +210,13 @@ export default function CampaignShowcase() {
             Single-player campaign
           </span>
           <h2 className="mb-4 font-display text-3xl font-bold sm:text-4xl">
-            Beat Ten Wizards. Win a Relic That Makes You{" "}
+            Beat Ten Wizards. Win a Relic That Makes Your Wizard{" "}
             <span className="text-gold-gradient">Luckier Forever.</span>
           </h2>
           <p className="text-lg text-white/75">
-            No one online? Climb a ladder of AI rivals, each with a personality
-            and a spell style to match. Lost a fight? Try again. Each battle
-            costs one token.
+            No one online? Send your wizard up a ladder of AI rivals, each with
+            a personality and a spell style to match. Lost a fight? Try again.
+            Each battle costs one token.
           </p>
         </div>
 
@@ -287,7 +288,7 @@ export default function CampaignShowcase() {
                 </h3>
                 <p className="mb-4 text-white/80">
                   Every round, both wizards roll a d20 for luck. With the relic,
-                  your d20 becomes a{" "}
+                  your wizard&apos;s d20 becomes a{" "}
                   <strong className="text-amber-200">d20+{luckBonus}</strong>.
                   In every duel, forever, friends included.
                 </p>
@@ -310,7 +311,7 @@ export default function CampaignShowcase() {
 
         <div className="mt-10 text-center">
           <Button asChild size="lg" variant="gold" className="text-lg">
-            <Link href="/sign-up">
+            <Link href={CREATE_WIZARD_SIGN_UP_URL}>
               <Zap aria-hidden="true" />
               Start the Campaign Free
             </Link>

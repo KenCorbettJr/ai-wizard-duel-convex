@@ -9,21 +9,25 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
-import HeroSpellCard from "@/components/HeroSpellCard";
-import HeroSpellForm from "@/components/HeroSpellForm";
+import HeroWizardCard from "@/components/HeroWizardCard";
+import HeroWizardForm from "@/components/HeroWizardForm";
 import RoundReplay from "@/components/RoundReplay";
 import TopWizards from "@/components/TopWizards";
 import HighlightedDuels from "@/components/HighlightedDuels";
 import CampaignShowcase from "@/components/CampaignShowcase";
 import {
-  ArrowRight,
   ChevronDown,
   Coins,
+  Crown,
   Eye,
+  Gem,
+  Image as ImageIcon,
   Laugh,
+  PenLine,
   Share2,
   Sparkles,
   Swords,
+  Trophy,
   Wand2,
   Zap,
 } from "lucide-react";
@@ -31,11 +35,12 @@ import Image from "next/image";
 import StickySignupBar from "@/components/StickySignupBar";
 import type { Metadata } from "next";
 import DashboardContent from "@/components/DashboardContent";
+import { CREATE_WIZARD_SIGN_UP_URL } from "@/lib/pendingWizard";
 
 export const metadata: Metadata = {
-  title: "AI Wizard Duel: Type Any Spell, Watch an AI Tell the Story",
+  title: "AI Wizard Duel: Create Your Wizard, Send Them Into Battle",
   description:
-    "Cast any spell you can imagine in secret. An AI narrates both wizards' spells at once, with art. Duel a friend or take on a ten-wizard campaign.",
+    "Describe any wizard you can imagine and an AI paints their portrait. Then send them into duels against friends, rivals and a ten-wizard campaign, with every battle narrated and illustrated by AI.",
 };
 
 export default function Home() {
@@ -52,6 +57,10 @@ export default function Home() {
 }
 
 const FAQS: Array<{ q: string; a: React.ReactNode }> = [
+  {
+    q: "Do I get to keep my wizard?",
+    a: "Yes. Your wizard stays on your account with their portrait, their win-loss record and any relics they earn. Before each duel you choose which of your wizards to send in.",
+  },
   {
     q: "Is it free to start?",
     a: `Yes. Sign up and you get ${STARTING_TOKENS} free tokens, enough for that many duels or campaign battles. You can also watch public duels without an account. Buy more tokens only if you want them.`,
@@ -88,10 +97,29 @@ const FAQS: Array<{ q: string; a: React.ReactNode }> = [
   },
 ];
 
-const STEPS = [
-  { icon: Wand2, title: "Create a wizard" },
-  { icon: Sparkles, title: "Cast anything" },
-  { icon: Swords, title: "Watch it painted" },
+const LEGEND_STEPS = [
+  {
+    icon: PenLine,
+    title: "Describe them",
+    text: "A grumpy owl archmage. A pirate who duels with soup. A librarian who weaponizes bookmarks. Their look, their quirks, their kind of magic: it's all up to you.",
+  },
+  {
+    icon: ImageIcon,
+    title: "Watch them come to life",
+    text: "The AI paints a portrait of the wizard you imagined. Your first portrait is free.",
+  },
+  {
+    icon: Swords,
+    title: "Battle as your champion",
+    text: "The AI paints your wizard into every duel scene, so they look like themselves round after round. Every win, loss and relic stays with them.",
+  },
+];
+
+const LEGEND_TRAITS = [
+  { icon: ImageIcon, label: "Same face in every battle" },
+  { icon: Trophy, label: "Their own win-loss record" },
+  { icon: Crown, label: "A spot on the leaderboard" },
+  { icon: Gem, label: "Relics they earn and keep" },
 ];
 
 function ArtCard({
@@ -152,17 +180,18 @@ function LandingPage() {
         <div className="container relative z-10 mx-auto grid min-h-[88vh] items-center gap-10 px-4 pt-24 pb-14 sm:pt-32 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
           <div className="text-center lg:text-left">
             <h1 className="mb-5 font-display text-4xl font-bold text-white sm:text-6xl [text-shadow:0_2px_24px_rgba(0,0,0,0.6)]">
-              Cast Any Spell You Can Imagine.{" "}
-              <span className="text-gold-gradient">Outwit Your Rival.</span>
+              Create Your Wizard.{" "}
+              <span className="text-gold-gradient">Send Them Into Battle.</span>
             </h1>
             <p className="mx-auto mb-8 max-w-xl text-lg text-white/90 sm:text-xl lg:mx-0">
-              You each write a spell in secret. The AI narrates the collision,
-              paints the scene, and picks a winner.
+              Describe any wizard you can dream up. The AI paints their
+              portrait, and they become your champion in every duel, building
+              a record and a reputation.
             </p>
-            <HeroSpellForm />
+            <HeroWizardForm />
             <p className="mt-3 text-sm text-white/85">
-              Free account, {STARTING_TOKENS} duels, no card. We&apos;ll save
-              your spell for your first duel.
+              Free account, {STARTING_TOKENS} duels and your first portrait
+              free. No card needed.
             </p>
             <p className="mt-3 text-sm">
               <Link
@@ -175,10 +204,93 @@ function LandingPage() {
             </p>
           </div>
           <div className="mx-auto w-full max-w-xl">
-            <HeroSpellCard />
+            <HeroWizardCard />
           </div>
         </div>
       </section>
+
+      {/* A wizard's story */}
+      <section className="bg-background py-14 sm:py-20">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <h2 className="mb-4 font-display text-3xl font-bold sm:text-4xl">
+              From a Few Words to a Legend
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Your wizard isn&apos;t a character you play once and forget.
+              They&apos;re yours: the face you send into every duel and the name
+              that climbs the leaderboard.
+            </p>
+          </div>
+          <ol className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+            {LEGEND_STEPS.map((step, i) => (
+              <li
+                key={step.title}
+                className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-xl shadow-black/20"
+              >
+                <div className="relative aspect-video bg-[oklch(0.17_0.05_285)]">
+                  {i === 0 && (
+                    <div className="flex h-full items-center p-5">
+                      <p className="text-lg italic leading-snug text-amber-100">
+                        &ldquo;A clumsy, good-hearted wizard whose spells
+                        backfire in spectacular ways. He never, ever gives
+                        up.&rdquo;
+                      </p>
+                    </div>
+                  )}
+                  {i === 1 && (
+                    <Image
+                      src="/images/wizards/boris.jpg"
+                      alt="Bumbling Boris, a wizard in a tall blue hat surrounded by misfiring sparkles and a startled rubber duck"
+                      fill
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-cover"
+                    />
+                  )}
+                  {i === 2 && (
+                    <ul className="grid h-full grid-cols-2 content-center gap-2 p-4">
+                      {LEGEND_TRAITS.map((trait) => (
+                        <li
+                          key={trait.label}
+                          className="flex items-center gap-2 rounded-lg bg-white/5 px-2.5 py-2 text-xs font-medium leading-tight text-white/90 ring-1 ring-white/10"
+                        >
+                          <trait.icon
+                            className="size-4 shrink-0 text-amber-300"
+                            aria-hidden
+                          />
+                          {trait.label}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-arcane text-sm font-bold text-white ring-2 ring-amber-300/50">
+                      {i + 1}
+                    </span>
+                    <h3 className="font-display text-xl font-bold">
+                      {step.title}
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-10 text-center">
+            <Button asChild size="lg" variant="gold" className="text-base">
+              <Link href={CREATE_WIZARD_SIGN_UP_URL}>
+                <Wand2 aria-hidden="true" />
+                Create My Wizard
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Top wizards (hidden until the leaderboard has entries) */}
+      <TopWizards />
 
       {/* Example duel */}
       <section className="relative overflow-hidden bg-[oklch(0.15_0.04_285)] pt-14 pb-10 sm:pt-20 sm:pb-12 text-white">
@@ -193,11 +305,12 @@ function LandingPage() {
               Try a round
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-display">
-              One Round, Two Spells, One Wild Story
+              Then the Duel Begins
             </h2>
             <p className="text-lg text-white/75">
+              In battle, your wizard fights with spells you write in secret.
               Your rival has already cast. Pick your counter and see how the AI
-              resolves the collision.
+              tells the story.
             </p>
           </div>
           <RoundReplay />
@@ -221,10 +334,11 @@ function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-display">
-              Settle Any Argument With Magic
+              Duel Friends and Rivals
             </h2>
             <p className="text-lg text-muted-foreground">
-              No rules to memorise. If you can describe it, you can cast it.
+              No rules to memorize. If you can describe it, your wizard can
+              cast it.
             </p>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
@@ -254,30 +368,11 @@ function LandingPage() {
               text="A thousand tiny mirrors versus an ice phoenix. The AI scores creativity and strategy first, then the dice decide."
             />
           </div>
-          <ol className="mx-auto mt-10 flex w-fit flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-2">
-            {STEPS.map((step, i) => (
-              <li key={step.title} className="flex items-center gap-2">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-arcane text-white ring-2 ring-amber-300/50">
-                  <step.icon className="size-4" aria-hidden />
-                </span>
-                <span className="font-semibold">{step.title}</span>
-                {i < STEPS.length - 1 && (
-                  <ArrowRight
-                    className="ml-2 hidden size-4 text-muted-foreground sm:block"
-                    aria-hidden
-                  />
-                )}
-              </li>
-            ))}
-          </ol>
         </div>
       </section>
 
       {/* Campaign */}
       <CampaignShowcase />
-
-      {/* Top wizards (hidden until the leaderboard has entries) */}
-      <TopWizards />
 
       {/* Pricing */}
       <section
@@ -319,7 +414,7 @@ function LandingPage() {
               </p>
             </div>
             <Button asChild size="lg" variant="gold" className="shrink-0">
-              <Link href="/sign-up">
+              <Link href={CREATE_WIZARD_SIGN_UP_URL}>
                 <Zap aria-hidden="true" />
                 Sign Up Free
               </Link>
@@ -387,13 +482,16 @@ function LandingPage() {
           <h2 className="text-3xl sm:text-5xl font-bold mb-4 font-display">
             Your First {STARTING_TOKENS} Duels Are Free.
             <br />
-            <span className="text-gold-gradient">Who Will You Challenge?</span>
+            <span className="text-gold-gradient">Who Will Your Wizard Be?</span>
           </h2>
           <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
-            Write a spell no one has thought of yet and see what the AI makes of
-            it.
+            Describe a wizard no one has ever imagined and see what the AI
+            paints.
           </p>
-          <HeroSpellForm className="mx-auto w-full max-w-xl" />
+          <HeroWizardForm
+            id="final-cta-wizard"
+            className="mx-auto w-full max-w-xl"
+          />
           <p className="mt-4">
             <Link
               href="/duels/watch"

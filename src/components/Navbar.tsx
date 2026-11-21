@@ -56,11 +56,12 @@ export function Navbar({
           </span>
         </Link>
       </div>
+      {/* Phones get just the logo and Sign In; Watch and Pricing are in the page. */}
       <div className="flex items-center gap-1 sm:gap-3">
         <Link
           href="/#pricing"
           className={cn(
-            "rounded-lg px-2 sm:px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 inline-flex items-center",
+            "hidden sm:inline-flex rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11 items-center",
             transparent ? "text-white" : "text-foreground",
           )}
         >
@@ -78,19 +79,18 @@ export function Navbar({
         <Link
           href="/duels/watch"
           className={cn(
-            "inline-flex items-center rounded-lg px-2 sm:px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11",
+            "hidden sm:inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4 min-h-11",
             transparent ? "text-white" : "text-foreground",
           )}
         >
-          <span className="sm:hidden">Watch</span>
-          <span className="hidden sm:inline">Watch Duels</span>
+          Watch Duels
         </Link>
         {landing ? (
           <>
             <Link
               href="/sign-in"
               className={cn(
-                "inline-flex min-h-11 items-center rounded-lg px-2 sm:px-3 py-2 text-sm font-semibold hover:underline underline-offset-4",
+                "inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold hover:underline underline-offset-4",
                 transparent ? "text-white" : "text-foreground",
               )}
             >
