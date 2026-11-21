@@ -25,6 +25,7 @@ import type * as duelIntroduction from "../duelIntroduction.js";
 import type * as duelLobby from "../duelLobby.js";
 import type * as duelRatings from "../duelRatings.js";
 import type * as duelRatingsData from "../duelRatingsData.js";
+import type * as duelViews from "../duelViews.js";
 import type * as duels from "../duels.js";
 import type * as generateImage from "../generateImage.js";
 import type * as generateImageWithGemini from "../generateImageWithGemini.js";
@@ -58,9 +59,12 @@ import type * as metadata from "../metadata.js";
 import type * as mocks_mockServices from "../mocks/mockServices.js";
 import type * as moderationEvents from "../moderationEvents.js";
 import type * as narration from "../narration.js";
+import type * as notifications from "../notifications.js";
 import type * as payments from "../payments.js";
+import type * as presence from "../presence.js";
 import type * as processDuelRound from "../processDuelRound.js";
 import type * as promoteUser from "../promoteUser.js";
+import type * as pushDelivery from "../pushDelivery.js";
 import type * as referrals from "../referrals.js";
 import type * as roundMedia from "../roundMedia.js";
 import type * as seasonHelpers from "../seasonHelpers.js";
@@ -105,6 +109,7 @@ declare const fullApi: ApiFromModules<{
   duelLobby: typeof duelLobby;
   duelRatings: typeof duelRatings;
   duelRatingsData: typeof duelRatingsData;
+  duelViews: typeof duelViews;
   duels: typeof duels;
   generateImage: typeof generateImage;
   generateImageWithGemini: typeof generateImageWithGemini;
@@ -138,9 +143,12 @@ declare const fullApi: ApiFromModules<{
   "mocks/mockServices": typeof mocks_mockServices;
   moderationEvents: typeof moderationEvents;
   narration: typeof narration;
+  notifications: typeof notifications;
   payments: typeof payments;
+  presence: typeof presence;
   processDuelRound: typeof processDuelRound;
   promoteUser: typeof promoteUser;
+  pushDelivery: typeof pushDelivery;
   referrals: typeof referrals;
   roundMedia: typeof roundMedia;
   seasonHelpers: typeof seasonHelpers;
@@ -188,4 +196,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
+};

@@ -68,7 +68,12 @@ export default function WatchDuelsPage() {
           ) : (
             <div className="grid gap-6 @3xl:grid-cols-2 @6xl:grid-cols-3">
               {duels.map((duel) => (
-                <DuelListItem key={duel._id} duel={duel} variant="card" />
+                <DuelListItem
+                  key={duel._id}
+                  duel={duel}
+                  variant="card"
+                  showOnlookers
+                />
               ))}
             </div>
           )}

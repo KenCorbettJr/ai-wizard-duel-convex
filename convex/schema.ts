@@ -483,4 +483,67 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_default", ["isDefault"]),
+  // Everything we tell a player about. Each row shows in their in-app inbox,
+  // and is also pushed to any devices they've turned push on for.
+  notifications: defineTable({
+    userId: v.string(), // Clerk subject of the recipient
+    type: v.union(v.literal("YOUR_TURN"), v.literal("DUEL_RESULT")),
+    title: v.string(),
+    body: v.string(),
+    url: v.string(), // In-app path opened when tapped, e.g. /duels/<id>
+    duelId: v.optional(v.id("duels")),
+    // Stops the same event notifying twice (e.g. "turn:<duel>:<round>:<user>")
+    dedupeKey: v.optional(v.string()),
+    createdAt: v.number(),
+    readAt: v.optional(v.number()),
+    pushStatus: v.optional(
+      v.union(
+        v.literal("PENDING"),
+        v.literal("SENT"),
+        v.literal("NO_DEVICES"),
+        v.literal("FAILED"),
+      ),
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_read_at", ["userId", "readAt"])
+    .index("by_dedupe_key", ["dedupeKey"]),
+  // Web Push subscriptions, one per browser/device a player turned push on in.
+  pushSubscriptions: defineTable({
+    userId: v.string(), // Clerk subject
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    userAgent: v.optional(v.string()),
+    createdAt: v.number(),
+    lastSuccessAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
+  // One row per onlooker per duel (duelists aren't counted). viewerId is
+  // "user:<clerk id>" or "anon:<browser id>", as in convex/presence.ts.
+  duelViews: defineTable({
+    duelId: v.id("duels"),
+    viewerId: v.string(),
+    visits: v.number(), // Visits at least VISIT_GAP_MS apart
+    firstViewedAt: v.number(),
+    lastViewedAt: v.number(),
+  }).index("by_duel_and_viewer", ["duelId", "viewerId"]),
+  // Per-duel popularity totals, kept off the duel document so counting a
+  // view doesn't re-run every query that reads the duel.
+  duelViewStats: defineTable({
+    duelId: v.id("duels"),
+    views: v.number(), // Every visit
+    uniqueViewers: v.number(),
+    signedInViewers: v.number(), // Of uniqueViewers, how many had accounts
+    liveViews: v.number(), // Visits while the duel was in progress
+    peakOnlookers: v.number(), // Most onlookers in the arena at once
+    lastViewedAt: v.number(),
+  })
+    .index("by_duel", ["duelId"])
+    .index("by_views", ["views"])
+    .index("by_unique_viewers", ["uniqueViewers"])
+    .index("by_live_views", ["liveViews"])
+    .index("by_peak_onlookers", ["peakOnlookers"])
+    .index("by_last_viewed_at", ["lastViewedAt"]),
 });

@@ -10,6 +10,7 @@ import { ChevronLeft, LogIn, LogOut, Menu, X } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
@@ -206,7 +207,8 @@ export function MobileNav() {
           </div>
           {/* Signed-out visitors get Sign In as a tab instead. */}
           {isSignedIn && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <NotificationBell />
               <Link
                 href="/credits"
                 aria-label="Tokens. Get more"

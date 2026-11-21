@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { LobbyStatusIndicator } from "@/components/LobbyStatusIndicator";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { MobileNav } from "@/components/navigation/MobileNav";
@@ -100,7 +101,10 @@ export function LeftSidebar({ className }: LeftSidebarProps) {
             <div className="flex items-center justify-between">
               <ThemeToggle />
               <Show when="signed-in">
-                <UserButton />
+                <div className="flex items-center gap-2">
+                  <NotificationBell />
+                  <UserButton />
+                </div>
               </Show>
               <Show when="signed-out">
                 <SignInButton>

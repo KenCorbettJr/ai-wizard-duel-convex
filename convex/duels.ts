@@ -6,6 +6,10 @@ import {
   MutationCtx,
 } from "./_generated/server";
 import { scheduleDuelRating } from "./lib/scheduleDuelRating";
+import {
+  scheduleDuelResultNotifications,
+  scheduleTurnReminders,
+} from "./notifications";
 import { rewardReferralsForCompletedDuel } from "./referrals";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
@@ -884,6 +888,9 @@ export const completeRound = internalMutation({
       // A new player's first finished duel unlocks any referral bonus.
       await rewardReferralsForCompletedDuel(ctx, duel.players);
 
+      // Tell players who weren't watching how it ended.
+      await scheduleDuelResultNotifications(ctx, duel._id);
+
       // Rate finished player duels so admins can pick highlights
       if (!duel.isCampaignBattle) {
         await scheduleDuelRating(ctx, duel._id);
@@ -917,6 +924,9 @@ export const completeRound = internalMutation({
         hitPoints: updatedHitPoints,
         needActionsFrom: duel.wizards, // All wizards need to act again
       });
+
+      // Remind anyone who stepped away that it's time to cast.
+      await scheduleTurnReminders(ctx, duel._id, nextRoundNumber);
 
       // For campaign battles, automatically generate actions for campaign opponents
       if (duel.isCampaignBattle && process.env.NODE_ENV !== "test") {
@@ -1386,6 +1396,9 @@ export const startDuelAfterIntroduction = internalMutation({
       currentRound: 1,
       needActionsFrom: duel.wizards, // All wizards need to act
     });
+
+    // Players often wander off while waiting for an opponent to join.
+    await scheduleTurnReminders(ctx, duelId, 1);
 
     // For campaign battles, automatically generate actions for campaign opponents
     if (duel.isCampaignBattle && process.env.NODE_ENV !== "test") {

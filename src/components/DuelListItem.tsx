@@ -6,6 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
 
 import { Badge } from "@/components/ui/badge";
+import { OnlookerBadge } from "@/components/arena/OnlookerCount";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -42,6 +43,8 @@ interface DuelListItemProps {
   variant?: "compact" | "card" | "dashboard";
   showActions?: boolean;
   onCopyShortcode?: (shortcode: string) => void;
+  /** Show a live count of people watching (card variant). */
+  showOnlookers?: boolean;
 }
 
 export function DuelListItem({
@@ -49,6 +52,7 @@ export function DuelListItem({
   variant = "card",
   showActions = true,
   onCopyShortcode,
+  showOnlookers = false,
 }: DuelListItemProps) {
   const { user } = useUser();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -408,7 +412,12 @@ export function DuelListItem({
               <Calendar className="w-4 h-4" />
               <span>{new Date(duel.createdAt).toLocaleDateString()}</span>
             </div>
-            {getStatusBadge()}
+            <div className="flex items-center gap-2">
+              {showOnlookers && (
+                <OnlookerBadge duelId={duel._id as Id<"duels">} />
+              )}
+              {getStatusBadge()}
+            </div>
           </div>
 
           {/* Main content */}

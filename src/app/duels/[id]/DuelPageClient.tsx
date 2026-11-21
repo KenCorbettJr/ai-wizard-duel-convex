@@ -51,6 +51,9 @@ import { DuelScoreboard } from "@/components/DuelScoreboard";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { DuelChat } from "@/components/DuelChat";
+import { EnablePushPrompt } from "@/components/notifications/EnablePushPrompt";
+import { ArenaPresence } from "@/components/arena/ArenaPresence";
+import { OnlookerCount } from "@/components/arena/OnlookerCount";
 import { safeConvexId } from "../../../lib/utils";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import posthog from "posthog-js";
@@ -1106,6 +1109,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           className="max-w-4xl mx-auto"
           style={{ paddingBottom: composerHeight ? composerHeight + 24 : 0 }}
         >
+          {duel.status !== "CANCELLED" && (
+            <ArenaPresence duelId={duel._id} isPlayer={!!isPlayerInDuel} />
+          )}
           <div className="mb-8">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <h1 className="text-3xl font-bold text-gold-gradient font-display">
@@ -1129,6 +1135,16 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   textOnlyMode={duel.textOnlyMode}
                   textOnlyReason={duel.textOnlyReason}
                 />
+                {!duel.isCampaignBattle && duel.status !== "CANCELLED" && (
+                  <OnlookerCount
+                    duelId={duel._id}
+                    viewerId={user?.id}
+                    players={duel.players}
+                    showOpponent={
+                      !!isPlayerInDuel && duel.status === "IN_PROGRESS"
+                    }
+                  />
+                )}
                 {duel.status !== "IN_PROGRESS" &&
                   duel.status !== "WAITING_FOR_PLAYERS" &&
                   duel.status !== "CANCELLED" &&
@@ -1497,6 +1513,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               </CardContent>
             </Card>
           )}
+
+          {isPlayerInDuel &&
+            !duel.isCampaignBattle &&
+            (duel.status === "WAITING_FOR_PLAYERS" ||
+              duel.status === "IN_PROGRESS") && <EnablePushPrompt />}
 
           <WatcherDialog
             rejection={watcherRejection}
