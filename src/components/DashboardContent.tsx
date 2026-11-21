@@ -4,8 +4,8 @@ import { useUser } from "@clerk/nextjs";
 import { LeftSidebar } from "@/components/LeftSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ConvexImage } from "@/components/ConvexImage";
-import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { DuelListItem } from "@/components/DuelListItem";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { useQuery } from "convex/react";
@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { peekPendingWizard } from "@/lib/pendingWizard";
+import { usePortraitStage } from "@/hooks/usePortraitStage";
 import {
   ChevronRight,
   Coins,
@@ -223,12 +224,15 @@ function WizardRow({
     _id: string;
     name: string;
     illustration?: string;
+    illustrationStatus?: "sketching" | "painting" | "failed";
+    illustrationRequestedAt?: number;
     wins?: number;
     losses?: number;
   };
   progress?: CampaignHomeProgress;
   className?: string;
 }) {
+  const portraitStage = usePortraitStage(wizard);
   const summary = getCampaignSummary(progress);
   const record = (wizard.wins ?? 0) + (wizard.losses ?? 0);
   return (
@@ -241,6 +245,10 @@ function WizardRow({
         aria-hidden="true"
         className="relative size-12 shrink-0 overflow-hidden rounded-full border-2 border-border bg-muted"
       >
+        {portraitStage && (
+          // Spinning rune ring while the portrait is being painted.
+          <span className="absolute inset-0 z-10 rounded-full border-2 border-dashed border-gold motion-safe:animate-[rune-spin_6s_linear_infinite]" />
+        )}
         {wizard.illustration ? (
           <ConvexImage
             storageId={wizard.illustration}
@@ -264,9 +272,11 @@ function WizardRow({
           {wizard.name}
         </Link>
         <p className="truncate text-xs text-muted-foreground">
-          {record > 0
-            ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L`
-            : "No duels yet"}
+          {portraitStage
+            ? "Painting portrait…"
+            : record > 0
+              ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L`
+              : "No duels yet"}
         </p>
         {summary.hasRelic && (
           <Link
@@ -306,7 +316,6 @@ export default function DashboardContent({
 }) {
   const { user } = useUser();
   const router = useRouter();
-  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [showMigrationNotification, setShowMigrationNotification] =
     useState(false);
 
@@ -314,7 +323,6 @@ export default function DashboardContent({
     isLoaded,
     isSignedIn,
     isProfileComplete,
-    getProfileCompletionPrompt,
   } = useProfileCompletion();
   const liveWizards = useQuery(
     api.wizards.getUserWizards,
@@ -377,12 +385,9 @@ export default function DashboardContent({
   const winRate =
     totalDuels > 0 ? Math.round((totalWins / totalDuels) * 100) : 0;
 
+  // Creating a wizard doesn't need a username, so nothing gates it.
   const handleCreateWizard = () => {
-    if (isProfileComplete) {
-      router.push("/wizards/create");
-    } else {
-      setShowProfilePrompt(true);
-    }
+    router.push("/wizards/create");
   };
 
   const handleCopyShortcode = async (shortcode: string) => {
@@ -393,8 +398,6 @@ export default function DashboardContent({
       console.error("Failed to copy to clipboard:", error);
     }
   };
-
-  const profilePrompt = getProfileCompletionPrompt("create wizards");
 
   // A visitor who described a wizard on the homepage before signing up goes
   // straight to creating it, even if sign-up dropped them here instead.
@@ -410,7 +413,10 @@ export default function DashboardContent({
       isLoaded &&
       isSignedIn &&
       !isProfileComplete &&
+      // Only nudge players who already have wizards; a brand-new player's
+      // first job is creating one.
       wizards !== undefined &&
+      wizards.length > 0 &&
       user
     ) {
       // Check if user has dismissed the notification before
@@ -509,6 +515,33 @@ export default function DashboardContent({
               />
             )}
 
+            {/* No wizard and no campaign card to point the way: make the
+                first step impossible to miss. */}
+            {wizards && wizards.length === 0 && season === null && (
+              <Card className="mb-6 border-gold/50 bg-linear-to-br from-gold/15 via-card to-primary/10 sm:mb-8">
+                <CardContent className="flex flex-col items-start gap-4 p-5 @xl:flex-row @xl:items-center">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-display text-xl font-bold sm:text-2xl">
+                      Create your first wizard
+                    </h2>
+                    <p className="mt-1 text-muted-foreground">
+                      Describe them however you like. The AI paints their
+                      portrait, and they fight as your champion in every duel.
+                    </p>
+                  </div>
+                  <Button
+                    size="lg"
+                    variant="gold"
+                    onClick={handleCreateWizard}
+                    className="w-full @xl:w-auto"
+                  >
+                    <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Create My Wizard
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {wizards === undefined ? (
               <div className="py-8 text-center">
                 <RuneSpinner size="md" label="Loading…" />
@@ -583,16 +616,6 @@ export default function DashboardContent({
                 />
               </>
             )}
-
-            <ProfileCompletionPrompt
-              open={showProfilePrompt}
-              onOpenChange={setShowProfilePrompt}
-              title={profilePrompt.title}
-              message={profilePrompt.message}
-              actionLabel={profilePrompt.actionLabel}
-              onAction={profilePrompt.onAction}
-              isSignInPrompt={!user}
-            />
 
             <MigrationNotification
               show={showMigrationNotification}

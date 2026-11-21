@@ -1,5 +1,6 @@
 import { SignUp } from "@clerk/nextjs";
 import { ClientOnly } from "@/components/ClientOnly";
+import { PendingWizardNotice } from "@/components/PendingWizardNotice";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,9 +11,14 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
       <ClientOnly>
-        <SignUp />
+        <div className="flex w-full flex-col items-center gap-4">
+          <PendingWizardNotice mode="sign-up" />
+          {/* New players go straight to creating their first wizard. A
+              redirect_url in the query still takes precedence. */}
+          <SignUp fallbackRedirectUrl="/wizards/create" />
+        </div>
       </ClientOnly>
     </div>
   );

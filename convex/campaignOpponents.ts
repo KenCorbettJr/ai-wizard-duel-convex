@@ -216,6 +216,14 @@ export const getCampaignOpponent = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -263,6 +271,14 @@ export const getAllCampaignOpponents = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),

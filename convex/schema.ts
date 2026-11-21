@@ -49,6 +49,15 @@ export default defineSchema({
     illustrationGeneratedAt: v.optional(v.number()),
     plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
     illustrationVersion: v.optional(v.number()),
+    // Portrait job in flight ("sketching" then "painting"), or "failed". Unset when idle.
+    illustrationStatus: v.optional(
+      v.union(
+        v.literal("sketching"),
+        v.literal("painting"),
+        v.literal("failed"),
+      ),
+    ),
+    illustrationRequestedAt: v.optional(v.number()),
     illustrations: v.optional(v.array(v.string())), // Array of Convex storage IDs
     isAIPowered: v.optional(v.boolean()),
     wins: v.optional(v.number()),

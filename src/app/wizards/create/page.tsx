@@ -1,10 +1,10 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import { api } from "../../../../convex/_generated/api";
 import { WizardForm } from "@/components/WizardForm";
-import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
-import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ import {
 export default function CreateWizardPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const wizards = useQuery(api.wizards.getUserWizards, user ? {} : "skip");
+  const isFirstWizard = wizards !== undefined && wizards.length === 0;
+
   // A description written on the homepage before signing up.
   const [pendingDescription] = useState(() =>
     typeof window === "undefined" ? null : peekPendingWizard(),
@@ -28,32 +30,22 @@ export default function CreateWizardPage() {
     if (pendingDescription) clearPendingWizard();
   }, [pendingDescription]);
 
-  const { isProfileComplete, getProfileCompletionPrompt } =
-    useProfileCompletion();
-
-  // Check profile completion when user loads
-  useEffect(() => {
-    if (user && !isProfileComplete) {
-      // Use a timeout to avoid the setState in effect warning
-      const timer = setTimeout(() => setShowProfilePrompt(true), 0);
-      return () => clearTimeout(timer);
-    }
-  }, [user, isProfileComplete]);
+  // No profile gate here: creating a wizard doesn't need a username, and a
+  // brand-new player's first step should be their wizard, not a form.
 
   const handleClose = () => {
     router.push("/wizards");
   };
 
-  const handleSuccess = () => {
-    router.push("/wizards");
+  // Go to the new wizard's page to watch their portrait being painted.
+  const handleSuccess = (wizardId?: string) => {
+    router.push(wizardId ? `/wizards/${wizardId}` : "/wizards");
   };
-
-  const profilePrompt = getProfileCompletionPrompt("create wizards");
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (!user && isLoaded) {
-      router.push("/sign-in?redirect=/wizards/create");
+      router.push("/sign-in?redirect_url=/wizards/create");
     }
   }, [user, isLoaded, router]);
 
@@ -73,23 +65,29 @@ export default function CreateWizardPage() {
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Link href="/wizards">
-                <ArrowLeft className="h-4 w-4" />
-                Back to My Wizards
-              </Link>
-            </Button>
-          </div>
+          {!isFirstWizard && (
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Link href="/wizards">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to My Wizards
+                </Link>
+              </Button>
+            </div>
+          )}
 
           <PageHeader
-            title="Create New Wizard"
-            description="Design your magical champion for epic duels"
+            title={isFirstWizard ? "Create Your First Wizard" : "Create New Wizard"}
+            description={
+              isFirstWizard
+                ? "Describe them however you like. The AI paints their portrait, and they fight as your champion in every duel."
+                : "Design your magical champion for epic duels"
+            }
             icon={<Wand2 className="h-6 w-6" aria-hidden="true" />}
           />
         </div>
@@ -113,16 +111,6 @@ export default function CreateWizardPage() {
             inModal={false}
           />
         </div>
-
-        <ProfileCompletionPrompt
-          open={showProfilePrompt}
-          onOpenChange={setShowProfilePrompt}
-          title={profilePrompt.title}
-          message={profilePrompt.message}
-          actionLabel={profilePrompt.actionLabel}
-          onAction={profilePrompt.onAction}
-          isSignInPrompt={false}
-        />
       </div>
     </div>
   );

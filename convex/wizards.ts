@@ -4,7 +4,8 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { activePortraitStage } from "./lib/portrait";
 import { api } from "./_generated/api";
 import { chargeWizardImageToken } from "./lib/wizardImageTokens";
 import { Wizard } from "@/types/wizard";
@@ -26,6 +27,14 @@ export const getUserWizards = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -100,6 +109,14 @@ export const getWizard = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -200,6 +217,10 @@ export const createWizard = internalMutation({
           userId: identity.subject,
         },
       );
+      await ctx.db.patch(wizardId, {
+        illustrationStatus: "sketching",
+        illustrationRequestedAt: Date.now(),
+      });
     }
 
     return wizardId;
@@ -295,7 +316,24 @@ export const updateWizardInternal = internalMutation({
       illustrationGeneratedAt: updates.illustration
         ? Date.now()
         : wizard.illustrationGeneratedAt,
+      // A stored illustration means the portrait job is done.
+      ...(updates.illustration ? { illustrationStatus: undefined } : {}),
     });
+  },
+});
+
+// Progress reports from the portrait job (generateWizardIllustration).
+export const setIllustrationStatus = internalMutation({
+  args: {
+    wizardId: v.id("wizards"),
+    status: v.union(v.literal("painting"), v.literal("failed")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { wizardId, status }) => {
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard) return null;
+    await ctx.db.patch(wizardId, { illustrationStatus: status });
+    return null;
   },
 });
 
@@ -325,6 +363,10 @@ export const scheduleWizardIllustrationInternal = internalMutation({
           description,
         },
       );
+      await ctx.db.patch(wizardId, {
+        illustrationStatus: "sketching",
+        illustrationRequestedAt: Date.now(),
+      });
     }
   },
 });
@@ -397,6 +439,13 @@ export const regenerateIllustration = mutation({
       );
     }
 
+    // Don't start (or charge for) a second job while one is still painting.
+    if (activePortraitStage(wizard, Date.now())) {
+      throw new ConvexError(
+        "This wizard's portrait is still being painted. Give it a moment.",
+      );
+    }
+
     // The first illustration is free. Redoing one that already exists costs a
     // token. Throws (rolling back) if the player has none.
     const tokenCharged = wizard.illustration
@@ -423,6 +472,10 @@ export const regenerateIllustration = mutation({
           refundTokenOnFailure: tokenCharged,
         },
       );
+      await ctx.db.patch(wizardId, {
+        illustrationStatus: "sketching",
+        illustrationRequestedAt: Date.now(),
+      });
     }
 
     return { success: true };
@@ -556,6 +609,14 @@ export const getWizardLeaderboard = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -704,6 +765,14 @@ export const getWizardWithOwner = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -781,6 +850,14 @@ export const getAllWizardsWithOwners = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -843,6 +920,14 @@ export const getWizardLeaderboardByPeriod = query({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),
@@ -1061,6 +1146,14 @@ export const getWizardInternal = internalQuery({
       illustrationGeneratedAt: v.optional(v.number()),
       plainIllustration: v.optional(v.string()), // Convex storage ID: wizard on a plain background (reference for scene generation)
       illustrationVersion: v.optional(v.number()),
+      illustrationStatus: v.optional(
+        v.union(
+          v.literal("sketching"),
+          v.literal("painting"),
+          v.literal("failed"),
+        ),
+      ),
+      illustrationRequestedAt: v.optional(v.number()),
       illustrations: v.optional(v.array(v.string())),
       isAIPowered: v.optional(v.boolean()),
       wins: v.optional(v.number()),

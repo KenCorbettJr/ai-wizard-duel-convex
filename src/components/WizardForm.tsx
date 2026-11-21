@@ -38,7 +38,8 @@ interface WizardFormProps {
   initialData?: WizardFormData;
   wizardId?: Id<"wizards">;
   onClose: () => void;
-  onSuccess: () => void;
+  /** Called after a save. Creates pass the new wizard's id. */
+  onSuccess: (wizardId?: Id<"wizards">) => void;
   inModal?: boolean;
 }
 
@@ -97,10 +98,13 @@ export function WizardForm({
       }
 
       posthog.capture(mode === "create" ? "wizard_created" : "wizard_updated");
-      onSuccess();
-      if (mode === "create") {
-        onClose();
-      }
+      // The caller decides where to go next (create → the new wizard's page,
+      // where the portrait paints in).
+      onSuccess(
+        mode === "create" && "wizardId" in result
+          ? (result.wizardId as Id<"wizards">)
+          : undefined,
+      );
     } catch (error) {
       console.error(
         `Error ${mode === "create" ? "creating" : "updating"} wizard:`,
@@ -121,6 +125,8 @@ export function WizardForm({
     try {
       await regenerateIllustration({ wizardId });
       posthog.capture("wizard_illustration_regenerated");
+      // Back to the wizard's page, where the new portrait paints in.
+      onSuccess();
     } catch (error) {
       console.error("Error regenerating illustration:", error);
       toast.error(

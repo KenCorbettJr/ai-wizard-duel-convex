@@ -1,5 +1,6 @@
 import { SignIn } from "@clerk/nextjs";
 import { ClientOnly } from "@/components/ClientOnly";
+import { PendingWizardNotice } from "@/components/PendingWizardNotice";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,9 +11,12 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
       <ClientOnly>
-        <SignIn />
+        <div className="flex w-full flex-col items-center gap-4">
+          <PendingWizardNotice mode="sign-in" />
+          <SignIn />
+        </div>
       </ClientOnly>
     </div>
   );

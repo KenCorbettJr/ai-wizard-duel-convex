@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Heart, Award, Scroll, Swords } from "lucide-react";
 import { Crown } from "@/components/ui/crown-icon";
 import { ConvexImage } from "@/components/ConvexImage";
+import { PortraitPainting } from "@/components/PortraitPainting";
+import { usePortraitStage } from "@/hooks/usePortraitStage";
 import { UserIdDisplay } from "@/components/UserIdDisplay";
 import { Id } from "../../convex/_generated/dataModel";
 import { memo } from "react";
@@ -18,6 +20,8 @@ interface WizardCardProps {
     name: string;
     description: string;
     illustration?: string; // This is a storage ID string, not Id<"_storage">
+    illustrationStatus?: "sketching" | "painting" | "failed";
+    illustrationRequestedAt?: number;
     ownerUserId?: string;
     ownerDisplayName?: string;
     hasCompletionRelic?: boolean;
@@ -45,6 +49,8 @@ export const WizardCard = memo(function WizardCard({
   showOwner = false,
   showActions = false,
 }: WizardCardProps) {
+  const portraitStage = usePortraitStage(wizard);
+
   const getBorderClasses = () => {
     if (isWinner) {
       return "border-4 border-warning/40 ring-4 ring-warning/30 shadow-warning/20";
@@ -69,7 +75,16 @@ export const WizardCard = memo(function WizardCard({
           className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <div className="relative">
-          {wizard.illustration && (
+          {portraitStage ? (
+            <div className="h-96 w-full overflow-hidden">
+              <PortraitPainting
+                stage={portraitStage}
+                name={wizard.name}
+                backdropStorageId={wizard.illustration}
+                compact
+              />
+            </div>
+          ) : wizard.illustration && (
             <div className="h-96 w-full overflow-hidden">
               <ConvexImage
                 storageId={wizard.illustration}

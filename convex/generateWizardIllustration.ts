@@ -57,6 +57,11 @@ export const generateWizardIllustration = action({
       const plainStorageId = await ctx.storage.store(
         new Blob([plainBuffer], { type: "image/webp" }),
       );
+      // Let the UI move from "sketching" to "painting the scene".
+      await ctx.runMutation(internal.wizards.setIllustrationStatus, {
+        wizardId,
+        status: "painting",
+      });
 
       // Step 2: the same wizard placed into a themed scene for display.
       let illustrationStorageId: string = plainStorageId;
@@ -105,6 +110,15 @@ export const generateWizardIllustration = action({
         `Error generating illustration for wizard ${wizardId}:`,
         error,
       );
+
+      try {
+        await ctx.runMutation(internal.wizards.setIllustrationStatus, {
+          wizardId,
+          status: "failed",
+        });
+      } catch (statusError) {
+        console.error("Failed to mark illustration as failed:", statusError);
+      }
 
       if (refundTokenOnFailure && userId) {
         try {

@@ -1,7 +1,9 @@
 "use client";
 
 import { use, useState } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "sonner";
 import { api } from "../../../../convex/_generated/api";
 import { ConvexImage } from "@/components/ConvexImage";
 import { EditWizardForm } from "@/components/EditWizardForm";
@@ -10,7 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
-import { WizardConjuringAnimation } from "@/components/WizardConjuringAnimation";
+import { PortraitPainting } from "@/components/PortraitPainting";
+import { usePortraitStage } from "@/hooks/usePortraitStage";
 import { WizardStatistics } from "@/components/WizardStatistics";
 import { TrophyHall } from "@/components/TrophyHall";
 import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
@@ -25,12 +28,13 @@ import {
   Edit,
   Swords,
   Scroll,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { safeConvexId } from "../../../lib/utils";
+import { cn, safeConvexId } from "../../../lib/utils";
 
 interface WizardPageClientProps {
   params: Promise<{
@@ -44,8 +48,6 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
   const { id } = use(params);
 
   const [isEditing, setIsEditing] = useState(false);
-  // Wall-clock "now" captured on mount; used to decide if illustration is still generating
-  const [mountedAt] = useState(() => Date.now());
 
   // Validate the ID format first
   const wizardId = safeConvexId<"wizards">(id);
@@ -59,6 +61,32 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
     api.duels.getWizardDuelsSafe,
     wizardId ? { wizardId } : "skip",
   );
+
+  // Portrait job in flight, if any. Once we've watched one run, the finished
+  // portrait gets a reveal animation instead of just popping in.
+  const portraitStage = usePortraitStage(wizard);
+  const [sawPainting, setSawPainting] = useState(false);
+  if (portraitStage && !sawPainting) setSawPainting(true);
+
+  const regenerateIllustration = useMutation(
+    api.wizards.regenerateIllustration,
+  );
+  const [retrying, setRetrying] = useState(false);
+  const retryPortrait = async () => {
+    if (!wizardId) return;
+    setRetrying(true);
+    try {
+      await regenerateIllustration({ wizardId });
+    } catch (error) {
+      toast.error(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : "Couldn't start the portrait. Please try again.",
+      );
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   if (
     (wizard === undefined || wizardDuels === undefined) &&
@@ -185,8 +213,23 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
           </div>
         )}
 
-        {wizard.illustration || wizard.illustrationURL ? (
-          <div className="w-full h-full relative overflow-hidden z-10">
+        {portraitStage ? (
+          <div className="relative z-10 h-full w-full">
+            <PortraitPainting
+              stage={portraitStage}
+              name={wizard.name}
+              backdropStorageId={wizard.illustration}
+            />
+          </div>
+        ) : wizard.illustration || wizard.illustrationURL ? (
+          <div
+            key={wizard.illustration ?? wizard.illustrationURL}
+            className={cn(
+              "w-full h-full relative overflow-hidden z-10",
+              sawPainting &&
+                "animate-in fade-in zoom-in-95 duration-1000 motion-reduce:animate-none",
+            )}
+          >
             {wizard.illustration ? (
               <ConvexImage
                 storageId={wizard.illustration}
@@ -207,16 +250,39 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
             {/* Subtle gradient overlay for better text readability */}
             <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-20" />
           </div>
-        ) : mountedAt - wizard._creationTime < 5 * 60 * 1000 ? (
-          <WizardConjuringAnimation />
         ) : (
           <div className="w-full h-full bg-arcane flex items-center justify-center">
             <Zap className="w-24 h-24 text-white" />
           </div>
         )}
 
-        {/* Wizard name overlay */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-30">
+        {/* The last portrait job failed: tell the owner and offer a retry. */}
+        {!portraitStage && isOwner && wizard.illustrationStatus === "failed" && (
+          <div
+            role="alert"
+            className="absolute inset-x-4 top-4 z-40 mx-auto flex max-w-xl flex-col items-start gap-3 rounded-xl border border-destructive/40 bg-card/95 p-4 shadow-xl backdrop-blur-sm sm:flex-row sm:items-center"
+          >
+            <p className="flex-1 text-sm">
+              <strong>The portrait didn&apos;t come out.</strong> Any token you
+              spent on it was refunded.
+            </p>
+            <Button size="sm" onClick={retryPortrait} disabled={retrying}>
+              <RefreshCw
+                className={cn("mr-2 h-4 w-4", retrying && "animate-spin")}
+                aria-hidden="true"
+              />
+              {wizard.illustration ? "Try again (1 token)" : "Try again"}
+            </Button>
+          </div>
+        )}
+
+        {/* Wizard name overlay (the painting animation already names them) */}
+        <div
+          className={cn(
+            "absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-30",
+            portraitStage && "hidden",
+          )}
+        >
           <div className="flex items-center justify-center gap-3 mb-2">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-2xl">
               {wizard.name}

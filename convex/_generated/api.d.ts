@@ -43,6 +43,7 @@ import type * as lib_duelTokens from "../lib/duelTokens.js";
 import type * as lib_imageProvider from "../lib/imageProvider.js";
 import type * as lib_narrationScript from "../lib/narrationScript.js";
 import type * as lib_narrationValidator from "../lib/narrationValidator.js";
+import type * as lib_portrait from "../lib/portrait.js";
 import type * as lib_posthog from "../lib/posthog.js";
 import type * as lib_pricing from "../lib/pricing.js";
 import type * as lib_recordAIUsage from "../lib/recordAIUsage.js";
@@ -121,6 +122,7 @@ declare const fullApi: ApiFromModules<{
   "lib/imageProvider": typeof lib_imageProvider;
   "lib/narrationScript": typeof lib_narrationScript;
   "lib/narrationValidator": typeof lib_narrationValidator;
+  "lib/portrait": typeof lib_portrait;
   "lib/posthog": typeof lib_posthog;
   "lib/pricing": typeof lib_pricing;
   "lib/recordAIUsage": typeof lib_recordAIUsage;
