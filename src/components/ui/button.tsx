@@ -11,13 +11,13 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-arcane text-primary-foreground shadow-md shadow-primary/30 ring-1 ring-inset ring-white/15 hover:brightness-110 hover:shadow-lg hover:shadow-primary/40",
-        gold: "bg-linear-to-b from-gold to-gold/75 text-gold-foreground shadow-md shadow-gold/30 ring-1 ring-inset ring-white/30 hover:brightness-105 hover:shadow-lg hover:shadow-gold/40",
+        gold: "bg-linear-to-b from-[color-mix(in_oklab,var(--gold)_75%,white)] via-gold to-[color-mix(in_oklab,var(--gold)_82%,black)] text-gold-foreground font-bold shadow-lg shadow-gold/40 ring-1 ring-inset ring-white/50 [text-shadow:0_1px_0_rgb(255_255_255/0.35)] hover:-translate-y-0.5 hover:brightness-110 hover:shadow-xl hover:shadow-gold/50",
         success:
           "bg-success text-success-foreground shadow-xs hover:bg-success/90",
         destructive:
           "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/30",
         outline:
-          "border border-primary/30 bg-background/60 shadow-xs hover:border-primary/60 hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:hover:bg-input/50",
+          "border border-primary/35 bg-card shadow-sm hover:border-primary/60 hover:bg-accent hover:text-accent-foreground dark:border-primary/40 dark:bg-accent/70 dark:hover:bg-accent",
         secondary:
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost:

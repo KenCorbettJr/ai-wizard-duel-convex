@@ -9,11 +9,14 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/85 dark:bg-primary/80",
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/85",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        victory:
+          "border-gold/60 bg-linear-to-b from-gold to-[color-mix(in_oklab,var(--gold)_80%,black)] text-gold-foreground shadow-sm shadow-gold/30",
+        defeat: "border-destructive/40 bg-destructive/15 text-destructive",
         outline: "text-foreground border-primary/40",
         success: "border-success/40 bg-success/15 text-success",
         warning: "border-warning/50 bg-warning/15 text-warning",

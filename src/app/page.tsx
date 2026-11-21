@@ -15,16 +15,8 @@ import DuelExample from "@/components/DuelExample";
 import RoundReplay from "@/components/RoundReplay";
 import TopWizards from "@/components/TopWizards";
 import HighlightedDuels from "@/components/HighlightedDuels";
-import {
-  Eye,
-  Sparkles,
-  Trophy,
-  Zap,
-  Coins,
-  Crown,
-  Laugh,
-  Share2,
-} from "lucide-react";
+import CampaignShowcase from "@/components/CampaignShowcase";
+import { Eye, Zap, Coins, Laugh, Share2 } from "lucide-react";
 import type { Metadata } from "next";
 import DashboardContent from "@/components/DashboardContent";
 
@@ -78,7 +70,7 @@ function LandingPage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="text-lg bg-white/10 text-white border-white/40 hover:bg-white/20 hover:text-white"
+                className="text-lg border-white/30 bg-[oklch(0.22_0.07_290)] text-white shadow-lg shadow-black/40 hover:border-white/50 hover:bg-[oklch(0.28_0.09_291)] hover:text-white dark:bg-[oklch(0.22_0.07_290)] dark:hover:bg-[oklch(0.28_0.09_291)]"
               >
                 <Link href="/duels/watch">
                   <Eye aria-hidden="true" />
@@ -196,37 +188,7 @@ function LandingPage() {
       <TopWizards />
 
       {/* Campaign */}
-      <section className="bg-secondary/30 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-10">
-            <h2 className="text-3xl font-bold mb-4 font-display">
-              No Friends Online? Fight Ten AI Wizards
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Climb from gentle apprentices to archmages, each with their own
-              personality and spell style. Retry any lost fight; every battle
-              costs one token.
-            </p>
-          </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
-            <FeatureCard
-              icon={Sparkles}
-              title="Pip the Apprentice"
-              description="“I read the manual, I swear!” Nervous and fumbling, he may be his own worst enemy."
-            />
-            <FeatureCard
-              icon={Trophy}
-              title="Shadowweaver Vex"
-              description="“Your shadow already works for me.” Mysterious and dangerous. Distrust any spell that looks too easy."
-            />
-            <FeatureCard
-              icon={Crown}
-              title="Archmage Eternus"
-              description="“I was old when your kingdom was young.” Beat him to earn a relic that boosts your luck in every duel."
-            />
-          </div>
-        </div>
-      </section>
+      <CampaignShowcase />
 
       {/* FAQ */}
       <section className="bg-background py-16">

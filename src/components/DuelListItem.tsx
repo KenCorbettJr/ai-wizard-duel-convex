@@ -125,12 +125,8 @@ export function DuelListItem({
         if (duel.status === "COMPLETED" && (userWon || userLost)) {
           return (
             <Badge
-              variant={userWon ? "default" : "secondary"}
-              className={
-                userWon
-                  ? "bg-success/15 text-success hover:bg-success/20 flex items-center gap-1"
-                  : "bg-destructive/15 text-destructive hover:bg-destructive/20 flex items-center gap-1"
-              }
+              variant={userWon ? "victory" : "defeat"}
+              className="flex items-center gap-1"
             >
               {userWon ? (
                 <>

@@ -66,7 +66,8 @@ export default function DesignSystemPage() {
             <Badge>Default</Badge>
             <Badge variant="secondary">Secondary</Badge>
             <Badge variant="outline">Outline</Badge>
-            <Badge variant="success">Victory</Badge>
+            <Badge variant="victory">Victory</Badge>
+            <Badge variant="defeat">Defeat</Badge>
             <Badge variant="warning">Pending</Badge>
             <Badge variant="info">Spectating</Badge>
             <Badge variant="destructive">Defeat</Badge>

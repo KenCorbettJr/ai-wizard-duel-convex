@@ -149,9 +149,27 @@ function getCameraShot(duelId: string, roundNumber: number): string {
   return order[Math.max(0, roundNumber - 1) % order.length];
 }
 
-// Generate a luck number (1-20, like a D20)
-function generateLuck(): number {
-  return Math.floor(Math.random() * 20) + 1;
+// Generate a luck number (1-20, like a D20), shifted by any luck bonus and
+// clamped back into 1-20.
+function generateLuck(bonus = 0): number {
+  const roll = Math.floor(Math.random() * 20) + 1;
+  return Math.max(1, Math.min(20, roll + bonus));
+}
+
+const BASE_LUCK = 10;
+
+// Campaign opponents carry a fixed luck modifier (-2 apprentices, +2
+// archmages). Player wizards get the campaign relic bonus from every season
+// they've completed.
+async function getLuckBonus(
+  ctx: ActionCtx,
+  wizard: Doc<"wizards">,
+): Promise<number> {
+  if (wizard.isCampaignOpponent) return wizard.luckModifier ?? 0;
+  const effective = await ctx.runQuery(api.campaigns.getWizardEffectiveLuck, {
+    wizardId: wizard._id,
+  });
+  return effective - BASE_LUCK;
 }
 
 // Validate and sanitize AI battle response
@@ -424,9 +442,13 @@ async function generateBattleRound(
   const wizard1Action = round.spells?.[wizard1ID]?.description || "No action";
   const wizard2Action = round.spells?.[wizard2ID]?.description || "No action";
 
-  // Generate luck for each wizard
-  const wizard1Luck = generateLuck();
-  const wizard2Luck = generateLuck();
+  // Generate luck for each wizard, including relic and opponent modifiers
+  const [wizard1Bonus, wizard2Bonus] = await Promise.all([
+    getLuckBonus(ctx, wizard1),
+    getLuckBonus(ctx, wizard2),
+  ]);
+  const wizard1Luck = generateLuck(wizard1Bonus);
+  const wizard2Luck = generateLuck(wizard2Bonus);
 
   // Determine action order randomly
   const firstWizard = Math.random() < 0.5 ? 1 : 2;

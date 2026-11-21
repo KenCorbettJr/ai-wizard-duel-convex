@@ -173,13 +173,13 @@ export function CampaignBattleHistory({
 
                   <div className="flex items-center gap-2">
                     {battle.status === "WON" && (
-                      <Badge className="bg-success/15 text-success">
+                      <Badge variant="victory">
                         <Trophy className="h-3 w-3 mr-1" />
                         Victory
                       </Badge>
                     )}
                     {battle.status === "LOST" && (
-                      <Badge className="bg-destructive/15 text-destructive">
+                      <Badge variant="defeat">
                         <X className="h-3 w-3 mr-1" />
                         Defeat
                       </Badge>
