@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as accountDeletion from "../accountDeletion.js";
 import type * as admin from "../admin.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as ai_getAI from "../ai/getAI.js";
@@ -37,6 +38,7 @@ import type * as imageGenerationConfig from "../imageGenerationConfig.js";
 import type * as lib_aiPricing from "../lib/aiPricing.js";
 import type * as lib_bflImage from "../lib/bflImage.js";
 import type * as lib_contentStandards from "../lib/contentStandards.js";
+import type * as lib_departed from "../lib/departed.js";
 import type * as lib_duelChat from "../lib/duelChat.js";
 import type * as lib_duelRating from "../lib/duelRating.js";
 import type * as lib_duelTokens from "../lib/duelTokens.js";
@@ -91,6 +93,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  accountDeletion: typeof accountDeletion;
   admin: typeof admin;
   adminUsers: typeof adminUsers;
   "ai/getAI": typeof ai_getAI;
@@ -120,6 +123,7 @@ declare const fullApi: ApiFromModules<{
   "lib/aiPricing": typeof lib_aiPricing;
   "lib/bflImage": typeof lib_bflImage;
   "lib/contentStandards": typeof lib_contentStandards;
+  "lib/departed": typeof lib_departed;
   "lib/duelChat": typeof lib_duelChat;
   "lib/duelRating": typeof lib_duelRating;
   "lib/duelTokens": typeof lib_duelTokens;

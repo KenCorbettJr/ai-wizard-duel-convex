@@ -35,6 +35,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { cn, safeConvexId } from "../../../lib/utils";
+import { DEPARTED_OWNER } from "../../../../convex/lib/departed";
 
 interface WizardPageClientProps {
   params: Promise<{
@@ -315,6 +316,11 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
             {wizard.description}
           </p>
+          {wizard.owner === DEPARTED_OWNER && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              This wizard&apos;s creator has left the arena.
+            </p>
+          )}
           {wizard.ownerUserId && (
             <div className="mt-4 flex justify-center">
               <div className="text-sm text-muted-foreground">

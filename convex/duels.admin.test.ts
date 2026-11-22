@@ -44,7 +44,9 @@ describe("Duel Admin Functions", () => {
     );
 
     // Cancel one duel
-    await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
+    await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
+      duelId: duel2Id,
+    });
 
     // Test filtering by status
     const waitingDuels = await withSuperAdminAuth(t).query(
@@ -128,7 +130,9 @@ describe("Duel Admin Functions", () => {
     });
 
     // Cancel one duel
-    await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
+    await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
+      duelId: duel2Id,
+    });
 
     // Get analytics
     const analytics = await withSuperAdminAuth(t).query(
@@ -199,7 +203,9 @@ describe("Duel Admin Functions", () => {
         wizards: [wizard1Id, wizard2Id],
       }
     );
-    await t.mutation(api.duels.cancelDuel, { duelId: completedDuelId });
+    await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
+      duelId: completedDuelId,
+    });
 
     // Get monitoring data
     const monitoring = await withSuperAdminAuth(t).query(
@@ -550,7 +556,9 @@ describe("Duel Admin Functions", () => {
     await t.mutation(api.duels.startDuel, { duelId: duel1Id });
 
     // Cancel one duel
-    await t.mutation(api.duels.cancelDuel, { duelId: duel2Id });
+    await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
+      duelId: duel2Id,
+    });
 
     // Leave one waiting
 

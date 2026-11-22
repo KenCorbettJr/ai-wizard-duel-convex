@@ -168,7 +168,7 @@ describe("Duel tokens", () => {
     expect(duel?.tokensCharged ?? []).toEqual([]);
   });
 
-  it("does not refund when a duel in progress is cancelled by a player", async () => {
+  it("won't let a player cancel a duel in progress, so no tokens move", async () => {
     const aliceWizard = await makeWizard("alice");
     const bobWizard = await makeWizard("bob");
     await ensureTestUser(t, "alice", 5);
@@ -184,7 +184,9 @@ describe("Duel tokens", () => {
     });
     await t.run(async (ctx) => ctx.db.patch(duelId, { status: "IN_PROGRESS" }));
 
-    await withAuth(t, "alice").mutation(api.duels.cancelDuel, { duelId });
+    await expect(
+      withAuth(t, "alice").mutation(api.duels.cancelDuel, { duelId }),
+    ).rejects.toThrow(/Forfeit it instead/);
 
     expect(await tokens("alice")).toBe(4);
     expect(await tokens("bob")).toBe(4);

@@ -110,10 +110,10 @@ We may update these Terms. If a change is significant, we'll tell you in the Ser
 
 ## 12. Deleting your account
 
-You can delete your account at any time in your profile settings. When you do:
+You can delete your account at any time on your Edit Profile page. Deletion happens right away and can't be undone. When you do:
 
 - Your account, email, profile, token balance, notifications and private data are deleted. **Unused tokens are lost and aren't refunded.**
-- Duels you're still playing end as a forfeit.
+- Duels you're still playing against other people end as a forfeit, and your opponent wins.
 - Wizards you only used in campaign battles, or never dueled with, are deleted along with those battles.
 - **Duels you played against other people stay**, because they're part of the other players' history too. They are no longer linked to you. Your username and profile are removed, your wizard appears as a departed wizard, and your chat messages in those duels are deleted. Your spells stay, so the duel still makes sense in the replay.
 

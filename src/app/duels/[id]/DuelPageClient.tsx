@@ -54,6 +54,7 @@ import { DuelChat } from "@/components/DuelChat";
 import { EnablePushPrompt } from "@/components/notifications/EnablePushPrompt";
 import { ArenaPresence } from "@/components/arena/ArenaPresence";
 import { OnlookerCount } from "@/components/arena/OnlookerCount";
+import { ForfeitDuelButton } from "@/components/ForfeitDuelButton";
 import { safeConvexId } from "../../../lib/utils";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import posthog from "posthog-js";
@@ -297,7 +298,10 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     animating.round === conclusionRound?.roundNumber;
 
   const winnerGateOpen =
-    (conclusionRevealed || !(hasConclusion || justCompleted)) &&
+    // A forfeited duel has no conclusion round to wait for.
+    (conclusionRevealed ||
+      !!duel?.forfeitedBy ||
+      !(hasConclusion || justCompleted)) &&
     caughtUp &&
     !revealPending &&
     !conclusionPlaying;
@@ -994,7 +998,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     : winnerIsAI
                       ? "holds the line for the campaign!"
                       : "defeats the AI opponent!"
-                  : "emerges victorious!"}
+                  : duel.forfeitedBy
+                    ? "wins by forfeit!"
+                    : "emerges victorious!"}
               </>
             ) : (
               "The duel ends in an honorable draw!"
@@ -1002,7 +1008,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           </CardDescription>
           {duel.winners.length === 1 && (
             <p className="text-center text-sm text-foreground/80">
-              After {lastResolvedNumber} round
+              {duel.forfeitedBy ? "Forfeited after" : "After"}{" "}
+              {lastResolvedNumber} round
               {lastResolvedNumber === 1 ? "" : "s"}. Final standing:{" "}
               {duel.wizards
                 .slice(0, 2)
@@ -1520,6 +1527,17 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             !duel.isCampaignBattle &&
             (duel.status === "WAITING_FOR_PLAYERS" ||
               duel.status === "IN_PROGRESS") && <EnablePushPrompt />}
+
+          {isPlayerInDuel && userWizardId && duel.status === "IN_PROGRESS" && (
+            <ForfeitDuelButton
+              duelId={duel._id}
+              isCampaignBattle={duel.isCampaignBattle}
+              opponentName={
+                [wizard1, wizard2].find((w) => w && w._id !== userWizardId)
+                  ?.name
+              }
+            />
+          )}
 
           <WatcherDialog
             rejection={watcherRejection}

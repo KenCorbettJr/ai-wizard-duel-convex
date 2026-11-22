@@ -95,11 +95,11 @@ We don't sell your personal information, and we don't share it for advertising.
 
 ## 6. How long we keep it
 
-- **Account information:** while your account is open. You can delete your account in your profile settings, and we finish deleting it within [30] days, including from our sign-in provider.
+- **Account information:** while your account is open. You can delete your account on your Edit Profile page. Your sign-in account is deleted right away, and the rest of your data within minutes. Copies in our backups are removed as those backups expire.
 - **Duels with other players:** a duel belongs to everyone who played in it, so it stays after one player deletes their account, but it's no longer linked to them. Their username and profile are removed, their wizard is shown as a departed wizard, and their chat messages are deleted. Their spells, and the narration and illustrations made from them, stay so the other player's duel still makes sense. If any of it contains personal information, ask us and we'll remove it.
 - **Campaign battles and unused wizards:** deleted along with the account.
-- **Moderation records:** up to [12 months], or longer if needed for an ongoing safety issue.
-- **Purchase records:** as long as tax and accounting law requires.
+- **Moderation records:** up to [12 months], or longer if needed for an ongoing safety issue. They're deleted along with the account.
+- **Purchase records:** as long as tax and accounting law requires. If you delete your account, we keep the record of each purchase but remove its link to you.
 - **Analytics:** according to our analytics settings, currently [X months].
 - **Push subscriptions:** until you turn notifications off, or the device stops accepting them.
 
@@ -108,7 +108,7 @@ We don't sell your personal information, and we don't share it for advertising.
 - **Edit** your username, display name and wizards in the app.
 - **Turn off notifications** in the app or in your browser.
 - **Control cookies** in your browser.
-- **Delete your account** in your profile settings (see Section 6 for what happens to duels with other players).
+- **Delete your account** on your Edit Profile page (see Section 6 for what happens to duels with other players).
 - **Access, correct or download** your information: email privacy@ai-wizard-duel.com.
 
 Depending on where you live (for example California, the EU or the UK), you may have the right to know what we hold about you, to get a copy, to correct or delete it, to object to or restrict some uses, to withdraw consent, and to complain to your local data protection authority. We won't treat you differently for using these rights. We'll confirm your identity before acting on a request.

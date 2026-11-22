@@ -41,7 +41,7 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),
   wizards: defineTable({
-    owner: v.string(), // User ID from Clerk or "campaign" for AI opponents
+    owner: v.string(), // User ID from Clerk, "campaign" for AI opponents, or "departed" once the owner deleted their account
     name: v.string(),
     description: v.string(),
     illustrationURL: v.optional(v.string()),
@@ -140,6 +140,7 @@ export default defineSchema({
     isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels
     rematchDuelId: v.optional(v.id("duels")), // Set when a player requests a rematch of this duel
     chatEnabled: v.optional(v.boolean()), // Duelist chat. Missing means on; a duelist can switch it off mid-duel
+    forfeitedBy: v.optional(v.id("wizards")), // Set when the duel ended because this wizard's player forfeited
   })
     .index("by_status", ["status"])
     .index("by_player", ["players"])
@@ -217,7 +218,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_duel", ["duelId"])
-    .index("by_round_and_user", ["roundId", "userId"]),
+    .index("by_round_and_user", ["roundId", "userId"])
+    .index("by_user", ["userId"]),
   duelLobby: defineTable({
     userId: v.string(), // Clerk user ID
     wizardId: v.id("wizards"),
@@ -528,7 +530,9 @@ export default defineSchema({
     visits: v.number(), // Visits at least VISIT_GAP_MS apart
     firstViewedAt: v.number(),
     lastViewedAt: v.number(),
-  }).index("by_duel_and_viewer", ["duelId", "viewerId"]),
+  })
+    .index("by_duel_and_viewer", ["duelId", "viewerId"])
+    .index("by_viewer", ["viewerId"]),
   // Per-duel popularity totals, kept off the duel document so counting a
   // view doesn't re-run every query that reads the duel.
   duelViewStats: defineTable({

@@ -10,6 +10,7 @@ import { api } from "./_generated/api";
 import { chargeWizardImageToken } from "./lib/wizardImageTokens";
 import { Wizard } from "@/types/wizard";
 import { computeWinRate, recordWizardResult } from "./lib/wizardStats";
+import { DEPARTED_OWNER } from "./lib/departed";
 import type { Id } from "./_generated/dataModel";
 
 // Get all wizards for the authenticated user with campaign relic status
@@ -657,7 +658,8 @@ export const getWizardLeaderboard = query({
       if (stats.totalDuels < minimum) continue;
 
       const wizard = await ctx.db.get(stats.wizardId);
-      if (!wizard) continue;
+      // Departed wizards' players deleted their accounts.
+      if (!wizard || wizard.owner === DEPARTED_OWNER) continue;
 
       const campaignProgress = await ctx.db
         .query("wizardCampaignProgress")
@@ -729,7 +731,8 @@ export const backfillWizardStats = internalMutation({
     }
 
     for (const [wizardId, { wins, losses }] of tally) {
-      if (!(await ctx.db.get(wizardId))) continue; // wizard was deleted
+      const wizard = await ctx.db.get(wizardId);
+      if (!wizard || wizard.owner === DEPARTED_OWNER) continue; // deleted, or its player left
       const totalDuels = wins + losses;
       const fields = {
         wins,
@@ -973,8 +976,10 @@ export const getWizardLeaderboardByPeriod = query({
         break;
     }
 
-    // Get all wizards
-    const wizards = await ctx.db.query("wizards").collect();
+    // Get all wizards, except departed ones (their players deleted their accounts)
+    const wizards = (await ctx.db.query("wizards").collect()).filter(
+      (wizard) => wizard.owner !== DEPARTED_OWNER,
+    );
 
     // Get duels completed in the specified period, excluding campaign battles
     const periodDuels = await ctx.db

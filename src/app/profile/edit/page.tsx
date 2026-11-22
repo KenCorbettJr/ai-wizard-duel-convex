@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ProfileEditForm } from "../../../components/ProfileEditForm";
+import { DeleteAccountCard } from "../../../components/DeleteAccountCard";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -48,6 +49,8 @@ export default function ProfileEditPage() {
 
           {/* Profile Edit Form */}
           <ProfileEditForm onSuccess={handleSuccess} />
+
+          <DeleteAccountCard />
 
           {/* Navigation */}
           <div className="mt-6 hidden text-center md:block">

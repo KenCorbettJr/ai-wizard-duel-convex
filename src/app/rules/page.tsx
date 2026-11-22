@@ -8,7 +8,7 @@ import {
   BrainCircuit,
   Feather,
   UserCheck,
-  MessageSquareOff,
+  MessagesSquare,
   Globe,
   Coins,
 } from "lucide-react";
@@ -46,7 +46,7 @@ const SAFEGUARDS = [
   {
     icon: Filter,
     title: "Everything is checked before anyone sees it",
-    text: "Every spell, wizard name and description, and every username and display name a player chooses is checked when it's submitted. If it breaks the rules, it's rejected and never shown to anyone.",
+    text: "Every spell, wizard name and description, duel chat message, and every username and display name a player chooses is checked when it's submitted. If it breaks the rules, it's rejected and never shown to anyone.",
   },
   {
     icon: BrainCircuit,
@@ -67,14 +67,14 @@ const SAFEGUARDS = [
 
 const FACTS = [
   {
-    icon: MessageSquareOff,
-    title: "No chat or private messages",
-    text: "Players can't message each other. They only meet through duels, and everything in a duel passes through the checks above.",
+    icon: MessagesSquare,
+    title: "Duel chat, but no private messages",
+    text: "The two players in a duel can trade a few short messages, and only signed-in viewers see them. Every message is checked like a spell, and either player can turn chat off. There are no private messages.",
   },
   {
     icon: Globe,
-    title: "Duels between players are public",
-    text: "Anyone can watch player duels on the Watch page, which keeps them out in the open. Campaign battles against AI wizards aren't listed.",
+    title: "Every duel is public",
+    text: "Anyone can watch duels on the Watch page, including campaign battles against the AI wizards. Keeping everything out in the open means there's nowhere to hide bad behavior.",
   },
   {
     icon: Coins,

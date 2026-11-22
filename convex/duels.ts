@@ -11,7 +11,7 @@ import {
   scheduleTurnReminders,
 } from "./notifications";
 import { rewardReferralsForCompletedDuel } from "./referrals";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 
 import { api, internal } from "./_generated/api";
@@ -73,6 +73,7 @@ export const getPlayerDuels = query({
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
       chatEnabled: v.optional(v.boolean()),
+      forfeitedBy: v.optional(v.id("wizards")),
     }),
   ),
   handler: async (ctx) => {
@@ -170,6 +171,7 @@ export const getDuelInternal = internalQuery({
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
       chatEnabled: v.optional(v.boolean()),
+      forfeitedBy: v.optional(v.id("wizards")),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -829,6 +831,12 @@ export const completeRound = internalMutation({
 
     await scheduleRoundNarration(ctx, roundId);
 
+    // The duel ended while this round was being written (a forfeit). Keep the
+    // round for the replay, but leave the duel's result alone.
+    if (duel.status === "COMPLETED" || duel.status === "CANCELLED") {
+      return roundId;
+    }
+
     // Update duel points and hit points
     const updatedPoints: Record<string, number> = { ...duel.points };
     const updatedHitPoints: Record<string, number> = { ...duel.hitPoints };
@@ -867,46 +875,12 @@ export const completeRound = internalMutation({
         losers: shouldEndDuel.losers,
       });
 
-      // Update wizard stats (only for non-campaign battles)
-      if (shouldEndDuel.winners && shouldEndDuel.losers) {
-        for (const winnerId of shouldEndDuel.winners) {
-          await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
-            wizardId: winnerId,
-            won: true,
-            isCampaignBattle: duel.isCampaignBattle || false,
-          });
-        }
-        for (const loserId of shouldEndDuel.losers) {
-          await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
-            wizardId: loserId,
-            won: false,
-            isCampaignBattle: duel.isCampaignBattle || false,
-          });
-        }
-      }
-
-      // A new player's first finished duel unlocks any referral bonus.
-      await rewardReferralsForCompletedDuel(ctx, duel.players);
-
-      // Tell players who weren't watching how it ended.
-      await scheduleDuelResultNotifications(ctx, duel._id);
-
-      // Rate finished player duels so admins can pick highlights
-      if (!duel.isCampaignBattle) {
-        await scheduleDuelRating(ctx, duel._id);
-      }
-
-      // Handle campaign battle completion
-      if (duel.isCampaignBattle) {
-        await ctx.runMutation(
-          internal.campaigns.completeCampaignBattleInternal,
-          {
-            duelId: duel._id,
-            winners: shouldEndDuel.winners || [],
-            losers: shouldEndDuel.losers || [],
-          },
-        );
-      }
+      await afterDuelCompleted(
+        ctx,
+        duel,
+        shouldEndDuel.winners ?? [],
+        shouldEndDuel.losers ?? [],
+      );
     } else {
       // Start next round
       const nextRoundNumber = duel.currentRound + 1;
@@ -939,6 +913,115 @@ export const completeRound = internalMutation({
     }
 
     return roundId;
+  },
+});
+
+/**
+ * Everything that follows a duel finishing, however it finished: wizard
+ * records, referral bonuses, result notifications, the AI rating and campaign
+ * progress. Call once, right after the duel is marked COMPLETED.
+ */
+async function afterDuelCompleted(
+  ctx: MutationCtx,
+  duel: Doc<"duels">,
+  winners: Id<"wizards">[],
+  losers: Id<"wizards">[],
+) {
+  for (const winnerId of winners) {
+    await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
+      wizardId: winnerId,
+      won: true,
+      isCampaignBattle: duel.isCampaignBattle || false,
+    });
+  }
+  for (const loserId of losers) {
+    await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
+      wizardId: loserId,
+      won: false,
+      isCampaignBattle: duel.isCampaignBattle || false,
+    });
+  }
+
+  // A new player's first finished duel unlocks any referral bonus.
+  await rewardReferralsForCompletedDuel(ctx, duel.players);
+
+  // Tell players who weren't watching how it ended.
+  await scheduleDuelResultNotifications(ctx, duel._id);
+
+  // Rate finished player duels so admins can pick highlights
+  if (!duel.isCampaignBattle) {
+    await scheduleDuelRating(ctx, duel._id);
+  }
+
+  if (duel.isCampaignBattle) {
+    await ctx.runMutation(internal.campaigns.completeCampaignBattleInternal, {
+      duelId: duel._id,
+      winners,
+      losers,
+    });
+  }
+}
+
+/**
+ * End an in-progress duel because a player gave up. Their wizard(s) lose and
+ * everyone else's win. A round still waiting for spells is dropped, so the
+ * replay ends on the last round that was actually fought.
+ */
+export async function forfeitDuelFor(
+  ctx: MutationCtx,
+  duel: Doc<"duels">,
+  forfeitingWizards: Id<"wizards">[],
+): Promise<void> {
+  if (duel.status !== "IN_PROGRESS") {
+    throw new ConvexError("Only a duel in progress can be forfeited.");
+  }
+  const losers = duel.wizards.filter((id) => forfeitingWizards.includes(id));
+  const winners = duel.wizards.filter((id) => !forfeitingWizards.includes(id));
+  if (losers.length === 0) {
+    throw new ConvexError("You don't have a wizard in this duel.");
+  }
+
+  const pending = await ctx.db
+    .query("duelRounds")
+    .withIndex("by_duel", (q) => q.eq("duelId", duel._id))
+    .filter((q) => q.eq(q.field("status"), "WAITING_FOR_SPELLS"))
+    .collect();
+  for (const round of pending) {
+    await ctx.db.delete(round._id);
+  }
+
+  await ctx.db.patch(duel._id, {
+    status: "COMPLETED" as DuelStatus,
+    completedAt: Date.now(),
+    winners,
+    losers,
+    needActionsFrom: [],
+    forfeitedBy: losers[0],
+  });
+
+  await afterDuelCompleted(ctx, duel, winners, losers);
+}
+
+/** Give up a duel in progress. The other player wins. */
+export const forfeitDuel = mutation({
+  args: { duelId: v.id("duels") },
+  returns: v.null(),
+  handler: async (ctx, { duelId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Not authenticated");
+    const duel = await ctx.db.get(duelId);
+    if (!duel) throw new ConvexError("Duel not found.");
+    if (!duel.players.includes(identity.subject)) {
+      throw new ConvexError("Only the duelists can forfeit this duel.");
+    }
+
+    const mine: Id<"wizards">[] = [];
+    for (const id of duel.wizards) {
+      const wizard = await ctx.db.get(id);
+      if (wizard?.owner === identity.subject) mine.push(id);
+    }
+    await forfeitDuelFor(ctx, duel, mine);
+    return null;
   },
 });
 
@@ -1025,16 +1108,32 @@ function checkDuelEndConditions(
 }
 
 // Cancel a duel
+/**
+ * Cancel a duel that hasn't started yet. Only a player in the duel can.
+ * A duel in progress can't be cancelled; a player forfeits it instead.
+ */
 export const cancelDuel = mutation({
   args: { duelId: v.id("duels") },
   handler: async (ctx, { duelId }) => {
-    const duel = await ctx.db.get(duelId);
-    if (!duel) {
-      throw new Error("Duel not found");
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
     }
 
-    if (duel.status === "COMPLETED") {
-      throw new Error("Cannot cancel a completed duel");
+    const duel = await ctx.db.get(duelId);
+    if (!duel) {
+      throw new ConvexError("Duel not found");
+    }
+    if (!duel.players.includes(identity.subject)) {
+      throw new ConvexError("Only a player in this duel can cancel it.");
+    }
+    if (duel.status === "CANCELLED") {
+      return duelId;
+    }
+    if (duel.status !== "WAITING_FOR_PLAYERS") {
+      throw new ConvexError(
+        "Only a duel that hasn't started can be cancelled. Forfeit it instead.",
+      );
     }
 
     await ctx.db.patch(duelId, {
@@ -1081,6 +1180,7 @@ export const getActiveDuels = query({
       isCampaignBattle: v.optional(v.boolean()),
       rematchDuelId: v.optional(v.id("duels")),
       chatEnabled: v.optional(v.boolean()),
+      forfeitedBy: v.optional(v.id("wizards")),
     }),
   ),
   handler: async (ctx) => {
@@ -1145,6 +1245,7 @@ export const getWatchableDuels = query({
         isCampaignBattle: v.optional(v.boolean()),
         rematchDuelId: v.optional(v.id("duels")),
         chatEnabled: v.optional(v.boolean()),
+        forfeitedBy: v.optional(v.id("wizards")),
       }),
     ),
     total: v.number(),
@@ -1399,6 +1500,11 @@ export const startDuelAfterIntroduction = internalMutation({
     const duel = await ctx.db.get(duelId);
     if (!duel) {
       throw new Error("Duel not found");
+    }
+    // Cancelled while the introduction was being written (for example, a
+    // player deleted their account).
+    if (duel.status !== "WAITING_FOR_PLAYERS") {
+      return;
     }
 
     // Create the first actual round

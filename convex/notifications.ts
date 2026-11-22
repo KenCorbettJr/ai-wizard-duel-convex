@@ -193,12 +193,19 @@ export const sendDuelResults = internalMutation({
       const lost = mine.some((w) => duel.losers?.includes(w._id));
       const name = mine[0]?.name ?? "Your wizard";
 
+      // The player who forfeited already knows how it ended.
+      if (duel.forfeitedBy && mine.some((w) => w._id === duel.forfeitedBy)) {
+        continue;
+      }
+
       await createNotification(ctx, {
         userId,
         type: "DUEL_RESULT",
         title: won ? "Victory!" : lost ? "Defeat" : "The duel is over",
         body: won
-          ? `${name} won the duel. Relive the battle.`
+          ? duel.forfeitedBy
+            ? `Your opponent forfeited. ${name} wins the duel!`
+            : `${name} won the duel. Relive the battle.`
           : lost
             ? `${name} fell in battle. See how it ended.`
             : `${name}'s duel has ended. See how it played out.`,

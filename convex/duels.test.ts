@@ -157,7 +157,7 @@ describe("Duels", () => {
       }
     );
 
-    await t.mutation(api.duels.cancelDuel, { duelId });
+    await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, { duelId });
 
     const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
       duelId,
