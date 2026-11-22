@@ -4,7 +4,7 @@
 
 **Last updated:** [DATE]
 
-These Terms of Use ("Terms") are an agreement between you and Forthought Labs LLC ("we," "us"), which runs AI Wizard Duel (the "Service"). By using the Service, with or without an account, you agree to these Terms and to our [Privacy Policy](./privacy-policy.md). If you don't agree, please don't use the Service.
+These Terms of Use ("Terms") are an agreement between you and Forthought Labs LLC ("we," "us"), which runs AI Wizard Duel (the "Service"). By using the Service, with or without an account, you agree to these Terms and to our [Privacy Policy](/privacy). If you don't agree, please don't use the Service.
 
 ---
 
@@ -23,7 +23,7 @@ When you use the Service, the following can be seen by anyone, including people 
 
 Duel chat is visible to every signed-in user who watches the duel, live or in a replay.
 
-Some things are **not** public. Your email address, your payment details, your token balance and your notifications are private. Our [Privacy Policy](./privacy-policy.md) explains what we keep private and how.
+Some things are **not** public. Your email address, your payment details, your token balance and your notifications are private. Our [Privacy Policy](/privacy) explains what we keep private and how.
 
 **Don't put anything into the Service that you wouldn't want the whole world to see.** That includes your real name, address, school, phone number, or anyone else's personal information. Content you share can be copied by others, and we can't always pull it back once it has been seen.
 
@@ -117,7 +117,7 @@ You can delete your account at any time on your Edit Profile page. Deletion happ
 - Wizards you only used in campaign battles, or never dueled with, are deleted along with those battles.
 - **Duels you played against other people stay**, because they're part of the other players' history too. They are no longer linked to you. Your username and profile are removed, your wizard appears as a departed wizard, and your chat messages in those duels are deleted. Your spells stay, so the duel still makes sense in the replay.
 
-If something you wrote in a remaining duel includes personal information, email support@ai-wizard-duel.com and we'll remove it. Our [Privacy Policy](./privacy-policy.md) has more details.
+If something you wrote in a remaining duel includes personal information, email support@ai-wizard-duel.com and we'll remove it. Our [Privacy Policy](/privacy) has more details.
 
 We may suspend or close your account as described in Section 4. Sections 5, 6, 7 (no cash value), 10, and 13–16 still apply after your account ends.
 

@@ -75,8 +75,9 @@ const FAQS: Array<{ q: string; a: React.ReactNode }> = [
       <>
         Yes. Everything stays PG-13. Every spell, wizard and username is
         checked by a word filter and an AI moderator before anyone sees it, and
-        the AI storyteller follows the same rules. There is no chat between
-        players.{" "}
+        the AI storyteller follows the same rules. There are no private
+        messages: duel chat is short, checked the same way, and either player
+        can turn it off.{" "}
         <Link
           href="/rules"
           className="text-primary underline-offset-4 hover:underline"
@@ -521,6 +522,12 @@ function LandingPage() {
             </Link>
             <Link href="/rules" className="hover:text-foreground">
               Rules &amp; Safety
+            </Link>
+            <Link href="/terms" className="hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-foreground">
+              Privacy
             </Link>
             <Link href="/sign-in" className="hover:text-foreground">
               Sign In

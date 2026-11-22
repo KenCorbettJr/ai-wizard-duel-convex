@@ -18,7 +18,7 @@ This Privacy Policy explains what information Forthought Labs LLC ("we," "us") c
 
 ## 1. What's public
 
-As the [Terms of Use](./terms-of-use.md) explain, AI Wizard Duel is a public platform. The following is visible to anyone, including visitors who aren't signed in:
+As the [Terms of Use](/terms) explain, AI Wizard Duel is a public platform. The following is visible to anyone, including visitors who aren't signed in:
 
 | Public | Who can see it |
 | --- | --- |
@@ -63,7 +63,7 @@ We use cookies and browser storage to keep you signed in (Clerk), to remember se
 ## 3. How we use information
 
 - To run the game: accounts, duels, campaign battles, AI narration and illustrations, tokens, leaderboards, notifications.
-- To keep it safe: moderation, preventing abuse and cheating, and enforcing the [Terms](./terms-of-use.md) and [Arena Rules](/rules).
+- To keep it safe: moderation, preventing abuse and cheating, and enforcing the [Terms](/terms) and [Arena Rules](/rules).
 - To process purchases, and to prevent payment fraud.
 - To understand and improve the Service, including which duels people enjoy watching.
 - To feature duels, for example on the Watch page or in promotions.
