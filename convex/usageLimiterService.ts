@@ -8,7 +8,6 @@ import type {
   CanCreateWizardResult,
   CanStartDuelResult,
   CanGenerateImagesResult,
-  CanWatchRewardAdResult,
 } from "./types";
 
 // Usage limits for free tier
@@ -16,7 +15,6 @@ export const FREE_TIER_LIMITS = {
   WIZARDS_MAX: 3,
   DUELS_PER_DAY: 5, // Will be removed in future task (unlimited duels for all registered users)
   INITIAL_IMAGE_CREDITS: STARTING_TOKENS,
-  AD_REWARD_COOLDOWN: 300000, // 5 minutes in milliseconds
 } as const;
 
 /**
@@ -208,8 +206,7 @@ export const canGenerateImages = query({
     if (subscription.imageCredits <= 0) {
       return {
         canGenerate: false,
-        reason:
-          "Insufficient tokens. Watch ads to earn more tokens or upgrade to Premium.",
+        reason: "Insufficient tokens. Buy more tokens to keep dueling.",
         imageCredits: 0,
         isPremium: false,
       };
@@ -265,22 +262,6 @@ export const trackImageGeneration = mutation({
     await ctx.runMutation(api.subscriptionService.incrementUsage, {
       clerkId,
       action: "IMAGE_GENERATED",
-    });
-
-    return null;
-  },
-});
-
-/**
- * Track ad watching and increment usage
- */
-export const trackAdWatching = mutation({
-  args: { clerkId: v.string() },
-  returns: v.null(),
-  handler: async (ctx, { clerkId }) => {
-    await ctx.runMutation(api.subscriptionService.incrementUsage, {
-      clerkId,
-      action: "AD_WATCHED",
     });
 
     return null;
@@ -396,47 +377,5 @@ export const getUserUsageStatus = query({
       imageCredits: imageStatus,
       monthlyUsage: subscription.monthlyUsage,
     };
-  },
-});
-
-/**
- * Check if user can watch ads for rewards (cooldown check)
- */
-export const canWatchRewardAd = query({
-  args: { clerkId: v.string() },
-  returns: v.object({
-    canWatch: v.boolean(),
-    reason: v.optional(v.string()),
-    cooldownEndsAt: v.optional(v.number()),
-  }),
-  handler: async (ctx, { clerkId }): Promise<CanWatchRewardAdResult> => {
-    // Get the user's last ad interaction
-    const lastAdInteraction = await ctx.db
-      .query("adInteractions")
-      .withIndex("by_user", (q) => q.eq("userId", clerkId))
-      .filter((q) => q.eq(q.field("adType"), "VIDEO_REWARD"))
-      .filter((q) => q.eq(q.field("action"), "COMPLETION"))
-      .order("desc")
-      .first();
-
-    if (!lastAdInteraction) {
-      // No previous ad interactions, can watch
-      return { canWatch: true };
-    }
-
-    const now = Date.now();
-    const cooldownEndsAt =
-      lastAdInteraction.createdAt + FREE_TIER_LIMITS.AD_REWARD_COOLDOWN;
-
-    if (now < cooldownEndsAt) {
-      return {
-        canWatch: false,
-        reason:
-          "Ad reward cooldown active. Please wait before watching another ad.",
-        cooldownEndsAt,
-      };
-    }
-
-    return { canWatch: true };
   },
 });

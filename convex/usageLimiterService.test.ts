@@ -260,21 +260,6 @@ describe("UsageLimiterService", () => {
 
       expect(subscription!.monthlyUsage.imageGenerations).toBe(1);
     });
-
-    test("should track ad watching", async () => {
-      await t.mutation(api.usageLimiterService.trackAdWatching, {
-        clerkId: testClerkId,
-      });
-
-      const subscription = await t.query(
-        api.userSubscriptionQueries.getUserSubscription,
-        {
-          clerkId: testClerkId,
-        },
-      );
-
-      expect(subscription!.monthlyUsage.adsWatched).toBe(1);
-    });
   });
 
   describe("getUserUsageStatus", () => {
@@ -318,58 +303,6 @@ describe("UsageLimiterService", () => {
       });
 
       expect(status).toBeNull();
-    });
-  });
-
-  describe("canWatchRewardAd", () => {
-    test("should allow ad watching when no previous interactions", async () => {
-      const result = await t.query(api.usageLimiterService.canWatchRewardAd, {
-        clerkId: testClerkId,
-      });
-
-      expect(result.canWatch).toBe(true);
-      expect(result.reason).toBeUndefined();
-      expect(result.cooldownEndsAt).toBeUndefined();
-    });
-
-    test("should enforce cooldown after ad completion", async () => {
-      // Create a recent ad interaction
-      await t.mutation(api.adService.trackAdInteraction, {
-        userId: testClerkId,
-        sessionId: "test-session",
-        adType: "VIDEO_REWARD",
-        placement: "CREDIT_REWARD",
-        action: "COMPLETION",
-        adNetworkId: "test-network",
-      });
-
-      const result = await t.query(api.usageLimiterService.canWatchRewardAd, {
-        clerkId: testClerkId,
-      });
-
-      expect(result.canWatch).toBe(false);
-      expect(result.reason).toContain("Ad reward cooldown active");
-      expect(result.cooldownEndsAt).toBeDefined();
-    });
-
-    test("should allow ad watching after cooldown expires", async () => {
-      // Create an old ad interaction (beyond cooldown)
-      const oldTimestamp = Date.now() - 400000; // 6+ minutes ago
-      await t.mutation(internal.adService.createAdInteractionInternal, {
-        userId: testClerkId,
-        sessionId: "test-session",
-        adType: "VIDEO_REWARD",
-        placement: "CREDIT_REWARD",
-        action: "COMPLETION",
-        adNetworkId: "test-network",
-        createdAt: oldTimestamp,
-      });
-
-      const result = await t.query(api.usageLimiterService.canWatchRewardAd, {
-        clerkId: testClerkId,
-      });
-
-      expect(result.canWatch).toBe(true);
     });
   });
 });

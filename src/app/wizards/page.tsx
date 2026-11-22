@@ -8,7 +8,6 @@ import { WizardCard } from "@/components/WizardCard";
 import { ProfileCompletionPrompt } from "@/components/ProfileCompletionPrompt";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AdDisplay } from "@/components/AdDisplay";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
@@ -81,13 +80,6 @@ export default function MyWizardsPage() {
           {!user && (
             <div className="mb-4 flex justify-center">
               <CreditDisplay />
-            </div>
-          )}
-
-          {/* Ad Display for Anonymous Users */}
-          {!user && (
-            <div className="mb-6">
-              <AdDisplay placement="WIZARD_PAGE" className="mb-4" />
             </div>
           )}
 

@@ -9,6 +9,16 @@ if (token && host) {
     defaults: "2026-08-30",
     capture_exceptions: true,
     debug: process.env.NODE_ENV === "development",
+    // Signed-out visitors (who may be under 13) are tracked without cookies
+    // or browser storage and never recorded. Signed-in players opt in once
+    // their account loads, which turns on cookies and session replay. Until
+    // then nothing is captured. See PostHogUserIdentifier in ClerkProvider.
+    cookieless_mode: "on_reject",
+    session_recording: {
+      maskAllInputs: true,
+      // Clerk's account UI shows emails; anything marked data-ph-mask is private.
+      maskTextSelector: '[class^="cl-"], [class*=" cl-"], [data-ph-mask]',
+    },
   })
 } else if (process.env.NODE_ENV === "development") {
   const missingVariable = token

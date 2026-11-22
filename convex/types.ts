@@ -46,12 +46,6 @@ export type CanGenerateImagesResult = {
   isPremium: boolean;
 };
 
-export type CanWatchRewardAdResult = {
-  canWatch: boolean;
-  reason?: string;
-  cooldownEndsAt?: number;
-};
-
 export type UserUsageStatus = {
   subscriptionTier: SubscriptionTier;
   subscriptionStatus: SubscriptionStatus;

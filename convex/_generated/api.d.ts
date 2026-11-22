@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as adService from "../adService.js";
 import type * as admin from "../admin.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as ai_getAI from "../ai/getAI.js";
@@ -92,7 +91,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  adService: typeof adService;
   admin: typeof admin;
   adminUsers: typeof adminUsers;
   "ai/getAI": typeof ai_getAI;

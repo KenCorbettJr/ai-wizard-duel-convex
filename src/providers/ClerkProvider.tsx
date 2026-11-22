@@ -5,6 +5,12 @@ import posthog from "posthog-js";
 import { ReactNode, Suspense, useEffect, useRef } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 
+/**
+ * Signed-out visitors get cookieless analytics with no session replay;
+ * signed-in players get full analytics and replay. PostHog runs in
+ * cookieless_mode "on_reject" (instrumentation-client.ts), so opting out
+ * means cookieless rather than nothing at all.
+ */
 function PostHogUserIdentifier() {
   const { isLoaded, user } = useUser();
   const identifiedUserId = useRef<string | null>(null);
@@ -13,10 +19,14 @@ function PostHogUserIdentifier() {
     if (!isLoaded) return;
 
     if (!user) {
-      if (identifiedUserId.current) {
-        posthog.reset();
-        identifiedUserId.current = null;
+      // Also covers someone who signed out in a previous visit: their stored
+      // opt-in would otherwise keep recording them.
+      // (has_opted_out_capturing() is already true while undecided, so check
+      // the explicit choice.)
+      if (posthog.get_explicit_consent_status() !== "denied") {
+        posthog.opt_out_capturing();
       }
+      identifiedUserId.current = null;
       return;
     }
 
@@ -26,6 +36,9 @@ function PostHogUserIdentifier() {
       posthog.reset();
     }
 
+    if (posthog.get_explicit_consent_status() !== "granted") {
+      posthog.opt_in_capturing({ captureEventName: false });
+    }
     posthog.identify(user.id, {
       email: user.primaryEmailAddress?.emailAddress,
       name: user.fullName || user.firstName || undefined,

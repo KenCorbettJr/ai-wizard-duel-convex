@@ -434,9 +434,6 @@ describe("Subscription Integration Tests", () => {
       await t.mutation(api.usageLimiterService.trackImageGeneration, {
         clerkId: freeClerkId,
       });
-      await t.mutation(api.usageLimiterService.trackAdWatching, {
-        clerkId: freeClerkId,
-      });
 
       // Verify tracking in subscription service
       const subscription = await t.query(
@@ -449,7 +446,6 @@ describe("Subscription Integration Tests", () => {
       expect(subscription!.monthlyUsage.wizardsCreated).toBe(1);
       expect(subscription!.monthlyUsage.duelsPlayed).toBe(1);
       expect(subscription!.monthlyUsage.imageGenerations).toBe(1);
-      expect(subscription!.monthlyUsage.adsWatched).toBe(1);
 
       // Verify tracking in usage limiter service
       const usageStatus = await t.query(
@@ -462,7 +458,6 @@ describe("Subscription Integration Tests", () => {
       expect(usageStatus!.monthlyUsage.wizardsCreated).toBe(1);
       expect(usageStatus!.monthlyUsage.duelsPlayed).toBe(1);
       expect(usageStatus!.monthlyUsage.imageGenerations).toBe(1);
-      expect(usageStatus!.monthlyUsage.adsWatched).toBe(1);
     });
   });
 

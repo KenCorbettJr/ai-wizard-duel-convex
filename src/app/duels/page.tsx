@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
-import { AdDisplay } from "@/components/AdDisplay";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
 import { Swords, Users, Search, Shield } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
@@ -39,13 +38,6 @@ export default function DuelsPage() {
             magical encounters"
           icon={<Swords className="h-6 w-6" aria-hidden="true" />}
         />
-
-        {/* Ad Display for Anonymous Users */}
-        {!user && (
-          <div className="mb-6">
-            <AdDisplay placement="DUEL_PAGE" className="mb-4" />
-          </div>
-        )}
 
         {/* Registration Prompt for Anonymous Users */}
         {!user && (

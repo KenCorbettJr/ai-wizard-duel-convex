@@ -151,7 +151,7 @@ export function CreditUsageHistory({
   };
 
   return (
-    <Card className={className}>
+    <Card className={className} data-ph-mask>
       {showTitle && (
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
