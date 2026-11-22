@@ -4,7 +4,7 @@ import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { generateText, type AIObservabilityContext } from "./aiTextGeneration";
-import { useReferenceImageProvider } from "./lib/imageProvider";
+import { shouldUseReferenceImageProvider } from "./lib/imageProvider";
 
 export const generateWizardIllustration = action({
   args: {
@@ -29,7 +29,7 @@ export const generateWizardIllustration = action({
     try {
       // Tokens are charged by the mutation that scheduled this action (the
       // first illustration is free). userId is only used for cost tracking.
-      const useGemini = useReferenceImageProvider();
+      const useGemini = shouldUseReferenceImageProvider();
       const observabilityContext: AIObservabilityContext = {
         sessionId: `wizard-${wizardId}`,
         traceId: crypto.randomUUID(),

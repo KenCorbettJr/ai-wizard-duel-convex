@@ -31,7 +31,7 @@ export function isBflEnabled(): boolean {
  * True when images should go through generateImageWithGemini (BFL or Gemini)
  * instead of calling FAL directly. Callers pass this as the `useGemini` arg.
  */
-export function useReferenceImageProvider(): boolean {
+export function shouldUseReferenceImageProvider(): boolean {
   return (
     process.env.USE_GEMINI_FOR_IMAGES === "true" ||
     process.env.USE_BFL_FOR_IMAGES === "true"
