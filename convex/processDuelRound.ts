@@ -9,6 +9,7 @@ import {
 } from "./aiTextGeneration";
 import { Id } from "./_generated/dataModel";
 import { api, internal } from "./_generated/api";
+import { withDuelNames } from "./lib/duelWizardNames";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
 import { shouldUseReferenceImageProvider } from "./lib/imageProvider";
@@ -293,8 +294,11 @@ export const processDuelRound = internalAction({
         throw new Error("Could not fetch all wizard data");
       }
 
-      const wizard1 = wizards[0];
-      const wizard2 = wizards[1];
+      // Same-named wizards get their owner added so the AI can tell them apart.
+      const [wizard1, wizard2] = (await withDuelNames(ctx, [
+        wizards[0],
+        wizards[1],
+      ])) as [Wizard, Wizard];
       const wizard1ID = duel.wizards[0];
       const wizard2ID = duel.wizards[1];
       const observabilityContext: AIObservabilityContext = {

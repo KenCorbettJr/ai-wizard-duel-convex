@@ -3,6 +3,7 @@
 import { internalAction, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
+import { withDuelNames } from "./lib/duelWizardNames";
 import { Id } from "./_generated/dataModel";
 import { DUEL_SCENE_ASPECT_RATIO } from "./lib/imageProvider";
 
@@ -208,9 +209,12 @@ async function getWizardReferences(
   const storageIds: string[] = [];
   const labels: string[] = [];
   try {
-    const wizards = await Promise.all(
-      wizardIds.map((wizardId) =>
-        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+    const wizards = await withDuelNames(
+      ctx,
+      await Promise.all(
+        wizardIds.map((wizardId) =>
+          ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+        ),
       ),
     );
     for (const wizard of wizards) {
@@ -233,9 +237,12 @@ async function getWizardDescriptions(
 ): Promise<Array<{ name: string; description: string }>> {
   try {
     // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
-    const wizards = await Promise.all(
-      wizardIds.map((wizardId) =>
-        ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+    const wizards = await withDuelNames(
+      ctx,
+      await Promise.all(
+        wizardIds.map((wizardId) =>
+          ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
+        ),
       ),
     );
 

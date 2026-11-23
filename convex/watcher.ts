@@ -225,6 +225,11 @@ export const createWizard = action({
   ),
   handler: async (ctx, args) => {
     const userId = await requireUser(ctx);
+    // Cheap duplicate-name check first, so it doesn't cost an AI call.
+    await ctx.runQuery(internal.wizards.assertNameFreeForOwner, {
+      owner: userId,
+      name: args.name,
+    });
     const rejection = await consultWatcher(ctx, userId, "wizard", [
       { label: "Wizard name", text: args.name },
       { label: "Wizard description", text: args.description },
@@ -248,6 +253,13 @@ export const updateWizard = action({
   returns: v.union(v.object({ ok: v.literal(true) }), rejectedValidator),
   handler: async (ctx, args) => {
     const userId = await requireUser(ctx);
+    if (args.name !== undefined) {
+      await ctx.runQuery(internal.wizards.assertNameFreeForOwner, {
+        owner: userId,
+        name: args.name,
+        exceptId: args.wizardId,
+      });
+    }
     const rejection = await consultWatcher(ctx, userId, "wizard", [
       { label: "Wizard name", text: args.name ?? "" },
       { label: "Wizard description", text: args.description ?? "" },

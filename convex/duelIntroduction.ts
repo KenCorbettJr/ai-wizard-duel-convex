@@ -4,6 +4,7 @@ import type { Doc } from "../convex/_generated/dataModel";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
+import { withDuelNames } from "./lib/duelWizardNames";
 
 import { Id } from "./_generated/dataModel";
 import { z } from "genkit/beta";
@@ -79,8 +80,14 @@ export const generateDuelIntroduction = action({
         throw new Error("Could not fetch all wizard data");
       }
 
-      const wizard1 = wizards[0];
-      const wizard2 = wizards[1];
+      // Same-named wizards get their owner added so the AI can tell them apart.
+      const [wizard1, wizard2] = (await withDuelNames(ctx, [
+        wizards[0],
+        wizards[1],
+      ])) as [
+        NonNullable<(typeof wizards)[0]>,
+        NonNullable<(typeof wizards)[1]>,
+      ];
 
       // Generate the introduction using AI
       const introduction = await generateIntroductionText(

@@ -111,7 +111,11 @@ export function WizardForm({
         error,
       );
       toast.error(
-        `Error ${mode === "create" ? "creating" : "updating"} wizard. Please try again.`,
+        // Expected problems (like reusing one of your own wizard names)
+        // arrive as a ConvexError with a message meant for the player.
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : `Error ${mode === "create" ? "creating" : "updating"} wizard. Please try again.`,
       );
     } finally {
       setIsSubmitting(false);

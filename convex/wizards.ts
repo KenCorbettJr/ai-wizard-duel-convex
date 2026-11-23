@@ -3,6 +3,7 @@ import {
   mutation,
   internalMutation,
   internalQuery,
+  type QueryCtx,
 } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { activePortraitStage } from "./lib/portrait";
@@ -11,7 +12,67 @@ import { chargeWizardImageToken } from "./lib/wizardImageTokens";
 import { Wizard } from "@/types/wizard";
 import { computeWinRate, recordWizardResult } from "./lib/wizardStats";
 import { DEPARTED_OWNER } from "./lib/departed";
+import { labelDuplicateNames, normalizeWizardName } from "./lib/wizardNames";
 import type { Id } from "./_generated/dataModel";
+
+/**
+ * The owner's other wizard already using this name, if any. Names only need
+ * to be unique within one player's roster; different players may share them.
+ */
+async function findOwnWizardNamed(
+  ctx: QueryCtx,
+  owner: string,
+  name: string,
+  exceptId?: Id<"wizards">,
+) {
+  const wanted = normalizeWizardName(name);
+  const mine = await ctx.db
+    .query("wizards")
+    .withIndex("by_owner", (q) => q.eq("owner", owner))
+    .collect();
+  return mine.find(
+    (w) => w._id !== exceptId && normalizeWizardName(w.name) === wanted,
+  );
+}
+
+async function assertWizardNameFree(
+  ctx: QueryCtx,
+  owner: string,
+  name: string,
+  exceptId?: Id<"wizards">,
+) {
+  const clash = await findOwnWizardNamed(ctx, owner, name, exceptId);
+  if (clash) {
+    throw new ConvexError(
+      `You already have a wizard named "${clash.name}". Pick a different name.`,
+    );
+  }
+}
+
+/**
+ * Lets the Watcher reject a duplicate name before paying for AI moderation.
+ * The create/update mutations check again, since they're authoritative.
+ */
+export const assertNameFreeForOwner = internalQuery({
+  args: {
+    owner: v.string(),
+    name: v.string(),
+    exceptId: v.optional(v.id("wizards")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { owner, name, exceptId }) => {
+    // Keeping a wizard's current name is never a clash (see updateWizard).
+    const current = exceptId ? await ctx.db.get(exceptId) : null;
+    if (
+      current &&
+      normalizeWizardName(current.name) === normalizeWizardName(name)
+    ) {
+      return null;
+    }
+    await assertWizardNameFree(ctx, owner, name, exceptId);
+    return null;
+  },
+});
 
 // Get all wizards for the authenticated user with campaign relic status
 export const getUserWizards = query({
@@ -193,6 +254,7 @@ export const createWizard = internalMutation({
     if (!identity) {
       throw new Error("Not authenticated");
     }
+    await assertWizardNameFree(ctx, identity.subject, name);
 
     const wizardId = await ctx.db.insert("wizards", {
       owner: identity.subject,
@@ -397,6 +459,14 @@ export const updateWizard = internalMutation({
     // Only allow updating owned wizards
     if (wizard.owner !== identity.subject) {
       throw new Error("Not authorized to update this wizard");
+    }
+    // Only check real renames, so wizards that already share a name (from
+    // before names were unique per player) can still be edited.
+    if (
+      updates.name !== undefined &&
+      normalizeWizardName(updates.name) !== normalizeWizardName(wizard.name)
+    ) {
+      await assertWizardNameFree(ctx, wizard.owner, updates.name, wizardId);
     }
 
     await ctx.db.patch(wizardId, {
@@ -1210,5 +1280,35 @@ export const getWizardInternal = internalQuery({
       hasCompletionRelic,
       effectiveLuckScore,
     };
+  },
+});
+
+/**
+ * Display names for the wizards in a duel, in order. Same-named wizards get
+ * their owner added ("Frostfire (Ken)") so the narration and illustrations
+ * can tell them apart.
+ */
+export const getDuelWizardNames = internalQuery({
+  args: { wizardIds: v.array(v.id("wizards")) },
+  returns: v.array(v.string()),
+  handler: async (ctx, { wizardIds }) => {
+    const entries = await Promise.all(
+      wizardIds.map(async (id) => {
+        const wizard = await ctx.db.get(id);
+        if (!wizard) return null;
+        const owner = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", wizard.owner))
+          .first();
+        const ownerLabel =
+          wizard.owner === "campaign"
+            ? "Campaign"
+            : (owner?.displayName ?? owner?.userId);
+        return { name: wizard.name, ownerLabel };
+      }),
+    );
+    return labelDuplicateNames(entries, (e) => e.ownerLabel).map(
+      (e, i) => e?.name ?? `Wizard ${i + 1}`,
+    );
   },
 });
