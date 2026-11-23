@@ -59,7 +59,8 @@ We may remove any content, or limit, suspend or end any account, at our discreti
 
 - **You keep ownership** of Your Content.
 - **You give us a license to use it.** You grant us a worldwide, non-exclusive, royalty-free, transferable and sublicensable license to host, store, reproduce, display, perform, adapt, translate, distribute and create derivative works from Your Content. We use this license to run, improve and promote the Service. That includes turning it into AI narration and illustrations, showing it in duels and replays, featuring and highlighting duels, and using it in marketing. This license continues after you stop using the Service for content already shared in duels with other players, because those duels belong to them too.
-- **You're responsible for Your Content.** You promise that you have the right to submit it, and that it doesn't break the law or anyone else's rights. Fan-fiction ideas inspired by books, games and movies are welcome. Copying someone else's work wholesale is not.
+- **You're responsible for Your Content.** You promise that you have the right to submit it, and that it doesn't break the law or anyone else's rights.
+- **Your wizards must be your own creations.** Don't create a wizard that is, or is plainly meant to be, a character someone else owns (from a book, movie, show, comic, game or brand) or a real person. Borrowing a general style or archetype, such as a grey-bearded sage or an ice queen, is fine, and so are figures from myth and folklore. Spells may be inspired by your favorite stories. We may reject, rename or remove wizards, names and images that break this rule.
 
 ## 6. AI-generated content
 
@@ -103,13 +104,30 @@ Apart from Your Content, the Service and everything in it (software, design, the
 
 If you send us feedback or ideas, we can use them without owing you anything.
 
-## 11. Changes and availability
+## 11. Copyright and other intellectual property complaints
+
+We respect the intellectual property of others and expect our users to do the same. If you believe something on the Service infringes your copyright, trademark or other rights, including a wizard, portrait, illustration or name, tell us and we'll look into it promptly.
+
+**Copyright notices.** Send a notice under the Digital Millennium Copyright Act (17 U.S.C. § 512) to our designated agent:
+
+[DMCA AGENT: name, mailing address, phone and email, exactly as registered with the U.S. Copyright Office]
+Email: copyright@aiwizardduel.com
+
+Your notice must include: (1) your physical or electronic signature; (2) the work you believe is infringed; (3) the material you believe is infringing, with a link to where it appears on the Service; (4) your contact information; (5) a statement that you have a good-faith belief the use isn't authorized by the owner, its agent or the law; and (6) a statement, under penalty of perjury, that the information in your notice is accurate and that you are the owner or authorized to act for the owner.
+
+**Counter-notices.** If we remove your content because of a notice and you believe that was a mistake, you can send us a counter-notice with the information required by 17 U.S.C. § 512(g)(3). We may then restore the content, as the law allows.
+
+**Other complaints**, such as trademark or a real person's likeness, can be sent to the same email address.
+
+**Repeat infringers.** We will end the accounts of users who repeatedly infringe others' rights, in appropriate circumstances.
+
+## 12. Changes and availability
 
 We're a small and growing service. Features, game rules, campaigns, seasons, prices and rewards may change or go away. We may change, suspend or end the Service, in whole or in part, at any time.
 
 We may update these Terms. If a change is significant, we'll tell you in the Service or by email before it takes effect. If you keep using the Service after a change takes effect, you accept the new Terms.
 
-## 12. Deleting your account
+## 13. Deleting your account
 
 You can delete your account at any time on your Edit Profile page. Deletion happens right away and can't be undone. When you do:
 
@@ -120,21 +138,21 @@ You can delete your account at any time on your Edit Profile page. Deletion happ
 
 If something you wrote in a remaining duel includes personal information, email support@aiwizardduel.com and we'll remove it. Our [Privacy Policy](/privacy) has more details.
 
-We may suspend or close your account as described in Section 4. Sections 5, 6, 7 (no cash value), 10, and 13–16 still apply after your account ends.
+We may suspend or close your account as described in Sections 4 and 11. Sections 5, 6, 7 (no cash value), 10, 11, and 14–17 still apply after your account ends.
 
-## 13. Disclaimers
+## 14. Disclaimers
 
 THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE." TO THE FULLEST EXTENT ALLOWED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. WE DON'T PROMISE THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE OR SECURE, THAT MODERATION WILL CATCH EVERYTHING, OR THAT AI OUTPUT WILL BE ACCURATE OR APPROPRIATE.
 
-## 14. Limitation of liability
+## 15. Limitation of liability
 
 TO THE FULLEST EXTENT ALLOWED BY LAW, WE WON'T BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR FOR LOST PROFITS, DATA OR GOODWILL. OUR TOTAL LIABILITY FOR ANY CLAIM RELATING TO THE SERVICE IS LIMITED TO THE GREATER OF (A) THE AMOUNT YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM, OR (B) US $50. Some places don't allow these limits, so they may not apply to you.
 
-## 15. Indemnity
+## 16. Indemnity
 
 If someone brings a claim against us because of Your Content or because you broke these Terms, you agree to cover our reasonable losses and costs, including legal fees, to the extent the law allows.
 
-## 16. Disputes
+## 17. Disputes
 
 **Talk to us first.** If you have a dispute with us, please email support@aiwizardduel.com and describe it. You and we agree to try in good faith to resolve it informally for at least 60 days before either side starts a lawsuit. Most problems can be fixed this way.
 
@@ -142,11 +160,11 @@ These Terms are governed by the laws of the State of South Carolina and applicab
 
 [DECISION: no arbitration clause for now. Revisit with a lawyer once revenue or the user base grows.]
 
-## 17. General
+## 18. General
 
 These Terms and the Privacy Policy are the whole agreement between us about the Service. If any part is found unenforceable, the rest still applies. If we don't enforce a term, that doesn't mean we've waived it. You can't transfer these Terms to anyone else. We may transfer them, for example if the Service is sold.
 
-## 18. Contact
+## 19. Contact
 
 Forthought Labs LLC
 South Carolina, USA
