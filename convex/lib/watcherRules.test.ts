@@ -159,10 +159,18 @@ describe("buildModerationPrompt", () => {
     expect(MODERATION_SYSTEM_PROMPT).toMatch(/public domain/);
   });
 
+  test("lets parody wizards through but not thin disguises", () => {
+    // Parody names are listed as allowed; misspelled real names as flagged.
+    expect(MODERATION_SYSTEM_PROMPT).toMatch(/Parody, homage and mash-up/);
+    expect(MODERATION_SYSTEM_PROMPT).toContain("Barry Plotter");
+    expect(MODERATION_SYSTEM_PROMPT).toContain("Hary Poter");
+    expect(MODERATION_SYSTEM_PROMPT).toMatch(/parody or a copy, ALLOW it/);
+  });
+
   test("an unoriginal wizard gets a friendly rejection", () => {
     const r = buildRejection("not_original", 0, null, 0);
     expect(r.category).toBe("not_original");
-    expect(r.hint).toMatch(/your own wizard/i);
+    expect(r.hint).toMatch(/parodies/i);
   });
 
   test("wraps text and strips tag-escape attempts", () => {

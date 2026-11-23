@@ -29,6 +29,7 @@ const WELCOME = [
   "Silly and gross-out jokes (the storyteller keeps them tasteful)",
   "Sweet, silly romance: love potions, charm spells, Cupid's arrows",
   "Spells inspired by your favorite books, games and movies",
+  "Parody and mash-up wizards with a twist of their own, like Barry Plotter",
 ];
 
 const NOT_ALLOWED = [
@@ -40,7 +41,7 @@ const NOT_ALLOWED = [
   "Self-harm",
   "Personal details: addresses, phone numbers, schools, real names",
   "Trying to trick the AI into breaking the game's rules",
-  "Wizards that copy someone else's character, or a real person. Your wizard must be your own creation",
+  "Wizards named after someone else's character (Harry Potter) or a real person. Give yours a name of your own",
 ];
 
 const SAFEGUARDS = [
