@@ -23,7 +23,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  labelDuplicateNames,
+  ownerLabelOf,
+} from "../../convex/lib/wizardNames";
 
 interface DuelListItemProps {
   duel: {
@@ -60,17 +64,23 @@ export function DuelListItem({
   const [copySuccess, setCopySuccess] = useState(false);
 
   // Fetch wizard details for all wizards in the duel
-  const wizard1 = useQuery(
+  const rawWizard1 = useQuery(
     api.wizards.getWizardWithOwner,
     duel.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
-  const wizard2 = useQuery(
+  const rawWizard2 = useQuery(
     api.wizards.getWizardWithOwner,
     duel.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
   );
-  const wizard3 = useQuery(
+  const rawWizard3 = useQuery(
     api.wizards.getWizardWithOwner,
     duel.wizards[2] ? { wizardId: duel.wizards[2] } : "skip",
+  );
+  // Same-named wizards from different players get their owner added.
+  const [wizard1, wizard2, wizard3] = useMemo(
+    () =>
+      labelDuplicateNames([rawWizard1, rawWizard2, rawWizard3], ownerLabelOf),
+    [rawWizard1, rawWizard2, rawWizard3],
   );
 
   const wizards = [wizard1, wizard2, wizard3].filter(

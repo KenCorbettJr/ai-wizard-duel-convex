@@ -25,6 +25,10 @@ import {
   useRef,
 } from "react";
 import { toast } from "sonner";
+import {
+  labelDuplicateNames,
+  ownerLabelOf,
+} from "../../../../convex/lib/wizardNames";
 import { ConvexError } from "convex/values";
 import {
   Swords,
@@ -132,13 +136,19 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   const duel = useQuery(api.duels.getDuel, duelId ? { duelId } : "skip");
 
   // Fetch wizard data for each wizard in the duel
-  const wizard1 = useQuery(
+  const rawWizard1 = useQuery(
     api.wizards.getWizardWithOwner,
     duel?.wizards[0] ? { wizardId: duel.wizards[0] } : "skip",
   );
-  const wizard2 = useQuery(
+  const rawWizard2 = useQuery(
     api.wizards.getWizardWithOwner,
     duel?.wizards[1] ? { wizardId: duel.wizards[1] } : "skip",
+  );
+  // Two players can name their wizards the same; add the owner so everyone
+  // can tell them apart ("Frostfire (Ken)").
+  const [wizard1, wizard2] = useMemo(
+    () => labelDuplicateNames([rawWizard1, rawWizard2], ownerLabelOf),
+    [rawWizard1, rawWizard2],
   );
 
   // Hide the winner until the viewer reveals the conclusion. This applies when
