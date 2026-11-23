@@ -14,7 +14,7 @@ This Privacy Policy explains what information Forthought Labs LLC ("we," "us") c
 - **Some things stay private:** your email, payment details, token balance, notifications and the devices you get them on.
 - **We don't sell your personal information.**
 - We use service providers to run the game: sign-in, payments, hosting, analytics, and AI models that write, moderate, illustrate and narrate. **There are no ads.**
-- You must be 13 or older to create an account.
+- Anyone can watch duels without an account. You must be 13 or older to create one.
 
 ## 1. What's public
 
@@ -109,15 +109,19 @@ We don't sell your personal information, and we don't share it for advertising.
 - **Turn off notifications** in the app or in your browser.
 - **Control cookies** in your browser.
 - **Delete your account** on your Edit Profile page (see Section 6 for what happens to duels with other players).
-- **Access, correct or download** your information: email privacy@ai-wizard-duel.com.
+- **Access, correct or download** your information: email privacy@aiwizardduel.com.
 
 Depending on where you live (for example California, the EU or the UK), you may have the right to know what we hold about you, to get a copy, to correct or delete it, to object to or restrict some uses, to withdraw consent, and to complain to your local data protection authority. We won't treat you differently for using these rights. We'll confirm your identity before acting on a request.
 
 ## 8. Children
 
-The Service is built to be safe for a young audience. Everything stays PG-13 and is moderated. But **you must be at least 13 to create an account**, and we don't knowingly collect personal information from children under 13. If you believe a child under 13 has given us personal information, contact privacy@ai-wizard-duel.com and we'll delete it.
+The Service is built to be safe for a young audience. Everything stays PG-13 and is moderated.
 
-Visitors who aren't signed in can watch duels. For them, we don't use analytics cookies, don't record sessions, don't show ads, and don't collect anything that identifies them personally. [DECISION: add an age question at sign-up, and get legal advice on COPPA.]
+**Children under 13 are welcome to watch duels without an account.** Watching doesn't require any personal information. For visitors who aren't signed in, we don't use analytics cookies, don't record sessions, don't show ads, and don't ask for a name, email or anything else that identifies them. The only things we keep are a random viewer ID in the browser and cookie-less usage data, which we use only to count views and watchers, keep the Service working and improve it. We never use them to build a profile of a visitor or to advertise.
+
+**You must be at least 13 to create an account**, and we don't knowingly collect personal information from children under 13. If you believe a child under 13 has created an account or given us personal information, contact privacy@aiwizardduel.com and we'll delete it.
+
+[TODO: add a neutral age question at sign-up, and have a lawyer confirm the COPPA approach for signed-out viewers.]
 
 Users 13 to 17 should use the Service with a parent or guardian's permission. Duel chat is planned to require age verification. [Update this once the 13+ chat gate ships.]
 
@@ -137,5 +141,5 @@ We'll post any changes here and update the "Last updated" date. If a change is s
 
 Forthought Labs LLC
 South Carolina, USA
-privacy@ai-wizard-duel.com
+privacy@aiwizardduel.com
 [OPTIONAL MAILING ADDRESS: a PO box or virtual mailbox, not a home address]

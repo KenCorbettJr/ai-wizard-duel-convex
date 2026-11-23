@@ -80,7 +80,7 @@ async function deleteClerkUser(clerkId: string): Promise<void> {
   const secret = process.env.CLERK_SECRET_KEY;
   if (!secret) {
     throw new ConvexError(
-      "Account deletion isn't available right now. Please email support@ai-wizard-duel.com.",
+      "Account deletion isn't available right now. Please email support@aiwizardduel.com.",
     );
   }
   const res = await fetch(

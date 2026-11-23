@@ -103,7 +103,7 @@ export function getFallbackImageUrl(
   status?: "active" | "completed" | "waiting",
 ): string {
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://ai-wizard-duel.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://aiwizardduel.com";
 
   switch (type) {
     case "wizard":

@@ -38,7 +38,7 @@ describe("Metadata Utilities", () => {
         description:
           "Create powerful wizards and engage in epic AI-powered spell-casting duels. Join the magical arena where strategy meets creativity in turn-based combat.",
         image: DEFAULT_SOCIAL_IMAGES.app,
-        url: "https://ai-wizard-duel.com",
+        url: "https://aiwizardduel.com",
         type: "website",
       });
     });
@@ -55,7 +55,7 @@ describe("Metadata Utilities", () => {
         title: "Custom Title",
         description: "Custom description",
         image: DEFAULT_SOCIAL_IMAGES.app,
-        url: "https://ai-wizard-duel.com",
+        url: "https://aiwizardduel.com",
         type: "website",
       });
     });
@@ -82,7 +82,7 @@ describe("Metadata Utilities", () => {
         description:
           "Create powerful wizards and engage in epic AI-powered spell-casting duels. Join the magical arena where strategy meets creativity in turn-based combat.",
         image: DEFAULT_SOCIAL_IMAGES.app,
-        url: "https://ai-wizard-duel.com",
+        url: "https://aiwizardduel.com",
         type: "website",
       });
     });
@@ -177,7 +177,7 @@ describe("Metadata Utilities", () => {
     it("should use default domain when environment variable not set", () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
       const relativeUrl = "/images/wizard.jpg";
-      const expected = "https://ai-wizard-duel.com/images/wizard.jpg";
+      const expected = "https://aiwizardduel.com/images/wizard.jpg";
 
       expect(validateImageUrl(relativeUrl)).toBe(expected);
     });

@@ -29,7 +29,8 @@ Some things are **not** public. Your email address, your payment details, your t
 
 ## 2. Who can use the Service
 
-- You must be at least **13 years old** to create an account. [DECISION: also require 13+ just to watch? See note in the Privacy Policy on children.]
+- **Anyone can watch duels**, without an account, including children under 13.
+- You must be at least **13 years old** to create an account, or to do anything that needs one, such as creating wizards, playing, chatting, reacting or buying tokens.
 - If you're under 18, or under the age of majority where you live, you may use the Service only with permission from a parent or guardian who agrees to these Terms for you.
 - You can't use the Service if we've banned you, or if the law where you live forbids you from using it.
 
@@ -38,7 +39,7 @@ Some things are **not** public. Your email address, your payment details, your t
 - You sign in through our sign-in provider. Keep your login secure. You're responsible for what happens on your account.
 - Choose a username and display name that follow our [Arena Rules](/rules). Don't impersonate anyone.
 - One person, one account, unless we agree otherwise. Don't sell, trade or share accounts.
-- Tell us at support@ai-wizard-duel.com if you think someone else has gotten into your account.
+- Tell us at support@aiwizardduel.com if you think someone else has gotten into your account.
 
 ## 4. Arena Rules and moderation
 
@@ -50,7 +51,7 @@ Our [Arena Rules](/rules) are part of these Terms. Everything on AI Wizard Duel 
 
 Spells, wizards, names, profiles and chat messages are checked automatically, by a word filter and an AI moderator, when you submit them. Content that breaks the rules is rejected. **Rejected content is logged and may be reviewed by our team.** Repeated violations can lock you out of writing for a while, or lead to suspension or a ban.
 
-We may remove any content, or limit, suspend or end any account, at our discretion, including for breaking these Terms or the Arena Rules. Automated moderation isn't perfect. If you think we got it wrong, contact us at support@ai-wizard-duel.com.
+We may remove any content, or limit, suspend or end any account, at our discretion, including for breaking these Terms or the Arena Rules. Automated moderation isn't perfect. If you think we got it wrong, contact us at support@aiwizardduel.com.
 
 ## 5. Your content
 
@@ -75,7 +76,7 @@ The Service uses third-party AI models to moderate content and to create narrati
 - You can buy more tokens with one-time payments, processed by Stripe. There are no subscriptions.
 - **Tokens have no cash value.** They can't be exchanged for money, transferred, or sold, and they are a limited license to use features of the Service, not property.
 - Tokens don't expire while your account is active. If your account is closed for breaking these Terms, unused tokens are forfeited.
-- **Purchases are final, with one exception.** If you bought tokens by accident, we'll refund that purchase if you ask within **14 days** and **haven't used any tokens since buying them**. Email support@ai-wizard-duel.com with the email address on your account. The refunded tokens are removed from your balance. We may refuse repeated refund requests. This doesn't limit any refund rights the law gives you.
+- **Purchases are final, with one exception.** If you bought tokens by accident, we'll refund that purchase if you ask within **14 days** and **haven't used any tokens since buying them**. Email support@aiwizardduel.com with the email address on your account. The refunded tokens are removed from your balance. We may refuse repeated refund requests. This doesn't limit any refund rights the law gives you.
 - If we cancel a duel because something broke on our side, we return the tokens it charged.
 - We may change token prices, bundles or bonuses at any time. Changes don't affect purchases you've already completed.
 
@@ -90,7 +91,7 @@ Don't:
 - break the law, or help anyone else break it;
 - harass, threaten, bully or try to find out who another player really is;
 - use bots, scripts or automation to play, farm tokens or rewards, scrape the Service, or inflate views, reactions or rankings;
-- exploit bugs. Please report them to support@ai-wizard-duel.com instead;
+- exploit bugs. Please report them to support@aiwizardduel.com instead;
 - try to get around moderation, rate limits, bans or token charges;
 - interfere with the Service or its security, or reverse-engineer it except where the law allows;
 - create accounts to abuse invite bonuses or free tokens;
@@ -117,7 +118,7 @@ You can delete your account at any time on your Edit Profile page. Deletion happ
 - Wizards you only used in campaign battles, or never dueled with, are deleted along with those battles.
 - **Duels you played against other people stay**, because they're part of the other players' history too. They are no longer linked to you. Your username and profile are removed, your wizard appears as a departed wizard, and your chat messages in those duels are deleted. Your spells stay, so the duel still makes sense in the replay.
 
-If something you wrote in a remaining duel includes personal information, email support@ai-wizard-duel.com and we'll remove it. Our [Privacy Policy](/privacy) has more details.
+If something you wrote in a remaining duel includes personal information, email support@aiwizardduel.com and we'll remove it. Our [Privacy Policy](/privacy) has more details.
 
 We may suspend or close your account as described in Section 4. Sections 5, 6, 7 (no cash value), 10, and 13–16 still apply after your account ends.
 
@@ -135,7 +136,7 @@ If someone brings a claim against us because of Your Content or because you brok
 
 ## 16. Disputes
 
-**Talk to us first.** If you have a dispute with us, please email support@ai-wizard-duel.com and describe it. You and we agree to try in good faith to resolve it informally for at least 60 days before either side starts a lawsuit. Most problems can be fixed this way.
+**Talk to us first.** If you have a dispute with us, please email support@aiwizardduel.com and describe it. You and we agree to try in good faith to resolve it informally for at least 60 days before either side starts a lawsuit. Most problems can be fixed this way.
 
 These Terms are governed by the laws of the State of South Carolina and applicable US federal law, without regard to conflict-of-laws rules. Any dispute that isn't resolved informally will be decided exclusively in the state or federal courts located in York County, South Carolina, and you and we consent to their jurisdiction. Either side may instead bring an individual claim in small claims court, if it qualifies. If you live in a country whose law gives you the right to bring a claim in your local courts, this section doesn't take that right away.
 
@@ -149,5 +150,5 @@ These Terms and the Privacy Policy are the whole agreement between us about the 
 
 Forthought Labs LLC
 South Carolina, USA
-support@ai-wizard-duel.com
+support@aiwizardduel.com
 [OPTIONAL MAILING ADDRESS: a PO box or virtual mailbox, not a home address]
