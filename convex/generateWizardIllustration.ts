@@ -4,7 +4,6 @@ import { action, ActionCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { generateText, type AIObservabilityContext } from "./aiTextGeneration";
-import { shouldUseReferenceImageProvider } from "./lib/imageProvider";
 import { ORIGINAL_CHARACTER_RULE } from "./lib/contentStandards";
 
 export const generateWizardIllustration = action({
@@ -30,7 +29,6 @@ export const generateWizardIllustration = action({
     try {
       // Tokens are charged by the mutation that scheduled this action (the
       // first illustration is free). userId is only used for cost tracking.
-      const useGemini = shouldUseReferenceImageProvider();
       const observabilityContext: AIObservabilityContext = {
         sessionId: `wizard-${wizardId}`,
         traceId: crypto.randomUUID(),
@@ -52,7 +50,6 @@ export const generateWizardIllustration = action({
       console.log("Generated plain illustration prompt:", plainPrompt);
 
       const plainBuffer = await generateAndCompress(ctx, plainPrompt, {
-        useGemini,
         usage: { userId, sessionId: `wizard-${wizardId}` },
       });
       const plainStorageId = await ctx.storage.store(
@@ -80,7 +77,6 @@ export const generateWizardIllustration = action({
         console.log("Generated themed illustration prompt:", themedPrompt);
 
         const themedBuffer = await generateAndCompress(ctx, themedPrompt, {
-          useGemini,
           referenceStorageId: plainStorageId,
           referenceLabel: name,
           usage: { userId, sessionId: `wizard-${wizardId}` },
@@ -135,13 +131,6 @@ export const generateWizardIllustration = action({
         }
       }
 
-      // If it's an environment variable issue, provide helpful guidance
-      if (error instanceof Error && error.message.includes("FAL_KEY")) {
-        throw new Error(
-          "Image generation is not configured. Please add your FAL_KEY to the environment variables.",
-        );
-      }
-
       throw new Error(
         `Failed to generate wizard illustration: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -149,44 +138,31 @@ export const generateWizardIllustration = action({
   },
 });
 
-// Generate one image (Gemini with an optional reference, otherwise FAL) and compress it.
+// Generate one image, with an optional character reference, and compress it.
 async function generateAndCompress(
   ctx: ActionCtx,
   prompt: string,
   options: {
-    useGemini: boolean;
     referenceStorageId?: string;
     referenceLabel?: string;
     usage: { userId?: string; sessionId?: string };
   },
 ): Promise<ArrayBuffer> {
-  const { useGemini, referenceStorageId, referenceLabel, usage } = options;
+  const { referenceStorageId, referenceLabel, usage } = options;
 
-  let imageBuffer: ArrayBuffer;
-  if (useGemini) {
-    imageBuffer = await ctx.runAction(
-      api.generateImageWithGemini.generateImageWithGemini,
-      {
-        prompt,
-        useGemini: true,
-        ...usage,
-        ...(referenceStorageId
-          ? {
-              wizardImages: [referenceStorageId],
-              wizardImageLabels: referenceLabel ? [referenceLabel] : undefined,
-            }
-          : {}),
-      },
-    );
-  } else {
-    // FAL (flux schnell) has no reference-image input, so the themed image is
-    // text-only on this path.
-    imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
+  const imageBuffer: ArrayBuffer = await ctx.runAction(
+    api.generateImageWithGemini.generateImageWithGemini,
+    {
       prompt,
-      skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
       ...usage,
-    });
-  }
+      ...(referenceStorageId
+        ? {
+            wizardImages: [referenceStorageId],
+            wizardImageLabels: referenceLabel ? [referenceLabel] : undefined,
+          }
+        : {}),
+    },
+  );
 
   if (process.env.NODE_ENV === "test") return imageBuffer;
 

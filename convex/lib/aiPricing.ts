@@ -41,13 +41,9 @@ const TOKEN_PRICES: Record<string, TokenPrice> = {
 
 /**
  * USD per generated image, for providers that bill per image.
- * FAL: schnell is $0.003/megapixel (we generate 1024x1024, about 1 MP).
- * Kontext [pro] is $0.04/image; the /multi endpoint price was not confirmed.
  * BFL FLUX 3 Klein is $0.009 per 1K image, references included (https://bfl.ai/pricing).
  */
 const IMAGE_PRICES: Record<string, number> = {
-  "fal-ai/flux/schnell": 0.003,
-  "fal-ai/flux-pro/kontext/multi": 0.04,
   "flux-3-image-klein": 0.009,
 };
 

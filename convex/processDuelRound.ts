@@ -12,7 +12,6 @@ import { api, internal } from "./_generated/api";
 import { withDuelNames } from "./lib/duelWizardNames";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
-import { shouldUseReferenceImageProvider } from "./lib/imageProvider";
 import { Wizard } from "@/types/wizard";
 import { CONTENT_STANDARDS } from "./lib/contentStandards";
 
@@ -359,9 +358,6 @@ export const processDuelRound = internalAction({
 
       // Schedule round illustration generation (with credit checking)
       if (process.env.NODE_ENV !== "test" && battleResult.illustrationPrompt) {
-        // Check if we should use an AI reference-image provider (BFL or Gemini)
-        const useGemini = shouldUseReferenceImageProvider();
-
         // Determine which user should be charged for the image generation
         // Use the first player in the duel for credit consumption
         const firstPlayerId = duel.players[0];
@@ -379,7 +375,6 @@ export const processDuelRound = internalAction({
           illustrationPrompt: battleResult.illustrationPrompt,
           duelId,
           roundNumber: round.roundNumber.toString(),
-          useGemini,
           userId: firstPlayerId,
           skipImageGeneration,
         });

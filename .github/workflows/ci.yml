@@ -28,9 +28,7 @@ env:
   NEXT_PUBLIC_WAITLIST_ENABLED: "false"
   NEXT_PUBLIC_CONVEX_URL: https://example.convex.cloud
   CONVEX_DEPLOYMENT: dev:example-123
-  FAL_KEY: dummy
   GOOGLE_API_KEY: dummy
-  USE_GEMINI_FOR_IMAGES: "true"
 
 jobs:
   ci:

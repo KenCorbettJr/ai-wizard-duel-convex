@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { convexTest } from "convex-test";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
@@ -12,115 +12,22 @@ vi.mock("./aiTextGeneration", () => ({
   generateText: mockGenerateText,
 }));
 
-// Mock the Fal client (used inside the real generateImage action)
-const mockSubscribe = vi.fn();
-vi.mock("@fal-ai/serverless-client", () => ({
-  subscribe: mockSubscribe,
-  config: vi.fn(),
-}));
-
-// Provide a fetch mock used by generateImage to fetch the generated image
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
 describe("generateWizardIllustration", () => {
   let t: ReturnType<typeof convexTest>;
+  const savedEnv = { ...process.env };
 
   beforeEach(() => {
     t = convexTest(schema, import.meta.glob("./**/*.*s"));
-
-    // Ensure env is set as tests expect
-    process.env.FAL_KEY = "test-fal-key";
-
-    // Clear mocks' history/implementations and then reconfigure their resolved values
     vi.clearAllMocks();
 
-    // Default mock Fal response & image bytes used by tests
-    // Create a minimal valid PNG image (1x1 pixel transparent PNG)
-    const mockImageData = new Uint8Array([
-      0x89,
-      0x50,
-      0x4e,
-      0x47,
-      0x0d,
-      0x0a,
-      0x1a,
-      0x0a, // PNG signature
-      0x00,
-      0x00,
-      0x00,
-      0x0d,
-      0x49,
-      0x48,
-      0x44,
-      0x52, // IHDR chunk
-      0x00,
-      0x00,
-      0x00,
-      0x01,
-      0x00,
-      0x00,
-      0x00,
-      0x01, // 1x1 dimensions
-      0x08,
-      0x06,
-      0x00,
-      0x00,
-      0x00,
-      0x1f,
-      0x15,
-      0xc4, // bit depth, color type, etc.
-      0x89,
-      0x00,
-      0x00,
-      0x00,
-      0x0b,
-      0x49,
-      0x44,
-      0x41, // IDAT chunk
-      0x54,
-      0x78,
-      0x9c,
-      0x62,
-      0x00,
-      0x02,
-      0x00,
-      0x00, // image data
-      0x05,
-      0x00,
-      0x01,
-      0x0d,
-      0x0a,
-      0x2d,
-      0xb4,
-      0x00, // checksum
-      0x00,
-      0x00,
-      0x00,
-      0x49,
-      0x45,
-      0x4e,
-      0x44,
-      0xae, // IEND chunk
-      0x42,
-      0x60,
-      0x82,
-    ]);
-    const mockImageUrl = "https://example.com/image.png";
+    // Emulator mode makes the image providers return a mock image.
+    process.env.ENV = "emulate";
+    process.env.GOOGLE_API_KEY = "test-google-key";
+    delete process.env.BFL_API_KEY;
+  });
 
-    // Provide a resolved value shape matching generateImage.ts expectations
-    mockSubscribe.mockResolvedValue({
-      images: [{ url: mockImageUrl }],
-    });
-
-    // Configure fetch to return the ArrayBuffer for the above URL
-    mockFetch.mockResolvedValue({
-      ok: true,
-      arrayBuffer: () => Promise.resolve(mockImageData.buffer),
-    });
-
-    // Re-assign fetch to ensure the runtime uses the mock after clearing
-    global.fetch = mockFetch;
+  afterEach(() => {
+    process.env = { ...savedEnv };
   });
 
   it("should generate enhanced prompt and illustration for wizard", async () => {
@@ -152,10 +59,8 @@ describe("generateWizardIllustration", () => {
     expect(updatedWizard?.illustration).toBe(result.storageId);
     expect(updatedWizard?.illustrationVersion).toBeGreaterThan(1);
 
-    // Ensure the mocked services were used
+    // Ensure the mocked text service was used
     expect(mockGenerateText).toHaveBeenCalled();
-    expect(mockSubscribe).toHaveBeenCalled();
-    expect(mockFetch).toHaveBeenCalled();
   });
 
   it("should handle different wizard types with enhanced prompts", async () => {
@@ -173,10 +78,13 @@ describe("generateWizardIllustration", () => {
     ];
 
     for (const wizard of wizardTypes) {
-      const wizardId = await withAuth(t).mutation(internal.wizards.createWizard, {
-        name: wizard.name,
-        description: wizard.description,
-      });
+      const wizardId = await withAuth(t).mutation(
+        internal.wizards.createWizard,
+        {
+          name: wizard.name,
+          description: wizard.description,
+        },
+      );
 
       const result = await withAuth(t).action(
         api.generateWizardIllustration.generateWizardIllustration,
@@ -190,8 +98,6 @@ describe("generateWizardIllustration", () => {
       expect(result.success).toBe(true);
       expect(result.storageId).toBeDefined();
       expect(mockGenerateText).toHaveBeenCalled();
-      expect(mockSubscribe).toHaveBeenCalled();
-      expect(mockFetch).toHaveBeenCalled();
     }
   });
 

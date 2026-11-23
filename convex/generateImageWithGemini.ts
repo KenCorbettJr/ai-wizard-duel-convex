@@ -13,13 +13,13 @@ import { recordAIUsage } from "./lib/recordAIUsage";
 import { generateWithBfl, BFL_IMAGE_MODEL } from "./lib/bflImage";
 import {
   isBflEnabled,
+  isGeminiImageEnabled,
   imageAspectRatioValidator,
   type ImageAspectRatio,
 } from "./lib/imageProvider";
 import {
   wizardReferenceInstructions,
   wizardDescriptionsLine,
-  falReferenceSuffix,
   referenceStyleValidator,
   type ReferenceStyle,
 } from "./lib/referenceImageRules";
@@ -40,7 +40,6 @@ import { z } from "genkit/beta";
 // remove named/copyrighted characters, which is the most likely refusal cause.
 const GEMINI_MAX_ATTEMPTS = 2;
 const BFL_MAX_ATTEMPTS = 2;
-const MAX_FAL_REFERENCE_IMAGES = 4;
 
 type WizardDescription = { name: string; description: string };
 
@@ -108,7 +107,6 @@ export const generateImageWithGemini = action({
         }),
       ),
     ), // Wizard descriptions for context in subsequent rounds
-    useGemini: v.optional(v.boolean()), // Whether to use an AI reference-image provider (BFL and/or Gemini) instead of FAL
     userId: v.optional(v.string()), // For cost tracking
     sessionId: v.optional(v.string()), // For cost tracking
     feature: v.optional(v.string()), // Cost-tracking feature name (default generate_wizard_image)
@@ -125,7 +123,6 @@ export const generateImageWithGemini = action({
       wizardImages,
       wizardImageLabels,
       wizardDescriptions,
-      useGemini = false,
       userId,
       sessionId,
       feature,
@@ -142,47 +139,90 @@ export const generateImageWithGemini = action({
       promptLength: prompt.length,
     };
 
-    // Rewritten prompt, computed lazily on the first retry and reused for FAL
+    // Rewritten prompt, computed lazily on the first retry and reused by the next provider
     let rewritten: Awaited<ReturnType<typeof rewriteForImageSafety>> = null;
 
-    const runFal = async (): Promise<ArrayBuffer> => {
-      // Give FAL the same character references so the wizards stay consistent
-      const referenceImageUrls: string[] = [];
-      for (const id of [...(wizardImages ?? []), previousImage ?? ""]) {
-        if (!id || referenceImageUrls.length >= MAX_FAL_REFERENCE_IMAGES) {
-          continue;
-        }
-        try {
-          const url = await ctx.storage.getUrl(id as Id<"_storage">);
-          if (url) referenceImageUrls.push(url);
-        } catch (error) {
-          console.warn(`Could not get URL for reference ${id}:`, error);
-        }
-      }
-      const falPrompt = rewritten?.prompt ?? prompt;
-      return await ctx.runAction(api.generateImage.generateImage, {
-        prompt:
-          referenceImageUrls.length > 0
-            ? `${falPrompt} ${falReferenceSuffix(referenceStyle)} Low poly art style.`
-            : falPrompt,
-        referenceImageUrls:
-          referenceImageUrls.length > 0 ? referenceImageUrls : undefined,
-        skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
-        userId,
-        sessionId,
-        aspectRatio,
-      });
+    // Gemini goes first. Black Forest Labs FLUX 3 Klein is the fallback.
+    // Each provider gets a second attempt with a rewritten prompt.
+    type Provider = {
+      name: "gemini" | "bfl";
+      model?: string;
+      maxAttempts: number;
+      run: (
+        promptText: string,
+        descriptions: WizardDescription[] | undefined,
+      ) => Promise<ArrayBuffer>;
     };
+    const providers: Provider[] = [];
+    if (isGeminiImageEnabled()) {
+      providers.push({
+        name: "gemini",
+        maxAttempts: GEMINI_MAX_ATTEMPTS,
+        run: (promptText, descriptions) =>
+          generateWithGeminiFlash(
+            ctx,
+            promptText,
+            previousImage,
+            wizardImages,
+            descriptions,
+            wizardImageLabels,
+            usage,
+            aspectRatio,
+            referenceStyle,
+          ),
+      });
+    }
+    if (isBflEnabled()) {
+      providers.push({
+        name: "bfl",
+        model: BFL_IMAGE_MODEL,
+        maxAttempts: BFL_MAX_ATTEMPTS,
+        run: async (promptText, descriptions) =>
+          isEmulatorMode()
+            ? generateMockImageBuffer()
+            : await generateWithBfl(
+                ctx,
+                {
+                  prompt: promptText,
+                  previousImage,
+                  wizardImages,
+                  wizardImageLabels,
+                  wizardDescriptions: descriptions,
+                  aspectRatio,
+                  referenceStyle,
+                },
+                usage,
+              ),
+      });
+    }
 
-    // Black Forest Labs FLUX 3 Klein goes first when enabled because it is the
-    // cheapest provider that accepts reference images. Gemini and then FAL
-    // remain as fallbacks.
-    const bflEnabled = useGemini && isBflEnabled();
-    if (bflEnabled) {
-      let lastBflError: unknown;
-      for (let attempt = 1; attempt <= BFL_MAX_ATTEMPTS; attempt++) {
+    if (providers.length === 0) {
+      const message =
+        "No image provider is configured. Set GOOGLE_API_KEY or BFL_API_KEY.";
+      await captureServerEvent("image_generation_all_providers_failed", {
+        ...baseProps,
+        error: message,
+        durationMs: Date.now() - started,
+      });
+      throw new Error(message);
+    }
+
+    let lastError: unknown;
+    for (const [index, provider] of providers.entries()) {
+      if (index > 0) {
+        const previous = providers[index - 1].name;
+        console.log(`${previous} exhausted, trying ${provider.name}`);
+        await captureServerEvent(`image_generation_fallback_from_${previous}`, {
+          ...baseProps,
+          to: provider.name,
+          error:
+            lastError instanceof Error ? lastError.message : String(lastError),
+        });
+      }
+      for (let attempt = 1; attempt <= provider.maxAttempts; attempt++) {
+        const useRewrite = attempt > 1;
         try {
-          if (attempt > 1 && !rewritten) {
+          if (useRewrite && !rewritten) {
             rewritten = await rewriteForImageSafety(
               ctx,
               usage,
@@ -190,148 +230,52 @@ export const generateImageWithGemini = action({
               wizardDescriptions,
             );
           }
-          const result = isEmulatorMode()
-            ? generateMockImageBuffer()
-            : await generateWithBfl(
-                ctx,
-                {
-                  prompt: attempt > 1 && rewritten ? rewritten.prompt : prompt,
-                  previousImage,
-                  wizardImages,
-                  wizardImageLabels,
-                  wizardDescriptions:
-                    attempt > 1 && rewritten
-                      ? rewritten.descriptions
-                      : wizardDescriptions,
-                  aspectRatio,
-                  referenceStyle,
-                },
-                usage,
-              );
+          const result = await provider.run(
+            useRewrite && rewritten ? rewritten.prompt : prompt,
+            useRewrite && rewritten
+              ? rewritten.descriptions
+              : wizardDescriptions,
+          );
           await captureServerEvent("image_generation_succeeded", {
             ...baseProps,
-            provider: "bfl",
-            model: BFL_IMAGE_MODEL,
+            provider: provider.name,
+            model: provider.model,
             attempt,
-            usedRewrittenPrompt: attempt > 1 && !!rewritten,
+            usedRewrittenPrompt: useRewrite && !!rewritten,
             durationMs: Date.now() - started,
           });
           return result;
         } catch (error) {
-          lastBflError = error;
+          lastError = error;
+          const details =
+            error instanceof GeminiNoImageError ? error.details : {};
           console.error(
-            `BFL attempt ${attempt}/${BFL_MAX_ATTEMPTS} failed:`,
+            `${provider.name} attempt ${attempt}/${provider.maxAttempts} failed:`,
             error,
           );
           await captureServerEvent("image_generation_failed", {
             ...baseProps,
-            provider: "bfl",
-            model: BFL_IMAGE_MODEL,
+            provider: provider.name,
+            model: provider.model,
             attempt,
-            usedRewrittenPrompt: attempt > 1 && !!rewritten,
-            willRetry: attempt < BFL_MAX_ATTEMPTS,
+            usedRewrittenPrompt: useRewrite && !!rewritten,
+            willRetry: attempt < provider.maxAttempts,
             error: error instanceof Error ? error.message : String(error),
+            ...details,
           });
         }
       }
-      console.log("BFL exhausted, trying the next provider");
-      await captureServerEvent("image_generation_fallback_from_bfl", {
-        ...baseProps,
-        bflError:
-          lastBflError instanceof Error
-            ? lastBflError.message
-            : String(lastBflError),
-      });
     }
 
-    // Gemini runs when it is switched on. When BFL is the primary provider,
-    // Gemini is only a fallback if USE_GEMINI_FOR_IMAGES is also set.
-    const geminiEnabled =
-      useGemini &&
-      !!process.env.GOOGLE_API_KEY &&
-      (!bflEnabled || process.env.USE_GEMINI_FOR_IMAGES === "true");
-    if (!geminiEnabled) {
-      return await runFal();
-    }
-
-    // Try Gemini, retrying once on failure
-    let lastError: unknown;
-    for (let attempt = 1; attempt <= GEMINI_MAX_ATTEMPTS; attempt++) {
-      try {
-        if (attempt > 1 && !rewritten) {
-          rewritten = await rewriteForImageSafety(
-            ctx,
-            usage,
-            prompt,
-            wizardDescriptions,
-          );
-        }
-        const result = await generateWithGeminiFlash(
-          ctx,
-          attempt > 1 && rewritten ? rewritten.prompt : prompt,
-          previousImage,
-          wizardImages,
-          attempt > 1 && rewritten
-            ? rewritten.descriptions
-            : wizardDescriptions,
-          wizardImageLabels,
-          usage,
-          aspectRatio,
-          referenceStyle,
-        );
-        await captureServerEvent("image_generation_succeeded", {
-          ...baseProps,
-          provider: "gemini",
-          attempt,
-          usedRewrittenPrompt: attempt > 1 && !!rewritten,
-          durationMs: Date.now() - started,
-        });
-        return result;
-      } catch (error) {
-        lastError = error;
-        const details =
-          error instanceof GeminiNoImageError ? error.details : {};
-        console.error(
-          `Gemini attempt ${attempt}/${GEMINI_MAX_ATTEMPTS} failed:`,
-          error,
-        );
-        await captureServerEvent("image_generation_failed", {
-          ...baseProps,
-          provider: "gemini",
-          attempt,
-          usedRewrittenPrompt: attempt > 1 && !!rewritten,
-          willRetry: attempt < GEMINI_MAX_ATTEMPTS,
-          error: error instanceof Error ? error.message : String(error),
-          ...details,
-        });
-      }
-    }
-
-    // Gemini exhausted: fall back to FAL
-    console.log("Falling back to FAL after Gemini failure");
-    await captureServerEvent("image_generation_fallback_to_fal", {
+    // Every provider failed
+    await captureServerEvent("image_generation_all_providers_failed", {
       ...baseProps,
-      geminiError:
-        lastError instanceof Error ? lastError.message : String(lastError),
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+      durationMs: Date.now() - started,
     });
-    try {
-      const result = await runFal();
-      await captureServerEvent("image_generation_succeeded", {
-        ...baseProps,
-        provider: "fal",
-        usedRewrittenPrompt: !!rewritten,
-        withReferences: (wizardImages?.length ?? 0) > 0 || !!previousImage,
-        durationMs: Date.now() - started,
-      });
-      return result;
-    } catch (falError) {
-      await captureServerEvent("image_generation_all_providers_failed", {
-        ...baseProps,
-        error: falError instanceof Error ? falError.message : String(falError),
-        durationMs: Date.now() - started,
-      });
-      throw falError;
-    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Image generation failed");
   },
 });
 

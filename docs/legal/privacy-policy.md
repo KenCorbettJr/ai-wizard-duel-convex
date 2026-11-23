@@ -1,8 +1,6 @@
 # AI Wizard Duel — Privacy Policy
 
-> **DRAFT. Not yet reviewed by a lawyer.** Items in [brackets] need a decision or a real value.
-
-**Last updated:** [DATE]
+**Last updated:** November 23, 2026
 
 This Privacy Policy explains what information Forthought Labs LLC ("we," "us") collects when you use AI Wizard Duel (the "Service"), how we use and share it, and the choices you have.
 
@@ -36,7 +34,7 @@ Public content can be viewed, copied, shared, linked to and indexed by search en
 
 **Information you give us**
 
-- **Account details:** your email address and name, through our sign-in provider (Clerk), or from Google or another account if you sign in with one. [Confirm which sign-in methods are enabled.]
+- **Account details:** your email address and name, through our sign-in provider (Clerk), or from Google or another account if you sign in with one.
 - **Profile:** your username and display name.
 - **Game content:** wizards, spells, chat messages and reactions.
 - **Purchases:** which token bundles you buy and when. Stripe handles your card details; we never see or store your full card number.
@@ -58,7 +56,7 @@ Public content can be viewed, copied, shared, linked to and indexed by search en
 
 **Cookies and similar technologies**
 
-We use cookies and browser storage to keep you signed in (Clerk), to remember settings and your anonymous viewer ID, to remember whether analytics should run without cookies, and, for signed-in players, for analytics and session replay (PostHog). Signed-out visitors get no analytics cookies. We don't use advertising cookies. You can control cookies in your browser. [DECISION: before marketing to the EU/UK, add a consent prompt for signed-in players' analytics and session replay.]
+We use cookies and browser storage to keep you signed in (Clerk), to remember settings and your anonymous viewer ID, to remember whether analytics should run without cookies, and, for signed-in players, for analytics and session replay (PostHog). Signed-out visitors get no analytics cookies. We don't use advertising cookies. You can control cookies in your browser.
 
 ## 3. How we use information
 
@@ -77,9 +75,9 @@ If you're in the EU or UK, our legal bases are: performing our contract with you
 To make the game work, we send content to third-party AI providers:
 
 - **Google (Gemini):** writing duel narration, moderating text, generating images and narrated audio, and playing the campaign wizards.
-- **Black Forest Labs and fal.ai:** generating images. [If fal.ai is removed from the app, take it off this list.]
+- **Black Forest Labs:** generating images when Gemini can't.
 
-What we send is mostly your game content: spells, wizard descriptions, chat messages being moderated, and duel context. We don't intentionally send your email or payment information. These providers process the content to produce results for us, under their own terms. [Confirm each provider's data-retention and training terms for the API tier you use, and say here whether your content is used to train their models.]
+What we send is mostly your game content: spells, wizard descriptions, chat messages being moderated, and duel context. We don't intentionally send your email or payment information. These providers process the content to produce results for us. Each provider's own terms govern how long it keeps that content and whether it may use it to improve its services.
 
 ## 5. How we share information
 
@@ -98,9 +96,9 @@ We don't sell your personal information, and we don't share it for advertising.
 - **Account information:** while your account is open. You can delete your account on your Edit Profile page. Your sign-in account is deleted right away, and the rest of your data within minutes. Copies in our backups are removed as those backups expire.
 - **Duels with other players:** a duel belongs to everyone who played in it, so it stays after one player deletes their account, but it's no longer linked to them. Their username and profile are removed, their wizard is shown as a departed wizard, and their chat messages are deleted. Their spells, and the narration and illustrations made from them, stay so the other player's duel still makes sense. If any of it contains personal information, ask us and we'll remove it.
 - **Campaign battles and unused wizards:** deleted along with the account.
-- **Moderation records:** up to [12 months], or longer if needed for an ongoing safety issue. They're deleted along with the account.
+- **Moderation records:** while your account is open. They're deleted along with the account, unless we need them for an ongoing safety issue.
 - **Purchase records:** as long as tax and accounting law requires. If you delete your account, we keep the record of each purchase but remove its link to you.
-- **Analytics:** according to our analytics settings, currently [X months].
+- **Analytics:** usage data for up to 1 year, and session replays for up to 30 days.
 - **Push subscriptions:** until you turn notifications off, or the device stops accepting them.
 
 ## 7. Your choices and rights
@@ -121,9 +119,7 @@ The Service is built to be safe for a young audience. Everything stays PG-13 and
 
 **You must be at least 13 to create an account**, and we don't knowingly collect personal information from children under 13. If you believe a child under 13 has created an account or given us personal information, contact privacy@aiwizardduel.com and we'll delete it.
 
-[TODO: add a neutral age question at sign-up, and have a lawyer confirm the COPPA approach for signed-out viewers.]
-
-Users 13 to 17 should use the Service with a parent or guardian's permission. Duel chat is planned to require age verification. [Update this once the 13+ chat gate ships.]
+Users 13 to 17 should use the Service with a parent or guardian's permission.
 
 ## 9. Security
 
@@ -139,7 +135,6 @@ We'll post any changes here and update the "Last updated" date. If a change is s
 
 ## 12. Contact
 
-Forthought Labs LLC
-South Carolina, USA
+Forthought Labs LLC\
+South Carolina, USA\
 privacy@aiwizardduel.com
-[OPTIONAL MAILING ADDRESS: a PO box or virtual mailbox, not a home address]

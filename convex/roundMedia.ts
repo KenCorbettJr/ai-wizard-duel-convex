@@ -3,7 +3,6 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { scheduleRoundNarration } from "./lib/scheduleNarration";
-import { shouldUseReferenceImageProvider as referenceImageProviderEnabled } from "./lib/imageProvider";
 
 /**
  * Loads a round and its duel, and checks the caller is one of the duelists.
@@ -62,7 +61,6 @@ export const retryRoundIllustration = mutation({
           illustrationPrompt,
           duelId: duel._id,
           roundNumber: round.roundNumber.toString(),
-          useGemini: referenceImageProviderEnabled(),
           userId: duel.players[0],
         },
       );

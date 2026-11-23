@@ -44,10 +44,3 @@ export function wizardDescriptionsLine(
     ? `The wizards are: ${list}.`
     : `Each wizard's usual look, for recognition only (this scene's action can change their pose, form and what they hold): ${list}.`;
 }
-
-/** Short version for FAL, which gets plain reference URLs. */
-export function falReferenceSuffix(style: ReferenceStyle): string {
-  return style === "exact"
-    ? "Keep each wizard's appearance exactly as in the reference images."
-    : "Keep each wizard recognizable from the reference images, but follow the scene for their pose, form and what they hold.";
-}

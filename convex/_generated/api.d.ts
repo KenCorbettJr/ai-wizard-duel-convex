@@ -27,7 +27,6 @@ import type * as duelRatings from "../duelRatings.js";
 import type * as duelRatingsData from "../duelRatingsData.js";
 import type * as duelViews from "../duelViews.js";
 import type * as duels from "../duels.js";
-import type * as generateImage from "../generateImage.js";
 import type * as generateImageWithGemini from "../generateImageWithGemini.js";
 import type * as generateRoundIllustration from "../generateRoundIllustration.js";
 import type * as generateWizardIllustration from "../generateWizardIllustration.js";
@@ -115,7 +114,6 @@ declare const fullApi: ApiFromModules<{
   duelRatingsData: typeof duelRatingsData;
   duelViews: typeof duelViews;
   duels: typeof duels;
-  generateImage: typeof generateImage;
   generateImageWithGemini: typeof generateImageWithGemini;
   generateRoundIllustration: typeof generateRoundIllustration;
   generateWizardIllustration: typeof generateWizardIllustration;

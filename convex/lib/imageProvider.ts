@@ -1,11 +1,10 @@
 /**
- * Which image providers are switched on, read from environment variables.
+ * Which image providers are available, based on their API keys.
  *
- * - USE_BFL_FOR_IMAGES=true (needs BFL_API_KEY): Black Forest Labs FLUX 3 Klein
- * - USE_GEMINI_FOR_IMAGES=true (needs GOOGLE_API_KEY): Gemini
- * - neither: FAL
+ * - GOOGLE_API_KEY: Gemini, the default provider
+ * - BFL_API_KEY: Black Forest Labs FLUX 3 Klein, the fallback when Gemini fails
  *
- * When several are on, they run in that order and fall back to the next one.
+ * Both go through generateImageWithGemini, which tries them in that order.
  */
 
 import { v, Infer } from "convex/values";
@@ -22,18 +21,12 @@ export const imageAspectRatioValidator = v.union(
 export type ImageAspectRatio = Infer<typeof imageAspectRatioValidator>;
 export const DUEL_SCENE_ASPECT_RATIO: ImageAspectRatio = "3:2";
 
-/** True when the BFL provider is switched on and has an API key. */
-export function isBflEnabled(): boolean {
-  return process.env.USE_BFL_FOR_IMAGES === "true" && !!process.env.BFL_API_KEY;
+/** True when Gemini can generate images. */
+export function isGeminiImageEnabled(): boolean {
+  return !!process.env.GOOGLE_API_KEY;
 }
 
-/**
- * True when images should go through generateImageWithGemini (BFL or Gemini)
- * instead of calling FAL directly. Callers pass this as the `useGemini` arg.
- */
-export function shouldUseReferenceImageProvider(): boolean {
-  return (
-    process.env.USE_GEMINI_FOR_IMAGES === "true" ||
-    process.env.USE_BFL_FOR_IMAGES === "true"
-  );
+/** True when the Black Forest Labs provider has an API key. */
+export function isBflEnabled(): boolean {
+  return !!process.env.BFL_API_KEY;
 }

@@ -41,7 +41,7 @@ In emulator mode (`.env.emulate` and `.env.local`):
 ```bash
 ENV=emulate
 # API keys are commented out - not needed in emulator mode
-# FAL_KEY=disabled_in_emulator_mode
+# BFL_API_KEY=disabled_in_emulator_mode
 # GOOGLE_API_KEY=disabled_in_emulator_mode
 ```
 
@@ -71,7 +71,7 @@ npm test convex/mocks/mockServices.test.ts
 The mocks are integrated into:
 
 - `convex/aiTextGeneration.ts` - Text generation service
-- `convex/generateImage.ts` - Image generation service
+- `convex/generateImageWithGemini.ts` - Image generation service
 - `convex/ai/getAI.ts` - AI client configuration
 
 ## Development

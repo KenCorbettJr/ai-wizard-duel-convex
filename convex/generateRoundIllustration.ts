@@ -12,7 +12,8 @@ export const generateRoundIllustration = internalAction({
     illustrationPrompt: v.string(),
     duelId: v.id("duels"),
     roundNumber: v.string(), // Can be "0" for introduction or actual round number
-    useGemini: v.optional(v.boolean()), // Whether to use Gemini Nano Banana
+    // Ignored. Still accepted so jobs scheduled before it was removed run.
+    useGemini: v.optional(v.boolean()),
     userId: v.optional(v.string()), // User ID for credit consumption
     skipImageGeneration: v.optional(v.boolean()), // Skip image generation for text-only mode
   },
@@ -22,7 +23,6 @@ export const generateRoundIllustration = internalAction({
       illustrationPrompt,
       duelId,
       roundNumber,
-      useGemini = false,
       userId,
       skipImageGeneration = false,
     },
@@ -35,7 +35,7 @@ export const generateRoundIllustration = internalAction({
       });
 
     console.log(
-      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${useGemini ? "with Gemini Nano Banana" : "with FAL"} ${skipImageGeneration ? "(text-only mode)" : ""}`,
+      `Starting illustration generation for duel ${duelId}, round ${roundNumber} ${skipImageGeneration ? "(text-only mode)" : ""}`,
     );
 
     try {
@@ -61,64 +61,51 @@ export const generateRoundIllustration = internalAction({
       let imageBuffer: ArrayBuffer;
       let previousImage: string | undefined;
 
-      if (useGemini) {
-        // Every round gets the plain-background wizard images as character
-        // references. Later rounds also get the previous scene for continuity.
-        const wizardRefs = await getWizardReferences(ctx, duel.wizards);
+      // Every round gets the plain-background wizard images as character
+      // references. Later rounds also get the previous scene for continuity.
+      const wizardRefs = await getWizardReferences(ctx, duel.wizards);
 
-        if (roundNumber === "0") {
-          imageBuffer = await ctx.runAction(
-            api.generateImageWithGemini.generateImageWithGemini,
-            {
-              prompt: illustrationPrompt,
-              wizardImages: wizardRefs.storageIds,
-              wizardImageLabels: wizardRefs.labels,
-              useGemini: true,
-              userId,
-              sessionId: `duel-${duelId}`,
-              feature: "generate_duel_illustration",
-              aspectRatio: DUEL_SCENE_ASPECT_RATIO,
-              referenceStyle: "scene",
-            },
-          );
-        } else {
-          previousImage = await getPreviousRoundIllustration(
-            ctx,
-            duelId,
-            parseInt(roundNumber),
-          );
-
-          const wizardDescriptions = await getWizardDescriptions(
-            ctx,
-            duel.wizards,
-          );
-
-          imageBuffer = await ctx.runAction(
-            api.generateImageWithGemini.generateImageWithGemini,
-            {
-              prompt: illustrationPrompt,
-              previousImage,
-              wizardImages: wizardRefs.storageIds,
-              wizardImageLabels: wizardRefs.labels,
-              wizardDescriptions,
-              useGemini: true,
-              userId,
-              sessionId: `duel-${duelId}`,
-              feature: "generate_duel_illustration",
-              aspectRatio: DUEL_SCENE_ASPECT_RATIO,
-              referenceStyle: "scene",
-            },
-          );
-        }
+      if (roundNumber === "0") {
+        imageBuffer = await ctx.runAction(
+          api.generateImageWithGemini.generateImageWithGemini,
+          {
+            prompt: illustrationPrompt,
+            wizardImages: wizardRefs.storageIds,
+            wizardImageLabels: wizardRefs.labels,
+            userId,
+            sessionId: `duel-${duelId}`,
+            feature: "generate_duel_illustration",
+            aspectRatio: DUEL_SCENE_ASPECT_RATIO,
+            referenceStyle: "scene",
+          },
+        );
       } else {
-        // Use FAL (original approach)
-        imageBuffer = await ctx.runAction(api.generateImage.generateImage, {
-          prompt: illustrationPrompt,
-          skipResize: process.env.NODE_ENV === "test", // Skip resize during tests
-          userId,
-          sessionId: `duel-${duelId}`,
-          aspectRatio: DUEL_SCENE_ASPECT_RATIO,
-        });
+        previousImage = await getPreviousRoundIllustration(
+          ctx,
+          duelId,
+          parseInt(roundNumber),
+        );
+
+        const wizardDescriptions = await getWizardDescriptions(
+          ctx,
+          duel.wizards,
+        );
+
+        imageBuffer = await ctx.runAction(
+          api.generateImageWithGemini.generateImageWithGemini,
+          {
+            prompt: illustrationPrompt,
+            previousImage,
+            wizardImages: wizardRefs.storageIds,
+            wizardImageLabels: wizardRefs.labels,
+            wizardDescriptions,
+            userId,
+            sessionId: `duel-${duelId}`,
+            feature: "generate_duel_illustration",
+            aspectRatio: DUEL_SCENE_ASPECT_RATIO,
+            referenceStyle: "scene",
+          },
+        );
       }
 
       // Apply additional resizing specifically for duel round illustrations (skip during tests)
