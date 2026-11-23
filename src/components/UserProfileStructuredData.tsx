@@ -15,7 +15,7 @@ export function UserProfileStructuredData({
   userProfile,
 }: UserProfileStructuredDataProps) {
   const displayName = userProfile.displayName || userProfile.userId;
-  const profileUrl = `${typeof window !== "undefined" ? window.location.origin : "https://ai-wizard-duel.com"}/users/${userProfile.userId}`;
+  const profileUrl = `${typeof window !== "undefined" ? window.location.origin : "https://aiwizardduel.com"}/users/${userProfile.userId}`;
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -62,7 +62,7 @@ export function UserProfileStructuredData({
       url:
         typeof window !== "undefined"
           ? window.location.origin
-          : "https://ai-wizard-duel.com",
+          : "https://aiwizardduel.com",
       genre: "Strategy Game",
       gamePlatform: "Web Browser",
     },

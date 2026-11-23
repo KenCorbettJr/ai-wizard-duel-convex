@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Arena Rules & Safety | AI Wizard Duel",
+  title: "Arena Rules & Safety",
   description:
     "AI Wizard Duel keeps everything PG-13. Every spell, wizard and username is checked before anyone sees it, and the AI storyteller follows the same rules.",
 };

@@ -13,7 +13,7 @@ import { getTokenPack } from "./lib/pricing";
  *   STRIPE_SECRET_KEY      sk_test_... / sk_live_...
  *   STRIPE_WEBHOOK_SECRET  whsec_... for the endpoint
  *                          https://<deployment>.convex.site/stripe/webhook
- *   SITE_URL               e.g. https://ai-wizard-duel.com (no trailing slash)
+ *   SITE_URL               e.g. https://aiwizardduel.com (no trailing slash)
  */
 
 function getStripe(): Stripe {

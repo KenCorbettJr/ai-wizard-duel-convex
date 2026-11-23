@@ -75,7 +75,10 @@ export default function RootLayout({
           >
             Skip to main content
           </a>
-          <TopLoader />
+          {/* It reads the URL, so it can't block prerendering of dynamic routes. */}
+          <Suspense fallback={null}>
+            <TopLoader />
+          </Suspense>
           <ClerkProvider>
             <ConvexClientProvider>
               <Suspense

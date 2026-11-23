@@ -61,7 +61,7 @@ const DEFAULT_METADATA: MetadataConfig = {
   description:
     "Create powerful wizards and engage in epic AI-powered spell-casting duels. Join the magical arena where strategy meets creativity in turn-based combat.",
   image: DEFAULT_SOCIAL_IMAGES.app,
-  url: "https://ai-wizard-duel.com",
+  url: "https://aiwizardduel.com",
   type: "website",
 };
 
@@ -200,7 +200,7 @@ export function validateImageUrl(imageUrl?: string): string | undefined {
 
   // Ensure the URL is absolute
   if (imageUrl.startsWith("/")) {
-    return `${process.env.NEXT_PUBLIC_SITE_URL || "https://ai-wizard-duel.com"}${imageUrl}`;
+    return `${process.env.NEXT_PUBLIC_SITE_URL || "https://aiwizardduel.com"}${imageUrl}`;
   }
 
   return imageUrl;
@@ -461,7 +461,7 @@ export function validateDescriptionLength(description: string): {
  */
 export function createCanonicalUrl(path: string): string {
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://ai-wizard-duel.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://aiwizardduel.com";
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   return `${baseUrl}${cleanPath}`;
 }
@@ -564,7 +564,7 @@ export function validateMetadataConfig(config: MetadataConfig): {
       // Handle relative URLs by converting them to absolute URLs
       if (config.image.startsWith("/")) {
         const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL || "https://ai-wizard-duel.com";
+          process.env.NEXT_PUBLIC_SITE_URL || "https://aiwizardduel.com";
         new URL(config.image, baseUrl);
       } else {
         new URL(config.image);
