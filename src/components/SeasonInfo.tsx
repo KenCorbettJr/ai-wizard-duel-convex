@@ -17,7 +17,7 @@ export function SeasonInfo({ userId, compact = false }: SeasonInfoProps) {
   const activeSeason = useQuery(api.campaignSeasons.getActiveCampaignSeason);
   const userProgress = useQuery(
     api.campaignSeasons.getUserCurrentSeasonProgress,
-    userId ? { userId } : "skip",
+    userId ? {} : "skip",
   );
 
   if (activeSeason === undefined) {

@@ -4,13 +4,14 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { CAMPAIGN_OPPONENTS_DATA } from "./campaignOpponents";
 import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { checkSuperAdminAccess } from "./auth.utils";
 import { getActiveCampaignSeasonHelper } from "./seasonHelpers";
 import { chargeDuelToken } from "./lib/duelTokens";
+import { syncDuelParticipants } from "./lib/duelParticipants";
 
 /**
  * Seed the campaign opponents as wizards with campaign-specific fields
@@ -520,10 +521,12 @@ export const getWizardCampaignProgress = query({
 });
 
 /**
- * Get all campaign progress for a user's wizards in the current season
+ * Get all campaign progress for the signed-in player's wizards in the current
+ * season. The player comes from auth, never from the client, so nobody can
+ * read another player's progress.
  */
 export const getUserCampaignProgress = query({
-  args: { userId: v.string() },
+  args: {},
   returns: v.array(
     v.object({
       _id: v.id("wizardCampaignProgress"),
@@ -538,7 +541,11 @@ export const getUserCampaignProgress = query({
       lastBattleAt: v.optional(v.number()),
     }),
   ),
-  handler: async (ctx, { userId }) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
+
     // Get the active season
     const activeSeason = await getActiveCampaignSeasonHelper(ctx);
     if (!activeSeason) {
@@ -547,8 +554,9 @@ export const getUserCampaignProgress = query({
 
     const progressList = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_season", (q) => q.eq("seasonId", activeSeason._id))
-      .filter((q) => q.eq(q.field("userId"), userId))
+      .withIndex("by_user_season", (q) =>
+        q.eq("userId", userId).eq("seasonId", activeSeason._id),
+      )
       .collect();
 
     return progressList;
@@ -1036,6 +1044,7 @@ export const startCampaignBattle = mutation({
       needActionsFrom: [],
       isCampaignBattle: true, // Mark as campaign battle
     });
+    await syncDuelParticipants(ctx, duelId);
 
     // Each campaign battle (including retries after a loss) costs 1 token.
     // Throws, rolling back the duel above, if the player has none.
@@ -1396,10 +1405,11 @@ export const calculateBattleLuck = query({
 });
 
 /**
- * Get comprehensive campaign statistics for a user
+ * Get comprehensive campaign statistics for the signed-in player (from auth,
+ * never a client-supplied id).
  */
 export const getCampaignStatistics = query({
-  args: { userId: v.string() },
+  args: {},
   returns: v.object({
     totalWizards: v.number(),
     completedCampaigns: v.number(),
@@ -1431,11 +1441,15 @@ export const getCampaignStatistics = query({
       }),
     ),
   }),
-  handler: async (ctx, { userId }) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Not authenticated");
+    const userId = identity.subject;
+
     // Get user's wizards
     const userWizards = await ctx.db
       .query("wizards")
-      .filter((q) => q.eq(q.field("owner"), userId))
+      .withIndex("by_owner", (q) => q.eq("owner", userId))
       .collect();
 
     // Get campaign progress for all wizards
@@ -1447,7 +1461,7 @@ export const getCampaignStatistics = query({
     // Get all campaign battles for the user
     const allBattles = await ctx.db
       .query("campaignBattles")
-      .filter((q) => q.eq(q.field("userId"), userId))
+      .withIndex("by_user_opponent", (q) => q.eq("userId", userId))
       .collect();
 
     // Calculate basic statistics

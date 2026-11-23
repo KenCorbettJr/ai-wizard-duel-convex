@@ -31,23 +31,19 @@ import {
 } from "lucide-react";
 
 interface CampaignStatsProps {
-  userId: string;
   showDetailedProgress?: boolean;
   showRecentActivity?: boolean;
   compact?: boolean;
 }
 
 export function CampaignStats({
-  userId,
   showDetailedProgress = true,
   showRecentActivity = true,
   compact = false,
 }: CampaignStatsProps) {
   // Get user's wizards and their campaign progress
   const userWizards = useQuery(api.wizards.getUserWizards, {});
-  const campaignProgress = useQuery(api.campaigns.getUserCampaignProgress, {
-    userId,
-  });
+  const campaignProgress = useQuery(api.campaigns.getUserCampaignProgress, {});
   const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
 
   // Show loading state

@@ -319,11 +319,7 @@ export default function DashboardContent({
   const [showMigrationNotification, setShowMigrationNotification] =
     useState(false);
 
-  const {
-    isLoaded,
-    isSignedIn,
-    isProfileComplete,
-  } = useProfileCompletion();
+  const { isLoaded, isSignedIn, isProfileComplete } = useProfileCompletion();
   const liveWizards = useQuery(
     api.wizards.getUserWizards,
     user?.id ? {} : "skip",
@@ -332,7 +328,7 @@ export default function DashboardContent({
   const liveOpponents = useQuery(api.campaigns.getCampaignOpponents);
   const liveProgress = useQuery(
     api.campaigns.getUserCampaignProgress,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
   const livePlayerDuels = useQuery(
     api.duels.getPlayerDuels,

@@ -196,7 +196,7 @@ export default function CampaignPage() {
 
   const campaignProgress = useQuery(
     api.campaigns.getUserCampaignProgress,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
 
   // Show registration prompt for anonymous users

@@ -26,7 +26,7 @@ describe("Campaign Statistics", () => {
       {
         name: "Test Wizard",
         description: "A test wizard for statistics",
-      }
+      },
     );
 
     // Initialize campaign progress
@@ -35,7 +35,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId,
         userId,
-      }
+      },
     );
 
     // Defeat a few opponents
@@ -54,9 +54,7 @@ describe("Campaign Statistics", () => {
     // Get campaign statistics
     const stats = await withAuth(t, userId).query(
       api.campaigns.getCampaignStatistics,
-      {
-        userId,
-      }
+      {},
     );
 
     expect(stats).toBeDefined();
@@ -81,7 +79,7 @@ describe("Campaign Statistics", () => {
       {
         name: "Lucky Wizard",
         description: "A wizard with a relic",
-      }
+      },
     );
 
     // Get initial effective luck (should be base 10)
@@ -89,7 +87,7 @@ describe("Campaign Statistics", () => {
       api.campaigns.getWizardEffectiveLuck,
       {
         wizardId,
-      }
+      },
     );
     expect(initialLuck).toBe(10);
 
@@ -99,7 +97,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId,
         userId,
-      }
+      },
     );
 
     // Defeat all 10 opponents
@@ -116,7 +114,7 @@ describe("Campaign Statistics", () => {
       api.campaigns.checkCampaignCompletion,
       {
         wizardId,
-      }
+      },
     );
     expect(completion.completed).toBe(true);
     expect(completion.relicAwarded).toBe(true);
@@ -126,7 +124,7 @@ describe("Campaign Statistics", () => {
       api.campaigns.getWizardEffectiveLuck,
       {
         wizardId,
-      }
+      },
     );
     expect(relicLuck).toBe(11);
 
@@ -136,7 +134,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId,
         baseLuck: 15,
-      }
+      },
     );
     expect(battleLuck).toBe(16); // 15 + 1 relic bonus
   });
@@ -150,7 +148,7 @@ describe("Campaign Statistics", () => {
       {
         name: "Battle Wizard",
         description: "A wizard for battle testing",
-      }
+      },
     );
 
     // Initialize campaign progress
@@ -159,7 +157,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId,
         userId,
-      }
+      },
     );
 
     // Create a campaign battle
@@ -168,7 +166,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId,
         opponentNumber: 1,
-      }
+      },
     );
 
     expect(battleResult.duelId).toBeDefined();
@@ -187,7 +185,7 @@ describe("Campaign Statistics", () => {
       {
         userId,
         limit: 5,
-      }
+      },
     );
 
     expect(recentBattles).toHaveLength(1);
@@ -208,7 +206,7 @@ describe("Campaign Statistics", () => {
       {
         name: "Champion Wizard",
         description: "A champion wizard",
-      }
+      },
     );
 
     await withAuth(t, user1).mutation(
@@ -216,7 +214,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId: wizard1,
         userId: user1,
-      }
+      },
     );
 
     // Defeat all opponents for user 1
@@ -234,7 +232,7 @@ describe("Campaign Statistics", () => {
       {
         name: "Novice Wizard",
         description: "A novice wizard",
-      }
+      },
     );
 
     await withAuth(t, user2).mutation(
@@ -242,7 +240,7 @@ describe("Campaign Statistics", () => {
       {
         wizardId: wizard2,
         userId: user2,
-      }
+      },
     );
 
     // Defeat first 3 opponents for user 2
@@ -259,7 +257,7 @@ describe("Campaign Statistics", () => {
       api.campaigns.getCampaignLeaderboard,
       {
         limit: 10,
-      }
+      },
     );
 
     expect(leaderboard).toHaveLength(2);

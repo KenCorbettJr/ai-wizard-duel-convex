@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { useConvexImage } from "@/hooks/useConvexImage";
 import Image from "next/image";
 import { memo } from "react";
+import { cn } from "@/lib/utils";
 
 interface ConvexImageProps {
   storageId: string;
@@ -15,6 +16,8 @@ interface ConvexImageProps {
   sizes?: string;
   /** Re-encode quality. Stored images are already compressed, so stay high. */
   quality?: number;
+  /** Load eagerly with high priority (for images above the fold). */
+  priority?: boolean;
 }
 
 export const ConvexImage = memo(function ConvexImage({
@@ -25,6 +28,7 @@ export const ConvexImage = memo(function ConvexImage({
   className,
   sizes,
   quality = 90,
+  priority = false,
 }: ConvexImageProps) {
   const imageUrl = useConvexImage(api.wizards.getIllustrationUrl, {
     storageId,
@@ -33,7 +37,7 @@ export const ConvexImage = memo(function ConvexImage({
   if (!imageUrl) {
     return (
       <div
-        className={`bg-muted animate-pulse rounded-lg ${className}`}
+        className={cn("bg-muted animate-pulse rounded-lg", className)}
         // Height comes from the ratio, so a class like h-auto or h-full still
         // applies and the box never overflows a narrower container.
         style={{
@@ -54,8 +58,8 @@ export const ConvexImage = memo(function ConvexImage({
       className={className}
       sizes={sizes}
       quality={quality}
-      priority={false}
-      loading="lazy"
+      preload={priority}
+      loading={priority ? "eager" : "lazy"}
     />
   );
 });

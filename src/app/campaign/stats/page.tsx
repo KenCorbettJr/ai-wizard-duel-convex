@@ -50,7 +50,6 @@ export default function CampaignStatsPage() {
 
           {/* Campaign Statistics Component */}
           <CampaignStats
-            userId={user.id}
             showDetailedProgress={true}
             showRecentActivity={true}
             compact={false}

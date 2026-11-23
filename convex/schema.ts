@@ -439,7 +439,8 @@ export default defineSchema({
     .index("by_wizard", ["wizardId"])
     .index("by_user", ["userId"])
     .index("by_season", ["seasonId"])
-    .index("by_wizard_season", ["wizardId", "seasonId"]),
+    .index("by_wizard_season", ["wizardId", "seasonId"])
+    .index("by_user_season", ["userId", "seasonId"]),
 
   // Campaign battle records (separate from multiplayer duels)
   campaignBattles: defineTable({
@@ -524,6 +525,15 @@ export default defineSchema({
     .index("by_endpoint", ["endpoint"]),
   // One row per onlooker per duel (duelists aren't counted). viewerId is
   // "user:<clerk id>" or "anon:<browser id>", as in convex/presence.ts.
+  // One row per player per live (waiting or in-progress) duel, removed when
+  // the duel ends. Maintained by lib/duelParticipants.syncDuelParticipants so
+  // "my live duels" is an indexed read rather than a scan of every live duel.
+  duelParticipants: defineTable({
+    duelId: v.id("duels"),
+    userId: v.string(),
+  })
+    .index("by_duel", ["duelId"])
+    .index("by_user", ["userId"]),
   duelViews: defineTable({
     duelId: v.id("duels"),
     viewerId: v.string(),

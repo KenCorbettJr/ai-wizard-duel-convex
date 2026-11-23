@@ -4,6 +4,7 @@ import { expect, test, describe, beforeEach } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
+import { withAuth } from "./test_utils";
 
 describe("Campaign Database Schema Tests", () => {
   let t: TestConvex<typeof schema>;
@@ -58,19 +59,19 @@ describe("Campaign Database Schema Tests", () => {
         api.campaigns.getCampaignOpponent,
         {
           opponentNumber: 1, // First opponent should be beginner
-        }
+        },
       );
       const intermediateOpponent = await t.query(
         api.campaigns.getCampaignOpponent,
         {
           opponentNumber: 5, // Middle opponent should be intermediate
-        }
+        },
       );
       const advancedOpponent = await t.query(
         api.campaigns.getCampaignOpponent,
         {
           opponentNumber: 10, // Last opponent should be advanced
-        }
+        },
       );
 
       expect(beginnerOpponent?.difficulty).toBe("BEGINNER");
@@ -139,7 +140,7 @@ describe("Campaign Database Schema Tests", () => {
         {
           wizardId,
           userId,
-        }
+        },
       );
 
       expect(progress).toBeDefined();
@@ -226,7 +227,7 @@ describe("Campaign Database Schema Tests", () => {
           name: "Second Campaign Wizard",
           description: "Another wizard for the same user",
           owner: userId,
-        }
+        },
       );
 
       // Initialize progress for both wizards
@@ -261,11 +262,9 @@ describe("Campaign Database Schema Tests", () => {
       expect(progress2?.defeatedOpponents).toEqual([]);
 
       // Get all user progress
-      const userProgress = await t.query(
+      const userProgress = await withAuth(t, userId).query(
         api.campaigns.getUserCampaignProgress,
-        {
-          userId,
-        }
+        {},
       );
 
       expect(userProgress).toHaveLength(2);
@@ -308,7 +307,7 @@ describe("Campaign Database Schema Tests", () => {
           wizardId,
           opponentNumber: 1,
           userId: otherUserId, // Wrong user
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -434,7 +433,7 @@ describe("Campaign Database Schema Tests", () => {
         api.campaigns.getWizardCampaignBattles,
         {
           wizardId,
-        }
+        },
       );
 
       expect(wizardBattles).toHaveLength(2);
@@ -455,7 +454,7 @@ describe("Campaign Database Schema Tests", () => {
         {
           userId,
           opponentNumber: 5,
-        }
+        },
       );
 
       expect(userOpponentBattles).toHaveLength(1);
@@ -508,7 +507,7 @@ describe("Campaign Database Schema Tests", () => {
           userId,
           opponentNumber: 1, // Same opponent
           duelId: duel2Id,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -543,7 +542,7 @@ describe("Campaign Database Schema Tests", () => {
             name: `Performance Wizard ${i}`,
             description: `Wizard ${i} for performance testing`,
             owner: userId,
-          }
+          },
         );
         wizardIds.push(wizardId);
 
@@ -565,11 +564,9 @@ describe("Campaign Database Schema Tests", () => {
 
       // Test by_user index
       const startTime2 = Date.now();
-      const userProgress = await t.query(
+      const userProgress = await withAuth(t, userId).query(
         api.campaigns.getUserCampaignProgress,
-        {
-          userId,
-        }
+        {},
       );
       const queryTime2 = Date.now() - startTime2;
 
@@ -611,7 +608,7 @@ describe("Campaign Database Schema Tests", () => {
         api.campaigns.getWizardCampaignBattles,
         {
           wizardId,
-        }
+        },
       );
       const queryTime1 = Date.now() - startTime1;
 
@@ -625,7 +622,7 @@ describe("Campaign Database Schema Tests", () => {
         {
           userId,
           opponentNumber: 3,
-        }
+        },
       );
       const queryTime2 = Date.now() - startTime2;
 
@@ -702,14 +699,14 @@ describe("Campaign Database Schema Tests", () => {
         t.mutation(api.campaigns.defeatOpponent, {
           wizardId,
           opponentNumber: 0, // Invalid: too low
-        })
+        }),
       ).rejects.toThrow();
 
       await expect(
         t.mutation(api.campaigns.defeatOpponent, {
           wizardId,
           opponentNumber: 11, // Invalid: too high
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -732,7 +729,7 @@ describe("Campaign Database Schema Tests", () => {
         t.mutation(api.campaigns.defeatOpponent, {
           wizardId,
           opponentNumber: 3, // Skipping opponents 1 and 2
-        })
+        }),
       ).rejects.toThrow();
 
       // Should not be able to defeat same opponent twice
@@ -745,7 +742,7 @@ describe("Campaign Database Schema Tests", () => {
         t.mutation(api.campaigns.defeatOpponent, {
           wizardId,
           opponentNumber: 1, // Already defeated
-        })
+        }),
       ).rejects.toThrow();
     });
   });

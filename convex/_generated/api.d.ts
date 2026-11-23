@@ -40,6 +40,7 @@ import type * as lib_bflImage from "../lib/bflImage.js";
 import type * as lib_contentStandards from "../lib/contentStandards.js";
 import type * as lib_departed from "../lib/departed.js";
 import type * as lib_duelChat from "../lib/duelChat.js";
+import type * as lib_duelParticipants from "../lib/duelParticipants.js";
 import type * as lib_duelRating from "../lib/duelRating.js";
 import type * as lib_duelTokens from "../lib/duelTokens.js";
 import type * as lib_imageProvider from "../lib/imageProvider.js";
@@ -125,6 +126,7 @@ declare const fullApi: ApiFromModules<{
   "lib/contentStandards": typeof lib_contentStandards;
   "lib/departed": typeof lib_departed;
   "lib/duelChat": typeof lib_duelChat;
+  "lib/duelParticipants": typeof lib_duelParticipants;
   "lib/duelRating": typeof lib_duelRating;
   "lib/duelTokens": typeof lib_duelTokens;
   "lib/imageProvider": typeof lib_imageProvider;

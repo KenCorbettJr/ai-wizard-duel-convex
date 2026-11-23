@@ -27,6 +27,7 @@ import type { Doc, Id, TableNames } from "./_generated/dataModel";
 import { forfeitDuelFor } from "./duels";
 import { refundDuelTokens } from "./lib/duelTokens";
 import { DEPARTED_OWNER } from "./lib/departed";
+import { syncDuelParticipants } from "./lib/duelParticipants";
 
 /** Duels looked at per batch. Each can cascade into many deletes. */
 const DUELS_PER_BATCH = 50;
@@ -193,6 +194,7 @@ async function handleDuel(
   ) {
     // Joined but not started yet (the introduction is being written).
     await ctx.db.patch(duel._id, { status: "CANCELLED" });
+    await syncDuelParticipants(ctx, duel._id);
     await refundDuelTokens(ctx, duel._id, "player_deleted_account");
   }
 
@@ -231,6 +233,7 @@ async function detachFromDuel(
         : duel.imageCreditConsumedBy,
     rematchDuelId,
   });
+  await syncDuelParticipants(ctx, duelId);
 
   for (const message of await ctx.db
     .query("duelMessages")
@@ -308,6 +311,7 @@ async function deleteDuelEntirely(ctx: MutationCtx, duel: Doc<"duels">) {
 
   await deleteStorage(ctx, duel.featuredIllustration);
   await ctx.db.delete(duelId);
+  await syncDuelParticipants(ctx, duelId);
 }
 
 export const deleteRemaining = internalMutation({

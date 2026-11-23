@@ -6,6 +6,7 @@ import {
   MutationCtx,
 } from "./_generated/server";
 import { scheduleDuelRating } from "./lib/scheduleDuelRating";
+import { syncDuelParticipants } from "./lib/duelParticipants";
 import {
   scheduleDuelResultNotifications,
   scheduleTurnReminders,
@@ -348,7 +349,7 @@ async function insertWaitingDuel(
     isUnique = !existing;
   } while (!isUnique);
 
-  return await ctx.db.insert("duels", {
+  const duelId = await ctx.db.insert("duels", {
     numberOfRounds,
     wizards,
     players,
@@ -364,6 +365,8 @@ async function insertWaitingDuel(
     creatorCoversEntry: coverOpponentEntry || undefined,
     chatEnabled,
   });
+  await syncDuelParticipants(ctx, duelId);
+  return duelId;
 }
 
 // Create a new duel
@@ -467,6 +470,7 @@ async function addPlayerToDuel(
     hitPoints: updatedHitPoints,
     needActionsFrom: updatedNeedActionsFrom,
   });
+  await syncDuelParticipants(ctx, duelId);
 
   // Auto-start the duel if we now have 2 players
   if (updatedPlayers.length >= 2) {
@@ -874,6 +878,7 @@ export const completeRound = internalMutation({
         winners: shouldEndDuel.winners,
         losers: shouldEndDuel.losers,
       });
+      await syncDuelParticipants(ctx, duel._id);
 
       await afterDuelCompleted(
         ctx,
@@ -998,6 +1003,7 @@ export async function forfeitDuelFor(
     needActionsFrom: [],
     forfeitedBy: losers[0],
   });
+  await syncDuelParticipants(ctx, duel._id);
 
   await afterDuelCompleted(ctx, duel, winners, losers);
 }
@@ -1139,6 +1145,7 @@ export const cancelDuel = mutation({
     await ctx.db.patch(duelId, {
       status: "CANCELLED" as DuelStatus,
     });
+    await syncDuelParticipants(ctx, duelId);
 
     return duelId;
   },
@@ -1197,6 +1204,105 @@ export const getActiveDuels = query({
     // Filter out campaign battles
     const allDuels = [...inProgressDuels, ...waitingDuels];
     return allDuels.filter((duel) => !duel.isCampaignBattle);
+  },
+});
+
+// Live (waiting or in-progress) duels for the signed-in player's wizards, one
+// row per wizard per duel. Reads the player's duelParticipants rows (indexed,
+// live duels only) and then just those duels, so it costs O(own live duels)
+// and only re-runs when one of them changes. Powers the "Your turn" /
+// "In duel" state on My Wizards.
+export const getMyWizardsLiveDuels = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      wizardId: v.id("wizards"),
+      duelId: v.id("duels"),
+      status: v.union(
+        v.literal("WAITING_FOR_PLAYERS"),
+        v.literal("IN_PROGRESS"),
+      ),
+      yourTurn: v.boolean(),
+      isCampaignBattle: v.boolean(),
+      createdAt: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
+
+    const participations = await ctx.db
+      .query("duelParticipants")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    if (participations.length === 0) return [];
+
+    const myWizards = await ctx.db
+      .query("wizards")
+      .withIndex("by_owner", (q) => q.eq("owner", userId))
+      .collect();
+    const mine = new Set(myWizards.map((w) => w._id));
+
+    const rows = [];
+    for (const { duelId } of participations) {
+      const duel = await ctx.db.get(duelId);
+      if (
+        !duel ||
+        (duel.status !== "IN_PROGRESS" && duel.status !== "WAITING_FOR_PLAYERS")
+      ) {
+        continue;
+      }
+      for (const wizardId of duel.wizards) {
+        if (!mine.has(wizardId)) continue;
+        rows.push({
+          wizardId,
+          duelId: duel._id,
+          status: duel.status,
+          yourTurn:
+            duel.status === "IN_PROGRESS" &&
+            duel.needActionsFrom.includes(wizardId),
+          isCampaignBattle: !!duel.isCampaignBattle,
+          createdAt: duel.createdAt,
+        });
+      }
+    }
+    return rows;
+  },
+});
+
+// One-time backfill of duelParticipants for duels that were already live
+// before the table existed. Run once after deploying:
+//   npx convex run duels:backfillDuelParticipants
+// Safe to re-run; it pages through live duels and self-schedules.
+export const backfillDuelParticipants = internalMutation({
+  args: {
+    status: v.optional(
+      v.union(v.literal("IN_PROGRESS"), v.literal("WAITING_FOR_PLAYERS")),
+    ),
+    cursor: v.optional(v.union(v.string(), v.null())),
+  },
+  returns: v.null(),
+  handler: async (ctx, { status = "IN_PROGRESS", cursor = null }) => {
+    const page = await ctx.db
+      .query("duels")
+      .withIndex("by_status", (q) => q.eq("status", status))
+      .paginate({ cursor, numItems: 100 });
+    for (const duel of page.page) {
+      await syncDuelParticipants(ctx, duel._id);
+    }
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.duels.backfillDuelParticipants, {
+        status,
+        cursor: page.continueCursor,
+      });
+    } else if (status === "IN_PROGRESS") {
+      await ctx.scheduler.runAfter(0, internal.duels.backfillDuelParticipants, {
+        status: "WAITING_FOR_PLAYERS",
+        cursor: null,
+      });
+    }
+    return null;
   },
 });
 
@@ -1520,6 +1626,7 @@ export const startDuelAfterIntroduction = internalMutation({
       currentRound: 1,
       needActionsFrom: duel.wizards, // All wizards need to act
     });
+    await syncDuelParticipants(ctx, duelId);
 
     // Players often wander off while waiting for an opponent to join.
     await scheduleTurnReminders(ctx, duelId, 1);
@@ -1844,6 +1951,7 @@ export const forceCancelDuel = mutation({
     await ctx.db.patch(duelId, {
       status: "CANCELLED" as DuelStatus,
     });
+    await syncDuelParticipants(ctx, duelId);
 
     // Admins cancel broken or stuck duels, so every player gets their token back
     await refundDuelTokens(ctx, duelId, "admin_cancelled");
@@ -2024,6 +2132,7 @@ export const createDuelInternal = internalMutation({
       textOnlyMode: false,
       isCampaignBattle: isCampaignBattle || false,
     });
+    await syncDuelParticipants(ctx, duelId);
 
     return duelId;
   },

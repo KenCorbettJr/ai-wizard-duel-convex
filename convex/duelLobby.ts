@@ -1,5 +1,6 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { syncDuelParticipants } from "./lib/duelParticipants";
 
 import { api, internal } from "./_generated/api";
 
@@ -312,6 +313,7 @@ export const createMatchedDuel = internalMutation({
     await ctx.db.patch(duelId, {
       status: "IN_PROGRESS",
     });
+    await syncDuelParticipants(ctx, duelId);
 
     // Schedule the duel introduction generation
     // In test environment, skip scheduling to avoid transaction issues

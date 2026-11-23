@@ -106,7 +106,7 @@ export const getActiveCampaignSeason = query({
       createdAt: v.number(),
       createdBy: v.string(),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     // First try to find an active season
@@ -153,7 +153,7 @@ export const getActiveCampaignSeasonInternal = internalQuery({
       createdAt: v.number(),
       createdBy: v.string(),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     // First try to find an active season
@@ -200,7 +200,7 @@ export const getAllCampaignSeasons = query({
       createdAt: v.number(),
       createdBy: v.string(),
       participantCount: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     // Check admin access
@@ -227,7 +227,7 @@ export const getAllCampaignSeasons = query({
           ...season,
           participantCount,
         };
-      })
+      }),
     );
 
     return seasonsWithCounts;
@@ -250,7 +250,7 @@ export const updateCampaignSeason = mutation({
           description: v.string(),
           luckBonus: v.number(),
           iconUrl: v.optional(v.string()),
-        })
+        }),
       ),
       opponents: v.optional(v.array(v.id("wizards"))),
       maxParticipants: v.optional(v.number()),
@@ -327,10 +327,11 @@ export const archiveCampaignSeason = mutation({
 });
 
 /**
- * Get user's progress in the current season
+ * Get the signed-in player's progress in the current season (player from
+ * auth, never a client-supplied id). Null when signed out or no season.
  */
 export const getUserCurrentSeasonProgress = query({
-  args: { userId: v.string() },
+  args: {},
   returns: v.union(
     v.object({
       season: v.object({
@@ -356,12 +357,16 @@ export const getUserCurrentSeasonProgress = query({
           hasCompletionRelic: v.boolean(),
           createdAt: v.number(),
           lastBattleAt: v.optional(v.number()),
-        })
+        }),
       ),
     }),
-    v.null()
+    v.null(),
   ),
-  handler: async (ctx, { userId }) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const userId = identity.subject;
+
     const activeSeason = await getActiveCampaignSeasonHelper(ctx);
     if (!activeSeason) {
       return null;
@@ -369,8 +374,9 @@ export const getUserCurrentSeasonProgress = query({
 
     const progress = await ctx.db
       .query("wizardCampaignProgress")
-      .withIndex("by_season", (q) => q.eq("seasonId", activeSeason._id))
-      .filter((q) => q.eq(q.field("userId"), userId))
+      .withIndex("by_user_season", (q) =>
+        q.eq("userId", userId).eq("seasonId", activeSeason._id),
+      )
       .collect();
 
     return {
@@ -386,10 +392,11 @@ export const getUserCurrentSeasonProgress = query({
 });
 
 /**
- * Get user's historical season progress
+ * Get the signed-in player's historical season progress (player from auth,
+ * never a client-supplied id). Empty when signed out.
  */
 export const getUserSeasonHistory = query({
-  args: { userId: v.string() },
+  args: {},
   returns: v.array(
     v.object({
       season: v.object({
@@ -407,9 +414,13 @@ export const getUserSeasonHistory = query({
       totalWizards: v.number(),
       relicsEarned: v.number(),
       totalBattlesWon: v.number(),
-    })
+    }),
   ),
-  handler: async (ctx, { userId }) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
+
     // Get all archived seasons
     const archivedSeasons = await ctx.db
       .query("campaignSeasons")
@@ -421,18 +432,19 @@ export const getUserSeasonHistory = query({
       archivedSeasons.map(async (season) => {
         const progress = await ctx.db
           .query("wizardCampaignProgress")
-          .withIndex("by_season", (q) => q.eq("seasonId", season._id))
-          .filter((q) => q.eq(q.field("userId"), userId))
+          .withIndex("by_user_season", (q) =>
+            q.eq("userId", userId).eq("seasonId", season._id),
+          )
           .collect();
 
         const completedWizards = progress.filter(
-          (p) => p.hasCompletionRelic
+          (p) => p.hasCompletionRelic,
         ).length;
         const totalWizards = progress.length;
         const relicsEarned = completedWizards;
         const totalBattlesWon = progress.reduce(
           (sum, p) => sum + p.defeatedOpponents.length,
-          0
+          0,
         );
 
         return {
@@ -447,7 +459,7 @@ export const getUserSeasonHistory = query({
           relicsEarned,
           totalBattlesWon,
         };
-      })
+      }),
     );
 
     return history.filter((h) => h.totalWizards > 0); // Only return seasons user participated in
@@ -490,7 +502,7 @@ export const createDefaultSeason = mutation({
     const campaignOpponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -502,7 +514,7 @@ export const createDefaultSeason = mutation({
 
     if (sortedOpponents.length === 0) {
       throw new Error(
-        "No campaign opponents found. Please create campaign opponents first."
+        "No campaign opponents found. Please create campaign opponents first.",
       );
     }
 
@@ -561,7 +573,7 @@ export const createDefaultSeasonInternal = internalMutation({
     const campaignOpponents = await ctx.db
       .query("wizards")
       .withIndex("by_campaign_opponent", (q) =>
-        q.eq("isCampaignOpponent", true)
+        q.eq("isCampaignOpponent", true),
       )
       .collect();
 
@@ -573,7 +585,7 @@ export const createDefaultSeasonInternal = internalMutation({
 
     if (sortedOpponents.length === 0) {
       throw new Error(
-        "No campaign opponents found. Please create campaign opponents first."
+        "No campaign opponents found. Please create campaign opponents first.",
       );
     }
 
