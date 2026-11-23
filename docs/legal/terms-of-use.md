@@ -1,8 +1,6 @@
 # AI Wizard Duel — Terms of Use
 
-> **DRAFT. Not yet reviewed by a lawyer.** Items in [brackets] need a decision or a real value.
-
-**Last updated:** [DATE]
+**Last updated:** November 23, 2026
 
 These Terms of Use ("Terms") are an agreement between you and Forthought Labs LLC ("we," "us"), which runs AI Wizard Duel (the "Service"). By using the Service, with or without an account, you agree to these Terms and to our [Privacy Policy](/privacy). If you don't agree, please don't use the Service.
 
@@ -67,7 +65,7 @@ We may remove any content, or limit, suspend or end any account, at our discreti
 The Service uses third-party AI models to moderate content and to create narration, illustrations, wizard portraits, audio and the campaign wizards' spells ("AI Output").
 
 - AI Output is generated automatically. It may be unexpected, inaccurate, or look like other content. It doesn't represent our views.
-- Subject to these Terms, and to the extent we hold any rights in it, we grant you a non-exclusive license to use the AI Output from your own duels and wizards for personal, non-commercial purposes, such as sharing it on social media. [DECISION: allow commercial use? Check the image providers' terms first.]
+- Subject to these Terms, and to the extent we hold any rights in it, we grant you a non-exclusive license to use the AI Output from your own duels and wizards for personal, non-commercial purposes, such as sharing it on social media.
 - AI Output is public in the same way Your Content is (see Section 1), and we may use it under the same license.
 - Don't use the Service to try to generate content that breaks the Arena Rules.
 
@@ -110,7 +108,7 @@ We respect the intellectual property of others and expect our users to do the sa
 
 **Copyright notices.** Send a notice under the Digital Millennium Copyright Act (17 U.S.C. § 512) to our designated agent:
 
-[DMCA AGENT: name, mailing address, phone and email, exactly as registered with the U.S. Copyright Office]
+Forthought Labs LLC, Attn: Copyright Agent\
 Email: copyright@aiwizardduel.com
 
 Your notice must include: (1) your physical or electronic signature; (2) the work you believe is infringed; (3) the material you believe is infringing, with a link to where it appears on the Service; (4) your contact information; (5) a statement that you have a good-faith belief the use isn't authorized by the owner, its agent or the law; and (6) a statement, under penalty of perjury, that the information in your notice is accurate and that you are the owner or authorized to act for the owner.
@@ -158,15 +156,12 @@ If someone brings a claim against us because of Your Content or because you brok
 
 These Terms are governed by the laws of the State of South Carolina and applicable US federal law, without regard to conflict-of-laws rules. Any dispute that isn't resolved informally will be decided exclusively in the state or federal courts located in York County, South Carolina, and you and we consent to their jurisdiction. Either side may instead bring an individual claim in small claims court, if it qualifies. If you live in a country whose law gives you the right to bring a claim in your local courts, this section doesn't take that right away.
 
-[DECISION: no arbitration clause for now. Revisit with a lawyer once revenue or the user base grows.]
-
 ## 18. General
 
 These Terms and the Privacy Policy are the whole agreement between us about the Service. If any part is found unenforceable, the rest still applies. If we don't enforce a term, that doesn't mean we've waived it. You can't transfer these Terms to anyone else. We may transfer them, for example if the Service is sold.
 
 ## 19. Contact
 
-Forthought Labs LLC
-South Carolina, USA
+Forthought Labs LLC\
+South Carolina, USA\
 support@aiwizardduel.com
-[OPTIONAL MAILING ADDRESS: a PO box or virtual mailbox, not a home address]
