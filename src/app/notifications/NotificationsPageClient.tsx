@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
-import { Bell, Swords, Trophy } from "lucide-react";
+import { Bell, Clapperboard, Swords, Trophy } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { PageHeader } from "@/components/PageHeader";
@@ -108,7 +108,12 @@ export function NotificationsPageClient() {
 }
 
 function TypeIcon({ type }: { type: Doc<"notifications">["type"] }) {
-  const Icon = type === "DUEL_RESULT" ? Trophy : Swords;
+  const Icon =
+    type === "DUEL_RESULT"
+      ? Trophy
+      : type === "TEASER_READY"
+        ? Clapperboard
+        : Swords;
   return (
     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-gold">
       <Icon className="h-4 w-4" aria-hidden="true" />

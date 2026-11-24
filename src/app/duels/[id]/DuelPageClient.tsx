@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DuelTeaserCard } from "@/components/DuelTeaserCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -1190,6 +1191,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 )}
             </div>
           </div>
+
+          {duel.status === "COMPLETED" && <DuelTeaserCard duelId={duel._id} />}
 
           {newRoundPill !== null && !revealPending && (
             <div
