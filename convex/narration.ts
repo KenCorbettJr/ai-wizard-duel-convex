@@ -22,7 +22,7 @@ let cachedVoice: string | undefined;
 // NARRATION_VOICE to pin a specific voice (a library voice ID or a custom
 // "voice_..." ID). Otherwise pick the first British male narrator voice in
 // the Extended Voice Library, sorted by ID so the choice is stable.
-async function resolveVoice(apiKey: string): Promise<string> {
+export async function resolveVoice(apiKey: string): Promise<string> {
   if (process.env.NARRATION_VOICE) return process.env.NARRATION_VOICE;
   if (cachedVoice) return cachedVoice;
 
@@ -61,10 +61,11 @@ async function resolveVoice(apiKey: string): Promise<string> {
   return FALLBACK_VOICE;
 }
 
-async function synthesize(
+export async function synthesize(
   apiKey: string,
   script: string,
   voice: string,
+  style: string = NARRATION_STYLE,
 ): Promise<Uint8Array<ArrayBuffer>> {
   const response = await fetch(`${GEMINI_API}/interactions`, {
     method: "POST",
@@ -79,7 +80,7 @@ async function synthesize(
               type: "text",
               text: script,
               annotations: [
-                { type: "speech_metadata", style: NARRATION_STYLE },
+                { type: "speech_metadata", style },
               ],
             },
           ],

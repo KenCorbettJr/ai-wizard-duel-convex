@@ -39,7 +39,8 @@ export default defineSchema({
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_user_id", ["userId"])
-    .index("by_stripe_customer", ["stripeCustomerId"]),
+    .index("by_stripe_customer", ["stripeCustomerId"])
+    .index("by_role", ["role"]),
   wizards: defineTable({
     owner: v.string(), // User ID from Clerk, "campaign" for AI opponents, or "departed" once the owner deleted their account
     name: v.string(),
@@ -109,6 +110,60 @@ export default defineSchema({
   })
     .index("by_duel", ["duelId"])
     .index("by_overall", ["overall"]),
+  // Short vertical teaser videos of a duel, for YouTube Shorts and the duel
+  // page. Built daily from the most popular duel (or on demand by an admin),
+  // reviewed by an admin, then published. Teasers never show how the duel
+  // ended: they stop before the deciding round. See convex/teasers.ts.
+  duelTeasers: defineTable({
+    duelId: v.id("duels"),
+    status: v.union(
+      v.literal("DRAFTING"), // Writing the script, voicing it, animating stills
+      v.literal("RENDERING"), // Waiting for the video render job
+      v.literal("READY"), // Rendered, waiting for an admin to review
+      v.literal("PUBLISHING"), // Approved, uploading to YouTube
+      v.literal("PUBLISHED"), // Live, and shown on the duel page
+      v.literal("REJECTED"),
+      v.literal("FAILED"),
+    ),
+    source: v.union(v.literal("daily"), v.literal("admin")),
+    aiMotion: v.boolean(), // Animate the stills into short AI video clips
+    pickScore: v.optional(v.number()),
+    pickReason: v.optional(v.string()),
+    title: v.optional(v.string()), // YouTube title, spoiler-free
+    description: v.optional(v.string()), // YouTube description, spoiler-free
+    // Voiced segments in order: hook, one per scene, then cliffhanger + call to action.
+    segments: v.optional(
+      v.array(
+        v.object({
+          kind: v.union(
+            v.literal("hook"),
+            v.literal("scene"),
+            v.literal("outro"),
+          ),
+          line: v.string(), // Spoken and captioned
+          roundNumber: v.optional(v.number()),
+          imageStorageId: v.optional(v.string()),
+          clipStorageId: v.optional(v.string()), // AI motion clip of the image
+          audioStorageId: v.optional(v.string()),
+          audioMs: v.optional(v.number()),
+        }),
+      ),
+    ),
+    musicStorageId: v.optional(v.string()), // AI background music (MP3)
+    videoStorageId: v.optional(v.string()), // Rendered MP4
+    renderStartedAt: v.optional(v.number()),
+    youtubeVideoId: v.optional(v.string()),
+    youtubeUrl: v.optional(v.string()),
+    error: v.optional(v.string()),
+    reviewedBy: v.optional(v.string()),
+    reviewedAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_duel", ["duelId"])
+    .index("by_status", ["status"])
+    .index("by_created_at", ["createdAt"]),
   duels: defineTable({
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
@@ -319,7 +374,12 @@ export default defineSchema({
     feature: v.string(), // e.g. generate_duel_round, generate_wizard_image
     provider: v.string(),
     model: v.string(),
-    kind: v.union(v.literal("text"), v.literal("image")),
+    kind: v.union(
+      v.literal("text"),
+      v.literal("image"),
+      v.literal("video"),
+      v.literal("audio"),
+    ),
     inputTokens: v.optional(v.number()),
     outputTokens: v.optional(v.number()),
     imageCount: v.optional(v.number()),
@@ -490,7 +550,11 @@ export default defineSchema({
   // and is also pushed to any devices they've turned push on for.
   notifications: defineTable({
     userId: v.string(), // Clerk subject of the recipient
-    type: v.union(v.literal("YOUR_TURN"), v.literal("DUEL_RESULT")),
+    type: v.union(
+      v.literal("YOUR_TURN"),
+      v.literal("DUEL_RESULT"),
+      v.literal("TEASER_READY"), // Admins: a duel teaser video is waiting for review
+    ),
     title: v.string(),
     body: v.string(),
     url: v.string(), // In-app path opened when tapped, e.g. /duels/<id>

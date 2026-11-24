@@ -1,0 +1,63 @@
+name: Render teaser
+
+# Renders a duel teaser video with Remotion (video/) and uploads it back to
+# Convex. Started by Convex (convex/teaserMedia.ts dispatchRender) through the
+# GitHub API; you can also run it by hand from the Actions tab.
+#
+# Needs the repository secret TEASER_RENDER_SECRET, matching the Convex
+# environment variable of the same name.
+
+on:
+  workflow_dispatch:
+    inputs:
+      teaser_id:
+        description: "duelTeasers ID"
+        required: true
+      convex_site_url:
+        description: "The deployment's HTTP actions URL, e.g. https://<name>.convex.site"
+        required: true
+
+concurrency:
+  group: render-teaser-${{ inputs.teaser_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: video
+    steps:
+      - name: Only render for our own Convex deployments
+        env:
+          SITE_URL: ${{ inputs.convex_site_url }}
+        run: |
+          if [[ ! "$SITE_URL" =~ ^https://[a-z0-9-]+\.convex\.site/?$ ]]; then
+            echo "convex_site_url must be a https://<name>.convex.site URL" >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: video/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Install the browser
+        run: npx remotion browser ensure
+
+      - name: Render and upload
+        env:
+          CONVEX_SITE_URL: ${{ inputs.convex_site_url }}
+          TEASER_RENDER_SECRET: ${{ secrets.TEASER_RENDER_SECRET }}
+          TEASER_ID: ${{ inputs.teaser_id }}
+        run: node render.mjs "$TEASER_ID"

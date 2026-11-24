@@ -5,7 +5,7 @@ export interface AIUsageRecord {
   feature: string;
   provider: string;
   model: string;
-  kind: "text" | "image";
+  kind: "text" | "image" | "video" | "audio";
   inputTokens?: number;
   outputTokens?: number;
   imageCount?: number;

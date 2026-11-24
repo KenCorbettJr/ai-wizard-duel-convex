@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "node_modules",
+    "video",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",

@@ -7,7 +7,12 @@ export const record = internalMutation({
     feature: v.string(),
     provider: v.string(),
     model: v.string(),
-    kind: v.union(v.literal("text"), v.literal("image")),
+    kind: v.union(
+      v.literal("text"),
+      v.literal("image"),
+      v.literal("video"),
+      v.literal("audio"),
+    ),
     inputTokens: v.optional(v.number()),
     outputTokens: v.optional(v.number()),
     imageCount: v.optional(v.number()),

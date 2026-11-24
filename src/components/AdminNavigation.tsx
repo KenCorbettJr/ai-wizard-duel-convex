@@ -22,6 +22,7 @@ import {
   Star,
   Eye,
   Flame,
+  Clapperboard,
 } from "lucide-react";
 
 interface AdminNavItem {
@@ -174,6 +175,11 @@ const adminNavItems: AdminNavItem[] = [
     href: "/admin/duel-ratings",
     label: "Duel Ratings",
     icon: Star,
+  },
+  {
+    href: "/admin/teasers",
+    label: "Duel Teasers",
+    icon: Clapperboard,
   },
   {
     href: "/admin/moderation",
