@@ -142,19 +142,12 @@ export const generateRoundIllustration = internalAction({
 
       if (targetRound) {
         // Update the round with the illustration
-        await ctx.runMutation(api.duels.updateRoundIllustration, {
+        await ctx.runMutation(internal.duels.updateRoundIllustration, {
           roundId: targetRound._id,
           illustration: storageId,
         });
+        // updateRoundIllustration also refreshes the duel's featured image
         await setStatus(null);
-
-        // If this is the introduction round, also set it as the featured illustration
-        if (roundNumber === "0") {
-          await ctx.runMutation(internal.duels.updateFeaturedIllustration, {
-            duelId,
-            illustration: storageId,
-          });
-        }
       }
 
       console.log(

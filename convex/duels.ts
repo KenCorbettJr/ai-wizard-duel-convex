@@ -25,6 +25,7 @@ import {
 } from "./lib/duelTokens";
 import { TO_THE_DEATH_MAX_ROUNDS } from "./lib/pricing";
 import { scheduleRoundNarration } from "./lib/scheduleNarration";
+import { pickTeaserIllustration } from "./lib/socialIllustration";
 import {
   verifySuperAdmin,
   debugUserMetadata,
@@ -1204,6 +1205,8 @@ async function afterDuelCompleted(
   winners: Id<"wizards">[],
   losers: Id<"wizards">[],
 ) {
+  // The final round can't be the teaser any more
+  await refreshFeaturedIllustration(ctx, duel._id);
   for (const winnerId of winners) {
     await ctx.runMutation(internal.wizards.updateWizardStatsInternal, {
       wizardId: winnerId,
@@ -1670,17 +1673,44 @@ export const getWatchableDuels = query({
   },
 });
 
-// Update duel featured illustration
-export const updateFeaturedIllustration = internalMutation({
-  args: {
-    duelId: v.id("duels"),
-    illustration: v.string(),
-  },
-  handler: async (ctx, { duelId, illustration }) => {
-    await ctx.db.patch(duelId, {
-      featuredIllustration: illustration,
-    });
-    return duelId;
+// Point the duel's featured illustration (card thumbnail and link preview)
+// at its teaser round. Call when a round illustration lands and when the duel
+// ends, since the final round must then stop being the teaser.
+async function refreshFeaturedIllustration(
+  ctx: MutationCtx,
+  duelId: Id<"duels">,
+): Promise<void> {
+  const duel = await ctx.db.get(duelId);
+  if (!duel) return;
+  const rounds = await ctx.db
+    .query("duelRounds")
+    .withIndex("by_duel", (q) => q.eq("duelId", duelId))
+    .collect();
+  const teaser = pickTeaserIllustration(duel.status, rounds);
+  if (teaser !== duel.featuredIllustration) {
+    await ctx.db.patch(duelId, { featuredIllustration: teaser });
+  }
+}
+
+// One-time backfill: switch existing duels from the introduction image to
+// their teaser round. Run once after deploying:
+//   npx convex run duels:backfillFeaturedIllustrations
+export const backfillFeaturedIllustrations = internalMutation({
+  args: { cursor: v.optional(v.union(v.string(), v.null())) },
+  returns: v.null(),
+  handler: async (ctx, { cursor = null }) => {
+    const page = await ctx.db.query("duels").paginate({ cursor, numItems: 50 });
+    for (const duel of page.page) {
+      await refreshFeaturedIllustration(ctx, duel._id);
+    }
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.duels.backfillFeaturedIllustrations,
+        { cursor: page.continueCursor },
+      );
+    }
+    return null;
   },
 });
 
@@ -1815,7 +1845,7 @@ export const createIntroductionRound = mutation({
 });
 
 // Update round illustration
-export const updateRoundIllustration = mutation({
+export const updateRoundIllustration = internalMutation({
   args: {
     roundId: v.id("duelRounds"),
     illustration: v.string(),
@@ -1835,6 +1865,7 @@ export const updateRoundIllustration = mutation({
     await ctx.db.patch(roundId, {
       outcome: updatedOutcome,
     });
+    await refreshFeaturedIllustration(ctx, round.duelId);
 
     return roundId;
   },

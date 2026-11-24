@@ -1,5 +1,5 @@
 import { query, internalQuery } from "./_generated/server";
-import { pickSocialIllustration } from "./lib/socialIllustration";
+import { pickTeaserIllustration } from "./lib/socialIllustration";
 import { v } from "convex/values";
 
 // Get wizard data optimized for metadata generation
@@ -114,7 +114,7 @@ export const getDuelForMetadata = query({
         .query("duelRounds")
         .withIndex("by_duel", (q) => q.eq("duelId", duelId))
         .collect();
-      socialIllustration = pickSocialIllustration(duel.status, rounds);
+      socialIllustration = pickTeaserIllustration(duel.status, rounds);
     }
 
     return {
@@ -126,10 +126,7 @@ export const getDuelForMetadata = query({
       wizards: wizardData,
       winners: duel.winners,
       losers: duel.losers,
-      // A finished duel's featured image is its final blow: keep it out of
-      // link previews.
-      featuredIllustration:
-        duel.status === "COMPLETED" ? undefined : duel.featuredIllustration,
+      featuredIllustration: duel.featuredIllustration,
       socialIllustration,
     };
   },
@@ -247,7 +244,7 @@ export const getDuelForMetadataInternal = internalQuery({
         .query("duelRounds")
         .withIndex("by_duel", (q) => q.eq("duelId", duelId))
         .collect();
-      socialIllustration = pickSocialIllustration(duel.status, rounds);
+      socialIllustration = pickTeaserIllustration(duel.status, rounds);
     }
 
     return {
@@ -259,10 +256,7 @@ export const getDuelForMetadataInternal = internalQuery({
       wizards: wizardData,
       winners: duel.winners,
       losers: duel.losers,
-      // A finished duel's featured image is its final blow: keep it out of
-      // link previews.
-      featuredIllustration:
-        duel.status === "COMPLETED" ? undefined : duel.featuredIllustration,
+      featuredIllustration: duel.featuredIllustration,
       socialIllustration,
     };
   },

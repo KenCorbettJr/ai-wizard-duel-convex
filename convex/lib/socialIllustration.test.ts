@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { pickSocialIllustration } from "./socialIllustration";
+import { pickTeaserIllustration } from "./socialIllustration";
 
-type Round = Parameters<typeof pickSocialIllustration>[1][number];
+type Round = Parameters<typeof pickTeaserIllustration>[1][number];
 const round = (
   roundNumber: number,
   illustration?: string,
@@ -21,28 +21,35 @@ const finished = [
   round(5, "conclusion", "CONCLUSION"),
 ];
 
-describe("pickSocialIllustration", () => {
+describe("pickTeaserIllustration", () => {
   test("a finished duel uses round 2 as foreshadowing", () => {
-    expect(pickSocialIllustration("COMPLETED", finished)).toBe("r2");
+    expect(pickTeaserIllustration("COMPLETED", finished)).toBe("r2");
   });
 
   test("falls back to round 3 when round 2 has no image", () => {
     const rounds = finished.map((r) => (r.roundNumber === 2 ? round(2) : r));
-    expect(pickSocialIllustration("COMPLETED", rounds)).toBe("r3");
+    expect(pickTeaserIllustration("COMPLETED", rounds)).toBe("r3");
   });
 
   test("never uses the final round, even when it is round 2 or 3", () => {
     const short = [round(0, "intro"), round(1), round(2), round(3, "r3")];
-    expect(pickSocialIllustration("COMPLETED", short)).toBe("intro");
+    expect(pickTeaserIllustration("COMPLETED", short)).toBe("intro");
   });
 
   test("never uses the conclusion", () => {
     const rounds = [round(1), round(2, "conclusion", "CONCLUSION")];
-    expect(pickSocialIllustration("COMPLETED", rounds)).toBeUndefined();
+    expect(pickTeaserIllustration("COMPLETED", rounds)).toBeUndefined();
   });
 
-  test("a live duel uses its latest illustration", () => {
+  test("a live duel moves past the introduction as rounds are drawn", () => {
     const live = [round(0, "intro"), round(1, "r1"), round(2)];
-    expect(pickSocialIllustration("IN_PROGRESS", live)).toBe("r1");
+    expect(pickTeaserIllustration("IN_PROGRESS", live)).toBe("r1");
+    live[2] = round(2, "r2");
+    expect(pickTeaserIllustration("IN_PROGRESS", live)).toBe("r2");
+  });
+
+  test("a live duel can use its latest round, which isn't the ending yet", () => {
+    const live = [round(0, "intro"), round(1, "r1"), round(2, "r2")];
+    expect(pickTeaserIllustration("IN_PROGRESS", live)).toBe("r2");
   });
 });
