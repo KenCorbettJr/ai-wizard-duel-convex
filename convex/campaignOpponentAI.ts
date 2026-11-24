@@ -10,6 +10,22 @@ import {
 } from "./aiTextGeneration";
 import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
+import { CONTENT_STANDARDS } from "./lib/contentStandards";
+import {
+  buildOpponentSpellPrompt,
+  type OpponentPromptWizard,
+} from "./lib/campaignOpponentPrompt";
+
+function toPromptWizard(wizard: Doc<"wizards">): OpponentPromptWizard {
+  return {
+    id: wizard._id,
+    name: wizard.name,
+    description: wizard.description,
+    spellStyle: wizard.spellStyle,
+    personalityTraits: wizard.personalityTraits,
+    difficulty: wizard.difficulty,
+  };
+}
 
 // Generate AI action for campaign opponent
 export const generateCampaignOpponentAction = internalAction({
@@ -156,7 +172,7 @@ async function generateCampaignOpponentSpell(
     spellDescription: z
       .string()
       .describe(
-        "A creative spell description that fits the wizard's personality and spell style, considering the current situation in the duel"
+        "One or two vivid sentences describing the wizard's action this round. It fits the wizard's personality and spell style, responds to the duel so far, and uses a different tactic from the wizard's earlier spells"
       ),
   });
 
@@ -172,48 +188,23 @@ async function generateCampaignOpponentSpell(
   }
 
   try {
-    // Build context about the duel
-    let context = `You are ${wizard.name}, a ${wizard.difficulty} campaign opponent wizard. Your description: ${wizard.description}`;
-    context += `\nYour spell style: ${wizard.spellStyle}`;
-    context += `\nYour personality traits: ${wizard.personalityTraits?.join(", ") || "mysterious"}`;
+    const prompt = buildOpponentSpellPrompt({
+      wizard: toPromptWizard(wizard),
+      opponent: opponentWizard ? toPromptWizard(opponentWizard) : null,
+      roundNumber: currentRound.roundNumber,
+      totalRounds: duel.numberOfRounds,
+      hitPoints: duel.hitPoints,
+      points: duel.points,
+      previousRounds,
+    });
 
-    if (opponentWizard) {
-      context += `\nYour opponent: ${opponentWizard.name} - ${opponentWizard.description}`;
-    }
+    const systemPrompt = `You write the spell a campaign opponent wizard casts each round of a magical duel. The spells should:
+- Sound like this particular wizard: their personality, spell style and difficulty
+- Fit what is happening in this duel and respond to the opponent
+- Feel fresh every round, never a rerun of an earlier spell
+- Be creative and fun for the player to face
 
-    context += `\nCurrent round: ${currentRound.roundNumber}`;
-    context += `\nYour current health: ${duel.hitPoints[wizard._id] ?? 100}/100`;
-
-    if (opponentWizard) {
-      context += `\nOpponent's health: ${duel.hitPoints[opponentWizard._id] ?? 100}/100`;
-    }
-
-    // Add context from previous rounds
-    if (previousRounds.length > 0) {
-      context += `\nPrevious rounds summary:`;
-      previousRounds.slice(-2).forEach((round) => {
-        if (round.outcome?.result) {
-          context += `\nRound ${round.roundNumber}: ${round.outcome.result}`;
-        }
-      });
-    }
-
-    const prompt = `${context}
-
-Generate a spell action for this wizard in the current duel situation. The spell should:
-1. Fit the wizard's personality and spell style
-2. Be appropriate for the current situation (health levels, round number)
-3. Be creative and engaging
-4. Be a single short sentence describing the action that the wizard will take or spell that the wizard will cast
-5. Will not describe how the action will affect the other wizard or what the outcome of the action will be.
-
-Consider the wizard's difficulty level: ${wizard.difficulty} wizards should use appropriately powered spells.`;
-
-    const systemPrompt = `You are an AI that generates spell actions for campaign opponent wizards in magical duels. Create spells that are:
-- Consistent with the wizard's personality and style
-- Appropriate for the current duel situation
-- Creative and engaging for players
-- Balanced for the wizard's difficulty level`;
+${CONTENT_STANDARDS}`;
 
     const result = await generateObject(
       prompt,

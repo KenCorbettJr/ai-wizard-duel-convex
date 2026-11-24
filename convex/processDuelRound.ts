@@ -14,6 +14,13 @@ import { z } from "genkit/beta";
 import { isEmulatorMode } from "./mocks/mockServices";
 import { Wizard } from "@/types/wizard";
 import { CONTENT_STANDARDS } from "./lib/contentStandards";
+import {
+  describeLuckEdge,
+  getDuelResult,
+  stalemateWarning,
+  trailingStalemateCount,
+  type DuelResult,
+} from "./lib/duelJudging";
 
 // Zod schema for structured AI output
 const BattleRoundResponseSchema = z.object({
@@ -31,6 +38,11 @@ const BattleRoundResponseSchema = z.object({
     .string()
     .describe(
       "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round. Include how each wizard looks in this exact moment (pose, form, what they hold), spell effects, action and motion, and keep the arena consistent with previous rounds.",
+    ),
+  roundVerdict: z
+    .string()
+    .describe(
+      "One sentence, written BEFORE the numbers below, naming which wizard won this round and the main reason (creativity, how well the action fits the duel, execution, luck). Say the round was even only in the rare case that both actions were genuinely matched.",
     ),
   damageSummary: z
     .string()
@@ -74,24 +86,24 @@ const DuelConclusionSchema = z.object({
   narration: z
     .string()
     .describe(
-      "A short sports-announcer style wrap-up of the duel: 3 to 5 sentences, about 60 to 90 words. Name the winner, call out only the one to three biggest moments that decided the match, and end on a memorable line. Do NOT recap every round.",
+      "A short sports-announcer style wrap-up of the duel: 3 to 5 sentences, about 60 to 90 words. Name the winner, or call it a draw if the duel was a draw, call out only the one to three biggest moments that decided the match, and end on a memorable line. Do NOT recap every round.",
     ),
   result: z
     .string()
     .describe(
-      "A brief but impactful summary of the duel conclusion that captures the essence of the victory.",
+      "A brief but impactful summary of the duel conclusion that captures the essence of the outcome (a victory or a draw).",
     ),
   illustrationPrompt: z
     .string()
     .describe(
-      "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description.",
+      "A detailed prompt for a low poly art style illustration of the final outcome, set in the Enchanted Arena with remnants of the duel matching the arena description. Show it exactly as instructed for this duel's result (a victory or a draw).",
     ),
 });
 
 // Types for the battle round response
 export type BattleRoundResponse = Omit<
   z.infer<typeof BattleRoundResponseSchema>,
-  "damageSummary"
+  "damageSummary" | "roundVerdict"
 > & {
   wizard1Luck?: number;
   wizard2Luck?: number;
@@ -492,7 +504,15 @@ async function generateBattleRound(
     wizard2,
   );
 
-  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\n${ILLUSTRATION_RULES}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
+  const luckGuidance = describeLuckEdge(
+    { id: wizard1ID, name: wizard1.name, luck: wizard1Luck },
+    { id: wizard2ID, name: wizard2.name, luck: wizard2Luck },
+  );
+  const stalemateNote = stalemateWarning(
+    trailingStalemateCount(previousRounds, [wizard1ID, wizard2ID]),
+  );
+
+  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== LUCK THIS ROUND ===\n${luckGuidance}${stalemateNote ? `\n\n${stalemateNote}` : ""}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\n${ILLUSTRATION_RULES}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
 
   try {
     // Use structured output with schema for better AI responses
@@ -642,7 +662,7 @@ The duel began with the wizards facing each other from opposite sides of the are
 ## Magical Principles
 The following principles govern magical interactions in this realm:
 1. Conservation of Energy: More powerful spells require more magical energy
-2. Law of Opposition: Opposing elemental forces can neutralize each other (fire vs water, etc.)
+2. Law of Opposition: Opposing elemental forces weaken each other (fire vs water, etc.), but they rarely cancel out perfectly. The stronger, better-aimed or luckier force usually pushes at least partly through.
 3. Law of Resonance: Similar magical energies amplify each other
 4. Law of Intention: Spells cast with clearer intent have greater focus
 5. Law of Preparation: Defensive preparations are effective against anticipated attacks
@@ -669,9 +689,20 @@ When judging each round, consider:
    - Anticipating environmental changes
 5. Luck Factor
    - For each wizard, you will be provided a luck number from 1-20 which represents their fortune
-   - Higher luck increases chances of successful execution
-   - Luck should subtly influence outcomes without being explicitly mentioned
    - Interpret luck 1-5 as very unfavorable, 6-10 as unfavorable, 11-15 as neutral, 16-18 as favorable, 19-20 as very favorable
+   - Luck carries real weight, but it is not everything. It decides close calls and how cleanly each spell is executed: whether a contested attack gets through, whether a defense holds, whether a spell misfires
+   - A big gap in luck is worth roughly 2 to 3 points of swing. A more creative action that fits the duel better can still win the round with worse luck, but it has to be clearly better to overcome a big gap
+   - Each round you will get a LUCK THIS ROUND note explaining how much the luck gap should matter. Follow it
+   - Show luck through what happens in the story. Never mention luck numbers in the narration
+
+## Deciding the Round
+- Most rounds should have a clear winner. Before writing the numbers, decide which wizard got the better of the exchange and why.
+- Full stalemates, where both wizards earn the same points and neither takes damage, should be rare. Use one only when both actions are genuinely matched in creativity, fit with the duel, execution and luck. Equal points should be uncommon too.
+- When two attacks collide, decide which one wins out. A partial hit (around 5 to 15 damage) for the side that lost the exchange is a normal, healthy outcome.
+- A wizard can only block, dodge or counter what their declared action could actually handle. Do not let a wizard anticipate an attack they could not see or know about (from behind, hidden, disguised) unless their action already covers it.
+- Specific, creative actions that fit the duel earn more than vague, generic ones. Reusing the same spell or tactic from earlier rounds earns fewer points.
+- A purely defensive or showy action that never threatens the opponent should usually earn fewer points than a well-built attack, unless the defense is especially clever.
+- Use the whole 0-10 range. A gap of 2 to 4 points between the round's winner and loser is typical. A dominant round can be wider.
 
 ## Wizard Action Guidelines
 - Wizards may only declare their own actions, not their effects on opponents
@@ -698,6 +729,7 @@ You must return ONLY a valid JSON object with the following structure:
   "narration": "A punchy description of the round's magical combat, written in present tense like a live announcer. Keep it SHORT: 2 brief paragraphs, about 70 to 100 words in total. Focus on the one or two decisive moments and how the spells interact. No scene-setting filler.",
   "result": "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
   "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Follow the ILLUSTRATION RULES: both wizards visible, and every attack that lands is shown aimed at and striking its target. Include how each wizard looks in this exact moment (pose, form, what they hold), spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
+  "roundVerdict": "One sentence, written BEFORE the numbers below, naming which wizard won this round and the main reason (creativity, fit with the duel, execution, luck). Call it even only in the rare case that both actions were genuinely matched.",
   "damageSummary": "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say that wizard took no damage.",
   "wizard1": {
     "pointsEarned": 0, // 0 to 10
@@ -715,7 +747,7 @@ You must return ONLY a valid JSON object with the following structure:
 - In case of a tie, the wizard with the most health points remaining wins
 - If both wizards have the same health points, declare a draw
 
-Remember to maintain impartiality while creating a dramatic and engaging narrative experience that makes both players feel their magical prowess is respected.${contextualGuidance}`;
+Stay impartial: treat both wizards' ideas with respect, but clearly reward whoever played the round better. Being fair means making real calls, not splitting every round down the middle. Create a dramatic and engaging narrative experience.${contextualGuidance}`;
 }
 
 // Helper function to generate round actions text
@@ -1052,10 +1084,13 @@ async function generateDuelConclusion(
       introductionRound?.outcome?.illustrationPrompt ||
       "a mysterious and grand magical arena";
 
-    // Determine winner and loser
-    const winnerId = duel.winners?.[0];
-    const winner = winnerId === wizard1ID ? wizard1 : wizard2;
-    const loser = winnerId === wizard1ID ? wizard2 : wizard1;
+    const result = getDuelResult(duel);
+    const isDraw = result.kind === "draw";
+    const winner =
+      result.kind === "win" && result.winnerId === wizard1ID
+        ? wizard1
+        : wizard2;
+    const loser = winner === wizard1 ? wizard2 : wizard1;
 
     // Generate complete duel history for context
     const duelHistory = generateDuelHistoryContext(
@@ -1064,34 +1099,55 @@ async function generateDuelConclusion(
       wizard2,
     );
 
-    const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel, speaking like a sports announcer giving the post-game call. You have the complete history of the duel for reference, but the audience just watched it, so do NOT recap it. Write a final narration that:
-
-- Is 3 to 5 sentences and about 60 to 90 words in total
+    const narrationRules = isDraw
+      ? `- Is 3 to 5 sentences and about 60 to 90 words in total
+- Says right away that the duel ended in a draw. Do NOT name a winner or suggest either wizard won
+- Calls out only the one to three moments that made it so evenly matched, like a highlight reel
+- Gives both wizards equal credit
+- Ends on a punchy, memorable closing line
+- Never walks through the rounds in order`
+      : `- Is 3 to 5 sentences and about 60 to 90 words in total
 - Names the winner right away
 - Calls out only the one to three moments that decided the match, like a highlight reel
 - Gives the loser a brief, gracious nod
 - Ends on a punchy, memorable closing line
-- Never walks through the rounds in order
+- Never walks through the rounds in order`;
+
+    const illustrationSpec = isDraw
+      ? result.bothFell
+        ? "A detailed prompt for a low poly art style illustration of a draw where both wizards fell together: both wizards collapsed or kneeling, spent, on opposite sides of the arena, equally matched, with neither shown as the victor. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
+        : "A detailed prompt for a low poly art style illustration of a draw: both wizards standing as equals, given equal size and prominence, facing each other with mutual respect (for example a bow, a salute, or a weary standoff), with neither celebrating and neither dejected. The crowd is on its feet for both. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
+      : "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions.";
+
+    const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel, speaking like a sports announcer giving the post-game call. You have the complete history of the duel for reference, but the audience just watched it, so do NOT recap it. Write a final narration that:
+
+${narrationRules}
 
 You must return ONLY a valid JSON object with these exact keys:
 {
-  "narration": "A short sports-announcer wrap-up: 3 to 5 sentences, about 60 to 90 words. Name the winner, highlight only the one to three decisive moments, and end on a memorable line. Do NOT recap every round.",
-  "result": "A brief but impactful summary of the duel conclusion that captures the essence of the victory.",
-  "illustrationPrompt": "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
+  "narration": "A short sports-announcer wrap-up: 3 to 5 sentences, about 60 to 90 words. ${isDraw ? "Call it a draw (no winner)" : "Name the winner"}, highlight only the one to three decisive moments, and end on a memorable line. Do NOT recap every round.",
+  "result": "A brief but impactful summary of the duel conclusion that captures the essence of the ${isDraw ? "draw" : "victory"}.",
+  "illustrationPrompt": "${illustrationSpec}"
 }
 
 Do not award any points or health points in this conclusion.
 
 ${CONTENT_STANDARDS}`;
 
-    const prompt = `${duelHistory}
+    const outcomeLines = isDraw
+      ? `The duel ended in a DRAW. ${
+          result.bothFell
+            ? "Both wizards fell in the same round."
+            : "The wizards finished level on points and health."
+        } There is no winner and no loser.
 
-=== FINAL RESULTS ===
-The duel is now complete. The final scores are:
-- ${wizard1.name}: ${wizard1FinalPoints} points, ${wizard1FinalHealth} health
-- ${wizard2.name}: ${wizard2FinalPoints} points, ${wizard2FinalHealth} health
+The arena is described as: ${arenaDescription}.
 
-The winner is ${winner.name}. The loser is ${loser.name}.
+${wizard1.name} Description: ${wizard1.description}
+${wizard2.name} Description: ${wizard2.description}
+
+Write a short announcer-style wrap-up (60 to 90 words) that calls the duel a draw and highlights only the one to three moments that kept it so even. Do not name a winner, and do not recap the whole battle.`
+      : `The winner is ${winner.name}. The loser is ${loser.name}.
 
 The arena is described as: ${arenaDescription}.
 
@@ -1100,6 +1156,15 @@ Losing Wizard Description: ${loser.description}
 
 Write a short announcer-style wrap-up (60 to 90 words) that names the winner and highlights only the one to three moments that decided the duel. Do not recap the whole battle.`;
 
+    const prompt = `${duelHistory}
+
+=== FINAL RESULTS ===
+The duel is now complete. The final scores are:
+- ${wizard1.name}: ${wizard1FinalPoints} points, ${wizard1FinalHealth} health
+- ${wizard2.name}: ${wizard2FinalPoints} points, ${wizard2FinalHealth} health
+
+${outcomeLines}`;
+
     let parsedResponse: DuelConclusionResponse;
 
     try {
@@ -1107,13 +1172,9 @@ Write a short announcer-style wrap-up (60 to 90 words) that names the winner and
         console.log(
           "🎭 Using mock AI conclusion generation (emulator/test mode)",
         );
-        parsedResponse = generateMockConclusion(
-          duel,
-          wizard1,
-          wizard2,
-          winner,
-          loser,
-        );
+        parsedResponse = isDraw
+          ? drawConclusion(wizard1, wizard2, result.bothFell)
+          : generateMockConclusion(duel, wizard1, wizard2, winner, loser);
       } else {
         parsedResponse = await generateObject(
           prompt,
@@ -1196,9 +1257,12 @@ function generateFallbackConclusion(
   wizard1: Doc<"wizards">,
   wizard2: Doc<"wizards">,
 ): DuelConclusionResponse {
-  const winnerId = duel.winners?.[0];
-  const winner = winnerId === wizard1._id ? wizard1 : wizard2;
-  const loser = winnerId === wizard1._id ? wizard2 : wizard1;
+  const result: DuelResult = getDuelResult(duel);
+  if (result.kind === "draw") {
+    return drawConclusion(wizard1, wizard2, result.bothFell);
+  }
+  const winner = result.winnerId === wizard1._id ? wizard1 : wizard2;
+  const loser = winner === wizard1 ? wizard2 : wizard1;
 
   const winnerName = winner?.name || "Unknown";
   const loserName = loser?.name || "Unknown";
@@ -1209,5 +1273,28 @@ function generateFallbackConclusion(
     narration: `The final spell echoes through the Enchanted Arena as the dust settles on this epic magical confrontation. ${winnerName} emerges victorious, their mastery of the arcane arts proven beyond doubt. ${loserName} fought valiantly, displaying remarkable magical prowess throughout the duel. Both wizards have earned the respect of all who witnessed this spectacular display of magical combat. The arena falls silent as the magical barriers dissipate, marking the end of this legendary duel.`,
     result: `${winnerName} claims victory in an epic magical duel!`,
     illustrationPrompt: `Low poly art style illustration of ${winnerName} (${winnerDescription}) celebrating victory in a magical arena, arms raised in triumph. In the background, ${loserName} (${loserDescription}) looks dejected, head bowed in defeat. The Enchanted Arena is filled with magical remnants, spell residue, and mystical particles floating in the air. Dynamic lighting, wide shot from spectator perspective, capturing the grandeur of the moment.`,
+  };
+}
+
+// Canned conclusion for a draw, used in tests and when the AI call fails.
+function drawConclusion(
+  wizard1: Doc<"wizards">,
+  wizard2: Doc<"wizards">,
+  bothFell: boolean,
+): DuelConclusionResponse {
+  const name1 = wizard1?.name || "Unknown";
+  const name2 = wizard2?.name || "Unknown";
+  const description1 = wizard1?.description || "A wizard";
+  const description2 = wizard2?.description || "A wizard";
+  const pose = bothFell
+    ? "both collapsed and spent on opposite sides of the arena, neither one the victor"
+    : "standing as equals facing each other, given equal size and prominence, exchanging a respectful bow, neither celebrating and neither dejected";
+
+  return {
+    narration: bothFell
+      ? `What a finish! ${name1} and ${name2} land their final blows at the same instant, and both wizards fall together. Neither could be separated from the other all duel long. The Enchanted Arena calls it a draw, and the crowd salutes them both!`
+      : `The dust settles and the scoreboard refuses to pick a side! ${name1} and ${name2} answered every spell with one of their own and finish dead level. This one goes down as a draw, and both wizards leave the Enchanted Arena with their heads held high!`,
+    result: `${name1} and ${name2} fight to a draw!`,
+    illustrationPrompt: `Low poly art style illustration of a drawn wizard duel. ${name1} (${description1}) and ${name2} (${description2}), ${pose}. The crowd in the tiered stands of the Enchanted Arena is on its feet for both of them. The arena is filled with magical remnants, spell residue, and mystical particles floating in the air. Dynamic lighting, wide shot from spectator perspective.`,
   };
 }
