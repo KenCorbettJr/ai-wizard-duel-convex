@@ -314,16 +314,17 @@ export function getWizardImageUrl(wizard: {
  */
 export function getDuelImageUrl(duel: {
   featuredIllustration?: string;
-  latestRoundIllustration?: string;
+  socialIllustration?: string;
   status: "WAITING_FOR_PLAYERS" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 }): string {
-  // Priority: Featured illustration > Latest round illustration > Status-based default
-  if (duel.featuredIllustration) {
-    return duel.featuredIllustration;
+  // Priority: spoiler-free round illustration > featured illustration (never
+  // for a finished duel, where it shows the final blow) > status default
+  if (duel.socialIllustration) {
+    return duel.socialIllustration;
   }
 
-  if (duel.latestRoundIllustration) {
-    return duel.latestRoundIllustration;
+  if (duel.featuredIllustration && duel.status !== "COMPLETED") {
+    return duel.featuredIllustration;
   }
 
   // Map duel status to social image status
@@ -728,7 +729,7 @@ export function generateDuelMetadata(
     winners?: string[];
     losers?: string[];
     featuredIllustration?: string;
-    latestRoundIllustration?: string;
+    socialIllustration?: string;
   },
   imageUrl?: string,
 ): MetadataConfig {
@@ -811,7 +812,7 @@ export function generateCompleteDuelMetadata(
     winners?: string[];
     losers?: string[];
     featuredIllustration?: string;
-    latestRoundIllustration?: string;
+    socialIllustration?: string;
   },
   imageUrl?: string,
 ): CompleteMetadata {

@@ -48,7 +48,8 @@ export async function generateMetadata({
       let imageUrl: string | undefined;
       let altText = "Join a magical duel in AI Wizard Duel";
 
-      if (duel.featuredIllustration) {
+      // A finished duel's featured image shows the final blow
+      if (duel.featuredIllustration && duel.status !== "COMPLETED") {
         imageUrl = `${convexUrl}/api/storage/${duel.featuredIllustration}`;
         altText = challengerWizard
           ? `Challenge from ${challengerWizard.name}`

@@ -1,4 +1,5 @@
 import { query, internalQuery } from "./_generated/server";
+import { pickSocialIllustration } from "./lib/socialIllustration";
 import { v } from "convex/values";
 
 // Get wizard data optimized for metadata generation
@@ -17,7 +18,7 @@ export const getWizardForMetadata = query({
       losses: v.optional(v.number()),
       winRate: v.number(),
       totalDuels: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, { wizardId }) => {
     const wizard = await ctx.db.get(wizardId);
@@ -58,7 +59,7 @@ export const getDuelForMetadata = query({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED")
+        v.literal("CANCELLED"),
       ),
       currentRound: v.number(),
       numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
@@ -69,13 +70,13 @@ export const getDuelForMetadata = query({
           wins: v.optional(v.number()),
           losses: v.optional(v.number()),
           winRate: v.number(),
-        })
+        }),
       ),
       winners: v.optional(v.array(v.id("wizards"))),
       losers: v.optional(v.array(v.id("wizards"))),
       featuredIllustration: v.optional(v.string()),
-      latestRoundIllustration: v.optional(v.string()),
-    })
+      socialIllustration: v.optional(v.string()),
+    }),
   ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -103,25 +104,17 @@ export const getDuelForMetadata = query({
           losses,
           winRate,
         };
-      })
+      }),
     );
 
-    // Get the latest round illustration if available
-    let latestRoundIllustration: string | undefined;
+    // A round illustration for link previews that doesn't spoil the ending
+    let socialIllustration: string | undefined;
     if (duel.status === "IN_PROGRESS" || duel.status === "COMPLETED") {
       const rounds = await ctx.db
         .query("duelRounds")
         .withIndex("by_duel", (q) => q.eq("duelId", duelId))
-        .order("desc")
         .collect();
-
-      // Find the most recent round with an illustration
-      for (const round of rounds) {
-        if (round.outcome?.illustration) {
-          latestRoundIllustration = round.outcome.illustration;
-          break;
-        }
-      }
+      socialIllustration = pickSocialIllustration(duel.status, rounds);
     }
 
     return {
@@ -133,8 +126,11 @@ export const getDuelForMetadata = query({
       wizards: wizardData,
       winners: duel.winners,
       losers: duel.losers,
-      featuredIllustration: duel.featuredIllustration,
-      latestRoundIllustration,
+      // A finished duel's featured image is its final blow: keep it out of
+      // link previews.
+      featuredIllustration:
+        duel.status === "COMPLETED" ? undefined : duel.featuredIllustration,
+      socialIllustration,
     };
   },
 });
@@ -155,7 +151,7 @@ export const getWizardForMetadataInternal = internalQuery({
       losses: v.optional(v.number()),
       winRate: v.number(),
       totalDuels: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, { wizardId }) => {
     const wizard = await ctx.db.get(wizardId);
@@ -196,7 +192,7 @@ export const getDuelForMetadataInternal = internalQuery({
         v.literal("WAITING_FOR_PLAYERS"),
         v.literal("IN_PROGRESS"),
         v.literal("COMPLETED"),
-        v.literal("CANCELLED")
+        v.literal("CANCELLED"),
       ),
       currentRound: v.number(),
       numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
@@ -207,13 +203,13 @@ export const getDuelForMetadataInternal = internalQuery({
           wins: v.optional(v.number()),
           losses: v.optional(v.number()),
           winRate: v.number(),
-        })
+        }),
       ),
       winners: v.optional(v.array(v.id("wizards"))),
       losers: v.optional(v.array(v.id("wizards"))),
       featuredIllustration: v.optional(v.string()),
-      latestRoundIllustration: v.optional(v.string()),
-    })
+      socialIllustration: v.optional(v.string()),
+    }),
   ),
   handler: async (ctx, { duelId }) => {
     const duel = await ctx.db.get(duelId);
@@ -241,25 +237,17 @@ export const getDuelForMetadataInternal = internalQuery({
           losses,
           winRate,
         };
-      })
+      }),
     );
 
-    // Get the latest round illustration if available
-    let latestRoundIllustration: string | undefined;
+    // A round illustration for link previews that doesn't spoil the ending
+    let socialIllustration: string | undefined;
     if (duel.status === "IN_PROGRESS" || duel.status === "COMPLETED") {
       const rounds = await ctx.db
         .query("duelRounds")
         .withIndex("by_duel", (q) => q.eq("duelId", duelId))
-        .order("desc")
         .collect();
-
-      // Find the most recent round with an illustration
-      for (const round of rounds) {
-        if (round.outcome?.illustration) {
-          latestRoundIllustration = round.outcome.illustration;
-          break;
-        }
-      }
+      socialIllustration = pickSocialIllustration(duel.status, rounds);
     }
 
     return {
@@ -271,8 +259,11 @@ export const getDuelForMetadataInternal = internalQuery({
       wizards: wizardData,
       winners: duel.winners,
       losers: duel.losers,
-      featuredIllustration: duel.featuredIllustration,
-      latestRoundIllustration,
+      // A finished duel's featured image is its final blow: keep it out of
+      // link previews.
+      featuredIllustration:
+        duel.status === "COMPLETED" ? undefined : duel.featuredIllustration,
+      socialIllustration,
     };
   },
 });

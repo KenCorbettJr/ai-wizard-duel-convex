@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -18,6 +18,13 @@ import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { consumePendingSpell } from "@/lib/pendingSpell";
 
 export const COMPOSER_ID = "spell-composer";
+
+const PHONE_QUERY = "(max-width: 767px)";
+function subscribePhone(onChange: () => void) {
+  const mq = window.matchMedia(PHONE_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
 export const MAX_SPELL_LENGTH = 500;
 
 interface CastSpellModalProps {
@@ -74,6 +81,15 @@ export function CastSpellModal({
   const titleRef = useRef<HTMLButtonElement>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [viewportTop, setViewportTop] = useState(0);
+  const isPhone = useSyncExternalStore(
+    subscribePhone,
+    () => window.matchMedia(PHONE_QUERY).matches,
+    () => false,
+  );
+  // On phones the open composer takes the whole screen, so the draft, ideas
+  // and Cast button all fit without scrolling inside a small drawer.
+  const fullScreen = isPhone && !isModalCollapsed;
 
   // Drop in a spell the player wrote on the homepage before signing up.
   useEffect(() => {
@@ -93,6 +109,7 @@ export function CastSpellModal({
         Math.max(0, window.innerHeight - vv.height - vv.offsetTop),
       );
       setViewportHeight(vv.height);
+      setViewportTop(vv.offsetTop);
     };
     update();
     vv.addEventListener("resize", update);
@@ -126,20 +143,30 @@ export function CastSpellModal({
     return () => root.removeAttribute("data-composer-open");
   }, [isModalCollapsed]);
 
-  // Reserve exactly the space the panel occupies.
+  // Reserve exactly the space the panel occupies. Full screen it covers the
+  // page, so keep the last docked height and the page doesn't jump on close.
   useEffect(() => {
     const el = panelRef.current;
-    if (!el || !onHeightChange) return;
+    if (!el || !onHeightChange || fullScreen) return;
     const report = () =>
       onHeightChange(el.getBoundingClientRect().height + keyboardInset);
     report();
     const ro = new ResizeObserver(report);
     ro.observe(el);
+    return () => ro.disconnect();
+  }, [onHeightChange, keyboardInset, fullScreen]);
+  useEffect(() => () => onHeightChange?.(0), [onHeightChange]);
+
+  // Don't let the page scroll underneath the full-screen composer.
+  useEffect(() => {
+    if (!fullScreen) return;
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
     return () => {
-      ro.disconnect();
-      onHeightChange(0);
+      root.style.overflow = previous;
     };
-  }, [onHeightChange, keyboardInset]);
+  }, [fullScreen]);
 
   const canSubmit = !!spellDescription.trim() && !isCasting;
   const remaining = MAX_SPELL_LENGTH - spellDescription.length;
@@ -161,10 +188,24 @@ export function CastSpellModal({
       ref={panelRef}
       id={COMPOSER_ID}
       aria-label={`Your action for round ${currentRound}`}
-      style={{ bottom: keyboardInset }}
-      className="fixed inset-x-0 z-30 md:left-64 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-4"
+      style={
+        fullScreen
+          ? { top: viewportTop, bottom: keyboardInset }
+          : { bottom: keyboardInset }
+      }
+      className={
+        fullScreen
+          ? "fixed inset-x-0 z-50 flex flex-col bg-background"
+          : "fixed inset-x-0 z-30 md:left-64 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-4"
+      }
     >
-      <Card className="mx-auto w-full max-w-4xl gap-3 border-2 border-primary/50 bg-card/95 shadow-2xl backdrop-blur-md transition-all duration-300 ease-in-out dark:shadow-3xl">
+      <Card
+        className={
+          fullScreen
+            ? "flex h-full w-full flex-col gap-3 rounded-none border-0 bg-card pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] shadow-none"
+            : "mx-auto w-full max-w-4xl gap-3 border-2 border-primary/50 bg-card/95 shadow-2xl backdrop-blur-md transition-all duration-300 ease-in-out dark:shadow-3xl"
+        }
+      >
         <CardHeader
           className={`gap-0 ${isModalCollapsed ? "cursor-pointer" : ""}`}
           onClick={
@@ -210,6 +251,7 @@ export function CastSpellModal({
               aria-label={
                 isModalCollapsed ? "Expand spell panel" : "Collapse spell panel"
               }
+              title={fullScreen ? "Back to the duel" : undefined}
               aria-expanded={!isModalCollapsed}
               aria-controls={`${COMPOSER_ID}-body`}
             >
@@ -223,16 +265,20 @@ export function CastSpellModal({
         </CardHeader>
         <CardContent
           id={`${COMPOSER_ID}-body`}
-          className="max-h-[45dvh] overflow-y-auto pt-0"
+          className={
+            fullScreen
+              ? "flex min-h-0 flex-1 flex-col overflow-y-auto pt-0"
+              : "max-h-[45dvh] overflow-y-auto pt-0"
+          }
           style={
-            viewportHeight
+            viewportHeight && !fullScreen
               ? { maxHeight: Math.floor(viewportHeight * 0.45) }
               : undefined
           }
           hidden={isModalCollapsed}
         >
           {!isModalCollapsed && (
-            <div className="space-y-3">
+            <div className="flex flex-1 flex-col gap-3">
               <textarea
                 ref={textareaRef}
                 aria-label={`Describe what ${wizardName} will do in round ${currentRound}`}
@@ -243,7 +289,7 @@ export function CastSpellModal({
                 onChange={(e) => onSpellDescriptionChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={`Describe the spell or action ${wizardName} will use. Be specific and creative.`}
-                className="h-24 w-full resize-none rounded-lg border border-input/50 bg-background/50 p-3 text-sm text-foreground backdrop-blur-sm transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus-visible:outline-none dark:placeholder:text-muted-foreground/50"
+                className={`${fullScreen ? "min-h-40 flex-1 text-base" : "h-24 text-sm"} w-full resize-none rounded-lg border border-input/50 bg-background/50 p-3 text-foreground backdrop-blur-sm transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus-visible:outline-none dark:placeholder:text-muted-foreground/50`}
                 disabled={isCasting}
               />
               {roundIdeas ? (
@@ -309,12 +355,12 @@ export function CastSpellModal({
                 id={`${COMPOSER_ID}-hint`}
                 className="flex items-center justify-between text-xs text-muted-foreground"
               >
-                <span>
+                <span className="hidden md:inline">
                   Press <kbd className="rounded border px-1">Ctrl/⌘</kbd>+
                   <kbd className="rounded border px-1">Enter</kbd> to submit
                 </span>
                 <span
-                  className={remaining < 50 ? "font-medium text-warning" : ""}
+                  className={`ml-auto ${remaining < 50 ? "font-medium text-warning" : ""}`}
                 >
                   {remaining} characters left
                 </span>

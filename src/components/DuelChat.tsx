@@ -181,7 +181,9 @@ export function DuelChat({
   // With chat off and nothing said, there's nothing to open.
   if (chatOff && (!all || all.length === 0)) return null;
 
-  const bottom = bottomOffset + 16;
+  // Sit above the phone tab bar (it hides itself while the spell composer is
+  // up, and --app-bottomnav-h drops to 0 with it).
+  const bottom = `calc(var(--app-bottomnav-h, 0px) + ${bottomOffset + 16}px)`;
 
   return (
     <>
@@ -200,7 +202,7 @@ export function DuelChat({
           aria-controls="duel-chat"
         >
           <MessageCircle className="h-5 w-5" aria-hidden="true" />
-          <span className="ml-2">Chat</span>
+          <span className="sr-only sm:not-sr-only sm:ml-2">Chat</span>
           {unread > 0 && (
             <span className="ml-2 rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
               {unread}

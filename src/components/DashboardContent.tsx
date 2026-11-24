@@ -1,5 +1,6 @@
 "use client";
 
+import { IncomingChallenges } from "@/components/IncomingChallenges";
 import { useUser } from "@clerk/nextjs";
 import { LeftSidebar } from "@/components/LeftSidebar";
 import { Badge } from "@/components/ui/badge";
@@ -496,6 +497,8 @@ export default function DashboardContent({
             </header>
 
             {resumeDuel && <ResumeDuelBanner duel={resumeDuel} />}
+
+            <IncomingChallenges />
 
             {/* Campaign: the single-player on-ramp, so it leads the page */}
             {season && opponents && wizards && campaignProgress && (

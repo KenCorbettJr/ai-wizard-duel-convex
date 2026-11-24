@@ -47,10 +47,10 @@ export async function generateMetadata({
 
     // Get optimized image URL if available
     let optimizedImageUrl: string | undefined;
-    if (duelData.latestRoundIllustration) {
+    if (duelData.socialIllustration) {
       try {
         const imageUrl = await fetchQuery(api.metadata.getOptimizedImageUrl, {
-          storageId: duelData.latestRoundIllustration,
+          storageId: duelData.socialIllustration,
         });
         optimizedImageUrl = imageUrl || undefined;
       } catch (error) {

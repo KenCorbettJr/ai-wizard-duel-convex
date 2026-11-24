@@ -33,17 +33,21 @@ import {
   TO_THE_DEATH_MAX_ROUNDS,
 } from "../../convex/lib/pricing";
 import posthog from "posthog-js";
+import { ConvexError } from "convex/values";
 
 interface CreateDuelFormProps {
   onClose: () => void;
   onSuccess: (duelId: Id<"duels">) => void;
   preSelectedWizardId?: Id<"wizards">;
+  /** Challenge this wizard directly: only its owner can accept the duel. */
+  opponentWizardId?: Id<"wizards">;
 }
 
 export function CreateDuelForm({
   onClose,
   onSuccess,
   preSelectedWizardId,
+  opponentWizardId,
 }: CreateDuelFormProps) {
   const { user } = useUser();
   const router = useRouter();
@@ -83,6 +87,12 @@ export function CreateDuelForm({
   );
 
   const createDuel = useMutation(api.duels.createDuel);
+  const challengeWizard = useMutation(api.duels.challengeWizard);
+  const opponent = useQuery(
+    api.wizards.getWizard,
+    opponentWizardId ? { wizardId: opponentWizardId } : "skip",
+  );
+  const isChallenge = !!opponentWizardId;
 
   // Auto-select first wizard if only one exists and none is pre-selected
   useEffect(() => {
@@ -113,23 +123,38 @@ export function CreateDuelForm({
     setIsCreating(true);
     setError(null);
     try {
-      const duelId = await createDuel({
+      const settings = {
         numberOfRounds,
-        wizards: [selectedWizard],
         enableImageGeneration,
         coverOpponentEntry: coversEntry,
         enableChat,
-      });
-      posthog.capture("duel_created", {
-        chat_enabled: enableChat,
-        round_count: numberOfRounds,
-        image_generation_enabled: enableImageGeneration,
-        covers_opponent_entry: coversEntry,
-      });
+      };
+      const duelId = opponentWizardId
+        ? await challengeWizard({
+            ...settings,
+            wizardId: selectedWizard,
+            opponentWizardId,
+          })
+        : await createDuel({ ...settings, wizards: [selectedWizard] });
+      posthog.capture(
+        opponentWizardId ? "duel_challenge_sent" : "duel_created",
+        {
+          chat_enabled: enableChat,
+          round_count: numberOfRounds,
+          image_generation_enabled: enableImageGeneration,
+          covers_opponent_entry: coversEntry,
+        },
+      );
       onSuccess(duelId);
     } catch (error) {
       console.error("Failed to create duel:", error);
-      setError("Failed to create duel. Please try again.");
+      setError(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : isChallenge
+            ? "Failed to send the challenge. Please try again."
+            : "Failed to create duel. Please try again.",
+      );
     } finally {
       setIsCreating(false);
     }
@@ -174,9 +199,15 @@ export function CreateDuelForm({
   return (
     <Card className="relative">
       <CardHeader>
-        <CardTitle>⚔️ Create New Duel</CardTitle>
+        <CardTitle>
+          {isChallenge
+            ? `⚔️ Challenge ${opponent?.name ?? "a Wizard"}`
+            : "⚔️ Create New Duel"}
+        </CardTitle>
         <CardDescription>
-          Set up a magical battle and wait for opponents to join
+          {isChallenge
+            ? "Pick your wizard and the rules. Their owner can accept or decline."
+            : "Set up a magical battle, then invite your opponent with a QR code or link"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -409,8 +440,10 @@ export function CreateDuelForm({
               {isCreating ? (
                 <>
                   <RuneSpinner size="xs" label="Working…" className="mr-2" />
-                  Creating Duel...
+                  {isChallenge ? "Sending Challenge..." : "Creating Duel..."}
                 </>
+              ) : isChallenge ? (
+                "Send Challenge"
               ) : (
                 "Create Duel"
               )}

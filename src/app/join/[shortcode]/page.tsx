@@ -76,15 +76,17 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
 
   // Check if user is already in the duel (moved before early returns)
   const isAlreadyInDuel = duel?.players?.includes(user?.id || "") || false;
+  // Private challenges are answered on the duel page itself
+  const isChallenge = !!duel?.challengedUserId;
 
   // Don't redirect unauthenticated users - let them see the duel first
 
   // Redirect to duel page when user is already in the duel
   useEffect(() => {
-    if (duel?._id && isAlreadyInDuel) {
+    if (duel?._id && (isAlreadyInDuel || isChallenge)) {
       router.push(`/duels/${duel._id}`);
     }
-  }, [duel?._id, isAlreadyInDuel, router]);
+  }, [duel?._id, isAlreadyInDuel, isChallenge, router]);
 
   const handleWizardSelect = (wizardId: Id<"wizards">) => {
     setSelectedWizard(wizardId);
@@ -198,12 +200,13 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
     );
   }
 
-  if (isAlreadyInDuel) {
+  if (isAlreadyInDuel || isChallenge) {
     return null;
   }
 
   // Check if duel is still accepting players
-  const canJoinDuel = duel.status === "WAITING_FOR_PLAYERS";
+  const canJoinDuel =
+    duel.status === "WAITING_FOR_PLAYERS" && duel.players.length < 2;
 
   // Get the challenger wizard (first wizard in the duel)
   const challengerWizard = wizard1;

@@ -149,6 +149,13 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
     ) || [];
 
   const isOwner = user && wizard && user.id === wizard.owner;
+  // Another player's wizard: you can send it a duel challenge.
+  const canChallenge =
+    !!wizard &&
+    !isOwner &&
+    !wizard.isCampaignOpponent &&
+    wizard.owner !== "campaign" &&
+    wizard.owner !== DEPARTED_OWNER;
 
   const handleEditSuccess = () => {
     setIsEditing(false);
@@ -258,24 +265,26 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
         )}
 
         {/* The last portrait job failed: tell the owner and offer a retry. */}
-        {!portraitStage && isOwner && wizard.illustrationStatus === "failed" && (
-          <div
-            role="alert"
-            className="absolute inset-x-4 top-4 z-40 mx-auto flex max-w-xl flex-col items-start gap-3 rounded-xl border border-destructive/40 bg-card/95 p-4 shadow-xl backdrop-blur-sm sm:flex-row sm:items-center"
-          >
-            <p className="flex-1 text-sm">
-              <strong>The portrait didn&apos;t come out.</strong> Any token you
-              spent on it was refunded.
-            </p>
-            <Button size="sm" onClick={retryPortrait} disabled={retrying}>
-              <RefreshCw
-                className={cn("mr-2 h-4 w-4", retrying && "animate-spin")}
-                aria-hidden="true"
-              />
-              {wizard.illustration ? "Try again (1 token)" : "Try again"}
-            </Button>
-          </div>
-        )}
+        {!portraitStage &&
+          isOwner &&
+          wizard.illustrationStatus === "failed" && (
+            <div
+              role="alert"
+              className="absolute inset-x-4 top-4 z-40 mx-auto flex max-w-xl flex-col items-start gap-3 rounded-xl border border-destructive/40 bg-card/95 p-4 shadow-xl backdrop-blur-sm sm:flex-row sm:items-center"
+            >
+              <p className="flex-1 text-sm">
+                <strong>The portrait didn&apos;t come out.</strong> Any token
+                you spent on it was refunded.
+              </p>
+              <Button size="sm" onClick={retryPortrait} disabled={retrying}>
+                <RefreshCw
+                  className={cn("mr-2 h-4 w-4", retrying && "animate-spin")}
+                  aria-hidden="true"
+                />
+                {wizard.illustration ? "Try again (1 token)" : "Try again"}
+              </Button>
+            </div>
+          )}
 
         {/* Wizard name overlay (the painting animation already names them) */}
         <div
@@ -415,12 +424,28 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
               </Link>
             </Button>
           )}
-          <Button asChild size="lg" className="text-lg px-8 py-3">
-            <Link href={`/duels/create?wizardId=${wizardId}`}>
-              <Swords className="w-5 h-5 mr-2" />
-              {isOwner ? "Start New Duel" : "Challenge to Duel"}
-            </Link>
-          </Button>
+          {isOwner && (
+            <Button asChild size="lg" className="text-lg px-8 py-3">
+              <Link href={`/duels/create?wizardId=${wizardId}`}>
+                <Swords className="w-5 h-5 mr-2" />
+                Start New Duel
+              </Link>
+            </Button>
+          )}
+          {canChallenge && (
+            <Button asChild size="lg" className="text-lg px-8 py-3">
+              <Link
+                href={
+                  user
+                    ? `/duels/create?opponentWizardId=${wizardId}`
+                    : `/sign-in?redirect_url=${encodeURIComponent(`/duels/create?opponentWizardId=${wizardId}`)}`
+                }
+              >
+                <Swords className="w-5 h-5 mr-2" />
+                Challenge to Duel
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Detailed Statistics */}
@@ -478,11 +503,13 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
                 <p className="text-muted-foreground mb-4">
                   This wizard hasn&apos;t participated in any duels.
                 </p>
-                <Button asChild>
-                  <Link href={`/duels/create?wizardId=${wizardId}`}>
-                    Start First Duel
-                  </Link>
-                </Button>
+                {isOwner && (
+                  <Button asChild>
+                    <Link href={`/duels/create?wizardId=${wizardId}`}>
+                      Start First Duel
+                    </Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}

@@ -19,6 +19,7 @@ import { Swords, Users, Search, Shield } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
+import { IncomingChallenges } from "@/components/IncomingChallenges";
 
 export default function DuelsPage() {
   const { user } = useUser();
@@ -45,6 +46,8 @@ export default function DuelsPage() {
             <RegistrationPrompt context="duel_access" />
           </div>
         )}
+
+        {user && <IncomingChallenges />}
 
         <div className="grid @3xl:grid-cols-3 gap-6 mb-8">
           <Card>

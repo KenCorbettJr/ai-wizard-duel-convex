@@ -196,8 +196,13 @@ export default defineSchema({
     rematchDuelId: v.optional(v.id("duels")), // Set when a player requests a rematch of this duel
     chatEnabled: v.optional(v.boolean()), // Duelist chat. Missing means on; a duelist can switch it off mid-duel
     forfeitedBy: v.optional(v.id("wizards")), // Set when the duel ended because this wizard's player forfeited
+    // Private challenge: only this player can join, with this wizard. They
+    // accept or decline it; nobody else can join by code.
+    challengedUserId: v.optional(v.string()),
+    challengedWizardId: v.optional(v.id("wizards")),
   })
     .index("by_status", ["status"])
+    .index("by_challenged_user_and_status", ["challengedUserId", "status"])
     .index("by_player", ["players"])
     .index("by_shortcode", ["shortcode"])
     .index("by_completed_at", ["completedAt"])
@@ -554,6 +559,7 @@ export default defineSchema({
       v.literal("YOUR_TURN"),
       v.literal("DUEL_RESULT"),
       v.literal("TEASER_READY"), // Admins: a duel teaser video is waiting for review
+      v.literal("DUEL_CHALLENGE"), // Another player challenged one of your wizards, or answered your challenge
     ),
     title: v.string(),
     body: v.string(),

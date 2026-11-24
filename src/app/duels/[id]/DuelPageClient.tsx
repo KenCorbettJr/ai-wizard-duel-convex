@@ -60,6 +60,10 @@ import { EnablePushPrompt } from "@/components/notifications/EnablePushPrompt";
 import { ArenaPresence } from "@/components/arena/ArenaPresence";
 import { OnlookerCount } from "@/components/arena/OnlookerCount";
 import { ForfeitDuelButton } from "@/components/ForfeitDuelButton";
+import {
+  ChallengeResponsePanel,
+  CreatorWaitingPanel,
+} from "@/components/WaitingDuelPanel";
 import { safeConvexId } from "../../../lib/utils";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import posthog from "posthog-js";
@@ -112,7 +116,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     null,
   );
   const [isJoining, setIsJoining] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
   const [castError, setCastError] = useState<string | null>(null);
   const [composerHeight, setComposerHeight] = useState(0);
   const [composerCollapsed, setComposerCollapsed] = useState(false);
@@ -122,13 +125,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   }, []);
   const [introOpen, setIntroOpen] = useState<boolean | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-    },
-    [],
-  );
   const { id } = use(params);
 
   // Validate the ID format first
@@ -743,22 +739,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     }
   };
 
-  const handleCopyLink = async () => {
-    if (!duel?.shortcode) return;
-
-    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopySuccess(true);
-      toast.success("Invite link copied");
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-      copyTimer.current = setTimeout(() => setCopySuccess(false), 2000);
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-      toast.error("Couldn't copy the link. Select it and copy manually.");
-    }
-  };
-
   // Show loading state
   if (isDuelLoading) {
     return (
@@ -1179,16 +1159,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   timeStyle: "short",
                 })}
               </p>
-              {duel.status === "WAITING_FOR_PLAYERS" &&
-                userWizard &&
-                userWizard._id === duel.wizards[0] && (
-                  <Button asChild size="sm">
-                    <Link href={`/duels/${duel._id}/share`}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share Challenge
-                    </Link>
-                  </Button>
-                )}
             </div>
           </div>
 
@@ -1197,7 +1167,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           {newRoundPill !== null && !revealPending && (
             <div
               className="pointer-events-none fixed inset-x-0 z-[35] flex justify-center md:left-64"
-              style={{ bottom: composerHeight + 16 }}
+              style={{
+                bottom: `calc(var(--app-bottomnav-h, 0px) + ${composerHeight + 16}px)`,
+              }}
             >
               <Button
                 size="sm"
@@ -1356,18 +1328,32 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-foreground">
                   <Clock className="h-5 w-5 text-warning animate-pulse" />
-                  {duel.players.length < 2
-                    ? "Waiting for Players"
-                    : "Preparing Duel"}
+                  {duel.players.length >= 2
+                    ? "Preparing Duel"
+                    : duel.challengedUserId
+                      ? "Challenge Sent"
+                      : isPlayerInDuel
+                        ? "Invite Your Opponent"
+                        : "Waiting for Players"}
                 </CardTitle>
                 <CardDescription>
-                  {duel.players.length < 2
-                    ? "This duel needs one more player to begin"
-                    : "Generating magical introduction and preparing the arena..."}
+                  {duel.players.length >= 2
+                    ? "Generating magical introduction and preparing the arena..."
+                    : duel.challengedUserId
+                      ? "Waiting for the challenged wizard to answer"
+                      : "This duel needs one more player to begin"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!isPlayerInDuel && duel.players.length < 2 ? (
+                {!isPlayerInDuel &&
+                duel.players.length < 2 &&
+                duel.challengedUserId ? (
+                  <ChallengeResponsePanel
+                    duel={duel}
+                    userId={user?.id}
+                    challengerWizardName={wizard1?.name}
+                  />
+                ) : !isPlayerInDuel && duel.players.length < 2 ? (
                   <div className="space-y-4">
                     {userLoaded && !user ? (
                       <div>
@@ -1501,34 +1487,10 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     )}
                   </div>
                 ) : duel.players.length < 2 ? (
-                  <div className="space-y-4">
-                    <p className="text-muted-foreground">
-                      Waiting for more players to join...
-                    </p>
-                    {duel.shortcode && (
-                      <div className="bg-background/50 rounded-lg p-4 border border-border/30">
-                        <p className="text-sm font-medium text-foreground mb-1">
-                          Invite another wizard to duel
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Share this link with someone you want to challenge:
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <code className="px-3 py-1.5 bg-primary/80 text-primary-foreground rounded-md text-sm font-mono border border-primary/50 flex-1 truncate">
-                            {`${typeof window !== "undefined" ? window.location.origin : ""}/join/${duel.shortcode}`}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleCopyLink}
-                            className="border-primary/30 hover:bg-primary/8 text-primary"
-                          >
-                            {copySuccess ? "✓ Copied!" : "Copy Link"}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CreatorWaitingPanel
+                    duel={duel}
+                    creatorWizardName={wizard1?.name}
+                  />
                 ) : (
                   <PreparingArena />
                 )}

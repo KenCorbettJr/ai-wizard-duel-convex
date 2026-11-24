@@ -8,6 +8,7 @@ import {
 import { scheduleDuelRating } from "./lib/scheduleDuelRating";
 import { syncDuelParticipants } from "./lib/duelParticipants";
 import {
+  createNotification,
   scheduleDuelResultNotifications,
   scheduleTurnReminders,
 } from "./notifications";
@@ -75,6 +76,8 @@ export const getPlayerDuels = query({
       rematchDuelId: v.optional(v.id("duels")),
       chatEnabled: v.optional(v.boolean()),
       forfeitedBy: v.optional(v.id("wizards")),
+      challengedUserId: v.optional(v.string()),
+      challengedWizardId: v.optional(v.id("wizards")),
     }),
   ),
   handler: async (ctx) => {
@@ -173,6 +176,8 @@ export const getDuelInternal = internalQuery({
       rematchDuelId: v.optional(v.id("duels")),
       chatEnabled: v.optional(v.boolean()),
       forfeitedBy: v.optional(v.id("wizards")),
+      challengedUserId: v.optional(v.string()),
+      challengedWizardId: v.optional(v.id("wizards")),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -308,6 +313,7 @@ async function insertWaitingDuel(
     enableImageGeneration,
     coverOpponentEntry = false,
     chatEnabled = true,
+    challenge,
   }: {
     userId: string;
     numberOfRounds: number | "TO_THE_DEATH";
@@ -315,6 +321,7 @@ async function insertWaitingDuel(
     enableImageGeneration: boolean;
     coverOpponentEntry?: boolean;
     chatEnabled?: boolean;
+    challenge?: { userId: string; wizardId: Id<"wizards"> };
   },
 ): Promise<Id<"duels">> {
   // A token is only taken when a second player joins and the duel starts.
@@ -364,6 +371,8 @@ async function insertWaitingDuel(
     textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
     creatorCoversEntry: coverOpponentEntry || undefined,
     chatEnabled,
+    challengedUserId: challenge?.userId,
+    challengedWizardId: challenge?.wizardId,
   });
   await syncDuelParticipants(ctx, duelId);
   return duelId;
@@ -425,6 +434,9 @@ async function addPlayerToDuel(
   wizards: Id<"wizards">[],
 ): Promise<void> {
   const duelId = duel._id;
+  if (duel.players.length >= 2) {
+    throw new ConvexError("This duel already has two players.");
+  }
 
   // The duel starts when the second player joins, so both players pay now.
   // Any failure here throws and rolls the whole join back.
@@ -523,9 +535,269 @@ export const joinDuel = mutation({
       throw new Error("User is already in this duel");
     }
 
+    if (duel.challengedUserId) {
+      if (duel.challengedUserId !== userId) {
+        throw new ConvexError(
+          "This duel is a private challenge for another wizard.",
+        );
+      }
+      if (wizards.length !== 1 || wizards[0] !== duel.challengedWizardId) {
+        throw new ConvexError(
+          "Accept this challenge with the wizard it names.",
+        );
+      }
+    }
+
     await addPlayerToDuel(ctx, duel, userId, wizards);
 
     return duelId;
+  },
+});
+
+// How many unanswered challenges one player can have out at once
+export const MAX_PENDING_CHALLENGES = 5;
+
+// Challenge another player's wizard to a duel. Creates a waiting duel that
+// only that wizard's owner can join, and tells them about it.
+export const challengeWizard = mutation({
+  args: {
+    wizardId: v.id("wizards"),
+    opponentWizardId: v.id("wizards"),
+    numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+    enableImageGeneration: v.optional(v.boolean()),
+    coverOpponentEntry: v.optional(v.boolean()),
+    enableChat: v.optional(v.boolean()),
+  },
+  returns: v.id("duels"),
+  handler: async (
+    ctx,
+    {
+      wizardId,
+      opponentWizardId,
+      numberOfRounds,
+      enableImageGeneration = true,
+      coverOpponentEntry = false,
+      enableChat = true,
+    },
+  ) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+    const userId = identity.subject;
+
+    const wizard = await ctx.db.get(wizardId);
+    if (!wizard || wizard.owner !== userId) {
+      throw new ConvexError("Not authorized to use this wizard");
+    }
+    const opponent = await ctx.db.get(opponentWizardId);
+    if (!opponent) {
+      throw new ConvexError("That wizard no longer exists.");
+    }
+    if (opponent.owner === userId) {
+      throw new ConvexError("You can't challenge your own wizard.");
+    }
+    const opponentUser =
+      opponent.owner === "campaign" || opponent.owner === "departed"
+        ? null
+        : await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerkId", opponent.owner))
+            .unique();
+    if (!opponentUser || opponent.isCampaignOpponent) {
+      throw new ConvexError("This wizard can't be challenged.");
+    }
+
+    const myLive = await ctx.db
+      .query("duelParticipants")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    let pending = 0;
+    for (const { duelId } of myLive) {
+      const d = await ctx.db.get(duelId);
+      if (
+        !d ||
+        d.status !== "WAITING_FOR_PLAYERS" ||
+        !d.challengedUserId ||
+        d.players[0] !== userId
+      ) {
+        continue;
+      }
+      if (d.challengedWizardId === opponentWizardId) {
+        throw new ConvexError(
+          `You've already challenged ${opponent.name}. Wait for an answer.`,
+        );
+      }
+      pending++;
+    }
+    if (pending >= MAX_PENDING_CHALLENGES) {
+      throw new ConvexError(
+        `You have ${MAX_PENDING_CHALLENGES} challenges waiting for an answer. Cancel one or wait before sending another.`,
+      );
+    }
+
+    const duelId = await insertWaitingDuel(ctx, {
+      userId,
+      numberOfRounds,
+      wizards: [wizardId],
+      enableImageGeneration,
+      coverOpponentEntry,
+      chatEnabled: enableChat,
+      challenge: { userId: opponent.owner, wizardId: opponentWizardId },
+    });
+
+    await createNotification(ctx, {
+      userId: opponent.owner,
+      type: "DUEL_CHALLENGE",
+      title: `${wizard.name} challenges ${opponent.name}!`,
+      body: coverOpponentEntry
+        ? "They're covering your entry. Accept or decline the duel."
+        : "Accept or decline the duel.",
+      url: `/duels/${duelId}`,
+      duelId,
+      dedupeKey: `challenge:${duelId}`,
+    });
+
+    return duelId;
+  },
+});
+
+// The challenged player accepts: their wizard joins and the duel begins.
+export const acceptChallenge = mutation({
+  args: { duelId: v.id("duels") },
+  returns: v.id("duels"),
+  handler: async (ctx, { duelId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+    const userId = identity.subject;
+    const duel = await ctx.db.get(duelId);
+    if (!duel || !duel.challengedUserId || !duel.challengedWizardId) {
+      throw new ConvexError("Challenge not found");
+    }
+    if (duel.challengedUserId !== userId) {
+      throw new ConvexError("This challenge isn't for you.");
+    }
+    if (duel.status !== "WAITING_FOR_PLAYERS") {
+      throw new ConvexError("This challenge is no longer open.");
+    }
+    if (duel.players.includes(userId)) {
+      return duelId;
+    }
+    const wizard = await ctx.db.get(duel.challengedWizardId);
+    if (!wizard || wizard.owner !== userId) {
+      throw new ConvexError("The challenged wizard is no longer yours.");
+    }
+
+    await addPlayerToDuel(ctx, duel, userId, [duel.challengedWizardId]);
+
+    await createNotification(ctx, {
+      userId: duel.players[0],
+      type: "DUEL_CHALLENGE",
+      title: `${wizard.name} accepted your challenge!`,
+      body: "The duel is starting.",
+      url: `/duels/${duelId}`,
+      duelId,
+      dedupeKey: `challenge-accepted:${duelId}`,
+    });
+
+    return duelId;
+  },
+});
+
+// The challenged player declines: the duel is cancelled and nobody pays.
+export const declineChallenge = mutation({
+  args: { duelId: v.id("duels") },
+  returns: v.null(),
+  handler: async (ctx, { duelId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+    const userId = identity.subject;
+    const duel = await ctx.db.get(duelId);
+    if (!duel || duel.challengedUserId !== userId) {
+      throw new ConvexError("Challenge not found");
+    }
+    if (duel.status === "CANCELLED") {
+      return null;
+    }
+    if (duel.status !== "WAITING_FOR_PLAYERS") {
+      throw new ConvexError("This challenge has already started.");
+    }
+
+    await ctx.db.patch(duelId, { status: "CANCELLED" as DuelStatus });
+    await syncDuelParticipants(ctx, duelId);
+
+    const wizard = duel.challengedWizardId
+      ? await ctx.db.get(duel.challengedWizardId)
+      : null;
+    await createNotification(ctx, {
+      userId: duel.players[0],
+      type: "DUEL_CHALLENGE",
+      title: `${wizard?.name ?? "Your opponent"} declined your challenge`,
+      body: "Challenge another wizard, or find a match in the lobby.",
+      url: `/duels/${duelId}`,
+      duelId,
+      dedupeKey: `challenge-declined:${duelId}`,
+    });
+    return null;
+  },
+});
+
+// Open challenges sent to the signed-in player, newest first
+export const getMyIncomingChallenges = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      duelId: v.id("duels"),
+      createdAt: v.number(),
+      numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+      creatorCoversEntry: v.boolean(),
+      challenger: v.object({
+        _id: v.id("wizards"),
+        name: v.string(),
+        illustration: v.optional(v.string()),
+      }),
+      myWizard: v.object({ _id: v.id("wizards"), name: v.string() }),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const duels = await ctx.db
+      .query("duels")
+      .withIndex("by_challenged_user_and_status", (q) =>
+        q
+          .eq("challengedUserId", identity.subject)
+          .eq("status", "WAITING_FOR_PLAYERS"),
+      )
+      .order("desc")
+      .take(20);
+
+    const rows = [];
+    for (const duel of duels) {
+      if (duel.players.includes(identity.subject)) continue;
+      const challenger = await ctx.db.get(duel.wizards[0]);
+      const mine = duel.challengedWizardId
+        ? await ctx.db.get(duel.challengedWizardId)
+        : null;
+      if (!challenger || !mine) continue;
+      rows.push({
+        duelId: duel._id,
+        createdAt: duel.createdAt,
+        numberOfRounds: duel.numberOfRounds,
+        creatorCoversEntry: !!duel.creatorCoversEntry,
+        challenger: {
+          _id: challenger._id,
+          name: challenger.name,
+          illustration: challenger.illustration,
+        },
+        myWizard: { _id: mine._id, name: mine.name },
+      });
+    }
+    return rows;
   },
 });
 
@@ -1188,6 +1460,8 @@ export const getActiveDuels = query({
       rematchDuelId: v.optional(v.id("duels")),
       chatEnabled: v.optional(v.boolean()),
       forfeitedBy: v.optional(v.id("wizards")),
+      challengedUserId: v.optional(v.string()),
+      challengedWizardId: v.optional(v.id("wizards")),
     }),
   ),
   handler: async (ctx) => {
@@ -1201,8 +1475,11 @@ export const getActiveDuels = query({
       .withIndex("by_status", (q) => q.eq("status", "WAITING_FOR_PLAYERS"))
       .collect();
 
-    // Filter out campaign battles
-    const allDuels = [...inProgressDuels, ...waitingDuels];
+    // Filter out campaign battles and private challenges nobody else can join
+    const allDuels = [
+      ...inProgressDuels,
+      ...waitingDuels.filter((duel) => !duel.challengedUserId),
+    ];
     return allDuels.filter((duel) => !duel.isCampaignBattle);
   },
 });
@@ -1352,6 +1629,8 @@ export const getWatchableDuels = query({
         rematchDuelId: v.optional(v.id("duels")),
         chatEnabled: v.optional(v.boolean()),
         forfeitedBy: v.optional(v.id("wizards")),
+        challengedUserId: v.optional(v.string()),
+        challengedWizardId: v.optional(v.id("wizards")),
       }),
     ),
     total: v.number(),
@@ -1361,6 +1640,8 @@ export const getWatchableDuels = query({
     const allDuels = await ctx.db.query("duels").collect();
     const watchableDuels = allDuels
       .filter((duel) => {
+        // A duel still waiting for its second player has nothing to watch.
+        if (duel.players.length < 2) return false;
         if (opponentId) {
           return (
             !!duel.isCampaignBattle &&

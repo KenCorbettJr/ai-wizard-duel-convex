@@ -53,6 +53,7 @@ import type * as lib_recordAIUsage from "../lib/recordAIUsage.js";
 import type * as lib_referenceImageRules from "../lib/referenceImageRules.js";
 import type * as lib_scheduleDuelRating from "../lib/scheduleDuelRating.js";
 import type * as lib_scheduleNarration from "../lib/scheduleNarration.js";
+import type * as lib_socialIllustration from "../lib/socialIllustration.js";
 import type * as lib_spellReactions from "../lib/spellReactions.js";
 import type * as lib_teaserPick from "../lib/teaserPick.js";
 import type * as lib_watcherRules from "../lib/watcherRules.js";
@@ -145,6 +146,7 @@ declare const fullApi: ApiFromModules<{
   "lib/referenceImageRules": typeof lib_referenceImageRules;
   "lib/scheduleDuelRating": typeof lib_scheduleDuelRating;
   "lib/scheduleNarration": typeof lib_scheduleNarration;
+  "lib/socialIllustration": typeof lib_socialIllustration;
   "lib/spellReactions": typeof lib_spellReactions;
   "lib/teaserPick": typeof lib_teaserPick;
   "lib/watcherRules": typeof lib_watcherRules;
