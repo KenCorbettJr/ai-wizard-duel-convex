@@ -1,5 +1,6 @@
 "use client";
 
+import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -421,6 +422,18 @@ export function CreateDuelForm({
                 </div>
               </button>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              A knockout wins instantly. Otherwise, the most points after the
+              last round wins.{" "}
+              <HowToWinDialog>
+                <button
+                  type="button"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  How to win
+                </button>
+              </HowToWinDialog>
+            </p>
           </div>
 
           {error && (

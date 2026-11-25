@@ -53,6 +53,8 @@ import {
   type WatcherRejection,
 } from "@/components/watcher/WatcherDialog";
 import { DuelScoreboard } from "@/components/DuelScoreboard";
+import { HowToWinDialog } from "@/components/HowToWinDialog";
+import { explainDuelResult } from "@/lib/duelResult";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { DuelChat } from "@/components/DuelChat";
@@ -906,6 +908,19 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         : wizard2
       : undefined;
   const winnerIsAI = !!winnerWizard?.isAIPowered;
+  const resultExplanation =
+    duel.status === "COMPLETED" && duel.winners
+      ? explainDuelResult({
+          wizardIds: duel.wizards,
+          winners: duel.winners,
+          hitPoints: duel.hitPoints,
+          points: duel.points,
+          forfeited: !!duel.forfeitedBy,
+          nameOf: (id) =>
+            (id === duel.wizards[0] ? wizard1?.name : wizard2?.name) ??
+            "The other wizard",
+        })
+      : null;
 
   // Winner announcement for completed duels.
   const resultCard = duel.status === "COMPLETED" &&
@@ -1009,6 +1024,19 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     `${(i === 0 ? wizard1 : wizard2)?.name ?? "Wizard"} ${Math.max(0, duel.hitPoints[id] ?? 0)} HP, ${duel.points[id] ?? 0} pts`,
                 )
                 .join(" · ")}
+            </p>
+          )}
+          {resultExplanation && (
+            <p className="mx-auto max-w-xl text-center text-sm text-foreground/90">
+              {resultExplanation}{" "}
+              <HowToWinDialog>
+                <button
+                  type="button"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  How scoring works
+                </button>
+              </HowToWinDialog>
             </p>
           )}
           {duel.isCampaignBattle && isPlayerInDuel && (

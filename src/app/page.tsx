@@ -66,6 +66,25 @@ const FAQS: Array<{ q: string; a: React.ReactNode }> = [
     a: `Yes. Sign up and you get ${STARTING_TOKENS} free tokens, enough for that many duels or campaign battles. You can also watch public duels without an account. Buy more tokens only if you want them.`,
   },
   {
+    q: "How do I win a duel?",
+    a: (
+      <>
+        Knock your rival down to 0 health and you win on the spot. If both
+        wizards are still standing after the last round, the one with the most
+        points wins, even if they have less health left. The AI judge awards
+        points each round for clever, creative spells. Health only breaks a
+        points tie.{" "}
+        <Link
+          href="/rules#how-to-win"
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          See how scoring works
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
     q: "Is there a limit to what I can cast, and is it fair?",
     a: "Cast anything you can describe. The AI scores creativity and strategy, and each wizard also gets a luck roll, so a clever spell can beat a bigger one and nobody wins on size alone.",
   },

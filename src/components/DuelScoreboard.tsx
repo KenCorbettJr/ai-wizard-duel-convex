@@ -9,7 +9,9 @@ import {
   Clock,
   Skull,
   Check,
+  CircleHelp,
 } from "lucide-react";
+import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
 import { Crown } from "@/components/ui/crown-icon";
@@ -477,6 +479,17 @@ export const DuelScoreboard = memo(function DuelScoreboard({
               {roundLabel}
             </span>
           )}
+          <HowToWinDialog>
+            <button
+              type="button"
+              aria-label="How to win a duel"
+              title="How to win"
+              className="inline-flex min-h-8 items-center gap-1 rounded-full px-1.5 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            >
+              <CircleHelp className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">How to win</span>
+            </button>
+          </HowToWinDialog>
         </div>
         <div
           role="status"

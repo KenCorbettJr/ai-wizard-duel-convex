@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  Check,
   X,
   ShieldCheck,
   Filter,
@@ -13,24 +12,15 @@ import {
   Coins,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HowToWin } from "@/components/HowToWin";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Arena Rules & Safety",
   description:
-    "AI Wizard Duel keeps everything PG-13. Every spell, wizard and username is checked before anyone sees it, and the AI storyteller follows the same rules.",
+    "How to win a duel, and how AI Wizard Duel keeps everything PG-13. Every spell, wizard and username is checked before anyone sees it.",
 };
-
-const WELCOME = [
-  "Fireballs, lightning, curses and epic magical battles",
-  "Spooky fantasy: skeletons, dark lords, shadow magic",
-  "Trash talk aimed at your rival's wizard",
-  "Silly and gross-out jokes (the storyteller keeps them tasteful)",
-  "Sweet, silly romance: love potions, charm spells, Cupid's arrows",
-  "Spells inspired by your favorite books, games and movies",
-  "Parody and mash-up wizards with a twist of their own, like Barry Plotter",
-];
 
 const NOT_ALLOWED = [
   "Swearing, including disguised spellings",
@@ -40,48 +30,48 @@ const NOT_ALLOWED = [
   "Bullying or threatening a real person",
   "Self-harm",
   "Personal details: addresses, phone numbers, schools, real names",
-  "Trying to trick the AI into breaking the game's rules",
-  "Wizards named after someone else's character (Harry Potter) or a real person. Give yours a name of your own",
+  "Tricking the AI into breaking the rules",
+  "Wizards named after someone else's character or a real person",
 ];
 
 const SAFEGUARDS = [
   {
     icon: Filter,
-    title: "Everything is checked before anyone sees it",
-    text: "Every spell, wizard name and description, duel chat message, and every username and display name a player chooses is checked when it's submitted. If it breaks the rules, it's rejected and never shown to anyone.",
+    title: "Everything is checked first",
+    text: "Every spell, wizard, chat message and username is checked when it's submitted. If it breaks the rules, nobody ever sees it.",
   },
   {
     icon: BrainCircuit,
     title: "Two layers of checking",
-    text: "A word filter catches known bad words, including tricks like swapped letters and symbols. Then an AI moderator reads the text in context. It knows a fireball in a fantasy duel is fine, and it catches innuendo, bullying and attempts to sneak something past it.",
+    text: "A word filter catches bad words and disguised spellings. Then an AI moderator reads for context, so a fireball is fine but innuendo and bullying aren't.",
   },
   {
     icon: Feather,
     title: "The storyteller follows the same rules",
-    text: "The AI that narrates each duel and creates its illustrations is instructed to keep everything PG-13. Crude jokes are softened, and if anything inappropriate ever slipped through, the storyteller drops it and the spell fails.",
+    text: "The AI that narrates and illustrates each duel keeps everything PG-13 and drops anything that slips through.",
   },
   {
     icon: UserCheck,
-    title: "Repeat offenders are stopped, and we review them",
-    text: "Each rejected attempt is a strike. Too many in a short time and a player is locked out of writing for a while. Every rejection is logged for our team to review.",
+    title: "Repeat offenders are stopped",
+    text: "Too many rejected attempts locks a player out of writing for a while. We review every rejection.",
   },
 ];
 
 const FACTS = [
   {
     icon: MessagesSquare,
-    title: "Duel chat, but no private messages",
-    text: "The two players in a duel can trade a few short messages, and only signed-in viewers see them. Every message is checked like a spell, and either player can turn chat off. There are no private messages.",
+    title: "No private messages",
+    text: "Duel chat is short, checked like spells, and either player can turn it off.",
   },
   {
     icon: Globe,
-    title: "Every duel is public",
-    text: "Anyone can watch duels on the Watch page, including campaign battles against the AI wizards. Keeping everything out in the open means there's nowhere to hide bad behavior.",
+    title: "Duels are public",
+    text: "Anyone can watch, so there's nowhere to hide bad behavior.",
   },
   {
     icon: Coins,
-    title: "Simple, one-time purchases",
-    text: "The game runs on tokens: one token per duel, with free tokens to start. There are no subscriptions, and tokens never expire.",
+    title: "One-time purchases",
+    text: "One token per duel. No subscriptions, and tokens never expire.",
   },
 ];
 
@@ -90,116 +80,91 @@ export default function RulesPage() {
     <div className="container mx-auto max-w-4xl px-4 pt-10 pb-16 sm:px-6 sm:py-12">
       <PageHeader
         title="Arena Rules & Safety"
-        description="AI Wizard Duel is built to be fun for players of all ages. Everything on it stays within a PG-13 rating. Here's what that means, and how we keep it that way."
+        description="How to win, what's off limits, and how we keep the arena PG-13."
         icon={<ShieldCheck className="h-6 w-6" aria-hidden="true" />}
       />
 
-      <section aria-labelledby="rules-heading" className="mb-14">
-        <h2 id="rules-heading" className="mb-2 font-display text-2xl font-bold">
-          The Arena Rules
+      <section
+        id="how-to-win"
+        aria-labelledby="how-to-win-heading"
+        className="mb-12 scroll-mt-24"
+      >
+        <h2
+          id="how-to-win-heading"
+          className="mb-4 font-display text-2xl font-bold"
+        >
+          How to Win a Duel
         </h2>
-        <p className="mb-6 text-muted-foreground">
-          If you can describe it, you can usually cast it. Just keep it fit for
-          everyone watching.
+        <HowToWin />
+      </section>
+
+      <section aria-labelledby="rules-heading" className="mb-12">
+        <h2 id="rules-heading" className="mb-2 font-display text-2xl font-bold">
+          Not Allowed in the Arena
+        </h2>
+        <p className="mb-4 text-muted-foreground">
+          If you can imagine it, you can probably cast it. Just keep it PG-13.
         </p>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Welcome in the arena</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {WELCOME.map((item) => (
-                  <li key={item} className="flex gap-3">
-                    <Check
-                      className="mt-0.5 size-5 shrink-0 text-success"
-                      aria-hidden="true"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Not allowed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {NOT_ALLOWED.map((item) => (
-                  <li key={item} className="flex gap-3">
-                    <X
-                      className="mt-0.5 size-5 shrink-0 text-destructive"
-                      aria-hidden="true"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-        <p className="mt-6 text-muted-foreground">
-          Break a rule and the Watcher, the arena&apos;s silent guardian, will
-          stop the spell before it&apos;s cast. Nothing is spent, and you can
-          rewrite it and try again. Keep testing the Watcher&apos;s patience and
-          your magic will be silenced for a while.
+        <Card>
+          <CardContent className="py-5">
+            <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+              {NOT_ALLOWED.map((item) => (
+                <li key={item} className="flex gap-3">
+                  <X
+                    className="mt-0.5 size-5 shrink-0 text-destructive"
+                    aria-hidden="true"
+                  />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+        <p className="mt-4 text-muted-foreground">
+          Break a rule and the Watcher, the arena&apos;s silent guardian, stops
+          the spell. Nothing is spent, so rewrite it and try again. Keep
+          pushing and your magic is silenced for a while.
         </p>
       </section>
 
-      <section aria-labelledby="parents-heading" className="mb-14">
+      <section aria-labelledby="parents-heading" className="mb-12">
         <h2
           id="parents-heading"
-          className="mb-2 font-display text-2xl font-bold"
+          className="mb-4 font-display text-2xl font-bold"
         >
           For Parents
         </h2>
-        <p className="mb-6 text-muted-foreground">
-          Players write their own spells, so we check everything they write. You
-          shouldn&apos;t have to wonder what your child might see.
-        </p>
-        <ol className="space-y-4">
-          {SAFEGUARDS.map(({ icon: Icon, title, text }, i) => (
-            <li key={title}>
-              <Card>
-                <CardContent className="flex gap-4 py-5">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-arcane text-white shadow-md shadow-primary/30">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">
-                      <span className="sr-only">Step {i + 1}: </span>
-                      {title}
-                    </h3>
-                    <p className="mt-1 text-muted-foreground">{text}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {SAFEGUARDS.map(({ icon: Icon, title, text }) => (
+            <Card key={title}>
+              <CardContent className="flex gap-4 py-5">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-arcane text-white shadow-md shadow-primary/30">
+                  <Icon className="size-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </ol>
+        </div>
 
-        <h3 className="mt-10 mb-4 font-display text-xl font-bold">
-          Good to know
-        </h3>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
           {FACTS.map(({ icon: Icon, title, text }) => (
             <Card key={title}>
               <CardContent className="space-y-2 py-5">
                 <Icon className="size-6 text-primary" aria-hidden="true" />
-                <h4 className="font-semibold">{title}</h4>
+                <h3 className="font-semibold">{title}</h3>
                 <p className="text-sm text-muted-foreground">{text}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <p className="mt-8 rounded-lg border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">
-          An honest note: no filter is perfect, and AI can make mistakes in
-          either direction. That&apos;s why we use several layers, keep the
-          storyteller under the same rules, and review every rejection
-          ourselves. We keep improving the checks as we learn.
+        <p className="mt-6 text-sm text-muted-foreground">
+          No filter is perfect, so we use several layers and keep improving
+          them as we learn.
         </p>
       </section>
 
