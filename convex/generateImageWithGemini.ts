@@ -20,6 +20,7 @@ import {
 import {
   wizardReferenceInstructions,
   wizardDescriptionsLine,
+  PREVIOUS_SCENE_INSTRUCTION,
   referenceStyleValidator,
   type ReferenceStyle,
 } from "./lib/referenceImageRules";
@@ -339,9 +340,7 @@ async function generateWithGeminiFlash(
         instructions.push(wizardReferenceInstructions(referenceStyle));
       }
       if (hasPreviousScene) {
-        instructions.push(
-          "Keep the same arena setting and wizard designs as the previous scene, but this is a NEW comic book panel: use the camera angle and composition described in the prompt and do NOT copy the previous image's framing, viewpoint or wizard positions.",
-        );
+        instructions.push(PREVIOUS_SCENE_INSTRUCTION);
       }
       if (wizardDescriptions && wizardDescriptions.length > 0) {
         instructions.push(

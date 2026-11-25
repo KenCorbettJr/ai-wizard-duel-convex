@@ -30,7 +30,7 @@ const IntroductionResponseSchema = z.object({
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration: a wide establishing shot from high in the spectator stands, looking down across a vast, stadium-sized arena. The two wizards stand about 50 feet apart on opposite sides of a large open arena floor and look small from this distance. Include wizard appearances, the crowd in the stands, the arena environment, and dynamic lighting with magical particles.",
+      "A very detailed prompt for a low poly art style illustration: a wide establishing shot of the Enchanted Arena, a colossal colosseum whose stone floor stretches for about a mile, with the spectator stands a distant ring along the horizon and the crowd tiny specks. The two wizards stand about 50 feet apart in the middle of the floor, facing each other, large enough to recognize. Name each wizard and say where they stand, but do not describe their clothing, colors, hair or height: reference images supply their looks. Include the distant crowd, the vast arena floor and a dramatic, colorful sky. Do not use the words panel, comic, frame or border, and do not ask for any text in the image.",
     ),
 });
 
@@ -186,7 +186,7 @@ The two wizards for this duel are:
 
 ${CONTENT_STANDARDS}`;
 
-    const prompt = `Introduce the two wizards, ${wizard1.name} and ${wizard2.name}, for their upcoming ${duelType} duel in the Enchanted Arena. In the illustration prompt, show the wizards about 50 feet apart in a vast arena, viewed from the spectator stands. Create a dramatic but brief introduction (about 80 to 110 words) that sets the stage for magical combat.`;
+    const prompt = `Introduce the two wizards, ${wizard1.name} and ${wizard2.name}, for their upcoming ${duelType} duel in the Enchanted Arena. In the illustration prompt, show the wizards about 50 feet apart in the middle of a colossal colosseum, with the crowd far away on the horizon. Create a dramatic but brief introduction (about 80 to 110 words) that sets the stage for magical combat.`;
 
     return await generateObject(
       prompt,

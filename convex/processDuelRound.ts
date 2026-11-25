@@ -37,7 +37,7 @@ const BattleRoundResponseSchema = z.object({
   illustrationPrompt: z
     .string()
     .describe(
-      "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round. Include how each wizard looks in this exact moment (pose, form, what they hold), spell effects, action and motion, and keep the arena consistent with previous rounds.",
+      "A one or two sentence scene note naming the round's single decisive moment: who did what to whom, and what it physically looked like. An art director turns this and the narration into the illustration, so do not describe camera angles, art style or the wizards' usual looks.",
     ),
   roundVerdict: z
     .string()
@@ -109,57 +109,6 @@ export type BattleRoundResponse = Omit<
   wizard2Luck?: number;
 };
 export type DuelConclusionResponse = z.infer<typeof DuelConclusionSchema>;
-
-// Scale of the arena, repeated in every illustration prompt. Without it the
-// image model draws a small platform with the wizards almost touching.
-const ARENA_SCALE =
-  "The Enchanted Arena is a vast, stadium-sized arena with tiered spectator stands all around, not a small platform. The wizards began the duel about 50 feet (15 meters) apart, but they are free to move: they can run, fly, leap, teleport, change the environment, and close to point-blank range or retreat as far as they like. Draw them wherever the action of this round puts them.";
-
-// Camera shots and the arena scale push wizards far apart. When an attack
-// actually lands, the picture must show it landing on the target.
-const ILLUSTRATION_RULES =
-  "ILLUSTRATION RULES: Pick the moment of impact, and show both wizards clearly in frame. Name each wizard and say who is attacking whom. If an attack hits (the target loses health), the attacker's move must be aimed AT the target, and the prompt must show the target being struck, with the target clearly visible and not tiny or in the background. A leaping, flying or swinging attacker travels toward the target, never toward the camera, the crowd or the stands. If the attack is blocked or dodged, show the attack meeting the defense. Wizards may be at any distance from each other, so place them where this round's actions put them, and let the camera shot frame them. Say which direction each wizard is facing and moving. Describe each wizard's body as this moment requires: their pose, their form, and what is in their hands (or that their hands are empty). If a wizard transformed or changed shape this round, describe ONLY the new form in full (for example, curled into a spinning ball, or a robot dinosaur in their colors) and say they are no longer in their usual form; never call it partial unless their spell says so. Do not mention their usual outfit, staff or props when the action changes or drops them.";
-
-// The introduction (round 0) is the wide establishing shot. Every battle round
-// gets a different camera angle. The order is shuffled per
-// duel so every duel feels different, and no angle repeats until all are used.
-const CAMERA_SHOTS = [
-  "Low-angle hero shot looking up at the winning or most dominant wizard, the dominant wizard's spell or strike blazing toward its target, with the other wizard clearly visible in the frame.",
-  "Dramatic close-up on one wizard's face and casting hands, intense expression, magical light on their features, the opponent and their spell visible behind.",
-  "Over-the-shoulder shot from behind one wizard, looking toward the opponent as spells and attacks pass between the two.",
-  "High aerial view looking straight down on the arena floor, the wizards wherever their actions put them, and the spells or strikes meeting in a bright shockwave.",
-  "Dutch-angle (tilted) action shot at the point of impact, debris and sparks flying, motion lines, a wizard caught mid-movement, the other wizard visible and part of the action.",
-  "Side-on cinematic profile of the whole arena, both wizards in frame, positioned where their actions put them, with clashing spells or strikes meeting between them.",
-  "Ground-level shot from behind rubble or arena stones, a wizard leaping or diving to dodge in the foreground as a spell streaks past.",
-  "Shot from behind the crowd silhouette in the stands, looking down over spectators gasping or cheering at the duel far below.",
-];
-
-// Small deterministic PRNG so the shuffle is stable for a given duel
-function seededRandom(seed: string): () => number {
-  let h = 1779033703 ^ seed.length;
-  for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  let state = h >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function getCameraShot(duelId: string, roundNumber: number): string {
-  const random = seededRandom(duelId);
-  const order = [...CAMERA_SHOTS];
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  return order[Math.max(0, roundNumber - 1) % order.length];
-}
 
 // Generate a luck number (1-20, like a D20), shifted by any luck bonus and
 // clamped back into 1-20.
@@ -512,7 +461,7 @@ async function generateBattleRound(
     trailingStalemateCount(previousRounds, [wizard1ID, wizard2ID]),
   );
 
-  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== LUCK THIS ROUND ===\n${luckGuidance}${stalemateNote ? `\n\n${stalemateNote}` : ""}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\n=== CAMERA SHOT for this round's illustration ===\n${getCameraShot(duel._id, round.roundNumber)}\n${ARENA_SCALE}\n${ILLUSTRATION_RULES}\nDo not reuse the framing of earlier rounds. Keep the narration brief (about 70 to 100 words).`;
+  const prompt = `${previousRoundsContext}\n\n=== Round ${round.roundNumber} ===\n${roundActions}\n\n=== LUCK THIS ROUND ===\n${luckGuidance}${stalemateNote ? `\n\n${stalemateNote}` : ""}\n\n=== OUTPUT FIELD MAPPING (IMPORTANT) ===\nIn your JSON response, the "wizard1" object is ONLY for ${wizard1.name}, and the "wizard2" object is ONLY for ${wizard2.name}. This is true regardless of the order the actions are listed above. Double check that each wizard's pointsEarned and healthChange are in the correct object: damage taken by ${wizard1.name} goes in wizard1, damage taken by ${wizard2.name} goes in wizard2.\n\nKeep the narration brief (about 70 to 100 words).`;
 
   try {
     // Use structured output with schema for better AI responses
@@ -728,7 +677,7 @@ You must return ONLY a valid JSON object with the following structure:
 {
   "narration": "A punchy description of the round's magical combat, written in present tense like a live announcer. Keep it SHORT: 2 brief paragraphs, about 70 to 100 words in total. Focus on the one or two decisive moments and how the spells interact. No scene-setting filler.",
   "result": "A short one sentence teaser for the round. This should be a single sentence that captures the essence of the round, ideally 10 words or less.",
-  "illustrationPrompt": "A very detailed prompt for a low poly art style illustration, framed like a dramatic comic book panel capturing the single most dynamic moment of the round. Follow the CAMERA SHOT instruction given for this round, and state the camera angle explicitly in the prompt. Follow the ILLUSTRATION RULES: both wizards visible, and every attack that lands is shown aimed at and striking its target. Include how each wizard looks in this exact moment (pose, form, what they hold), spell effects, action and motion, dynamic lighting and magical particles, and keep the arena consistent with previous rounds.",
+  "illustrationPrompt": "A one or two sentence scene note naming the round's single decisive moment: who did what to whom, and what it physically looked like. No camera angles, art style or descriptions of the wizards' usual looks.",
   "roundVerdict": "One sentence, written BEFORE the numbers below, naming which wizard won this round and the main reason (creativity, fit with the duel, execution, luck). Call it even only in the rare case that both actions were genuinely matched.",
   "damageSummary": "One sentence, written BEFORE the numbers below, stating for each wizard whether they were actually hit this round and how badly, based strictly on your narration. If an attack was destroyed, blocked, dodged, absorbed or reflected, say that wizard took no damage.",
   "wizard1": {
@@ -1115,9 +1064,9 @@ async function generateDuelConclusion(
 
     const illustrationSpec = isDraw
       ? result.bothFell
-        ? "A detailed prompt for a low poly art style illustration of a draw where both wizards fell together: both wizards collapsed or kneeling, spent, on opposite sides of the arena, equally matched, with neither shown as the victor. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
-        : "A detailed prompt for a low poly art style illustration of a draw: both wizards standing as equals, given equal size and prominence, facing each other with mutual respect (for example a bow, a salute, or a weary standoff), with neither celebrating and neither dejected. The crowd is on its feet for both. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions."
-      : "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Ensure the wizards' appearances are consistent with their descriptions.";
+        ? "A detailed prompt for a low poly art style illustration of a draw where both wizards fell together: both wizards collapsed or kneeling, spent, on opposite sides of the arena, equally matched, with neither shown as the victor. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Name each wizard, but do not describe their clothing, colors, hair or height: reference images supply their looks. Do not use the words panel, comic, frame or border, and do not ask for any text in the image."
+        : "A detailed prompt for a low poly art style illustration of a draw: both wizards standing as equals, given equal size and prominence, facing each other with mutual respect (for example a bow, a salute, or a weary standoff), with neither celebrating and neither dejected. The crowd is on its feet for both in the distant stands. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Name each wizard, but do not describe their clothing, colors, hair or height: reference images supply their looks. Do not use the words panel, comic, frame or border, and do not ask for any text in the image."
+      : "A detailed prompt for a low poly art style illustration showing the winning wizard celebrating and the losing wizard in the background looking dejected, with the crowd cheering from the distant stands of the colossal colosseum. The scene should be set in the Enchanted Arena with remnants of the duel matching the arena description. Include visual references to key magical elements from the duel. Name each wizard, but do not describe their clothing, colors, hair or height: reference images supply their looks. Do not use the words panel, comic, frame or border, and do not ask for any text in the image.";
 
     const systemPrompt = `You are the Arcane Arbiter concluding a wizard duel, speaking like a sports announcer giving the post-game call. You have the complete history of the duel for reference, but the audience just watched it, so do NOT recap it. Write a final narration that:
 

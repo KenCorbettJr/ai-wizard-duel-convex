@@ -303,6 +303,18 @@ async function deleteDuelEntirely(ctx: MutationCtx, duel: Doc<"duels">) {
     await ctx.db.delete(row._id);
   }
   for (const row of await ctx.db
+    .query("duelBattlefields")
+    .withIndex("by_duel_and_round", (q) => q.eq("duelId", duelId))
+    .collect()) {
+    await ctx.db.delete(row._id);
+  }
+  for (const row of await ctx.db
+    .query("duelArtNotes")
+    .withIndex("by_duel", (q) => q.eq("duelId", duelId))
+    .collect()) {
+    await ctx.db.delete(row._id);
+  }
+  for (const row of await ctx.db
     .query("campaignBattles")
     .withIndex("by_duel", (q) => q.eq("duelId", duelId))
     .collect()) {

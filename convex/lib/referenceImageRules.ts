@@ -15,7 +15,7 @@ export const referenceStyleValidator = v.union(
 export type ReferenceStyle = Infer<typeof referenceStyleValidator>;
 
 const NO_SHEET =
-  "The reference images only show what the character looks like: do NOT reproduce their layout, white or gray background, or framing. Do NOT make a character sheet, turnaround, multiple views, panels, collage, labels, or any text. The scene background must fill the entire image edge to edge.";
+  "The reference images only show what the character looks like: do NOT reproduce their layout, white or gray background, or framing. Do NOT make a character sheet, turnaround, multiple views, panels, collage, labels, or any text. The scene background must fill the entire image edge to edge, with no border or margin.";
 
 /** Instructions for drawing the wizards from their reference images. */
 export function wizardReferenceInstructions(style: ReferenceStyle): string {
@@ -44,3 +44,7 @@ export function wizardDescriptionsLine(
     ? `The wizards are: ${list}.`
     : `Each wizard's usual look, for recognition only (this scene's action can change their pose, form and what they hold): ${list}.`;
 }
+
+/** Sent with the previous round's image, which is only there for continuity. */
+export const PREVIOUS_SCENE_INSTRUCTION =
+  "The appearance reference images, not the previous scene, decide how each wizard looks: if the previous scene drew a wizard differently from their reference, follow the reference. Use the previous scene only for the setting and any lasting damage to the ground. This is a NEW shot: follow the prompt for the setting, camera angle and composition, and do NOT copy the previous image's framing, border, viewpoint, wizard positions or wizard sizes.";

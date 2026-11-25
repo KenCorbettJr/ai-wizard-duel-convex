@@ -207,6 +207,21 @@ export default defineSchema({
     .index("by_shortcode", ["shortcode"])
     .index("by_completed_at", ["completedAt"])
     .index("by_highlighted_at", ["highlightedAt"]),
+  // Per-duel notes for the illustrations. `scale` is a fixed sentence about the
+  // wizards' relative heights, repeated in every image so sizes stay consistent.
+  // Written once, the first time an image of the duel is generated.
+  duelArtNotes: defineTable({
+    duelId: v.id("duels"),
+    scale: v.string(),
+  }).index("by_duel", ["duelId"]),
+  // What the battlefield looks like after each battle round (craters, ice,
+  // weather...), written by the art director and fed into the next round so the
+  // environment builds up over the duel. Battle rounds hide the arena stands.
+  duelBattlefields: defineTable({
+    duelId: v.id("duels"),
+    roundNumber: v.number(),
+    description: v.string(),
+  }).index("by_duel_and_round", ["duelId", "roundNumber"]),
   duelRounds: defineTable({
     duelId: v.id("duels"),
     roundNumber: v.number(),

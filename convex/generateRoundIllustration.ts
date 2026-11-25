@@ -6,6 +6,16 @@ import { api, internal } from "./_generated/api";
 import { withDuelNames } from "./lib/duelWizardNames";
 import { Id } from "./_generated/dataModel";
 import { DUEL_SCENE_ASPECT_RATIO } from "./lib/imageProvider";
+import { directRoundScene, ensureDuelScale } from "./sceneDirector";
+import {
+  COLOSSEUM_RULE,
+  PERSPECTIVE_RULE,
+  SCENE_IMAGE_RULES,
+  getCameraShot,
+  healthAfterRounds,
+  impactLines,
+} from "./lib/sceneDirection";
+import type { AIObservabilityContext } from "./aiTextGeneration";
 
 export const generateRoundIllustration = internalAction({
   args: {
@@ -58,55 +68,123 @@ export const generateRoundIllustration = internalAction({
       // Players already paid a token when the duel started, so there is no
       // per-image credit check here.
 
-      let imageBuffer: ArrayBuffer;
-      let previousImage: string | undefined;
+      const wizards = await getDuelWizards(ctx, duel.wizards);
+      const rounds = (await ctx.runQuery(api.duels.getDuelRounds, {
+        duelId,
+      })) as RoundRow[];
+      const roundNum = Number(roundNumber);
+      const thisRound = rounds.find((r) => r.roundNumber === roundNum);
+      const observability: AIObservabilityContext = {
+        sessionId: `duel-${duelId}`,
+        distinctId: userId,
+        usageCtx: ctx,
+      };
+
+      // A fixed sentence about the wizards' relative heights, the same in
+      // every image of the duel.
+      const scale = await ensureDuelScale(
+        ctx,
+        duelId,
+        wizards.map((w) => ({ name: w.name, description: w.description })),
+        observability,
+      );
+
+      // Battle rounds get their image prompt from the art director, written
+      // from what the judge decided happened. The introduction and conclusion
+      // keep the prompt they were written with. If the director fails, the
+      // judge's scene note is used as-is.
+      let scenePrompt = illustrationPrompt;
+      let transformedWizards: string[] = [];
+      let impacts: string[] = [];
+      if (isBattleRound(thisRound)) {
+        const battlefield = await ctx.runQuery(
+          internal.duelArtNotes.getBattlefieldBefore,
+          { duelId, beforeRound: thisRound.roundNumber },
+        );
+        const directorRound = {
+          ...buildDirectorRound(duel, wizards, rounds, thisRound),
+          battlefield: battlefield ?? undefined,
+        };
+        // Who got hit is stated again after the scene, because the director
+        // sometimes leaves a hit out when the narration doesn't describe it.
+        impacts = impactLines(directorRound.wizards);
+        try {
+          const direction = await directRoundScene(
+            directorRound,
+            observability,
+          );
+          if (direction.prompt) {
+            scenePrompt = direction.prompt;
+            transformedWizards = direction.transformedWizards;
+          }
+          if (direction.battlefield) {
+            await ctx.runMutation(internal.duelArtNotes.setBattlefield, {
+              duelId,
+              roundNumber: thisRound.roundNumber,
+              description: direction.battlefield,
+            });
+          }
+        } catch (error) {
+          console.warn(
+            "Art director failed, using the judge's scene note:",
+            error,
+          );
+        }
+      }
+
+      const prompt = [
+        scenePrompt,
+        ...(impacts.length > 0
+          ? [`The outcome must be visible: ${impacts.join(" ")}`]
+          : []),
+        // Every scene of the duel shares the colosseum's scale, so the crowd
+        // stays a distant ring on the horizon from introduction to conclusion.
+        COLOSSEUM_RULE,
+        scale ? `${scale} ${PERSPECTIVE_RULE}` : PERSPECTIVE_RULE,
+        SCENE_IMAGE_RULES,
+      ].join("\n\n");
 
       // Every round gets the plain-background wizard images as character
-      // references. Later rounds also get the previous scene for continuity.
-      const wizardRefs = await getWizardReferences(ctx, duel.wizards);
+      // references, except a wizard drawn transformed this round: their usual
+      // portrait would pull the model back to their usual form. Later rounds
+      // also get the previous scene for continuity.
+      const visible = wizards.filter(
+        (w) => !transformedWizards.includes(w.name),
+      );
+      const wizardRefs = referencesFor(visible);
 
-      if (roundNumber === "0") {
-        imageBuffer = await ctx.runAction(
-          api.generateImageWithGemini.generateImageWithGemini,
-          {
-            prompt: illustrationPrompt,
-            wizardImages: wizardRefs.storageIds,
-            wizardImageLabels: wizardRefs.labels,
-            userId,
-            sessionId: `duel-${duelId}`,
-            feature: "generate_duel_illustration",
-            aspectRatio: DUEL_SCENE_ASPECT_RATIO,
-            referenceStyle: "scene",
-          },
-        );
-      } else {
-        previousImage = await getPreviousRoundIllustration(
-          ctx,
-          duelId,
-          parseInt(roundNumber),
-        );
+      // Battle rounds don't use the introduction as a reference: it is a wide
+      // establishing shot and would pull every round back to its framing.
+      const previousImage =
+        roundNumber === "0"
+          ? undefined
+          : getPreviousRoundIllustration(
+              rounds,
+              roundNum,
+              isBattleRound(thisRound) ? 1 : 0,
+            );
 
-        const wizardDescriptions = await getWizardDescriptions(
-          ctx,
-          duel.wizards,
-        );
-
-        imageBuffer = await ctx.runAction(
-          api.generateImageWithGemini.generateImageWithGemini,
-          {
-            prompt: illustrationPrompt,
-            previousImage,
-            wizardImages: wizardRefs.storageIds,
-            wizardImageLabels: wizardRefs.labels,
-            wizardDescriptions,
-            userId,
-            sessionId: `duel-${duelId}`,
-            feature: "generate_duel_illustration",
-            aspectRatio: DUEL_SCENE_ASPECT_RATIO,
-            referenceStyle: "scene",
-          },
-        );
-      }
+      const imageBuffer: ArrayBuffer = await ctx.runAction(
+        api.generateImageWithGemini.generateImageWithGemini,
+        {
+          prompt,
+          previousImage,
+          wizardImages: wizardRefs.storageIds,
+          wizardImageLabels: wizardRefs.labels,
+          wizardDescriptions:
+            roundNumber === "0"
+              ? undefined
+              : visible.map((w) => ({
+                  name: w.name,
+                  description: w.description,
+                })),
+          userId,
+          sessionId: `duel-${duelId}`,
+          feature: "generate_duel_illustration",
+          aspectRatio: DUEL_SCENE_ASPECT_RATIO,
+          referenceStyle: "scene",
+        },
+      );
 
       // Apply additional resizing specifically for duel round illustrations (skip during tests)
       let finalImageBuffer = imageBuffer;
@@ -133,13 +211,7 @@ export const generateRoundIllustration = internalAction({
         new Blob([finalImageBuffer], { type: "image/webp" }),
       );
 
-      // Find the round to update
-      const rounds = await ctx.runQuery(api.duels.getDuelRounds, { duelId });
-      const targetRound = rounds.find(
-        (round: { roundNumber: number }) =>
-          round.roundNumber.toString() === roundNumber,
-      );
-
+      const targetRound = thisRound;
       if (targetRound) {
         // Update the round with the illustration
         await ctx.runMutation(internal.duels.updateRoundIllustration, {
@@ -180,14 +252,38 @@ export const generateRoundIllustration = internalAction({
   },
 });
 
-// Get the character reference image for each wizard. Prefers the plain-background
-// image; falls back to the display illustration for wizards created before it existed.
-async function getWizardReferences(
+type DuelWizard = {
+  id: Id<"wizards">;
+  name: string;
+  description: string;
+  // Plain-background image, or the display illustration for older wizards
+  reference?: string;
+};
+
+type RoundRow = {
+  _id: Id<"duelRounds">;
+  roundNumber: number;
+  type: string;
+  status: string;
+  spells?: Record<string, { description: string; castBy: string }>;
+  outcome?: {
+    narrative: string;
+    result?: string;
+    illustration?: string;
+    illustrationPrompt?: string;
+    pointsAwarded?: Record<string, number>;
+    healthChange?: Record<string, number>;
+  };
+};
+
+type BattleRound = RoundRow & { outcome: NonNullable<RoundRow["outcome"]> };
+
+// Names (with owners added for same-named wizards), descriptions and
+// reference images for the duel's wizards, in duel order.
+async function getDuelWizards(
   ctx: ActionCtx,
   wizardIds: Id<"wizards">[],
-): Promise<{ storageIds: string[]; labels: string[] }> {
-  const storageIds: string[] = [];
-  const labels: string[] = [];
+): Promise<DuelWizard[]> {
   try {
     const wizards = await withDuelNames(
       ctx,
@@ -197,102 +293,87 @@ async function getWizardReferences(
         ),
       ),
     );
-    for (const wizard of wizards) {
-      const storageId = wizard?.plainIllustration ?? wizard?.illustration;
-      if (wizard && storageId) {
-        storageIds.push(storageId);
-        labels.push(wizard.name);
-      }
-    }
+    const result: DuelWizard[] = [];
+    wizards.forEach((wizard, i) => {
+      if (!wizard) return;
+      result.push({
+        id: wizardIds[i],
+        name: wizard.name,
+        description: wizard.description,
+        reference: wizard.plainIllustration ?? wizard.illustration,
+      });
+    });
+    return result;
   } catch (error) {
-    console.warn("Could not get wizard reference images:", error);
-  }
-  return { storageIds, labels };
-}
-
-// Helper function to get wizard descriptions for context in subsequent rounds
-async function getWizardDescriptions(
-  ctx: ActionCtx,
-  wizardIds: Id<"wizards">[],
-): Promise<Array<{ name: string; description: string }>> {
-  try {
-    // Get wizard data (using internal query to handle both regular wizards and campaign opponents)
-    const wizards = await withDuelNames(
-      ctx,
-      await Promise.all(
-        wizardIds.map((wizardId) =>
-          ctx.runQuery(internal.wizards.getWizardInternal, { wizardId }),
-        ),
-      ),
-    );
-
-    // Extract wizard names and descriptions
-    const descriptions: Array<{ name: string; description: string }> = [];
-
-    for (const wizard of wizards) {
-      if (
-        wizard &&
-        typeof wizard === "object" &&
-        "name" in wizard &&
-        "description" in wizard
-      ) {
-        const w = wizard as { name: string; description: string };
-        descriptions.push({
-          name: w.name,
-          description: w.description,
-        });
-      }
-    }
-
-    return descriptions;
-  } catch (error) {
-    console.warn("Could not get wizard descriptions:", error);
+    console.warn("Could not load the duel's wizards:", error);
     return [];
   }
 }
 
-// Helper function to get the previous round's illustration
-async function getPreviousRoundIllustration(
-  ctx: ActionCtx,
-  duelId: Id<"duels">,
+function referencesFor(wizards: DuelWizard[]): {
+  storageIds: string[];
+  labels: string[];
+} {
+  const withRefs = wizards.filter((w) => w.reference);
+  return {
+    storageIds: withRefs.map((w) => w.reference!),
+    labels: withRefs.map((w) => w.name),
+  };
+}
+
+// A round the wizards fought (not the introduction or conclusion) with a result
+function isBattleRound(round: RoundRow | undefined): round is BattleRound {
+  return (
+    !!round &&
+    round.roundNumber >= 1 &&
+    round.type !== "CONCLUSION" &&
+    !!round.spells &&
+    !!round.outcome?.narrative
+  );
+}
+
+function buildDirectorRound(
+  duel: { _id: Id<"duels">; numberOfRounds: number | "TO_THE_DEATH" },
+  wizards: DuelWizard[],
+  rounds: RoundRow[],
+  round: BattleRound,
+) {
+  const health = healthAfterRounds(
+    wizards.map((w) => w.id),
+    rounds,
+    round.roundNumber,
+  );
+  return {
+    roundNumber: round.roundNumber,
+    totalRounds:
+      typeof duel.numberOfRounds === "number" ? duel.numberOfRounds : undefined,
+    wizards: wizards.map((w) => ({
+      name: w.name,
+      description: w.description,
+      action: round.spells?.[w.id]?.description,
+      healthChange: round.outcome.healthChange?.[w.id] ?? 0,
+      pointsEarned: round.outcome.pointsAwarded?.[w.id] ?? 0,
+      healthAfter: health[w.id] ?? 100,
+    })),
+    narration: round.outcome.narrative,
+    result: round.outcome.result,
+    cameraShot: getCameraShot(duel._id, round.roundNumber),
+  };
+}
+
+// The most recent illustrated round before this one, for scene continuity
+function getPreviousRoundIllustration(
+  rounds: RoundRow[],
   currentRoundNumber: number,
-): Promise<string | undefined> {
-  try {
-    const rounds = (await ctx.runQuery(api.duels.getDuelRounds, {
-      duelId,
-    })) as unknown[];
-
-    // Find the most recent completed round before the current one
-    const previousRounds = rounds
-      .filter((round: unknown) => {
-        if (!round || typeof round !== "object") return false;
-        const r = round as {
-          roundNumber: number;
-          status: string;
-          outcome?: { illustration?: string };
-        };
-        return (
-          r.roundNumber < currentRoundNumber &&
-          r.status === "COMPLETED" &&
-          r.outcome?.illustration
-        );
-      })
-      .sort((a: unknown, b: unknown) => {
-        const roundA = a as { roundNumber: number };
-        const roundB = b as { roundNumber: number };
-        return roundB.roundNumber - roundA.roundNumber;
-      });
-
-    if (previousRounds.length > 0) {
-      const firstRound = previousRounds[0] as {
-        outcome?: { illustration?: string };
-      };
-      return firstRound.outcome?.illustration;
-    }
-
-    return undefined;
-  } catch (error) {
-    console.warn("Could not get previous round illustration:", error);
-    return undefined;
-  }
+  earliestRound = 0,
+): string | undefined {
+  return rounds
+    .filter(
+      (r) =>
+        r.roundNumber >= earliestRound &&
+        r.roundNumber < currentRoundNumber &&
+        r.status === "COMPLETED" &&
+        r.outcome?.illustration,
+    )
+    .sort((a, b) => b.roundNumber - a.roundNumber)[0]?.outcome?.illustration;
 }

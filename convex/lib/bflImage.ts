@@ -7,6 +7,7 @@ import type { ImageAspectRatio } from "./imageProvider";
 import {
   wizardReferenceInstructions,
   wizardDescriptionsLine,
+  PREVIOUS_SCENE_INSTRUCTION,
   type ReferenceStyle,
 } from "./referenceImageRules";
 
@@ -110,9 +111,7 @@ async function buildRequest(ctx: ActionCtx, params: BflImageParams) {
     );
   }
   if (hasPreviousScene) {
-    instructions.push(
-      "Keep the same arena setting and wizard designs as the previous scene, but this is a NEW comic book panel: use the camera angle and composition described in the prompt and do NOT copy the previous image's framing, viewpoint or wizard positions.",
-    );
+    instructions.push(PREVIOUS_SCENE_INSTRUCTION);
   }
   if (params.wizardDescriptions?.length) {
     instructions.push(
