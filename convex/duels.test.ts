@@ -344,7 +344,7 @@ test("should allow unauthenticated users to view duels", async () => {
   expect(completedDuelAsUnauthenticated).not.toBeNull();
   expect(completedDuelAsUnauthenticated?.status).toBe("COMPLETED");
 });
-test("should create duel with image generation disabled", async () => {
+test("ignores requests to turn image generation off", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
   // Create a wizard
@@ -359,7 +359,7 @@ test("should create duel with image generation disabled", async () => {
     });
   });
 
-  // Create a duel with image generation disabled
+  // Older clients may still ask for a text-only duel
   const duelId = await withAuth(t, "test-user-1").mutation(
     api.duels.createDuel,
     {
@@ -369,13 +369,13 @@ test("should create duel with image generation disabled", async () => {
     }
   );
 
-  // Verify the duel was created with text-only mode enabled
+  // Every duel has images regardless
   const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
     duelId,
   });
   expect(duel).toBeTruthy();
-  expect(duel!.textOnlyMode).toBe(true);
-  expect(duel!.textOnlyReason).toBe("user_preference");
+  expect(duel!.textOnlyMode).toBe(false);
+  expect(duel!.textOnlyReason).toBeUndefined();
 });
 
 test("should create duel with image generation enabled by default", async () => {

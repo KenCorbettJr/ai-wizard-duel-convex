@@ -806,7 +806,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
               </div>
             )}
 
-            {/* Round Illustration or Text-Only Placeholder */}
+            {/* Round Illustration */}
             {round.outcome?.illustration ? (
               <div
                 id={`round-${round.roundNumber}-art`}
@@ -853,25 +853,6 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                 <MediaRetryButton
                   onRetry={() => retryIllustration({ roundId: round._id })}
                 />
-              </div>
-            ) : duel.textOnlyMode && round.outcome?.illustrationPrompt ? (
-              <div
-                className={`${at(STAGE.IMAGE)} bg-linear-to-br from-warning/20 to-gold/10 border-2 border-dashed border-warning/40 aspect-[3/2] mb-4 max-w-2xl mx-auto rounded-lg flex items-center justify-center p-8`}
-              >
-                <div className="text-center">
-                  <div className="text-6xl mb-4">📜</div>
-                  <h3 className="text-lg font-semibold text-warning mb-2">
-                    Text-Only Mode
-                  </h3>
-                  <p className="text-sm text-warning mb-4">
-                    This round would have been illustrated, but the duel is in
-                    text-only mode
-                  </p>
-                  <div className="text-xs text-warning bg-warning/15 rounded-lg p-3 max-w-md">
-                    <strong>Illustration prompt:</strong>{" "}
-                    {round.outcome.illustrationPrompt}
-                  </div>
-                </div>
               </div>
             ) : null}
 

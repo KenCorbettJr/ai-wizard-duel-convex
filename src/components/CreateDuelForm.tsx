@@ -20,14 +20,7 @@ import { Id, Doc } from "../../convex/_generated/dataModel";
 import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
-import {
-  Image as ImageIcon,
-  Type,
-  AlertTriangle,
-  Info,
-  Gift,
-  MessageCircle,
-} from "lucide-react";
+import { AlertTriangle, Info, Gift, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import {
   DUEL_TOKEN_COST,
@@ -58,7 +51,6 @@ export function CreateDuelForm({
   const [numberOfRounds, setNumberOfRounds] = useState<number | "TO_THE_DEATH">(
     3,
   );
-  const [enableImageGeneration, setEnableImageGeneration] = useState(true);
   const [coverOpponentEntry, setCoverOpponentEntry] = useState(false);
   const [enableChat, setEnableChat] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -126,7 +118,6 @@ export function CreateDuelForm({
     try {
       const settings = {
         numberOfRounds,
-        enableImageGeneration,
         coverOpponentEntry: coversEntry,
         enableChat,
       };
@@ -142,7 +133,6 @@ export function CreateDuelForm({
         {
           chat_enabled: enableChat,
           round_count: numberOfRounds,
-          image_generation_enabled: enableImageGeneration,
           covers_opponent_entry: coversEntry,
         },
       );
@@ -240,42 +230,9 @@ export function CreateDuelForm({
             )}
           </div>
 
-          {/* Image Generation Settings */}
+          {/* Duel options */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-3">
-              Image Generation
-            </label>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0">
-                    {enableImageGeneration ? (
-                      <ImageIcon className="h-5 w-5 text-primary" />
-                    ) : (
-                      <Type className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-foreground">
-                        {enableImageGeneration
-                          ? "Images Enabled"
-                          : "Text-Only Mode"}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {enableImageGeneration
-                        ? "Generate AI illustrations for your duel rounds"
-                        : "Duel will use text descriptions only"}
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={enableImageGeneration}
-                  onCheckedChange={setEnableImageGeneration}
-                />
-              </div>
-
               {/* Duelist chat */}
               <div className="flex items-center justify-between gap-3 p-4 border rounded-lg">
                 <div className="flex items-start gap-3">

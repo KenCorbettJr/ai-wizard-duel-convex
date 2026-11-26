@@ -56,7 +56,6 @@ import { DuelScoreboard } from "@/components/DuelScoreboard";
 import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { explainDuelResult } from "@/lib/duelResult";
 import { RoundTimeline } from "@/components/RoundTimeline";
-import { DuelModeIndicator } from "@/components/DuelModeIndicator";
 import { DuelChat } from "@/components/DuelChat";
 import { EnablePushPrompt } from "@/components/notifications/EnablePushPrompt";
 import { ArenaPresence } from "@/components/arena/ArenaPresence";
@@ -643,7 +642,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       posthog.capture("spell_submitted", {
         round_number: duel.currentRound,
         is_campaign_battle: duel.isCampaignBattle,
-        text_only_mode: duel.textOnlyMode,
       });
       lastSubmitted.current = submitted;
       requestAnimationFrame(() =>
@@ -1157,10 +1155,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     Campaign Battle
                   </Badge>
                 )}
-                <DuelModeIndicator
-                  textOnlyMode={duel.textOnlyMode}
-                  textOnlyReason={duel.textOnlyReason}
-                />
                 {duel.status !== "CANCELLED" && (
                   <OnlookerCount
                     duelId={duel._id}
@@ -1313,17 +1307,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 </div>
               </CardHeader>
             </Card>
-          )}
-
-          {/* Text-Only Mode Explanation */}
-          {duel.textOnlyMode && (
-            <div className="mb-8">
-              <DuelModeIndicator
-                textOnlyMode={duel.textOnlyMode}
-                textOnlyReason={duel.textOnlyReason}
-                showDetails={true}
-              />
-            </div>
           )}
 
           {!watchedHere && resultCard}

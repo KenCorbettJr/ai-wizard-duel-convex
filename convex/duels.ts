@@ -311,7 +311,6 @@ async function insertWaitingDuel(
     userId,
     numberOfRounds,
     wizards,
-    enableImageGeneration,
     coverOpponentEntry = false,
     chatEnabled = true,
     challenge,
@@ -319,7 +318,6 @@ async function insertWaitingDuel(
     userId: string;
     numberOfRounds: number | "TO_THE_DEATH";
     wizards: Id<"wizards">[];
-    enableImageGeneration: boolean;
     coverOpponentEntry?: boolean;
     chatEnabled?: boolean;
     challenge?: { userId: string; wizardId: Id<"wizards"> };
@@ -368,8 +366,8 @@ async function insertWaitingDuel(
     hitPoints: initialHitPoints,
     needActionsFrom: wizards, // All wizards need to act initially
     shortcode,
-    textOnlyMode: !enableImageGeneration,
-    textOnlyReason: !enableImageGeneration ? "user_preference" : undefined,
+    // Every duel is illustrated; images are core to the game.
+    textOnlyMode: false,
     creatorCoversEntry: coverOpponentEntry || undefined,
     chatEnabled,
     challengedUserId: challenge?.userId,
@@ -384,6 +382,7 @@ export const createDuel = mutation({
   args: {
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
     wizards: v.array(v.id("wizards")),
+    // Ignored: every duel has images. Still accepted so older clients work.
     enableImageGeneration: v.optional(v.boolean()),
     // Creator pays their opponent's token too, so a friend can play free
     coverOpponentEntry: v.optional(v.boolean()),
@@ -392,13 +391,7 @@ export const createDuel = mutation({
   },
   handler: async (
     ctx,
-    {
-      numberOfRounds,
-      wizards,
-      enableImageGeneration = true,
-      coverOpponentEntry = false,
-      enableChat = true,
-    },
+    { numberOfRounds, wizards, coverOpponentEntry = false, enableChat = true },
   ) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -417,7 +410,6 @@ export const createDuel = mutation({
       userId: identity.subject,
       numberOfRounds,
       wizards,
-      enableImageGeneration,
       coverOpponentEntry,
       chatEnabled: enableChat,
     });
@@ -565,6 +557,7 @@ export const challengeWizard = mutation({
     wizardId: v.id("wizards"),
     opponentWizardId: v.id("wizards"),
     numberOfRounds: v.union(v.number(), v.literal("TO_THE_DEATH")),
+    // Ignored: every duel has images. Still accepted so older clients work.
     enableImageGeneration: v.optional(v.boolean()),
     coverOpponentEntry: v.optional(v.boolean()),
     enableChat: v.optional(v.boolean()),
@@ -576,7 +569,6 @@ export const challengeWizard = mutation({
       wizardId,
       opponentWizardId,
       numberOfRounds,
-      enableImageGeneration = true,
       coverOpponentEntry = false,
       enableChat = true,
     },
@@ -641,7 +633,6 @@ export const challengeWizard = mutation({
       userId,
       numberOfRounds,
       wizards: [wizardId],
-      enableImageGeneration,
       coverOpponentEntry,
       chatEnabled: enableChat,
       challenge: { userId: opponent.owner, wizardId: opponentWizardId },
@@ -858,9 +849,6 @@ export const requestRematch = mutation({
       userId,
       numberOfRounds: duel.numberOfRounds,
       wizards: myWizards,
-      enableImageGeneration: !(
-        duel.textOnlyMode && duel.textOnlyReason === "user_preference"
-      ),
       chatEnabled: duel.chatEnabled !== false,
     });
     await ctx.db.patch(duelId, { rematchDuelId: rematchId });
