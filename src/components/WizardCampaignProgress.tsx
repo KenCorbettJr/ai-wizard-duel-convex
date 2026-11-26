@@ -1,230 +1,112 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import Link from "next/link";
+import { ChevronRight, Crown, Scroll } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Scroll, Target, Crown, Swords, ArrowRight, Clock } from "lucide-react";
-import Link from "next/link";
-import { SeasonInfo } from "./SeasonInfo";
+import { cn } from "@/lib/utils";
 
 interface WizardCampaignProgressProps {
   wizardId: Id<"wizards">;
   isOwner: boolean;
-  userId?: string;
 }
 
+const TOTAL_OPPONENTS = 10;
+
+/**
+ * One-line campaign status for a wizard profile. Visitors only see it once
+ * the wizard has started the current season; owners also get a link in.
+ */
 export function WizardCampaignProgress({
   wizardId,
   isOwner,
-  userId,
 }: WizardCampaignProgressProps) {
-  // Get wizard's campaign progress
-  const wizardProgress = useQuery(
-    api.campaigns.getWizardCampaignProgress,
-    wizardId ? { wizardId } : "skip",
-  );
-
-  // Get campaign opponents for context
-  const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
-
-  // Get active season info
+  const progress = useQuery(api.campaigns.getWizardCampaignProgress, {
+    wizardId,
+  });
   const activeSeason = useQuery(api.campaignSeasons.getActiveCampaignSeason);
 
-  if (
-    wizardProgress === undefined ||
-    campaignOpponents === undefined ||
-    activeSeason === undefined
-  ) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scroll className="h-5 w-5 text-primary" />
-            Campaign Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse">
-            <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-            <div className="h-2 bg-muted rounded mb-4"></div>
-            <div className="h-8 bg-muted rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (progress === undefined || activeSeason === undefined) return null;
+  if (!activeSeason) return null;
+  if (!progress && !isOwner) return null;
 
-  const defeatedCount = wizardProgress?.defeatedOpponents.length || 0;
-  const isCompleted = defeatedCount === 10;
-  const progressPercentage = (defeatedCount / 10) * 100;
-  const currentOpponent = wizardProgress?.currentOpponent || 1;
-  const hasStarted = wizardProgress !== null;
+  const defeated = progress?.defeatedOpponents.length ?? 0;
+  const complete = defeated >= TOTAL_OPPONENTS;
 
-  // Get current opponent info
-  const currentOpponentInfo = campaignOpponents.find(
-    (opponent: {
-      opponentNumber?: number;
-      name: string;
-      difficulty?: string;
-    }) => opponent.opponentNumber === currentOpponent,
+  const status = !progress
+    ? "Not started"
+    : complete
+      ? "Complete"
+      : `${defeated}/${TOTAL_OPPONENTS} defeated`;
+
+  const content = (
+    <>
+      {complete ? (
+        <Crown className="h-5 w-5 shrink-0 text-gold" aria-hidden />
+      ) : (
+        <Scroll className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2 text-sm">
+          <span className="truncate font-medium text-foreground">
+            {activeSeason.name}
+          </span>
+          <span
+            className={cn(
+              "shrink-0 text-xs",
+              complete ? "font-semibold text-gold" : "text-muted-foreground",
+            )}
+          >
+            {status}
+          </span>
+        </div>
+        {progress ? (
+          <Progress
+            value={(defeated / TOTAL_OPPONENTS) * 100}
+            className="mt-1.5 h-1.5"
+            aria-label={`Campaign progress: ${defeated} of ${TOTAL_OPPONENTS}`}
+          />
+        ) : (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Beat {TOTAL_OPPONENTS} AI opponents to earn a luck relic
+          </p>
+        )}
+      </div>
+      <span className="flex shrink-0 items-center text-xs font-medium text-primary">
+        {isOwner
+          ? progress
+            ? complete
+              ? "View"
+              : "Continue"
+            : "Start"
+          : "What's this?"}
+        <ChevronRight className="h-4 w-4" aria-hidden />
+      </span>
+    </>
   );
 
-  // Show season info if no active season
-  if (!activeSeason) {
-    return (
-      <div className="space-y-4">
-        <SeasonInfo userId={userId} />
-        <Card>
-          <CardContent className="text-center py-8">
-            <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-            <h3 className="font-semibold text-muted-foreground mb-1">
-              No Active Season
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Campaign battles are not available when no season is active
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Owners open their wizard's campaign; visitors learn what a campaign is.
+  const body = (
+    <Link
+      href={isOwner ? `/campaign/wizard/${wizardId}` : "/campaign"}
+      className="flex items-center gap-3 rounded-lg border border-border bg-card/60 px-3 py-2.5 transition-colors hover:bg-accent/50 sm:px-4"
+    >
+      {content}
+    </Link>
+  );
 
   return (
-    <div className="space-y-4">
-      {/* Season Info */}
-      <SeasonInfo userId={userId} compact />
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scroll className="h-5 w-5 text-primary" />
-            Campaign Progress
-            <Badge variant="outline" className="text-xs">
-              {activeSeason.name}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!hasStarted ? (
-            // Campaign not started
-            <div className="text-center py-4">
-              <div className="mb-4">
-                <Scroll className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <h3 className="font-semibold text-muted-foreground mb-1">
-                  Campaign Not Started
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Challenge 10 unique AI opponents to earn a powerful relic
-                </p>
-              </div>
-              {isOwner && (
-                <Button asChild>
-                  <Link href={`/campaign/wizard/${wizardId}`}>
-                    <Swords className="h-4 w-4 mr-2" />
-                    Start Campaign
-                  </Link>
-                </Button>
-              )}
-            </div>
-          ) : (
-            // Campaign in progress or completed
-            <>
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Progress</span>
-                  <span className="text-muted-foreground">
-                    {defeatedCount}/10 opponents defeated
-                  </span>
-                </div>
-                <Progress value={progressPercentage} className="h-2" />
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center justify-between">
-                {isCompleted ? (
-                  <div className="flex items-center gap-2 text-success">
-                    <Crown className="h-4 w-4" />
-                    <span className="font-medium">Campaign Completed!</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-info">
-                    <Target className="h-4 w-4" />
-                    <span className="font-medium">
-                      Next: Opponent {currentOpponent}
-                    </span>
-                  </div>
-                )}
-
-                {wizardProgress?.hasCompletionRelic && (
-                  <Badge variant="secondary" className="text-xs">
-                    <Crown className="h-3 w-3 mr-1" />
-                    Relic Earned
-                  </Badge>
-                )}
-              </div>
-
-              {/* Current Opponent Info */}
-              {!isCompleted && currentOpponentInfo && (
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-sm">
-                        {currentOpponentInfo.name}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        {currentOpponentInfo.difficulty} difficulty
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">
-                        Opponent #{currentOpponent}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-lg font-bold text-success">
-                    {defeatedCount}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Defeated</div>
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-info">
-                    {10 - defeatedCount}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Remaining</div>
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-primary">
-                    {Math.round(progressPercentage)}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">Complete</div>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              {isOwner && (
-                <Button asChild variant="outline" className="w-full">
-                  <Link href={`/campaign/wizard/${wizardId}`}>
-                    <Scroll className="h-4 w-4 mr-2" />
-                    View Full Campaign
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <section aria-labelledby="campaign-heading">
+      <h2
+        id="campaign-heading"
+        className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground"
+      >
+        <Scroll className="h-4 w-4" aria-hidden />
+        Campaign
+      </h2>
+      {body}
+    </section>
   );
 }

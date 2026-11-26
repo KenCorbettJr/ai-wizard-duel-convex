@@ -1749,6 +1749,64 @@ export const getWizardDuelsSafe = query({
   },
 });
 
+// A wizard's duels, newest first, each with its (first) opponent's name and
+// portrait so a history list can render in one round trip.
+export const getWizardDuelHistory = query({
+  args: { wizardId: v.id("wizards") },
+  handler: async (ctx, { wizardId }) => {
+    const duels = (await ctx.db.query("duels").collect())
+      .filter((duel) => duel.wizards.includes(wizardId))
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    const opponentCache = new Map<
+      Id<"wizards">,
+      {
+        _id: Id<"wizards">;
+        name: string;
+        illustration?: string;
+        illustrationURL?: string;
+      } | null
+    >();
+    const opponentOf = async (id: Id<"wizards">) => {
+      if (!opponentCache.has(id)) {
+        const w = await ctx.db.get(id);
+        opponentCache.set(
+          id,
+          w
+            ? {
+                _id: w._id,
+                name: w.name,
+                illustration: w.illustration,
+                illustrationURL: w.illustrationURL,
+              }
+            : null,
+        );
+      }
+      return opponentCache.get(id) ?? null;
+    };
+
+    return Promise.all(
+      duels.map(async (duel) => {
+        const opponentIds = duel.wizards.filter((id) => id !== wizardId);
+        // Only what a history row needs, not the whole duel document.
+        return {
+          _id: duel._id,
+          status: duel.status,
+          wizards: duel.wizards,
+          winners: duel.winners,
+          losers: duel.losers,
+          numberOfRounds: duel.numberOfRounds,
+          currentRound: duel.currentRound,
+          createdAt: duel.createdAt,
+          isCampaignBattle: duel.isCampaignBattle,
+          opponent: opponentIds[0] ? await opponentOf(opponentIds[0]) : null,
+          extraOpponents: Math.max(0, opponentIds.length - 1),
+        };
+      }),
+    );
+  },
+});
+
 // Get duel statistics for the authenticated player
 export const getPlayerDuelStats = query({
   args: {},
