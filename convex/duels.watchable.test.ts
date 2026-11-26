@@ -50,16 +50,26 @@ async function seed() {
 const page = { limit: 10, offset: 0 };
 
 describe("getWatchableDuels", () => {
-  test("lists player duels and campaign battles together by default, newest first", async () => {
+  test("lists player duels and campaign battles together, live first, then newest", async () => {
     const { t, ids } = await seed();
     const result = await t.query(api.duels.getWatchableDuels, page);
     expect(result.duels.map((d) => d._id)).toEqual([
-      ids.frost,
       ids.ember,
+      ids.frost,
       ids.pvpCancelled,
       ids.pvp,
     ]);
     expect(result.total).toBe(4);
+    expect(result.liveCount).toBe(1);
+  });
+
+  test("filters to live duels", async () => {
+    const { t, ids } = await seed();
+    const result = await t.query(api.duels.getWatchableDuels, {
+      ...page,
+      kind: "live",
+    });
+    expect(result.duels.map((d) => d._id)).toEqual([ids.ember]);
   });
 
   test("filters to player duels", async () => {
@@ -77,7 +87,84 @@ describe("getWatchableDuels", () => {
       ...page,
       kind: "campaign",
     });
-    expect(result.duels.map((d) => d._id)).toEqual([ids.frost, ids.ember]);
+    expect(result.duels.map((d) => d._id)).toEqual([ids.ember, ids.frost]);
+  });
+
+  test("teases a spell from the first round only once it has resolved", async () => {
+    const { t, ids } = await seed();
+    const round = (
+      duelId: Id<"duels">,
+      status: "WAITING_FOR_SPELLS" | "COMPLETED",
+    ) =>
+      t.run(async (ctx) => {
+        const duel = (await ctx.db.get(duelId))!;
+        await ctx.db.insert("duelRounds", {
+          duelId,
+          roundNumber: 1,
+          type: "SPELL_CASTING",
+          status,
+          spells: {
+            [duel.wizards[0]]: {
+              description: "A storm of chain lightning",
+              castBy: duel.wizards[0],
+              timestamp: 1,
+            },
+          },
+        });
+      });
+    await round(ids.ember, "WAITING_FOR_SPELLS");
+    await round(ids.frost, "COMPLETED");
+    const result = await t.query(api.duels.getWatchableDuels, page);
+    const byId = new Map(result.duels.map((d) => [d._id, d]));
+    expect(byId.get(ids.ember)?.openings).toEqual([]);
+    expect(byId.get(ids.frost)?.openings.map((o) => o.spell)).toEqual([
+      "A storm of chain lightning",
+    ]);
+  });
+
+  test("keeps results from spectators but not from the duelists", async () => {
+    const { t, ids } = await seed();
+    await t.run(async (ctx) => {
+      const duel = (await ctx.db.get(ids.pvp))!;
+      await ctx.db.patch(ids.pvp, {
+        winners: [duel.wizards[0]],
+        points: { [duel.wizards[0]]: 3 },
+      });
+    });
+    const find = (r: { duels: Array<{ _id: Id<"duels"> }> }) =>
+      r.duels.find((d) => d._id === ids.pvp) as {
+        winners?: Id<"wizards">[];
+        points: Record<string, number>;
+        currentRound: number;
+      };
+
+    const spectator = find(await t.query(api.duels.getWatchableDuels, page));
+    expect(spectator.winners).toBeUndefined();
+    expect(spectator.points).toEqual({});
+    expect(spectator.currentRound).toBe(0);
+
+    const duelist = find(
+      await t
+        .withIdentity({ subject: "p1" })
+        .query(api.duels.getWatchableDuels, page),
+    );
+    expect(duelist.winners).toHaveLength(1);
+  });
+
+  test("shows a duel still waiting to start only to its players", async () => {
+    const { t, ids } = await seed();
+    await t.run((ctx) =>
+      ctx.db.patch(ids.pvp, {
+        status: "WAITING_FOR_PLAYERS",
+        shortcode: "ABC123",
+      }),
+    );
+    const stranger = await t.query(api.duels.getWatchableDuels, page);
+    expect(stranger.duels.map((d) => d._id)).not.toContain(ids.pvp);
+    const player = await t
+      .withIdentity({ subject: "p1" })
+      .query(api.duels.getWatchableDuels, page);
+    expect(player.duels.map((d) => d._id)).toContain(ids.pvp);
   });
 
   test("filters to battles against one campaign wizard", async () => {

@@ -4,23 +4,11 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
+import { DuelCard, DuelCardSkeleton } from "@/components/DuelCard";
 
 import { Badge } from "@/components/ui/badge";
-import { OnlookerBadge } from "@/components/arena/OnlookerCount";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Clock,
-  Sparkles,
-  Star,
-  Swords,
-  Shield,
-  Crown,
-  X,
-  Calendar,
-  Users,
-  Copy,
-} from "lucide-react";
+import { Clock, Sparkles, Star, Swords, Crown, X, Copy } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
@@ -45,12 +33,19 @@ interface DuelListItemProps {
     points?: Record<string, number>;
     hitPoints?: Record<string, number>;
     isCampaignBattle?: boolean;
+    forfeitedBy?: Id<"wizards">;
+    openings?: Array<{ wizardId: Id<"wizards">; spell: string }>;
+    uniqueViewers?: number;
   };
   variant?: "compact" | "card" | "dashboard";
   showActions?: boolean;
   onCopyShortcode?: (shortcode: string) => void;
   /** Show a live count of people watching (card variant). */
   showOnlookers?: boolean;
+  /** Load the card's scene eagerly (card variant, above the fold). */
+  priority?: boolean;
+  /** Spotlight layout (card variant). */
+  featured?: boolean;
 }
 
 export function DuelListItem({
@@ -59,6 +54,8 @@ export function DuelListItem({
   showActions = true,
   onCopyShortcode,
   showOnlookers = false,
+  priority = false,
+  featured = false,
 }: DuelListItemProps) {
   const { user } = useUser();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -207,14 +204,9 @@ export function DuelListItem({
   };
 
   if (isLoading) {
+    if (variant === "card") return <DuelCardSkeleton />;
     return (
-      <div
-        className={
-          variant === "card"
-            ? "border rounded p-4"
-            : "flex items-center justify-between p-2 border rounded"
-        }
-      >
+      <div className="flex items-center justify-between p-2 border rounded">
         <div className="flex-1">
           <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
           <div className="h-3 bg-muted rounded w-1/2"></div>
@@ -329,149 +321,14 @@ export function DuelListItem({
     );
   }
 
-  // Card variant for main pages - Facebook-style post card
   return (
-    <Link href={`/duels/${duel._id}`} className="block">
-      <Card
-        className="hover:shadow-lg cursor-pointer overflow-hidden hover:scale-105 transition-transform duration-200 pt-0"
-        data-testid="duel-list-item"
-      >
-        {/* Featured illustration with floating wizard avatars */}
-        <div className="relative w-full h-64">
-          {duel.featuredIllustration ? (
-            <ConvexImage
-              storageId={duel.featuredIllustration}
-              alt="Duel illustration"
-              width={800}
-              height={512}
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-arcane flex items-center justify-center">
-              <Swords className="h-16 w-16 text-white/70" />
-            </div>
-          )}
-
-          {/* Floating wizard avatars */}
-          {wizards.length >= 1 && (
-            <div className="absolute -bottom-10 left-2 flex flex-col items-center">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-card border-4 border-card shadow-lg mb-2">
-                {wizards[0].illustration ? (
-                  <ConvexImage
-                    storageId={wizards[0].illustration}
-                    alt={`${wizards[0].name} avatar`}
-                    width={256}
-                    height={256}
-                    sizes="128px"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-arcane flex items-center justify-center text-white font-bold text-lg">
-                    {wizards[0].name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="text-foreground max-w-36 text-center truncate font-black">
-                {wizards[0].name}
-              </div>
-            </div>
-          )}
-
-          {wizards.length >= 2 && (
-            <>
-              {/* VS indicator in the middle */}
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-card border-4 border-card shadow-lg rounded-full w-12 h-12 flex items-center justify-center z-10">
-                <span className="text-foreground font-bold text-sm">VS</span>
-              </div>
-
-              <div className="absolute -bottom-10 right-2 flex flex-col items-center">
-                <div className="w-32 h-32 rounded-full overflow-hidden bg-card border-4 border-card shadow-lg mb-2">
-                  {wizards[1].illustration ? (
-                    <ConvexImage
-                      storageId={wizards[1].illustration}
-                      alt={`${wizards[1].name} avatar`}
-                      width={256}
-                      height={256}
-                      sizes="128px"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-linear-to-br from-info to-info/70 flex items-center justify-center text-white font-bold text-lg">
-                      {wizards[1].name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="text-foreground max-w-36 text-center truncate font-black">
-                  {wizards[1].name}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Additional wizards indicator */}
-          {wizards.length > 2 && (
-            <div className="absolute top-4 right-4 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
-              +{wizards.length - 2} more
-            </div>
-          )}
-        </div>
-
-        <CardContent className="p-0 pt-4">
-          {/* Header with status and date */}
-          <div className="flex items-center justify-between p-4 pb-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              <span>{new Date(duel.createdAt).toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {showOnlookers && (
-                <OnlookerBadge duelId={duel._id as Id<"duels">} />
-              )}
-              {duel.isCampaignBattle && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Shield className="h-3 w-3" aria-hidden="true" />
-                  Campaign
-                </Badge>
-              )}
-              {getStatusBadge()}
-            </div>
-          </div>
-
-          {/* Main content */}
-          <div className="px-4 space-y-3">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                <span>{duel.wizards.length} wizards</span>
-              </div>
-              <span>•</span>
-              <span>{getRoundInfo()}</span>
-            </div>
-
-            {/* Share code for waiting duels */}
-            {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
-              <div className="flex items-center gap-2 p-2 bg-primary/8 rounded-lg">
-                <span className="text-sm text-muted-foreground">
-                  Share code:
-                </span>
-                <code
-                  className="text-sm px-2 py-1 bg-primary/12 text-primary rounded cursor-pointer hover:bg-primary/20 flex items-center gap-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCopyShortcode(duel.shortcode!);
-                  }}
-                  title="Click to copy share link"
-                >
-                  {copySuccess ? "Copied!" : duel.shortcode}
-                  <Copy className="h-3 w-3" />
-                </code>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+    <DuelCard
+      duel={duel}
+      wizards={wizards}
+      viewerId={user?.id}
+      showOnlookers={showOnlookers}
+      priority={priority}
+      featured={featured}
+    />
   );
 }
