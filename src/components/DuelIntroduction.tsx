@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "./ConvexImage";
+import { ImageLightbox } from "./ImageLightbox";
 import { memo, useEffect, useState } from "react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { NarratedText } from "@/components/NarratedText";
@@ -59,15 +60,20 @@ export const DuelIntroduction = memo(function DuelIntroduction({
       {introRound.outcome.illustration && (
         <div className="relative w-full max-w-2xl mx-auto rounded-lg overflow-hidden bg-black">
           {/* Shown at its own shape: new scenes are 3:2, older ones vary. */}
-          <ConvexImage
+          <ImageLightbox
             storageId={introRound.outcome.illustration}
-            alt="Duel Introduction"
-            width={1152}
-            height={768}
-            sizes="(min-width: 672px) 672px, 100vw"
-            quality={95}
-            className="w-full h-auto"
-          />
+            alt="Duel introduction"
+          >
+            <ConvexImage
+              storageId={introRound.outcome.illustration}
+              alt="Duel Introduction"
+              width={1152}
+              height={768}
+              sizes="(min-width: 672px) 672px, 100vw"
+              quality={95}
+              className="w-full h-auto"
+            />
+          </ImageLightbox>
         </div>
       )}
 

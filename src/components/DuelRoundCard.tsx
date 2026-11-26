@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConvexImage } from "@/components/ConvexImage";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { D20Die } from "@/components/ui/d20-die";
 import {
   Sparkles,
@@ -811,20 +812,25 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                 id={`round-${round.roundNumber}-art`}
                 className={`bg-black mb-4 max-w-2xl mx-auto rounded-lg overflow-hidden ${at(STAGE.IMAGE, "")}`}
               >
-                <ConvexImage
-                  // Shown at its own shape, never cropped: new scenes are 3:2,
-                  // but older ones are square or 16:9 with wizards at the edges.
-                  className={`w-full h-auto ${at(STAGE.IMAGE, "reveal-image")}`}
+                <ImageLightbox
                   storageId={round.outcome.illustration}
-                  alt={
-                    round.outcome.illustrationPrompt ||
-                    `Round ${round.roundNumber} illustration`
-                  }
-                  width={1152}
-                  height={768}
-                  sizes="(min-width: 672px) 672px, 100vw"
-                  quality={95}
-                />
+                  alt={`Round ${round.roundNumber} illustration`}
+                >
+                  <ConvexImage
+                    // Shown at its own shape, never cropped: new scenes are 3:2,
+                    // but older ones are square or 16:9 with wizards at the edges.
+                    className={`w-full h-auto ${at(STAGE.IMAGE, "reveal-image")}`}
+                    storageId={round.outcome.illustration}
+                    alt={
+                      round.outcome.illustrationPrompt ||
+                      `Round ${round.roundNumber} illustration`
+                    }
+                    width={1152}
+                    height={768}
+                    sizes="(min-width: 672px) 672px, 100vw"
+                    quality={95}
+                  />
+                </ImageLightbox>
               </div>
             ) : round.illustrationStatus === "PENDING" ? (
               <div

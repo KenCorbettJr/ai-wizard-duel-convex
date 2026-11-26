@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { api } from "../../../../convex/_generated/api";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { ConvexImage } from "@/components/ConvexImage";
 import { EditWizardForm } from "@/components/EditWizardForm";
 import { UserIdDisplay } from "@/components/UserIdDisplay";
@@ -238,25 +239,32 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
                 "animate-in fade-in zoom-in-95 duration-1000 motion-reduce:animate-none",
             )}
           >
-            {wizard.illustration ? (
-              <ConvexImage
-                storageId={wizard.illustration}
-                alt={wizard.name}
-                width={1200}
-                height={600}
-                className="w-full h-full object-contain relative z-10"
-              />
-            ) : wizard.illustrationURL ? (
-              <Image
-                src={wizard.illustrationURL}
-                alt={wizard.name}
-                fill
-                className="object-contain relative z-10"
-                priority
-              />
-            ) : null}
+            <ImageLightbox
+              storageId={wizard.illustration}
+              src={wizard.illustration ? undefined : wizard.illustrationURL}
+              alt={wizard.name}
+              className="h-full z-10"
+            >
+              {wizard.illustration ? (
+                <ConvexImage
+                  storageId={wizard.illustration}
+                  alt={wizard.name}
+                  width={1200}
+                  height={600}
+                  className="w-full h-full object-contain relative z-10"
+                />
+              ) : wizard.illustrationURL ? (
+                <Image
+                  src={wizard.illustrationURL}
+                  alt={wizard.name}
+                  fill
+                  className="object-contain relative z-10"
+                  priority
+                />
+              ) : null}
+            </ImageLightbox>
             {/* Subtle gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-20" />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-20" />
           </div>
         ) : (
           <div className="w-full h-full bg-arcane flex items-center justify-center">
