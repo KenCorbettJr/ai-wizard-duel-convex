@@ -1011,3 +1011,158 @@
     animation: none;
   }
 }
+
+/* ---- Duel start "versus" splash, driven by DuelVersusIntro ----
+   Nothing moves until .versus-play is added (once portraits have loaded). */
+.versus-backdrop {
+  background: radial-gradient(
+    ellipse at center,
+    oklch(0.32 0.14 290),
+    oklch(0.12 0.05 285) 70%
+  );
+}
+.versus-flash {
+  background: radial-gradient(
+    circle at center,
+    oklch(0.95 0.1 90 / 0.55),
+    transparent 55%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+.versus-fighter,
+.versus-vs,
+.versus-subtitle {
+  opacity: 0;
+}
+.versus-left .versus-card {
+  box-shadow: 0 0 40px -6px oklch(0.7 0.15 240 / 0.7);
+}
+.versus-right .versus-card {
+  box-shadow: 0 0 40px -6px oklch(0.68 0.2 25 / 0.7);
+}
+.versus-vs {
+  background-image: linear-gradient(
+    180deg,
+    oklch(0.95 0.11 92),
+    oklch(0.72 0.16 75)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px oklch(0.8 0.15 85 / 0.6));
+}
+.versus-ring {
+  border: 2px solid oklch(0.85 0.14 88 / 0.8);
+  opacity: 0;
+}
+
+.versus-play .versus-left {
+  animation: versus-in-left 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.15s both;
+}
+.versus-play .versus-right {
+  animation: versus-in-right 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.15s both;
+}
+.versus-play .versus-vs {
+  animation: versus-stamp 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 0.6s both;
+}
+.versus-play .versus-ring {
+  animation: versus-ring 0.8s ease-out 0.68s both;
+}
+.versus-play .versus-flash {
+  animation: versus-flash 0.6s ease-out 0.65s both;
+}
+.versus-play .versus-name {
+  animation: duel-reveal 0.5s ease-out 0.8s both;
+}
+.versus-play .versus-subtitle {
+  animation: versus-fade 0.5s ease-out 1s both;
+}
+.versus-leave {
+  animation: versus-leave 0.45s ease-in both;
+  pointer-events: none;
+}
+
+@keyframes versus-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes versus-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-60vw) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes versus-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(60vw) rotate(8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes versus-stamp {
+  from {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes versus-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+@keyframes versus-flash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes versus-leave {
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+/* Reduced motion: no sliding, stamping or flash; just a gentle fade. */
+@media (prefers-reduced-motion: reduce) {
+  .versus-play .versus-left,
+  .versus-play .versus-right,
+  .versus-play .versus-vs,
+  .versus-play .versus-name,
+  .versus-play .versus-subtitle {
+    animation: versus-fade 0.4s ease-out both;
+  }
+  .versus-play .versus-ring,
+  .versus-play .versus-flash {
+    animation: none;
+  }
+  .versus-leave {
+    animation: versus-fade 0.3s ease-in reverse both;
+  }
+}
