@@ -19,6 +19,8 @@ interface UserIdDisplayProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   clickable?: boolean;
+  /** Render the @handle in monospace (default). */
+  mono?: boolean;
 }
 
 const sizeClasses = {
@@ -47,6 +49,7 @@ export function UserIdDisplay({
   size = "md",
   className,
   clickable = true,
+  mono = true,
 }: UserIdDisplayProps) {
   const sizeConfig = sizeClasses[size];
 
@@ -91,7 +94,9 @@ export function UserIdDisplay({
           </AvatarFallback>
         </Avatar>
       )}
-      <span className={cn(sizeConfig.text, "text-foreground font-mono")}>
+      <span
+        className={cn(sizeConfig.text, "text-foreground", mono && "font-mono")}
+      >
         @{userId}
       </span>
     </div>

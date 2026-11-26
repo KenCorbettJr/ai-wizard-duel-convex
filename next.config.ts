@@ -26,6 +26,9 @@ if (process.env.ENV === "emulate") {
 }
 
 const nextConfig: NextConfig = {
+  // Dev server only: let phones and tablets on the local network load the
+  // app's scripts (e.g. http://192.168.1.20:3000).
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "*.local"],
   async headers() {
     // Browsers must always fetch the latest service worker.
     return [

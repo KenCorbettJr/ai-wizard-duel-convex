@@ -53,6 +53,7 @@ import {
   type WatcherRejection,
 } from "@/components/watcher/WatcherDialog";
 import { DuelScoreboard } from "@/components/DuelScoreboard";
+import { DuelVersusIntro } from "@/components/DuelVersusIntro";
 import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { explainDuelResult } from "@/lib/duelResult";
 import { RoundTimeline } from "@/components/RoundTimeline";
@@ -321,6 +322,36 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     if (winnerGateOpen && duel?.status === "COMPLETED") setWinnerShown(true);
   }, [winnerGateOpen, duel?.status]);
   const showWinner = winnerGateOpen || winnerShown;
+
+  // "Versus" splash for a duel that has just begun: once per duel per browser,
+  // for anyone who arrives before the first round resolves. Adding ?versus to
+  // the URL replays it on any duel. Decided in a layout effect as soon as the
+  // duel loads (or goes live while open), so the splash covers the page
+  // before it is painted.
+  const [versusOpen, setVersusOpen] = useState(false);
+  const versusForcedChecked = useRef(false);
+  const duelLoaded = !!duel;
+  const twoWizards = (duel?.wizards.length ?? 0) >= 2;
+  const justBegun = duel?.status === "IN_PROGRESS" && !hasResolvedRounds;
+  useLayoutEffect(() => {
+    if (!duelLoaded || !duelId || !twoWizards) return;
+    if (!versusForcedChecked.current) {
+      versusForcedChecked.current = true;
+      if (new URLSearchParams(window.location.search).has("versus")) {
+        setVersusOpen(true);
+        return;
+      }
+    }
+    if (!justBegun) return;
+    const key = `duel-versus-seen:${duelId}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch {
+      // No storage: still show it; it may just repeat on reload.
+    }
+    setVersusOpen(true);
+  }, [duelLoaded, duelId, twoWizards, justBegun]);
 
   // Lock the introduction's initial open state once the duel has loaded, so it
   // doesn't collapse (and shift the layout) when the first round resolves.
@@ -1128,6 +1159,18 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   return (
     <div className="min-h-screen">
+      {versusOpen && (
+        <DuelVersusIntro
+          left={wizard1 ?? undefined}
+          right={wizard2 ?? undefined}
+          subtitle={
+            typeof duel.numberOfRounds === "number"
+              ? `${duel.numberOfRounds} rounds`
+              : "To the death"
+          }
+          onDone={() => setVersusOpen(false)}
+        />
+      )}
       <div className="container mx-auto px-4 py-4 sm:px-6 sm:py-12">
         <div
           className="max-w-4xl mx-auto"

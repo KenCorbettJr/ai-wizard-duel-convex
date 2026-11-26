@@ -1,136 +1,86 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import Link from "next/link";
+import Image from "next/image";
+import { Trophy, Zap } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Trophy, Zap } from "lucide-react";
-import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface TrophyHallProps {
   wizardId: Id<"wizards">;
 }
 
+/**
+ * The wizards this one has beaten, as a scrollable row of captioned
+ * portraits. Renders nothing until there's at least one victory.
+ */
 export function TrophyHall({ wizardId }: TrophyHallProps) {
   const defeatedWizards = useQuery(api.wizards.getDefeatedWizards, {
     wizardId,
   });
 
-  if (defeatedWizards === undefined) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-gold" />
-            Trophy Hall
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse">
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="aspect-square bg-muted rounded-lg" />
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!defeatedWizards || defeatedWizards.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-gold" />
-            Trophy Hall
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              No victories yet. Challenge other wizards to start building your
-              trophy collection!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (!defeatedWizards || defeatedWizards.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-gold" />
-          Trophy Hall
-          <Badge variant="secondary" className="ml-2">
-            {defeatedWizards.length}{" "}
-            {defeatedWizards.length === 1 ? "Victory" : "Victories"}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-          {defeatedWizards.map((wizard) => {
-            const defeatedDate = new Date(
-              wizard.defeatedAt,
-            ).toLocaleDateString();
-            return (
-              <div
-                key={wizard._id}
-                className="group relative aspect-square rounded-lg overflow-hidden border-2 border-warning/40 bg-linear-to-br from-warning/20 to-gold/10 hover:scale-105 transition-transform cursor-pointer"
-                title={`Defeated ${wizard.name} on ${defeatedDate}`}
-              >
-                {wizard.illustration || wizard.illustrationURL ? (
-                  <div className="w-full h-full relative">
-                    {wizard.illustration ? (
-                      <ConvexImage
-                        storageId={wizard.illustration}
-                        alt={wizard.name}
-                        width={160}
-                        height={160}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : wizard.illustrationURL ? (
-                      <Image
-                        src={wizard.illustrationURL}
-                        alt={wizard.name}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    ) : null}
-                  </div>
+    <section aria-labelledby="trophy-hall-heading">
+      <h2
+        id="trophy-hall-heading"
+        className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground"
+      >
+        <Trophy className="h-4 w-4 text-gold" aria-hidden />
+        Defeated
+        <span className="font-sans font-normal normal-case tracking-normal">
+          ({defeatedWizards.length})
+        </span>
+      </h2>
+      <ul
+        className={cn(
+          "-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0",
+          defeatedWizards.length > 4 &&
+            "[mask-image:linear-gradient(to_right,black_85%,transparent)]",
+        )}
+      >
+        {defeatedWizards.map((wizard) => (
+          <li key={wizard._id} className="w-20 shrink-0">
+            <Link
+              href={`/wizards/${wizard._id}`}
+              className="group block text-center"
+              title={`Defeated ${wizard.name} on ${new Date(wizard.defeatedAt).toLocaleDateString()}`}
+            >
+              <div className="relative mx-auto h-14 w-14 overflow-hidden rounded-full border-2 border-gold/50 bg-muted transition-colors group-hover:border-gold">
+                {wizard.illustration ? (
+                  <ConvexImage
+                    storageId={wizard.illustration}
+                    alt=""
+                    width={112}
+                    height={112}
+                    sizes="56px"
+                    className="h-full w-full rounded-none object-cover"
+                  />
+                ) : wizard.illustrationURL ? (
+                  <Image
+                    src={wizard.illustrationURL}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-warning" />
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Zap className="h-5 w-5 text-warning" aria-hidden />
                   </div>
                 )}
-
-                {/* Trophy overlay */}
-                <div className="absolute top-1 right-1">
-                  <Trophy className="w-3 h-3 text-gold drop-shadow-sm" />
-                </div>
-
-                {/* Tooltip on hover */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
-                  <span className="text-white text-xs font-medium text-center mb-1">
-                    {wizard.name}
-                  </span>
-                  <span className="text-white/80 text-xs text-center">
-                    {defeatedDate}
-                  </span>
-                </div>
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              <span className="mt-1 line-clamp-2 block text-xs leading-tight text-muted-foreground group-hover:text-foreground">
+                {wizard.name}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
