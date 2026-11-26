@@ -67,10 +67,7 @@ export function OnlookerBadge({ duelId }: { duelId: Id<"duels"> }) {
   return (
     <Badge variant="outline" className="flex items-center gap-1">
       <Eye className="h-3 w-3 text-gold" aria-hidden="true" />
-      <span>
-        {count}
-        <span className="sr-only"> watching</span>
-      </span>
+      <span>{count} watching</span>
     </Badge>
   );
 }

@@ -1581,11 +1581,17 @@ export const getWatchableDuels = query({
     limit: v.number(),
     offset: v.number(),
     kind: v.optional(
-      v.union(v.literal("all"), v.literal("players"), v.literal("campaign")),
+      v.union(
+        v.literal("all"),
+        v.literal("live"),
+        v.literal("players"),
+        v.literal("campaign"),
+      ),
     ),
     opponentId: v.optional(v.id("wizards")),
   },
   returns: v.object({
+    liveCount: v.number(),
     duels: v.array(
       v.object({
         _id: v.id("duels"),
@@ -1622,17 +1628,30 @@ export const getWatchableDuels = query({
         forfeitedBy: v.optional(v.id("wizards")),
         challengedUserId: v.optional(v.string()),
         challengedWizardId: v.optional(v.id("wizards")),
+        // Spoiler-free hook: the spells cast in the first resolved round.
+        openings: v.array(
+          v.object({ wizardId: v.id("wizards"), spell: v.string() }),
+        ),
+        uniqueViewers: v.optional(v.number()),
       }),
     ),
     total: v.number(),
     hasMore: v.boolean(),
   }),
   handler: async (ctx, { limit, offset, kind = "all", opponentId }) => {
+    const viewerId = (await ctx.auth.getUserIdentity())?.subject;
     const allDuels = await ctx.db.query("duels").collect();
     const watchableDuels = allDuels
       .filter((duel) => {
         // A duel still waiting for its second player has nothing to watch.
         if (duel.players.length < 2) return false;
+        // Nothing to watch yet, and its join code is for the players.
+        if (
+          duel.status === "WAITING_FOR_PLAYERS" &&
+          !(viewerId && duel.players.includes(viewerId))
+        ) {
+          return false;
+        }
         if (opponentId) {
           return (
             !!duel.isCampaignBattle &&
@@ -1640,6 +1659,7 @@ export const getWatchableDuels = query({
             duel.wizards.includes(opponentId)
           );
         }
+        if (kind === "live") return duel.status === "IN_PROGRESS";
         if (kind === "players") return !duel.isCampaignBattle;
         if (kind === "campaign") {
           // A cancelled campaign battle never had anything to watch.
@@ -1647,16 +1667,78 @@ export const getWatchableDuels = query({
         }
         return !duel.isCampaignBattle || duel.status !== "CANCELLED";
       })
-      .sort((a, b) => b.createdAt - a.createdAt);
+      // Live duels first: they're what a spectator can join right now.
+      .sort(
+        (a, b) =>
+          Number(b.status === "IN_PROGRESS") -
+            Number(a.status === "IN_PROGRESS") || b.createdAt - a.createdAt,
+      );
+    const liveCount = allDuels.filter(
+      (duel) => duel.status === "IN_PROGRESS" && duel.players.length >= 2,
+    ).length;
 
     const total = watchableDuels.length;
-    const duels = watchableDuels.slice(offset, offset + limit);
+    const duels = await Promise.all(
+      watchableDuels.slice(offset, offset + limit).map(async (duel) => {
+        const [rounds, stats] = await Promise.all([
+          ctx.db
+            .query("duelRounds")
+            .withIndex("by_duel", (q) => q.eq("duelId", duel._id))
+            .collect(),
+          ctx.db
+            .query("duelViewStats")
+            .withIndex("by_duel", (q) => q.eq("duelId", duel._id))
+            .first(),
+        ]);
+        const firstRound = rounds.find((r) => r.roundNumber === 1);
+        // Only a resolved round: an open round's spells are still secret.
+        const spells =
+          firstRound?.status === "COMPLETED"
+            ? Object.values(firstRound.spells ?? {})
+            : [];
+        // In seat order, so each spell lines up with its wizard on the card.
+        const openings = duel.wizards.flatMap((wizardId) => {
+          const spell = spells.find((s) => s.castBy === wizardId);
+          return spell
+            ? [{ wizardId, spell: spell.description.slice(0, 200) }]
+            : [];
+        });
+        // Spectators replay spoiler-free, so only the duelists get the
+        // result. Everyone else finds out on the duel page.
+        const participant = !!viewerId && duel.players.includes(viewerId);
+        return {
+          ...duel,
+          ...(participant
+            ? {}
+            : {
+                winners: undefined,
+                losers: undefined,
+                forfeitedBy: undefined,
+                points: {},
+                hitPoints: {},
+                // How long a finished duel ran can hint at a knockout.
+                completedAt: undefined,
+                // Account details and billing are nobody else's business.
+                players: [],
+                needActionsFrom: [],
+                challengedUserId: undefined,
+                imageCreditConsumedBy: undefined,
+                tokensCharged: undefined,
+                textOnlyReason: undefined,
+                ...(duel.status === "COMPLETED" ? { currentRound: 0 } : {}),
+              }),
+          openings,
+          uniqueViewers: stats?.uniqueViewers,
+        };
+      }),
+    );
     const hasMore = offset + limit < total;
 
     return {
       duels,
       total,
       hasMore,
+      liveCount,
     };
   },
 });

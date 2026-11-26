@@ -7,6 +7,10 @@ interface PageHeaderProps {
   icon?: ReactNode;
   actions?: ReactNode;
   className?: string;
+  /** Extra classes for the description, e.g. to hide it on small screens. */
+  descriptionClassName?: string;
+  /** Drop the decorative rule on phones, where height is precious. */
+  compactOnMobile?: boolean;
 }
 
 /** Standard page heading used across every section for a consistent look. */
@@ -16,6 +20,8 @@ export function PageHeader({
   icon,
   actions,
   className,
+  descriptionClassName,
+  compactOnMobile = false,
 }: PageHeaderProps) {
   return (
     <header
@@ -35,13 +41,21 @@ export function PageHeader({
             {title}
           </h1>
           {description && (
-            <p className="mt-1 max-w-2xl text-muted-foreground">
+            <p
+              className={cn(
+                "mt-1 max-w-2xl text-muted-foreground",
+                descriptionClassName,
+              )}
+            >
               {description}
             </p>
           )}
           <div
             aria-hidden="true"
-            className="mt-3 h-0.5 w-24 rounded-full bg-linear-to-r from-gold to-transparent"
+            className={cn(
+              "mt-3 h-0.5 w-24 rounded-full bg-linear-to-r from-gold to-transparent",
+              compactOnMobile && "hidden sm:block",
+            )}
           />
         </div>
       </div>
