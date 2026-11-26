@@ -7,8 +7,8 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
 
 /**
- * Live count of onlookers in the arena (everyone viewing except the duelists),
- * plus, for a duelist, whether their opponent is here too.
+ * Live count of onlookers in the arena (everyone viewing except the duelists
+ * and the viewer), plus, for a duelist, whether their opponent is here too.
  */
 export function OnlookerCount({
   duelId,
@@ -28,7 +28,11 @@ export function OnlookerCount({
     showOpponent &&
     !!viewerId &&
     players.some((p) => p !== viewerId && arena.playersHere.includes(p));
-  const count = arena.atCapacity ? `${arena.onlookers}+` : arena.onlookers;
+  // Anyone who isn't a duelist is one of the onlookers; don't count the
+  // viewer back to themselves.
+  const viewerCounted = !viewerId || !players.includes(viewerId);
+  const others = Math.max(0, arena.onlookers - (viewerCounted ? 1 : 0));
+  const count = arena.atCapacity ? `${arena.onlookers}+` : others;
 
   return (
     <>
@@ -41,7 +45,7 @@ export function OnlookerCount({
           Opponent here
         </Badge>
       )}
-      {arena.onlookers > 0 && (
+      {(arena.atCapacity || others > 0) && (
         <Badge
           variant="outline"
           className="flex items-center gap-1.5"
