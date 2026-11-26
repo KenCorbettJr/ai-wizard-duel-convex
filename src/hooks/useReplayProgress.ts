@@ -5,6 +5,19 @@ import { useCallback, useEffect, useState } from "react";
 const keyFor = (duelId: string) => `duelReplayProgress:${duelId}`;
 
 /**
+ * Whether this browser has started watching a duel's replay. For choosing
+ * among many duels at once, where a hook per duel won't do.
+ */
+export function hasStartedReplay(duelId: string): boolean {
+  try {
+    const n = Number(localStorage.getItem(keyFor(duelId)));
+    return Number.isFinite(n) && n > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Remembers, per duel, the last round this viewer has watched. Lets a shared
  * duel be replayed one round at a time and resumed later.
  *
