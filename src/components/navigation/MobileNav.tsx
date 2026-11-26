@@ -184,7 +184,7 @@ export function MobileNav() {
       >
         <div
           className={cn(
-            "flex min-h-14 items-center justify-between gap-2 py-1.5 pr-4",
+            "flex min-h-14 items-center justify-between gap-3 py-1.5 pr-3",
             showBack ? "pl-1" : "pl-4",
           )}
         >
@@ -199,16 +199,16 @@ export function MobileNav() {
                 <ChevronLeft className="h-6 w-6" aria-hidden="true" />
               </button>
             )}
-            <Link href="/" className="inline-flex min-h-11 items-center">
-              <span className="block whitespace-nowrap font-display text-base font-bold tracking-wide text-gold-gradient">
+            <Link href="/" className="inline-flex min-h-11 min-w-0 items-center">
+              <span className="block truncate font-display text-sm font-bold tracking-wide text-gold-gradient min-[400px]:text-base">
                 AI Wizard Duel
               </span>
             </Link>
           </div>
           {/* Signed-out visitors get Sign In as a tab instead. */}
           {isSignedIn && (
-            <div className="flex items-center gap-2">
-              <NotificationBell />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <NotificationBell className="size-10" />
               <Link
                 href="/credits"
                 aria-label="Tokens. Get more"
