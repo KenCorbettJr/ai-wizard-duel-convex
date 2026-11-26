@@ -68,12 +68,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Lightning bolt!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Fire shield!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -152,12 +152,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "extreme healing spell",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "extreme damage spell",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -206,12 +206,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "death spell",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "counter spell",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -263,12 +263,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Magic missile!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Shield spell!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -309,12 +309,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Chaos spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Order spell!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -354,12 +354,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Test spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Counter spell!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -581,7 +581,7 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Solo spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             // wizard2Id didn't cast a spell
           },
@@ -645,12 +645,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "death spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Life spell!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -712,12 +712,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Final spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Last stand!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });
@@ -774,7 +774,7 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Previous spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
           outcome: {
@@ -797,12 +797,12 @@ describe("Process Duel Round", () => {
             [wizard1Id]: {
               description: "Follow-up spell!",
               castBy: wizard1Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
             [wizard2Id]: {
               description: "Revenge spell!",
               castBy: wizard2Id,
-              castAt: Date.now(),
+              timestamp: Date.now(),
             },
           },
         });

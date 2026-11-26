@@ -14,3 +14,16 @@ packageExtensions:
   jsdom:
     peerDependencies:
       parse5: '*'
+overrides:
+  # Security patches for packages pulled in by genkit -> firebase-admin.
+  # Same major versions; drop once genkit ships with them.
+  '@fastify/busboy': ^3.2.2
+  fast-xml-parser@4: ^4.5.7
+  node-forge: ^1.4.3
+  websocket-driver: ^0.7.5
+  # Genkit's telemetry packages only support @opentelemetry/api below 1.10;
+  # our own logging needs 1.10. Keep Genkit on 1.9 as before.
+  '@genkit-ai/ai>@opentelemetry/api': ~1.9.0
+  '@genkit-ai/core>@opentelemetry/api': ~1.9.0
+  '@genkit-ai/google-cloud>@opentelemetry/api': ~1.9.0
+  '@google-cloud/logging>@opentelemetry/api': ~1.9.0
