@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef } from "react";
-import { Check, Loader2, Clock, Eye } from "lucide-react";
+import { Crown, Loader2, Clock, Eye } from "lucide-react";
 import { Doc, Id } from "../../convex/_generated/dataModel";
 
 interface RoundTimelineProps {
@@ -20,6 +20,8 @@ interface RoundTimelineProps {
 }
 
 const fmt = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+/** "-35 HP", or a dash when nothing changed ("0 HP" reads as knocked out). */
+const hpText = (n: number) => (n === 0 ? "—" : `${fmt(n)} HP`);
 
 /** One chip per round with each wizard's HP change. Chips jump to the round. */
 export const RoundTimeline = memo(function RoundTimeline({
@@ -46,9 +48,10 @@ export const RoundTimeline = memo(function RoundTimeline({
     .filter((r) => r.roundNumber > 0 && r.type !== "CONCLUSION")
     .sort((a, b) => a.roundNumber - b.roundNumber);
   if (items.length < 1 && totalRounds === undefined) return null;
-  const short = wizardNames.map(
-    (n) => n.trim().split(/\s+/)[0].slice(0, 7) || "?",
-  ) as [string, string];
+  const short = wizardNames.map((n) => n.trim().split(/\s+/)[0] || "?") as [
+    string,
+    string,
+  ];
   if (short[0].toLowerCase() === short[1].toLowerCase()) {
     short[0] = "P1";
     short[1] = "P2";
@@ -79,7 +82,7 @@ export const RoundTimeline = memo(function RoundTimeline({
 
   return (
     <nav aria-label="Round timeline" className="mt-3">
-      <ol ref={list} className="relative flex gap-2 overflow-x-auto pb-1">
+      <ol ref={list} className="relative flex flex-wrap gap-2 pb-1">
         {items.map((r) => {
           const unseen =
             revealedThrough !== undefined && r.roundNumber > revealedThrough;
@@ -103,17 +106,36 @@ export const RoundTimeline = memo(function RoundTimeline({
           const changes = wizardIds
             .slice(0, 2)
             .map((id) => r.outcome?.healthChange?.[id] ?? 0);
+          // Who took the round: more points, or (on equal points) less hurt.
+          const pts = wizardIds
+            .slice(0, 2)
+            .map((id) => r.outcome?.pointsAwarded?.[id] ?? 0);
+          const roundWinner =
+            pts[0] !== pts[1]
+              ? pts[0] > pts[1]
+                ? 0
+                : 1
+              : changes[0] !== changes[1]
+                ? changes[0] > changes[1]
+                  ? 0
+                  : 1
+                : null;
           const isCurrent = r.roundNumber === currentRound && !done;
           return (
             <li key={r._id} className="shrink-0">
               <button
                 type="button"
+                title={
+                  done
+                    ? `${wizardNames[0]} ${hpText(changes[0])}, ${wizardNames[1]} ${hpText(changes[1])}`
+                    : undefined
+                }
                 ref={isCurrent ? currentChip : undefined}
                 onClick={() => jump(r.roundNumber)}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`Round ${r.roundNumber}, ${
                   done
-                    ? `complete. Health changes: ${wizardNames[0]} ${fmt(changes[0])}, ${wizardNames[1]} ${fmt(changes[1])}`
+                    ? `${roundWinner !== null ? `won by ${wizardNames[roundWinner]}` : "even"}. Health changes: ${wizardNames[0]} ${fmt(changes[0])}, ${wizardNames[1]} ${fmt(changes[1])}`
                     : r.status === "PROCESSING"
                       ? "being resolved"
                       : "waiting for actions"
@@ -127,14 +149,20 @@ export const RoundTimeline = memo(function RoundTimeline({
                 <span className="font-semibold">R{r.roundNumber}</span>
                 {done ? (
                   <>
-                    <Check
-                      className="h-3 w-3 text-success"
-                      aria-hidden="true"
-                    />
-                    <span>
-                      {short[0]} {fmt(changes[0])} · {short[1]}{" "}
-                      {fmt(changes[1])}
-                    </span>
+                    {roundWinner !== null ? (
+                      <>
+                        <Crown
+                          className="h-3 w-3 text-gold"
+                          aria-hidden="true"
+                        />
+                        <span className="max-w-[9ch] truncate">
+                          {short[roundWinner]}
+                        </span>
+                        <span>won</span>
+                      </>
+                    ) : (
+                      <span>Even</span>
+                    )}
                   </>
                 ) : r.status === "PROCESSING" ? (
                   <Loader2

@@ -4,7 +4,6 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
 import {
   Gift,
   Coins,
@@ -106,27 +105,29 @@ export function CreditUsageHistory({
   const getSourceLabel = (source: string) => {
     switch (source) {
       case "AD_REWARD":
-        return "Ad Reward";
+        return "Ad reward";
       case "SIGNUP_BONUS":
-        return "Welcome Bonus";
+        return "Welcome bonus";
       case "PREMIUM_GRANT":
-        return "Premium";
+        return "Duel entry";
       case "ADMIN_GRANT":
-        return "Admin Grant";
+        return "Gift from the team";
       case "DUEL_ENTRY":
-        return "Duel Entry";
+        return "Duel entry";
       case "DUEL_REFUND":
-        return "Duel Refund";
+        return "Duel refund";
       case "WIZARD_IMAGE":
-        return "Wizard Illustration";
+        return "Wizard portrait";
       case "WIZARD_IMAGE_REFUND":
-        return "Illustration Refund";
+        return "Portrait refund";
       case "PURCHASE":
-        return "Token Purchase";
+        return "Bought tokens";
       case "REFERRAL_BONUS":
-        return "Invite Bonus";
-      default:
-        return source.replace("_", " ");
+        return "Invite bonus";
+      default: {
+        const words = source.replaceAll("_", " ").toLowerCase();
+        return words.charAt(0).toUpperCase() + words.slice(1);
+      }
     }
   };
 
@@ -145,7 +146,10 @@ export function CreditUsageHistory({
       const diffInDays = Math.floor(diffInHours / 24);
       return `${diffInDays}d ago`;
     } else {
-      return date.toLocaleDateString();
+      return date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
     }
   };
 
@@ -156,9 +160,6 @@ export function CreditUsageHistory({
           <CardTitle className="flex items-center gap-2 text-lg">
             <Clock className="h-5 w-5" />
             Token History
-            <Badge variant="secondary" className="ml-auto">
-              {creditHistory.length} transactions
-            </Badge>
           </CardTitle>
         </CardHeader>
       )}
@@ -185,12 +186,6 @@ export function CreditUsageHistory({
                         Sponsored by {transaction.metadata.sponsorName}
                       </span>
                     )}
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${getTransactionColor(transaction.type)}`}
-                    >
-                      {transaction.type.toLowerCase()}
-                    </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {formatDate(transaction.createdAt)}
@@ -211,13 +206,9 @@ export function CreditUsageHistory({
                     </>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {transaction.metadata?.sponsorName
-                    ? "sponsored"
-                    : transaction.type === "CONSUMED"
-                      ? "used"
-                      : "earned"}
-                </div>
+                {transaction.metadata?.sponsorName && (
+                  <div className="text-xs text-muted-foreground">sponsored</div>
+                )}
               </div>
             </div>
           ))}

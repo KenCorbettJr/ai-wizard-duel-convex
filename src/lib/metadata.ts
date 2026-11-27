@@ -604,7 +604,7 @@ export function generateWizardMetadata(
   const winRatePercent = Math.round(wizard.winRate * 100);
 
   // Create wizard-specific title
-  const title = `${wizard.name} - AI Wizard Duel`;
+  const title = wizard.name;
 
   // Create engaging description with stats
   let description = wizard.description;
@@ -739,7 +739,7 @@ export function generateDuelMetadata(
   let title: string;
   if (duel.status === "COMPLETED") {
     // Shared links are watched as replays, so the title keeps the winner secret.
-    title = `Epic Duel: ${wizardNames.join(" vs ")} · Who will prevail?`;
+    title = `Duel replay: ${wizardNames.join(" vs ")}`;
   } else if (duel.status === "IN_PROGRESS") {
     title = `Live Duel: ${wizardNames.join(" vs ")}`;
   } else if (duel.status === "WAITING_FOR_PLAYERS") {
@@ -920,7 +920,7 @@ export function generateUserProfileMetadata(
   const duelText = userProfile.totalDuels === 1 ? "duel" : "duels";
 
   // Create user-specific title
-  const title = `${displayName} (@${userProfile.userId}) - AI Wizard Duel`;
+  const title = `${displayName} (@${userProfile.userId})`;
 
   // Create engaging description with stats
   let description = `View ${displayName}'s magical profile on AI Wizard Duel.`;

@@ -453,7 +453,7 @@ function LandingPage() {
             ))}
           </ul>
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            Duels can be 3, 5 or 10 rounds, or To the Death (up to{" "}
+            Duels can be 3 or 5 rounds, or To the Death (up to{" "}
             {TO_THE_DEATH_MAX_ROUNDS} rounds). You&apos;re only charged when a
             duel starts, and cancelled duels are refunded.
           </p>

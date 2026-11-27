@@ -69,16 +69,7 @@ export const SuperAdminOnly = dynamic(
   () => Promise.resolve(SuperAdminOnlyClient),
   {
     ssr: false,
-    loading: () => (
-      <Card>
-        <CardContent className="text-center py-12">
-          <Shield className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Checking Permissions</h3>
-          <p className="text-muted-foreground">
-            Please wait while we verify your access...
-          </p>
-        </CardContent>
-      </Card>
-    ),
+    // Nothing while loading: admin-only bits shouldn't flash for players.
+    loading: () => null,
   },
 );

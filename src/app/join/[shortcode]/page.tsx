@@ -331,7 +331,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
               </div>
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Hash className="h-4 w-4" />
-                <span>Shortcode:</span>
+                <span>Duel code:</span>
                 <span className="font-mono font-bold text-primary bg-primary/50 px-2 py-1 rounded border border-primary/50">
                   {duel.shortcode}
                 </span>
@@ -543,7 +543,7 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
                       </p>
                       <Button onClick={handleCreateWizard}>
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Create Wizard
+                        Create wizard
                       </Button>
                     </CardContent>
                   </Card>

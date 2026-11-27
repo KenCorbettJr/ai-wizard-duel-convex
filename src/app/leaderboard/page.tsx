@@ -103,7 +103,7 @@ function WizardLeaderboardCard({
   };
 
   const formatWinRate = (winRate: number) => {
-    return `${(winRate * 100).toFixed(1)}%`;
+    return `${Math.round(winRate * 100)}%`;
   };
 
   const getCardStyling = (rank: number) => {
@@ -121,10 +121,10 @@ function WizardLeaderboardCard({
 
   return (
     <Card className={`sparkle-hover ${getCardStyling(wizard.rank)}`}>
-      <CardContent className="p-6">
-        <div className="flex items-center gap-4">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-center gap-3 sm:gap-4">
           {/* Rank */}
-          <div className="flex flex-col items-center min-w-[60px]">
+          <div className="flex flex-col items-center min-w-[48px]">
             {getRankIcon(wizard.rank, period)}
             <Badge variant={getRankBadgeVariant(wizard.rank)} className="mt-1">
               #{wizard.rank}
@@ -137,7 +137,7 @@ function WizardLeaderboardCard({
           </div>
 
           {/* Wizard Avatar */}
-          <Avatar className="h-16 w-16">
+          <Avatar className="h-12 w-12 shrink-0 sm:h-16 sm:w-16">
             <AvatarImage src={illustrationUrl || undefined} alt={wizard.name} />
             <AvatarFallback className="text-lg font-bold">
               {wizard.name.charAt(0).toUpperCase()}
@@ -146,10 +146,10 @@ function WizardLeaderboardCard({
 
           {/* Wizard Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
               <Link
                 href={`/wizards/${wizard._id}`}
-                className="font-display text-xl font-bold text-foreground hover:text-primary transition-colors truncate"
+                className="font-display text-lg font-bold leading-tight text-foreground hover:text-primary transition-colors line-clamp-2 sm:text-xl"
               >
                 {wizard.name}
               </Link>
@@ -181,49 +181,23 @@ function WizardLeaderboardCard({
             )}
           </div>
 
-          {/* Stats */}
-          <div className="flex flex-col sm:flex-row gap-4 text-center">
-            <div className="min-w-[80px]">
-              <div className="text-2xl font-bold text-success">
-                {formatWinRate(
-                  period === "all" ? wizard.winRate : wizard.periodWinRate,
-                )}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {period === "all"
-                  ? "Win Rate"
-                  : `${period === "week" ? "Weekly" : "Monthly"} Win Rate`}
-              </div>
+          {/* Stats: win rate up top, record underneath */}
+          <div className="shrink-0 text-right">
+            <div
+              className={`text-xl font-bold sm:text-2xl ${
+                (period === "all" ? wizard.winRate : wizard.periodWinRate) >=
+                0.5
+                  ? "text-success"
+                  : "text-foreground"
+              }`}
+            >
+              {formatWinRate(
+                period === "all" ? wizard.winRate : wizard.periodWinRate,
+              )}
             </div>
-            <div className="min-w-[60px]">
-              <div className="text-lg font-semibold text-foreground">
-                {period === "all" ? wizard.wins || 0 : wizard.periodWins}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {period === "all"
-                  ? "Wins"
-                  : `${period === "week" ? "Weekly" : "Monthly"} Wins`}
-              </div>
-            </div>
-            <div className="min-w-[60px]">
-              <div className="text-lg font-semibold text-foreground">
-                {period === "all" ? wizard.losses || 0 : wizard.periodLosses}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {period === "all"
-                  ? "Losses"
-                  : `${period === "week" ? "Weekly" : "Monthly"} Losses`}
-              </div>
-            </div>
-            <div className="min-w-[60px]">
-              <div className="text-lg font-semibold text-foreground">
-                {period === "all" ? wizard.totalDuels : wizard.periodTotalDuels}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {period === "all"
-                  ? "Total"
-                  : `${period === "week" ? "Weekly" : "Monthly"} Total`}
-              </div>
+            <div className="whitespace-nowrap text-xs text-muted-foreground">
+              {period === "all" ? wizard.wins || 0 : wizard.periodWins}W ·{" "}
+              {period === "all" ? wizard.losses || 0 : wizard.periodLosses}L
             </div>
           </div>
         </div>
@@ -258,7 +232,7 @@ export default function LeaderboardPage() {
       />
 
       {/* Toolbar: period tabs + filters in one compact row */}
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div
           role="group"
           aria-label="Time period"
@@ -279,7 +253,7 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="grid grid-cols-2 gap-3 sm:flex">
           <Select
             value={minDuels.toString()}
             onValueChange={(value) => setMinDuels(parseInt(value))}
@@ -342,36 +316,27 @@ export default function LeaderboardPage() {
         </ol>
       )}
 
-      <section className="mt-12">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-gold" aria-hidden="true" />
-              Ready to Compete?
-            </CardTitle>
-            <CardDescription>
-              Create your own wizard and climb the leaderboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Show when="signed-in">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Button asChild>
-                  <Link href="/wizards">My Wizards</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/duels/create">Start Duel</Link>
-                </Button>
-              </div>
-            </Show>
-            <Show when="signed-out">
+      {/* Only visitors need the pitch; players already have the nav. */}
+      <Show when="signed-out">
+        <section className="mt-12">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-gold" aria-hidden="true" />
+                Ready to Compete?
+              </CardTitle>
+              <CardDescription>
+                Create your own wizard and climb the leaderboard.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <SignInButton>
                 <Button>Sign in to compete</Button>
               </SignInButton>
-            </Show>
-          </CardContent>
-        </Card>
-      </section>
+            </CardContent>
+          </Card>
+        </section>
+      </Show>
     </div>
   );
 }

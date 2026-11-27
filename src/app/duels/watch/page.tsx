@@ -165,7 +165,7 @@ function WatchDuelsContent() {
           className="mb-5 sm:mb-6"
           title="Watch Duels"
           icon={<Eye className="h-6 w-6" aria-hidden="true" />}
-          description="Live battles and spoiler-free replays."
+          description="Live battles and replays. Other players' results stay hidden until you reveal them."
           descriptionClassName="text-sm sm:text-base"
           compactOnMobile
           actions={

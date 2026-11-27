@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Show } from "@clerk/nextjs";
 import {
   X,
   ShieldCheck,
@@ -98,6 +99,44 @@ export default function RulesPage() {
         <HowToWin />
       </section>
 
+      <section aria-labelledby="luck-heading" className="mb-12">
+        <h2 id="luck-heading" className="mb-4 font-display text-2xl font-bold">
+          Luck, Dice and Ranks
+        </h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardContent className="space-y-2 py-5">
+              <h3 className="font-semibold">The d20</h3>
+              <p className="text-sm text-muted-foreground">
+                Every round each wizard rolls a 20-sided die. A high roll helps
+                a spell land; a low one can make it fizzle. A clever spell still
+                matters more than the dice.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="space-y-2 py-5">
+              <h3 className="font-semibold">Luck</h3>
+              <p className="text-sm text-muted-foreground">
+                Luck is added to that roll. Campaign foes range from -2 to +2
+                Luck, and beating the whole campaign earns your wizard a relic
+                worth a permanent +1 Luck.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="space-y-2 py-5">
+              <h3 className="font-semibold">Ranks</h3>
+              <p className="text-sm text-muted-foreground">
+                Wins against other players raise your wizard&apos;s title:
+                Novice, Apprentice (1 win), Adept (3), Sorcerer (10) and
+                Archmage (25). Ranks are for bragging rights only.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       <section aria-labelledby="rules-heading" className="mb-12">
         <h2 id="rules-heading" className="mb-2 font-display text-2xl font-bold">
           Not Allowed in the Arena
@@ -122,8 +161,8 @@ export default function RulesPage() {
         </Card>
         <p className="mt-4 text-muted-foreground">
           Break a rule and the Watcher, the arena&apos;s silent guardian, stops
-          the spell. Nothing is spent, so rewrite it and try again. Keep
-          pushing and your magic is silenced for a while.
+          the spell. Nothing is spent, so rewrite it and try again. Keep pushing
+          and your magic is silenced for a while.
         </p>
       </section>
 
@@ -163,8 +202,8 @@ export default function RulesPage() {
         </div>
 
         <p className="mt-6 text-sm text-muted-foreground">
-          No filter is perfect, so we use several layers and keep improving
-          them as we learn.
+          No filter is perfect, so we use several layers and keep improving them
+          as we learn.
         </p>
       </section>
 
@@ -172,9 +211,16 @@ export default function RulesPage() {
         <Button asChild variant="outline" size="lg">
           <Link href="/duels/watch">Watch a duel</Link>
         </Button>
-        <Button asChild variant="gold" size="lg">
-          <Link href="/sign-up">Start playing free</Link>
-        </Button>
+        <Show when="signed-out">
+          <Button asChild variant="gold" size="lg">
+            <Link href="/sign-up">Start playing free</Link>
+          </Button>
+        </Show>
+        <Show when="signed-in">
+          <Button asChild variant="gold" size="lg">
+            <Link href="/duels/create">Start a duel</Link>
+          </Button>
+        </Show>
       </div>
     </div>
   );

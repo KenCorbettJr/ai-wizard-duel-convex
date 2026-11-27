@@ -24,7 +24,7 @@ export async function generateMetadata({
       return {
         title: "Join Duel",
         description:
-          "Join a magical duel using a shortcode and battle other wizards in AI Wizard Duel.",
+          "Join a magical duel using a duel code and battle other wizards in AI Wizard Duel.",
       };
     }
 
@@ -39,7 +39,7 @@ export async function generateMetadata({
         : "Join Duel",
       description: challengerWizard
         ? `${challengerWizard.name} has challenged you to a magical duel! Join the battle in AI Wizard Duel.`
-        : "Join a magical duel using a shortcode and battle other wizards in AI Wizard Duel.",
+        : "Join a magical duel using a duel code and battle other wizards in AI Wizard Duel.",
     };
 
     // Add Open Graph image - prefer duel's featured illustration, fallback to challenger's illustration
@@ -88,7 +88,7 @@ export async function generateMetadata({
     return {
       title: "Join Duel",
       description:
-        "Join a magical duel using a shortcode and battle other wizards in AI Wizard Duel.",
+        "Join a magical duel using a duel code and battle other wizards in AI Wizard Duel.",
     };
   }
 }

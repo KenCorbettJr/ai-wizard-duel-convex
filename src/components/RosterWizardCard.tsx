@@ -272,7 +272,7 @@ export const RosterWizardCard = memo(function RosterWizardCard({
         >
           <p
             className={cn(
-              "flex items-baseline justify-between gap-2 text-xs [text-shadow:0_1px_2px_rgb(0_0_0/0.85)]",
+              "flex flex-wrap items-baseline justify-between gap-x-2 text-xs [text-shadow:0_1px_2px_rgb(0_0_0/0.85)]",
               portraitStage && "hidden",
             )}
           >
@@ -291,20 +291,13 @@ export const RosterWizardCard = memo(function RosterWizardCard({
             {rank.next && (
               <span
                 className={cn(
-                  "truncate text-white/75",
+                  "text-white/75",
                   rankedUp && "hidden @min-[13rem]:inline",
                 )}
               >
-                {rank.next.winsNeeded}
-                <span aria-hidden="true" className="@min-[13rem]:hidden">
-                  {" "}
-                  to go
-                </span>
-                <span className="sr-only @min-[13rem]:not-sr-only">
-                  {" "}
-                  {rank.next.winsNeeded === 1 ? "win" : "wins"} to{" "}
-                  {rank.next.title}
-                </span>
+                {rank.next.winsNeeded}{" "}
+                {rank.next.winsNeeded === 1 ? "win" : "wins"} to{" "}
+                {rank.next.title}
               </span>
             )}
           </p>
@@ -345,7 +338,7 @@ export const RosterWizardCard = memo(function RosterWizardCard({
             )}
           >
             {duels === 0 ? (
-              <span className="text-white/80">Awaiting first duel</span>
+              <span className="text-white/80">No duels yet</span>
             ) : (
               <>
                 <span className="text-emerald-300">

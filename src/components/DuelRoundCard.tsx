@@ -50,6 +50,8 @@ interface DuelRoundCardProps {
   onRevealImpact?: (roundNumber: number) => void;
   /** Called when the staged reveal has finished or was skipped. */
   onRevealComplete?: (roundNumber: number) => void;
+  /** The page already shows the result (e.g. the viewer's own duel). */
+  conclusionRevealed?: boolean;
 }
 
 /** Reveal steps, in order. */
@@ -180,7 +182,9 @@ function ProcessingStages({
 }
 
 function DeltaValue({ value }: { value: number }) {
-  if (value === 0) return <span>0</span>;
+  // "HP 0" would read as knocked out; say what actually happened.
+  if (value === 0)
+    return <span className="text-muted-foreground">no change</span>;
   if (value > 0)
     return <span className="font-bold text-success">+{value}</span>;
   return <span className="text-destructive font-bold">{value}</span>;
@@ -195,12 +199,14 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   revealToken,
   onRevealImpact,
   onRevealComplete,
+  conclusionRevealed = false,
 }: DuelRoundCardProps) {
   const { user } = useUser();
   const [showReprocessButton, setShowReprocessButton] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
   const { revealed, reveal } = useConclusionReveal(duel._id);
-  const conclusionLocked = round.type === "CONCLUSION" && !revealed;
+  const conclusionLocked =
+    round.type === "CONCLUSION" && !revealed && !conclusionRevealed;
   const [expandedOverride, setExpandedOverride] = useState<boolean | null>(
     null,
   );
@@ -426,10 +432,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <RuneSpinner size="md" label="Loading…" />
-            <span className="ml-2 text-muted-foreground">
-              Loading round data...
-            </span>
+            <RuneSpinner size="md" label="Summoning the round…" />
           </div>
         </CardContent>
       </Card>
@@ -564,9 +567,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   </span>
                   {!expanded && (
                     <span className="mt-1 block truncate font-sans text-sm font-normal normal-case tracking-normal text-muted-foreground">
-                      {[summary, round.outcome?.result]
-                        .filter(Boolean)
-                        .join(" — ") || "Round complete"}
+                      {round.outcome?.result || summary || "Round complete"}
                     </span>
                   )}
                 </span>
@@ -711,7 +712,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   <FastForward className="mr-1 h-4 w-4" aria-hidden="true" />
                   Skip
                 </Button>
-              ) : (
+              ) : round.type === "CONCLUSION" ? null : (
                 <Button
                   size="sm"
                   variant="ghost"
@@ -755,7 +756,17 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                             {wiz?.name ?? "Wizard"}
                           </span>
                           {roll !== undefined && (
-                            <div className={at(STAGE.DICE, "reveal-roll")}>
+                            <div
+                              className={`flex items-center gap-1.5 ${at(STAGE.DICE, "reveal-roll")}`}
+                              title={`Luck roll: ${roll} on a d20`}
+                            >
+                              {(roll >= 20 || roll <= 1) && (
+                                <span
+                                  className={`text-right text-[10px] font-semibold uppercase leading-tight ${roll >= 20 ? "text-gold" : "text-destructive"}`}
+                                >
+                                  {roll >= 20 ? "Lucky!" : "Unlucky"}
+                                </span>
+                              )}
                               <D20Die value={roll} size="sm" />
                             </div>
                           )}
@@ -783,10 +794,19 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                           >
                             {hp !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
-                                <span className="text-muted-foreground">
-                                  HP
-                                </span>
-                                <DeltaValue value={hp} />
+                                {hp < 0 ? (
+                                  <span className="font-bold text-destructive">
+                                    Lost {-hp} HP
+                                  </span>
+                                ) : hp > 0 ? (
+                                  <span className="font-bold text-success">
+                                    Healed {hp} HP
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    No damage
+                                  </span>
+                                )}
                               </span>
                             )}
                             {pts !== undefined && (

@@ -71,26 +71,6 @@ function difficultyTiers(opponents: CampaignHomeOpponent[]) {
   return tiers;
 }
 
-/** How far the next difficulty tier is, e.g. { tier: "Advanced", away: 3 }. */
-function nextTier(
-  opponents: CampaignHomeOpponent[],
-  nextOpponent: number | null,
-): { tier: string; away: number } | null {
-  if (nextOpponent === null) return null;
-  const tiers = difficultyTiers(opponents);
-  let start = 1;
-  for (let i = 0; i < tiers.length; i++) {
-    const end = start + tiers[i].count - 1;
-    if (nextOpponent <= end) {
-      return tiers[i + 1]
-        ? { tier: tiers[i + 1].label, away: end - nextOpponent + 1 }
-        : null;
-    }
-    start = end + 1;
-  }
-  return null;
-}
-
 /** Ten pips, difficulty tiers beneath, and the relic as the goal at the end. */
 function ProgressTrack({
   progress,
@@ -138,7 +118,7 @@ function ProgressTrack({
         {tiers.length > 1 && (
           <div
             aria-hidden="true"
-            className="mt-1 flex gap-1 text-[11px] uppercase tracking-wide text-muted-foreground"
+            className="mt-1 flex gap-1 text-[11px] text-muted-foreground"
           >
             {tiers.map((tier) => (
               <span
@@ -146,14 +126,7 @@ function ProgressTrack({
                 style={{ flex: tier.count }}
                 className="truncate border-t border-border/60 pt-0.5 text-center"
               >
-                {tier.label === "Intermediate" ? (
-                  <>
-                    <span className="@md:hidden">Mid</span>
-                    <span className="hidden @md:inline">{tier.label}</span>
-                  </>
-                ) : (
-                  tier.label
-                )}
+                {tier.label}
               </span>
             ))}
           </div>
@@ -354,7 +327,6 @@ export function CampaignHomeCard({
       : lowTokens
         ? `${tokens} ${tokens === 1 ? "battle" : "battles"} left`
         : null;
-  const tier = nextTier(opponents, summary.nextOpponent);
   const remaining = summary.total - summary.defeatedCount;
   // Another wizard already holds the relic: say so before anything else.
   const showRelicStrip = relicHolder && relicHolder._id !== wizard._id;
@@ -404,7 +376,7 @@ export function CampaignHomeCard({
                 {s2.hasRelic && (
                   <Crown className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
-                <span className="min-w-0 truncate">{w.name.split(" ")[0]}</span>
+                <span className="min-w-0 truncate">{w.name}</span>
                 <span
                   className={cn(
                     "shrink-0",
@@ -507,7 +479,7 @@ export function CampaignHomeCard({
                     : "Continue campaign"}
             </Link>
           </Button>
-          {!tokenNote && summary.isFresh && (
+          {!tokenNote && !summary.isCompleted && (
             <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
               <Coins
                 className="h-3 w-3 shrink-0 text-gold"
@@ -558,13 +530,10 @@ export function CampaignHomeCard({
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <p>
             <span className="font-semibold text-foreground">
-              {summary.defeatedCount}/{summary.total} beaten
+              {summary.defeatedCount}/{summary.total} defeated
             </span>
-            {!summary.isCompleted && tier
-              ? ` · ${tier.away} ${tier.away === 1 ? "win" : "wins"} to ${tier.tier}`
-              : ""}
             {!summary.isCompleted && !summary.hasRelic
-              ? ` · ${remaining} wins to the crown`
+              ? ` · ${remaining} to the relic`
               : ""}
           </p>
         </div>

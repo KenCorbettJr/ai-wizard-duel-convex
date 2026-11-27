@@ -4,7 +4,7 @@ import { CreditsPageClient } from "./CreditsPageClient";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 
 export const metadata: Metadata = {
-  title: "Tokens - AI Wizard Duel",
+  title: "Tokens",
   description: "Buy tokens for AI Wizard Duel. One token enters one duel.",
 };
 

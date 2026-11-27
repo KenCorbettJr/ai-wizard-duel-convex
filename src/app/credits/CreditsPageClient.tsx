@@ -32,7 +32,7 @@ import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { formatSponsorEnd, useSponsorship } from "@/components/SponsorBanner";
 
 export function CreditsPageClient() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const searchParams = useSearchParams();
   const purchase = searchParams.get("purchase");
   const sessionId = searchParams.get("session_id");
@@ -70,6 +70,16 @@ export function CreditsPageClient() {
       });
     }
   }, [purchaseStatus]);
+
+  // Wait for sign-in state before choosing a signed-in or signed-out view,
+  // so signed-in players never see the sign-up pitch flash by.
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <RuneSpinner size="md" label="Loading…" />
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -248,8 +258,8 @@ export function CreditsPageClient() {
                 <span className="font-medium">
                   {DUEL_TOKEN_COST} token = 1 duel.
                 </span>{" "}
-                3, 5 or 10 rounds, or To the Death (up to{" "}
-                {TO_THE_DEATH_MAX_ROUNDS} rounds). Same price.
+                3 or 5 rounds, or To the Death (up to {TO_THE_DEATH_MAX_ROUNDS}{" "}
+                rounds). Same price.
               </p>
             </div>
             <div className="flex gap-3">

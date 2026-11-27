@@ -27,6 +27,25 @@ import {
   type WatcherRejection,
 } from "@/components/watcher/WatcherDialog";
 
+/** Tap-to-fill starting points for a player staring at a blank form. */
+const EXAMPLE_WIZARDS: WizardFormData[] = [
+  {
+    name: "Ember Thornwick",
+    description:
+      "A hot-headed fire mage in a scorched red cloak who hurls comets and laughs at danger. Her staff is a burning branch from a dragon's nest.",
+  },
+  {
+    name: "Professor Glimmerfrost",
+    description:
+      "An absent-minded ice wizard with a frosty beard and floating spectacles. He freezes time for a heartbeat and traps foes in crystal riddles.",
+  },
+  {
+    name: "Moss the Wanderer",
+    description:
+      "A quiet druid wrapped in living vines, with a fox familiar on her shoulder. She summons roots, swarms of fireflies and sudden thunderstorms.",
+  },
+];
+
 interface WizardFormData {
   name: string;
   description: string;
@@ -168,28 +187,58 @@ export function WizardForm({
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {mode === "create" && !formData.name && !formData.description && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            Need inspiration? Tap one to start.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {EXAMPLE_WIZARDS.map((example) => (
+              <Button
+                key={example.name}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => setFormData({ ...example })}
+              >
+                <Wand2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                {example.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2">
-        <Label htmlFor="name">Wizard Name</Label>
+        <Label htmlFor="name">Name</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Enter wizard name"
+          placeholder="e.g. Ember Thornwick"
+          maxLength={60}
           required
           disabled={isSubmitting}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <div className="flex items-baseline justify-between gap-2">
+          <Label htmlFor="description">Who are they?</Label>
+          <span className="text-xs text-muted-foreground" aria-live="polite">
+            {formData.description.length}/1000
+          </span>
+        </div>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
           }
-          placeholder="Describe your wizard's abilities, appearance, and personality"
-          rows={4}
+          placeholder="Their look, their magic and their personality. The more vivid, the better the portrait and the duels."
+          rows={5}
+          maxLength={1000}
           required
           disabled={isSubmitting}
         />
@@ -220,7 +269,7 @@ export function WizardForm({
                 <Save className="w-4 h-4 mr-2" />
               )}
               {mode === "create"
-                ? "Create Wizard"
+                ? "Create wizard"
                 : redrawOnly
                   ? hasPortrait
                     ? "Regenerate Portrait"
@@ -240,6 +289,12 @@ export function WizardForm({
           Cancel
         </Button>
       </div>
+      {mode === "create" && (
+        <p className="-mt-3 text-sm text-muted-foreground">
+          Free. The AI generates their portrait from your description. Keep it
+          PG-13, and no real people or famous characters.
+        </p>
+      )}
       {mode === "edit" && hasPortrait && (
         <p className="-mt-3 text-sm text-muted-foreground">
           {redrawOnly
@@ -261,27 +316,25 @@ export function WizardForm({
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>
-              {mode === "create" ? "Create New Wizard" : "Edit Wizard"}
-            </CardTitle>
-            <CardDescription>
-              {mode === "create"
-                ? "Design your magical companion"
-                : "Update your wizard's details or generate a new portrait."}
-            </CardDescription>
-          </div>
-          {mode === "edit" && (
+      {mode === "create" ? null : (
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Edit Wizard</CardTitle>
+              <CardDescription>
+                Update your wizard&apos;s details or generate a new portrait.
+              </CardDescription>
+            </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
-          )}
-        </div>
-      </CardHeader>
+          </div>
+        </CardHeader>
+      )}
 
-      <CardContent>{formContent}</CardContent>
+      <CardContent className={mode === "create" ? "pt-6" : undefined}>
+        {formContent}
+      </CardContent>
     </Card>
   );
 }

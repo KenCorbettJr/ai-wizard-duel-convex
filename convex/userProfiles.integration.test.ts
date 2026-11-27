@@ -16,7 +16,7 @@ describe("User Profile Integration Tests", () => {
       // Step 2: Check initial profile status - should not have profile
       const initialStatus = await withAuth(t, clerkId).query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(initialStatus.hasProfile).toBe(false);
       expect(initialStatus.userId).toBeUndefined();
@@ -24,7 +24,7 @@ describe("User Profile Integration Tests", () => {
       // Step 3: Check user ID availability for desired handle
       const availabilityCheck = await t.query(
         api.userProfiles.checkUserIdAvailability,
-        { userId: "johndoe" }
+        { userId: "johndoe" },
       );
       expect(availabilityCheck.available).toBe(true);
       expect(availabilityCheck.valid).toBe(true);
@@ -36,7 +36,7 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "johndoe",
           displayName: "John Doe",
-        }
+        },
       );
       expect(profileSetup.success).toBe(true);
       expect(profileSetup.error).toBeUndefined();
@@ -44,7 +44,7 @@ describe("User Profile Integration Tests", () => {
       // Step 5: Verify profile is now complete
       const finalStatus = await withAuth(t, clerkId).query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(finalStatus.hasProfile).toBe(true);
       expect(finalStatus.userId).toBe("johndoe");
@@ -79,14 +79,14 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "testhandle",
           displayName: "First User",
-        }
+        },
       );
       expect(firstUserSetup.success).toBe(true);
 
       // Second user tries to claim the same handle
       const availabilityCheck = await t.query(
         api.userProfiles.checkUserIdAvailability,
-        { userId: "testhandle" }
+        { userId: "testhandle" },
       );
       expect(availabilityCheck.available).toBe(false);
       expect(availabilityCheck.valid).toBe(true);
@@ -100,7 +100,7 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "testhandle",
           displayName: "Second User",
-        }
+        },
       );
       expect(secondUserSetup.success).toBe(false);
       expect(secondUserSetup.error).toBe("This user ID is already taken");
@@ -120,7 +120,7 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "testhandle",
           displayName: "First User",
-        }
+        },
       );
       expect(firstUserSetup.success).toBe(true);
 
@@ -130,7 +130,7 @@ describe("User Profile Integration Tests", () => {
       for (const variation of variations) {
         const availabilityCheck = await t.query(
           api.userProfiles.checkUserIdAvailability,
-          { userId: variation }
+          { userId: variation },
         );
         expect(availabilityCheck.available).toBe(false);
         expect(availabilityCheck.error).toBe("This user ID is already taken");
@@ -140,7 +140,7 @@ describe("User Profile Integration Tests", () => {
           {
             userId: variation,
             displayName: "Second User",
-          }
+          },
         );
         expect(setupAttempt.success).toBe(false);
       }
@@ -165,7 +165,7 @@ describe("User Profile Integration Tests", () => {
         {
           name: "Fire Mage",
           description: "A powerful fire wizard",
-        }
+        },
       );
 
       const wizard2Id = await withAuth(t, clerkId).mutation(
@@ -173,7 +173,7 @@ describe("User Profile Integration Tests", () => {
         {
           name: "Ice Sorceress",
           description: "Master of ice magic",
-        }
+        },
       );
 
       // Update wizard stats to simulate battle history
@@ -203,7 +203,7 @@ describe("User Profile Integration Tests", () => {
         won: false,
       });
 
-      // Create a duel to add to duel count
+      // An unfinished duel doesn't count: totalDuels is the decided record.
       await withAuth(t, clerkId).mutation(api.duels.createDuel, {
         numberOfRounds: 3,
         wizards: [wizard1Id],
@@ -218,7 +218,7 @@ describe("User Profile Integration Tests", () => {
       expect(profile?.userId).toBe("gamemaster");
       expect(profile?.displayName).toBe("Game Master");
       expect(profile?.totalWizards).toBe(2);
-      expect(profile?.totalDuels).toBe(1);
+      expect(profile?.totalDuels).toBe(6); // wins + losses, like the dashboard
       expect(profile?.wins).toBe(3); // 2 + 1 wins across wizards
       expect(profile?.losses).toBe(3); // 1 + 2 losses across wizards
       expect(profile?.winRate).toBe(50); // 3 wins out of 6 total games
@@ -284,7 +284,7 @@ describe("User Profile Integration Tests", () => {
       // Profile status should show incomplete
       const status = await withAuth(t, clerkId).query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(status.hasProfile).toBe(false);
     });
@@ -309,18 +309,18 @@ describe("User Profile Integration Tests", () => {
       expect(tooLong.available).toBe(false);
       expect(tooLong.valid).toBe(false);
       expect(tooLong.error).toBe(
-        "User ID must be no more than 20 characters long"
+        "User ID must be no more than 20 characters long",
       );
 
       // Test invalid characters
       const invalidChars = await t.query(
         api.userProfiles.checkUserIdAvailability,
-        { userId: "user@name" }
+        { userId: "user@name" },
       );
       expect(invalidChars.available).toBe(false);
       expect(invalidChars.valid).toBe(false);
       expect(invalidChars.error).toBe(
-        "User ID can only contain letters, numbers, underscores, and hyphens"
+        "User ID can only contain letters, numbers, underscores, and hyphens",
       );
 
       // Test reserved word
@@ -330,7 +330,7 @@ describe("User Profile Integration Tests", () => {
       expect(reserved.available).toBe(false);
       expect(reserved.valid).toBe(false);
       expect(reserved.error).toBe(
-        "This user ID is reserved and cannot be used"
+        "This user ID is reserved and cannot be used",
       );
 
       // Test valid format
@@ -357,7 +357,7 @@ describe("User Profile Integration Tests", () => {
       // Check availability for the same ID
       const availability = await t.query(
         api.userProfiles.checkUserIdAvailability,
-        { userId: "popular" }
+        { userId: "popular" },
       );
 
       expect(availability.available).toBe(false);
@@ -383,7 +383,7 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "originalhandle",
           displayName: "Original Name",
-        }
+        },
       );
       expect(initialSetup.success).toBe(true);
 
@@ -393,17 +393,17 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "newhandle",
           displayName: "New Name",
-        }
+        },
       );
       expect(changeAttempt.success).toBe(false);
       expect(changeAttempt.error).toBe(
-        "User ID has already been set and cannot be changed"
+        "User ID has already been set and cannot be changed",
       );
 
       // Verify original user ID is still set
       const status = await withAuth(t, clerkId).query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(status.userId).toBe("originalhandle");
     });
@@ -460,14 +460,14 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "Updated Name",
-        }
+        },
       );
       expect(updateResult.success).toBe(true);
 
       // Verify the change
       const status = await withAuth(t, clerkId).query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(status.displayName).toBe("Updated Name");
       expect(status.userId).toBe("editableuser"); // Should remain unchanged
@@ -494,7 +494,7 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "",
-        }
+        },
       );
       expect(emptyResult.success).toBe(false);
       expect(emptyResult.error).toBe("Display name cannot be empty");
@@ -504,11 +504,11 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "a".repeat(51),
-        }
+        },
       );
       expect(tooLongResult.success).toBe(false);
       expect(tooLongResult.error).toBe(
-        "Display name must be 50 characters or less"
+        "Display name must be 50 characters or less",
       );
 
       // Test whitespace handling
@@ -516,14 +516,14 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "  Trimmed Name  ",
-        }
+        },
       );
       expect(whitespaceResult.success).toBe(true);
 
       // Verify trimming worked
       const status = await withAuth(t, clerkId).query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(status.displayName).toBe("Trimmed Name");
     });
@@ -539,11 +539,11 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "New Name",
-        }
+        },
       );
       expect(updateResult.success).toBe(false);
       expect(updateResult.error).toBe(
-        "Profile setup must be completed before editing"
+        "Profile setup must be completed before editing",
       );
     });
   });
@@ -555,15 +555,18 @@ describe("User Profile Integration Tests", () => {
       // Try profile operations without authentication
       const statusResult = await t.query(
         api.userProfiles.getCurrentUserProfileStatus,
-        {}
+        {},
       );
       expect(statusResult.hasProfile).toBe(false);
 
       // These should fail gracefully or return appropriate errors
-      const setUserIdResult = await t.mutation(internal.userProfiles.setUserId, {
-        userId: "testhandle",
-        displayName: "Test User",
-      });
+      const setUserIdResult = await t.mutation(
+        internal.userProfiles.setUserId,
+        {
+          userId: "testhandle",
+          displayName: "Test User",
+        },
+      );
       expect(setUserIdResult.success).toBe(false);
       expect(setUserIdResult.error).toBe("Not authenticated");
 
@@ -571,7 +574,7 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "New Name",
-        }
+        },
       );
       expect(updateResult.success).toBe(false);
       expect(updateResult.error).toBe("Not authenticated");
@@ -587,7 +590,7 @@ describe("User Profile Integration Tests", () => {
         {
           userId: "testhandle",
           displayName: "Test User",
-        }
+        },
       );
       expect(setUserIdResult.success).toBe(false);
       expect(setUserIdResult.error).toBe("User record not found");
@@ -596,7 +599,7 @@ describe("User Profile Integration Tests", () => {
         internal.userProfiles.updateUserProfile,
         {
           displayName: "New Name",
-        }
+        },
       );
       expect(updateResult.success).toBe(false);
       expect(updateResult.error).toBe("User record not found");

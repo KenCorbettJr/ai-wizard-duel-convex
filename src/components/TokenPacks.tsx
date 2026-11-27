@@ -97,7 +97,7 @@ export function TokenPacks({
                     at {formatCentsPerDuel(pack)} each
                   </p>
                   <p className={bonus > 0 ? "text-success" : "invisible"}>
-                    {bonus > 0 ? `${bonus} bonus tokens` : "No bonus"}
+                    {bonus > 0 ? `Includes ${bonus} bonus tokens` : "No bonus"}
                   </p>
                 </div>
                 {mode === "buy" && (

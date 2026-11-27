@@ -62,7 +62,9 @@ export function CampaignPathMap({
               className={cn(
                 "h-2 flex-1 rounded-full transition-colors",
                 status === "defeated" && "bg-success",
-                status === "current" && "bg-primary motion-safe:animate-pulse",
+                // Outlined, like the home card: a filled bar read as progress.
+                status === "current" &&
+                  "bg-warning/25 ring-2 ring-inset ring-warning motion-safe:animate-pulse",
                 status === "locked" && "bg-muted",
               )}
             />

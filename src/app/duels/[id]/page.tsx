@@ -26,7 +26,7 @@ export async function generateMetadata({
 
     if (!duelId) {
       return generateCompleteDefaultMetadata({
-        title: "Duel Not Found - AI Wizard Duel",
+        title: "Duel Not Found",
         description:
           "The requested duel could not be found. Join other epic magical battles in the AI Wizard Duel arena.",
       });
@@ -39,7 +39,7 @@ export async function generateMetadata({
 
     if (!duelData) {
       return generateCompleteDefaultMetadata({
-        title: "Duel Not Found - AI Wizard Duel",
+        title: "Duel Not Found",
         description:
           "The requested duel could not be found. Join other epic magical battles in the AI Wizard Duel arena.",
       });

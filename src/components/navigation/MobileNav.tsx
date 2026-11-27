@@ -199,7 +199,10 @@ export function MobileNav() {
                 <ChevronLeft className="h-6 w-6" aria-hidden="true" />
               </button>
             )}
-            <Link href="/" className="inline-flex min-h-11 min-w-0 items-center">
+            <Link
+              href="/"
+              className="inline-flex min-h-11 min-w-0 items-center"
+            >
               <span className="block truncate font-display text-sm font-bold tracking-wide text-gold-gradient min-[400px]:text-base">
                 AI Wizard Duel
               </span>
@@ -228,6 +231,15 @@ export function MobileNav() {
         className="app-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
       >
         <div className="flex h-[var(--app-bottomnav-bar-h)] items-stretch">
+          {/* Placeholders while sign-in state loads, so the bar doesn't
+              collapse to a lone "More" and then jump. */}
+          {!isLoaded &&
+            [0, 1, 2, 3].map((i) => (
+              <div key={i} aria-hidden="true" className={tabClass}>
+                <span className="h-5 w-5 rounded-full bg-muted/60" />
+                <span className="h-2 w-8 rounded bg-muted/40" />
+              </div>
+            ))}
           {isLoaded && (
             <>
               {tabs.map((tab) => (

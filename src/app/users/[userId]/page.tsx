@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { UserProfilePage } from "@/components/UserProfilePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
@@ -25,7 +26,7 @@ export async function generateMetadata({
 
     if (!userProfile) {
       return {
-        title: `User @${decodedUserId} - AI Wizard Duel`,
+        title: `User @${decodedUserId}`,
         description: `User profile for @${decodedUserId} on AI Wizard Duel`,
         robots: "noindex",
       };
@@ -38,18 +39,24 @@ export async function generateMetadata({
   } catch (error) {
     console.error("Error generating metadata for user profile:", error);
     return {
-      title: `User @${decodedUserId} - AI Wizard Duel`,
+      title: `User @${decodedUserId}`,
       description: `User profile for @${decodedUserId} on AI Wizard Duel`,
       robots: "noindex",
     };
   }
 }
 
-export default async function UserProfilePageRoute({
-  params,
-}: UserProfilePageProps) {
+async function UserProfileContent({ params }: UserProfilePageProps) {
   const { userId } = await params;
-  const decodedUserId = decodeURIComponent(userId);
+  return <UserProfilePage userId={decodeURIComponent(userId)} />;
+}
 
-  return <UserProfilePage userId={decodedUserId} />;
+// Reading params inside Suspense keeps the rest of the route prerenderable,
+// the same way the wizard and duel pages do.
+export default function UserProfilePageRoute({ params }: UserProfilePageProps) {
+  return (
+    <Suspense fallback={null}>
+      <UserProfileContent params={params} />
+    </Suspense>
+  );
 }

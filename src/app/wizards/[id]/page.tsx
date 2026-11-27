@@ -24,7 +24,7 @@ export async function generateMetadata({
 
     if (!wizardId) {
       return generateCompleteDefaultMetadata({
-        title: "Invalid Wizard - AI Wizard Duel",
+        title: "Invalid Wizard",
         description:
           "The wizard you're looking for could not be found. Explore other magical wizards in our arena.",
       });
@@ -37,7 +37,7 @@ export async function generateMetadata({
 
     if (!wizard) {
       return generateCompleteDefaultMetadata({
-        title: "Wizard Not Found - AI Wizard Duel",
+        title: "Wizard Not Found",
         description:
           "The wizard you're looking for doesn't exist. Discover other powerful wizards ready for battle.",
       });
@@ -61,7 +61,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error("Error generating wizard metadata:", error);
     return generateCompleteDefaultMetadata({
-      title: "Wizard Profile - AI Wizard Duel",
+      title: "Wizard Profile",
       description:
         "Explore this wizard's magical abilities and battle history in our AI-powered dueling arena.",
     });

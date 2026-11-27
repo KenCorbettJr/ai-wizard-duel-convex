@@ -31,11 +31,11 @@ export function duelOutcomeFor(
 const OUTCOME_CHIP: Record<DuelOutcome, { label: string; className: string }> =
   {
     win: {
-      label: "Won",
+      label: "Victory",
       className: "bg-success/15 text-success border-success/40",
     },
     loss: {
-      label: "Lost",
+      label: "Defeat",
       className: "bg-destructive/15 text-destructive border-destructive/40",
     },
     draw: {

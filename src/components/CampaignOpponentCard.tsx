@@ -4,10 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CheckCircle, Crown, Eye, Lock, Swords } from "lucide-react";
+import { CheckCircle, Eye, Lock } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
-import type { Doc, Id } from "../../convex/_generated/dataModel";
-import type { useStartCampaignBattle } from "@/hooks/useStartCampaignBattle";
+import type { Doc } from "../../convex/_generated/dataModel";
 import {
   CAMPAIGN_TOTAL_OPPONENTS,
   difficultyLabel,
@@ -16,12 +15,10 @@ import {
 import { cn } from "@/lib/utils";
 
 interface CampaignOpponentCardProps {
+  /** The season's relic, named the same way everywhere. */
+  relicName?: string;
   opponent: Doc<"wizards">;
   status: OpponentStatus;
-  /** The player's wizard, needed to start battles. */
-  wizardId: Id<"wizards">;
-  /** Shared battle starter so busy state is consistent across buttons. */
-  battle: ReturnType<typeof useStartCampaignBattle>;
   className?: string;
 }
 
@@ -40,17 +37,14 @@ function luckText(modifier: number): string {
 export function CampaignOpponentCard({
   opponent,
   status,
-  wizardId,
-  battle,
   className,
+  relicName = "Campaign Relic",
 }: CampaignOpponentCardProps) {
-  const { start, isStarting, isBusy } = battle;
   const number = opponent.opponentNumber ?? 0;
   const isBoss = number === CAMPAIGN_TOTAL_OPPONENTS;
   const isLocked = status === "locked";
   const isCurrent = status === "current";
   const isDefeated = status === "defeated";
-  const starting = isStarting(wizardId, number);
 
   return (
     <Card
@@ -96,17 +90,7 @@ export function CampaignOpponentCard({
               isLocked && "bg-muted",
             )}
           >
-            {isLocked ? (
-              <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                {isBoss ? (
-                  <Crown className="h-7 w-7" aria-hidden />
-                ) : (
-                  <span className="text-2xl font-bold" aria-hidden>
-                    ?
-                  </span>
-                )}
-              </div>
-            ) : opponent.illustration ? (
+            {opponent.illustration ? (
               <ConvexImage
                 storageId={opponent.illustration}
                 alt={opponent.name}
@@ -115,6 +99,8 @@ export function CampaignOpponentCard({
                 className={cn(
                   "h-full w-full object-cover",
                   isDefeated && "opacity-80",
+                  // Locked foes are visible but not yet within reach.
+                  isLocked && "opacity-60 grayscale",
                 )}
               />
             ) : (
@@ -125,7 +111,7 @@ export function CampaignOpponentCard({
           </div>
           <div className="min-w-0">
             <h3 className="truncate text-base font-bold leading-tight">
-              {isLocked ? "Mystery Wizard" : opponent.name}
+              {opponent.name}
             </h3>
             <div className="mt-1 flex flex-wrap gap-1">
               <Badge
@@ -137,7 +123,11 @@ export function CampaignOpponentCard({
               >
                 {difficultyLabel(opponent.difficulty)}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge
+                variant="outline"
+                className="text-xs"
+                title="Luck shifts this wizard's d20 roll each round."
+              >
                 {luckText(opponent.luckModifier ?? 0)}
               </Badge>
             </div>
@@ -145,10 +135,12 @@ export function CampaignOpponentCard({
         </div>
 
         {isLocked ? (
-          <p className="text-sm text-muted-foreground">
-            Defeat the opponents before this one to reveal this challenger.
-            {isBoss && " Beat the boss to earn the Campaign Relic."}
-          </p>
+          // The "Locked" tag says enough; only the boss teases its reward.
+          isBoss && (
+            <p className="text-sm text-muted-foreground">
+              Defeat the boss to earn the {relicName} relic.
+            </p>
+          )
         ) : (
           <>
             <p className="line-clamp-3 text-sm text-muted-foreground">
@@ -174,26 +166,9 @@ export function CampaignOpponentCard({
           </>
         )}
 
-        {isCurrent && (
-          <Button
-            className="mt-auto w-full"
-            onClick={() => start(wizardId, number)}
-            disabled={isBusy}
-            aria-label={`Battle ${opponent.name}`}
-          >
-            <Swords className="mr-2 h-4 w-4" aria-hidden />
-            {starting ? "Entering the arena..." : "Battle Now"}
-          </Button>
-        )}
-
         {/* Locked opponents stay a mystery, so only revealed ones link out */}
         {!isLocked && (
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className={cn("w-full", !isCurrent && "mt-auto")}
-          >
+          <Button asChild variant="ghost" size="sm" className="mt-auto w-full">
             <Link href={`/duels/watch?opponent=${opponent._id}`}>
               <Eye className="mr-2 h-4 w-4" aria-hidden />
               Watch battles

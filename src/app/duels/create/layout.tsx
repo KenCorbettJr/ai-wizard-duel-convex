@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Create Duel",
+  title: "Start a Duel",
   description:
     "Set up a new magical battle and challenge other wizards to an epic duel in AI Wizard Duel.",
 };
