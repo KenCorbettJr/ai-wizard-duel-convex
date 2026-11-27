@@ -17,6 +17,10 @@ interface RoundTimelineProps {
    */
   revealedThrough?: number;
   onRevealTo?: (roundNumber: number) => void;
+  /** Show a watched round. Without it, chips scroll the page to the round. */
+  onJumpTo?: (roundNumber: number) => void;
+  /** The round on screen, highlighted. */
+  viewingRound?: number;
 }
 
 const fmt = (n: number) => (n > 0 ? `+${n}` : `${n}`);
@@ -32,6 +36,8 @@ export const RoundTimeline = memo(function RoundTimeline({
   totalRounds,
   revealedThrough,
   onRevealTo,
+  onJumpTo,
+  viewingRound,
 }: RoundTimelineProps) {
   const currentChip = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLOListElement>(null);
@@ -65,6 +71,10 @@ export const RoundTimeline = memo(function RoundTimeline({
       : [];
 
   const jump = (n: number) => {
+    if (onJumpTo) {
+      onJumpTo(n);
+      return;
+    }
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -121,6 +131,7 @@ export const RoundTimeline = memo(function RoundTimeline({
                   : 1
                 : null;
           const isCurrent = r.roundNumber === currentRound && !done;
+          const isViewing = r.roundNumber === viewingRound;
           return (
             <li key={r._id} className="shrink-0">
               <button
@@ -132,7 +143,9 @@ export const RoundTimeline = memo(function RoundTimeline({
                 }
                 ref={isCurrent ? currentChip : undefined}
                 onClick={() => jump(r.roundNumber)}
-                aria-current={isCurrent ? "step" : undefined}
+                aria-current={
+                  isViewing ? "true" : isCurrent ? "step" : undefined
+                }
                 aria-label={`Round ${r.roundNumber}, ${
                   done
                     ? `${roundWinner !== null ? `won by ${wizardNames[roundWinner]}` : "even"}. Health changes: ${wizardNames[0]} ${fmt(changes[0])}, ${wizardNames[1]} ${fmt(changes[1])}`
@@ -144,7 +157,7 @@ export const RoundTimeline = memo(function RoundTimeline({
                   isCurrent
                     ? "border-primary bg-primary/10 font-semibold text-foreground"
                     : "border-border/60 bg-card/80 text-muted-foreground hover:text-foreground"
-                }`}
+                } ${isViewing ? "ring-2 ring-gold/70 text-foreground" : ""}`}
               >
                 <span className="font-semibold">R{r.roundNumber}</span>
                 {done ? (

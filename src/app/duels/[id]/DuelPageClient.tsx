@@ -31,11 +31,20 @@ import {
   ownerLabelOf,
 } from "../../../../convex/lib/wizardNames";
 import { ConvexError } from "convex/values";
-import { Swords, Clock, Sparkles, ScrollText, Share2 } from "lucide-react";
+import {
+  Swords,
+  Clock,
+  Sparkles,
+  ScrollText,
+  Share2,
+  ChevronRight,
+  GalleryHorizontal,
+} from "lucide-react";
 import { Crown } from "@/components/ui/crown-icon";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
 import { DuelRoundCard } from "@/components/DuelRoundCard";
+import { RoundStage } from "@/components/RoundStage";
 import { useConclusionReveal } from "@/hooks/useConclusionReveal";
 import { useReplayProgress } from "@/hooks/useReplayProgress";
 import { ReplayNextStep, type ReplayStep } from "@/components/ReplayNextStep";
@@ -213,11 +222,6 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       round.roundNumber > 0 && round.status === "COMPLETED",
   );
 
-  const latestRoundNumber = useMemo(
-    () => Math.max(0, ...(duel?.rounds ?? []).map((r) => r.roundNumber)),
-    [duel?.rounds],
-  );
-
   const lastResolvedNumber = useMemo(() => {
     const done = (duel?.rounds ?? []).filter(
       (r) =>
@@ -377,15 +381,30 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
 
   const status = duel?.status;
   const currentRoundNumber = duel?.currentRound;
-  const focusComposer = useCallback(() => {
-    setAckedThrough((a) => Math.max(a, lastResolvedNumber));
-    setComposerCollapsed(false);
-    requestAnimationFrame(() => {
-      document
-        .querySelector<HTMLTextAreaElement>(`#${COMPOSER_ID} textarea`)
-        ?.focus();
-    });
-  }, [lastResolvedNumber]);
+  // ---- The stage ----
+  // One round is on screen at a time. `stageRound` is the round the viewer
+  // chose (or a reveal brought up); null shows the newest round they can see.
+  const [stageRound, setStageRound] = useState<number | null>(null);
+  // Which way the last move went, so the new round slides in from that side.
+  const [stageDir, setStageDir] = useState<1 | -1>(1);
+  // A finished duel can also be read as one long page.
+  const [storyMode, setStoryMode] = useState(false);
+  useEffect(() => {
+    try {
+      setStoryMode(localStorage.getItem("duel-view") === "story");
+    } catch {
+      // No storage: start on the stage.
+    }
+  }, []);
+  const chooseStoryMode = useCallback((on: boolean) => {
+    setStoryMode(on);
+    try {
+      localStorage.setItem("duel-view", on ? "story" : "stage");
+    } catch {
+      // Not remembered; fine.
+    }
+  }, []);
+
   const scrollToRound = useCallback((roundNumber: number) => {
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -404,25 +423,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     };
     attempt();
   }, []);
-  const jumpToCurrentRound = useCallback(() => {
-    if (currentRoundNumber !== undefined) scrollToRound(currentRoundNumber);
-  }, [currentRoundNumber, scrollToRound]);
 
-  // Scroll to where the viewer is on first load. After that, only offer a pill.
   const [newRoundPill, setNewRoundPill] = useState<number | null>(null);
-  const following = useRef(true);
-  const scrolledOnce = useRef(false);
-  useEffect(() => {
-    const onScroll = () => {
-      const distance =
-        document.documentElement.scrollHeight -
-        (window.scrollY + window.innerHeight);
-      following.current = distance < window.innerHeight * 1.5;
-      if (following.current) setNewRoundPill(null);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
   const awaitingCastAck =
     status === "IN_PROGRESS" &&
     !!isPlayerInDuel &&
@@ -430,6 +432,113 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     ackedThrough < lastResolvedNumber &&
     currentRound?.status === "WAITING_FOR_SPELLS" &&
     !hasUserCastSpell;
+
+  const visibleRounds = useMemo(
+    () =>
+      (duel?.rounds ?? [])
+        .filter((round: Doc<"duelRounds">) => {
+          if (round.roundNumber <= 0 || revealedThrough === null) return false;
+          if (round.type === "CONCLUSION") {
+            return caughtUp && conclusionRevealed && !revealPending;
+          }
+          if (round.status === "COMPLETED") {
+            return round.roundNumber <= revealedThrough;
+          }
+          // The round in play: only once the viewer is caught up and, for a
+          // player, has chosen to move on to it.
+          return (
+            duel?.status === "IN_PROGRESS" &&
+            caughtUp &&
+            !revealPending &&
+            !awaitingCastAck
+          );
+        })
+        .sort((a, b) => a.roundNumber - b.roundNumber),
+    [
+      duel?.rounds,
+      duel?.status,
+      revealedThrough,
+      caughtUp,
+      conclusionRevealed,
+      revealPending,
+      awaitingCastAck,
+    ],
+  );
+  const stageNumbers = useMemo(
+    () => visibleRounds.map((r) => r.roundNumber),
+    [visibleRounds],
+  );
+  const shownRoundNo =
+    stageRound !== null && stageNumbers.includes(stageRound)
+      ? stageRound
+      : stageNumbers[stageNumbers.length - 1];
+  const shownRoundRef = useRef(shownRoundNo);
+  useLayoutEffect(() => {
+    shownRoundRef.current = shownRoundNo;
+  });
+
+  // Bring the stage into view when the round on it changes, unless its top is
+  // already comfortably on screen. The first load has its own scroll, below.
+  const scrolledOnce = useRef(false);
+  const prevShown = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevShown.current;
+    prevShown.current = shownRoundNo;
+    if (!scrolledOnce.current || shownRoundNo === undefined || storyMode)
+      return;
+    if (prev === shownRoundNo) return;
+    const el = document.getElementById(`round-${shownRoundNo}`);
+    if (!el) return;
+    const sticky =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--duel-sticky-h",
+        ),
+      ) || 160;
+    const top = el.getBoundingClientRect().top;
+    if (top < sticky || top > window.innerHeight * 0.5) {
+      scrollToRound(shownRoundNo);
+    }
+  }, [shownRoundNo, storyMode, scrollToRound]);
+
+  const revealPendingRef = useRef(false);
+  const conclusionRoundNoRef = useRef<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    conclusionRoundNoRef.current = conclusionRoundNo;
+    revealPendingRef.current =
+      !!animating && !animating.done && animating.round !== conclusionRoundNo;
+  });
+
+  /** Put a round on the stage. Leaving a reveal part-way counts as done. */
+  const goToRound = useCallback((n: number) => {
+    stopAllNarration();
+    setAnimating((a) =>
+      a && !a.done && a.round !== n ? { ...a, impact: true, done: true } : a,
+    );
+    setStageDir(n >= (shownRoundRef.current ?? 0) ? 1 : -1);
+    setStageRound(n);
+    setNewRoundPill((p) => (p === n ? null : p));
+  }, []);
+
+  const focusComposer = useCallback(() => {
+    setAckedThrough((a) => Math.max(a, lastResolvedNumber));
+    setComposerCollapsed(false);
+    if (currentRoundNumber !== undefined) {
+      setStageDir(1);
+      setStageRound(currentRoundNumber);
+    }
+    requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLTextAreaElement>(`#${COMPOSER_ID} textarea`)
+        ?.focus();
+    });
+  }, [lastResolvedNumber, currentRoundNumber]);
+  const jumpToCurrentRound = useCallback(() => {
+    if (currentRoundNumber === undefined) return;
+    goToRound(currentRoundNumber);
+    scrollToRound(currentRoundNumber);
+  }, [currentRoundNumber, goToRound, scrollToRound]);
+
   // Live: the round in play. Replaying: the last round watched (none at 0).
   const initialScrollTarget =
     revealedThrough === null
@@ -447,75 +556,41 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   useLayoutEffect(() => {
     initialScrollRef.current = initialScrollTarget;
   });
+  // On first load, bring the stage into view once, unless the viewer has
+  // already started scrolling.
   useEffect(() => {
-    if (revealedThrough === null) return;
-    if (!scrolledOnce.current) {
-      if (initialScrollRef.current === null) {
-        scrolledOnce.current = true;
-        return;
-      }
-      const go = () => {
-        if (initialScrollRef.current !== null)
-          scrollToRound(initialScrollRef.current);
-      };
-      // First load: bring the active round into view.
-      let interacted = false;
-      const stop = () => {
-        interacted = true;
-      };
-      const events = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
-      events.forEach((ev) =>
-        window.addEventListener(ev, stop, { passive: true, once: true }),
-      );
-      const t = setTimeout(() => {
-        scrolledOnce.current = true;
-        go();
-      }, 300);
-      // Images and narration can shift the layout, so settle once more.
-      const t2 = setTimeout(() => {
-        if (!interacted) go();
-      }, 2000);
-      return () => {
-        clearTimeout(t);
-        clearTimeout(t2);
-        events.forEach((ev) => window.removeEventListener(ev, stop));
-      };
-    }
+    if (revealedThrough === null || scrolledOnce.current) return;
+    scrolledOnce.current = true;
+    const target = initialScrollRef.current;
+    if (target === null) return;
+    let interacted = false;
+    const stop = () => {
+      interacted = true;
+    };
+    const events = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+    events.forEach((ev) =>
+      window.addEventListener(ev, stop, { passive: true, once: true }),
+    );
+    const t = setTimeout(() => {
+      if (!interacted && shownRoundRef.current !== undefined)
+        scrollToRound(shownRoundRef.current);
+    }, 300);
+    return () => {
+      clearTimeout(t);
+      events.forEach((ev) => window.removeEventListener(ev, stop));
+    };
   }, [revealedThrough, scrollToRound]);
 
-  const revealPendingRef = useRef(false);
-  const conclusionRoundNoRef = useRef<number | undefined>(undefined);
-  useLayoutEffect(() => {
-    conclusionRoundNoRef.current = conclusionRoundNo;
-    revealPendingRef.current =
-      !!animating && !animating.done && animating.round !== conclusionRoundNo;
-  });
   /** Reveal every round up to `n` and play the reveal of round `n`. */
-  const revealTo = useCallback(
-    (n: number) => {
-      stopAllNarration();
-      setRevealedThrough((prev) => Math.max(prev ?? 0, n));
-      setAnimating({ round: n, token: Date.now(), impact: false, done: false });
-      setWatchedHere(true);
-      setNewRoundPill(null);
-      scrollToRound(n);
-      // Older rounds collapse as the replay moves on, which can shift the
-      // page; correct once if the new round ended up out of place.
-      setTimeout(() => {
-        const top = document
-          .getElementById(`round-${n}`)
-          ?.getBoundingClientRect().top;
-        const sticky =
-          parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue(
-              "--duel-sticky-h",
-            ),
-          ) || 160;
-        if (top !== undefined && Math.abs(top - sticky) > 160) scrollToRound(n);
-      }, 900);
-    },
-    [scrollToRound],
-  );
+  const revealTo = useCallback((n: number) => {
+    stopAllNarration();
+    setRevealedThrough((prev) => Math.max(prev ?? 0, n));
+    setAnimating({ round: n, token: Date.now(), impact: false, done: false });
+    setWatchedHere(true);
+    setNewRoundPill(null);
+    setStageDir(1);
+    setStageRound(n);
+  }, []);
   const onRevealImpact = useCallback((n: number) => {
     setAnimating((a) => (a && a.round === n ? { ...a, impact: true } : a));
   }, []);
@@ -534,10 +609,11 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     }
   }, []);
 
-  // When a round resolves while the viewer is caught up, play its reveal and
-  // bring it into view if they're following along. Otherwise offer a pill, so
-  // nobody is pulled away from what they were reading. A layout effect, so the
-  // finished round never paints before its reveal starts.
+  // When a round resolves while the viewer is caught up and on the newest
+  // round, put it on the stage and start its reveal, which then waits for
+  // them at the first beat. Anyone looking back at an older round gets a pill
+  // instead. A layout effect, so the finished round never paints before its
+  // reveal starts.
   const prevResolved = useRef<number | null>(null);
   useLayoutEffect(() => {
     if (revealedThrough === null) return;
@@ -546,12 +622,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     if (prev === null || lastResolvedNumber <= prev) return;
     // Still replaying earlier rounds: the new one waits its turn.
     if (revealedThrough < prev) return;
-    // Mid-reveal, or scrolled away reading: don't play it where it can't be
-    // seen. The "continue" step (and a pill) offer it instead.
-    const distance =
-      document.documentElement.scrollHeight -
-      (window.scrollY + window.innerHeight);
-    if (revealPendingRef.current || distance > window.innerHeight * 1.5) {
+    const viewing = shownRoundRef.current;
+    if (revealPendingRef.current || (viewing !== undefined && viewing < prev)) {
       setNewRoundPill(lastResolvedNumber);
       return;
     }
@@ -563,8 +635,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       done: false,
     });
     setWatchedHere(true);
-    setTimeout(() => scrollToRound(lastResolvedNumber), 400);
-  }, [lastResolvedNumber, revealedThrough, scrollToRound]);
+    setStageDir(1);
+    setStageRound(lastResolvedNumber);
+  }, [lastResolvedNumber, revealedThrough]);
 
   // Health and points as of the rounds the viewer has seen, so the scoreboard
   // doesn't give away rounds they haven't watched. The round being revealed
@@ -576,51 +649,19 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         ? Math.min(revealedThrough, animating.round - 1)
         : revealedThrough;
   // Looking back over a finished duel: the scoreboard follows the round on
-  // screen, and only shows the final result once the reader reaches it.
+  // the stage, and only shows the final result on the last round.
   const reviewing =
-    duel?.status === "COMPLETED" && caughtUp && showWinner && !animating;
-  const [followRound, setFollowRound] = useState<number | null>(0);
-  useEffect(() => {
-    if (!reviewing) return;
-    let raf = 0;
-    const measure = () => {
-      raf = 0;
-      const board = document.querySelector(".duel-scoreboard");
-      const line =
-        (board?.getBoundingClientRect().bottom ?? 0) +
-        window.innerHeight * 0.25;
-      const end = [
-        conclusionRoundNo !== undefined
-          ? document.getElementById(`round-${conclusionRoundNo}`)
-          : null,
-        document.getElementById("duel-result"),
-      ].find(Boolean);
-      const atBottom =
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - 4;
-      if (atBottom || (end && end.getBoundingClientRect().top < line)) {
-        setFollowRound(null);
-        return;
-      }
-      let current = 0;
-      for (const n of completedRoundNumbers) {
-        const el = document.getElementById(`round-${n}`);
-        if (el && el.getBoundingClientRect().top < line) current = n;
-      }
-      setFollowRound(current);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(measure);
-    };
-    raf = requestAnimationFrame(measure);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [reviewing, completedRoundNumbers, conclusionRoundNo]);
+    duel?.status === "COMPLETED" &&
+    caughtUp &&
+    showWinner &&
+    (!animating || animating.done);
+  const followRound =
+    !storyMode &&
+    shownRoundNo !== undefined &&
+    shownRoundNo !== conclusionRoundNo &&
+    shownRoundNo < lastResolvedNumber
+      ? shownRoundNo
+      : null;
   const followingRounds = reviewing && followRound !== null;
   const scoreThrough =
     reviewing && followRound !== null ? followRound : displayedThrough;
@@ -752,10 +793,15 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   };
 
   const skipToResult = () => {
-    const el = document.getElementById("duel-result");
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.focus({ preventScroll: true });
+    // The result sits under the last round, so put that round on the stage.
+    const last = stageNumbers[stageNumbers.length - 1];
+    if (last !== undefined) goToRound(last);
+    setTimeout(() => {
+      const el = document.getElementById("duel-result");
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.focus({ preventScroll: true });
+    }, 150);
   };
 
   const handleReveal = () => {
@@ -771,10 +817,12 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         impact: false,
         done: false,
       });
-      scrollToRound(conclusionRound.roundNumber);
+      setStageDir(1);
+      setStageRound(conclusionRound.roundNumber);
       return;
     }
     setAnimating(null);
+    setStageRound(null);
     // Bring the result into view once it has rendered.
     setTimeout(() => {
       const el = document.getElementById("duel-result");
@@ -988,7 +1036,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             ? undefined
             : displayedThrough
       }
-      onRevealTo={revealTo}
+      onRevealTo={reviewing ? goToRound : revealTo}
+      onJumpTo={storyMode && reviewing ? undefined : goToRound}
+      viewingRound={storyMode && reviewing ? undefined : shownRoundNo}
     />
   );
 
@@ -1309,7 +1359,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         impact: false,
         done: false,
       });
-      scrollToRound(conclusionRound.roundNumber);
+      setStageDir(1);
+      setStageRound(conclusionRound.roundNumber);
     } else if (nextStep.kind === "cast") {
       focusComposer();
     }
@@ -1321,25 +1372,38 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       ? () => revealTo(lastResolvedNumber)
       : undefined;
 
-  const visibleRounds = (duel.rounds ?? [])
-    .filter((round: Doc<"duelRounds">) => round.roundNumber > 0)
-    .filter((round: Doc<"duelRounds">) => {
-      if (revealedThrough === null) return false;
-      if (round.type === "CONCLUSION") {
-        return caughtUp && conclusionRevealed && !revealPending;
-      }
-      if (round.status === "COMPLETED") {
-        return round.roundNumber <= revealedThrough;
-      }
-      // The round in play: only once the viewer is caught up and, for a
-      // player, has chosen to move on to it.
-      return (
-        duel.status === "IN_PROGRESS" &&
-        caughtUp &&
-        !revealPending &&
-        !awaitingCastAck
-      );
-    });
+  // What the stage shows, and where its arrows go.
+  const storyView = storyMode && reviewing && visibleRounds.length > 0;
+  const shownRound = visibleRounds.find((r) => r.roundNumber === shownRoundNo);
+  const stageIdx =
+    shownRoundNo === undefined ? -1 : stageNumbers.indexOf(shownRoundNo);
+  const prevStageNo = stageIdx > 0 ? stageNumbers[stageIdx - 1] : undefined;
+  const laterStageNo = stageIdx >= 0 ? stageNumbers[stageIdx + 1] : undefined;
+  const onNewestRound = laterStageNo === undefined;
+  const nextIsStep =
+    laterStageNo === undefined &&
+    !!nextStep &&
+    nextStep.kind !== "writing-conclusion";
+  const stageNextLabel =
+    laterStageNo !== undefined
+      ? laterStageNo === conclusionRoundNo
+        ? "On to the conclusion"
+        : `On to round ${laterStageNo}`
+      : !nextIsStep || !nextStep
+        ? undefined
+        : nextStep.kind === "conclusion"
+          ? "Reveal the conclusion"
+          : nextStep.kind === "cast"
+            ? `On to round ${nextStep.round}`
+            : nextStep.kind === "next"
+              ? `Watch round ${nextStep.round}`
+              : "Watch the first round";
+  const stageNextGo =
+    laterStageNo !== undefined
+      ? () => goToRound(laterStageNo)
+      : nextIsStep
+        ? handleNextStep
+        : undefined;
 
   return (
     <div className="min-h-screen">
@@ -1432,7 +1496,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   if (target > (revealedThrough ?? 0) && !revealPending) {
                     revealTo(target);
                   } else {
-                    scrollToRound(target);
+                    goToRound(target);
                   }
                 }}
               >
@@ -1852,9 +1916,23 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </details>
           )}
 
-          {/* Individual Round Cards */}
-          {visibleRounds.length > 0 && (
+          {/* The rounds: one at a time on the stage, or (for a finished
+              duel the viewer has seen through) all on one page. */}
+          {storyView ? (
             <div className="space-y-6">
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => chooseStoryMode(false)}
+                >
+                  <GalleryHorizontal
+                    className="mr-1 h-4 w-4"
+                    aria-hidden="true"
+                  />
+                  One round at a time
+                </Button>
+              </div>
               {visibleRounds.map((round: Doc<"duelRounds">) => (
                 <DuelRoundCard
                   key={round._id}
@@ -1862,14 +1940,60 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   duel={duel}
                   wizard1={wizard1}
                   wizard2={wizard2}
-                  isLatest={
-                    reviewing ||
-                    round.roundNumber === latestRoundNumber ||
-                    round.roundNumber >=
-                      (revealedThrough ?? lastResolvedNumber) - 1
-                  }
+                  conclusionRevealed={conclusionRevealed}
+                />
+              ))}
+            </div>
+          ) : (
+            shownRound && (
+              <RoundStage
+                label={
+                  shownRound.type === "CONCLUSION"
+                    ? "Conclusion"
+                    : `Round ${shownRound.roundNumber}`
+                }
+                sublabel={
+                  shownRound.type !== "CONCLUSION" &&
+                  typeof duel.numberOfRounds === "number"
+                    ? `of ${duel.numberOfRounds}`
+                    : undefined
+                }
+                onPrev={
+                  prevStageNo !== undefined
+                    ? () => goToRound(prevStageNo)
+                    : undefined
+                }
+                prevLabel={
+                  prevStageNo !== undefined
+                    ? `Back to round ${prevStageNo}`
+                    : undefined
+                }
+                onNext={stageNextGo}
+                nextLabel={stageNextLabel}
+                transitionKey={shownRound._id}
+                direction={stageDir}
+                extra={
+                  reviewing ? (
+                    <button
+                      type="button"
+                      onClick={() => chooseStoryMode(true)}
+                      className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                    >
+                      Show every round on one page
+                    </button>
+                  ) : undefined
+                }
+              >
+                <DuelRoundCard
+                  round={shownRound}
+                  duel={duel}
+                  wizard1={wizard1}
+                  wizard2={wizard2}
+                  // Only while it plays: coming back to a watched round
+                  // mounts it again, and that mustn't replay it.
                   revealToken={
-                    animating?.round === round.roundNumber
+                    animating?.round === shownRound.roundNumber &&
+                    !animating.done
                       ? animating.token
                       : undefined
                   }
@@ -1877,11 +2001,27 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   onRevealComplete={onRevealComplete}
                   conclusionRevealed={conclusionRevealed}
                 />
-              ))}
+              </RoundStage>
+            )
+          )}
+
+          {/* A later round the viewer can already see: one tap away. */}
+          {!storyView && laterStageNo !== undefined && !revealPending && (
+            <div className="mb-8 flex justify-center">
+              <Button
+                size="lg"
+                variant="gold"
+                onClick={() => goToRound(laterStageNo)}
+              >
+                {laterStageNo === conclusionRoundNo
+                  ? "On to the conclusion"
+                  : `On to round ${laterStageNo}`}
+                <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+              </Button>
             </div>
           )}
 
-          {nextStep && (
+          {nextStep && onNewestRound && (
             <div id="replay-next" className="scroll-mb-8">
               <ReplayNextStep
                 step={nextStep}
@@ -1902,7 +2042,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </div>
           )}
 
-          {resultCard}
+          {(storyView || onNewestRound) && resultCard}
         </div>
       </div>
     </div>
