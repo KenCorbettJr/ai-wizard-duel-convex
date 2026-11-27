@@ -52,6 +52,8 @@ interface CampaignHomeCardProps {
   /** Token balance, when known. Premium players pass `unlimited` instead. */
   tokens?: number;
   unlimited?: boolean;
+  /** Set while a sponsor makes battles free; pass `unlimited` too. */
+  sponsorName?: string;
   /** A duel is waiting on the player, so it owns the filled button. */
   deferPrimary?: boolean;
 }
@@ -245,6 +247,7 @@ export function CampaignHomeCard({
   onCreateWizard,
   tokens,
   unlimited,
+  sponsorName,
   deferPrimary,
 }: CampaignHomeCardProps) {
   const [chosenId, setChosenId] = useState<string | null>(null);
@@ -349,7 +352,9 @@ export function CampaignHomeCard({
   const outOfTokens = !unlimited && tokens === 0;
   const lowTokens = !unlimited && tokens !== undefined && tokens <= 2;
   const tokenNote = unlimited
-    ? "Premium: battles are free"
+    ? sponsorName
+      ? `Free battles, thanks to ${sponsorName}`
+      : "Premium: battles are free"
     : outOfTokens
       ? "You are out of tokens"
       : lowTokens

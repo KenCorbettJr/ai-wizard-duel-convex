@@ -4,7 +4,8 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Badge } from "./ui/badge";
-import { Coins, Crown } from "lucide-react";
+import { Coins, Crown, Sparkles } from "lucide-react";
+import { useSponsorship } from "./SponsorBanner";
 
 interface CreditDisplayProps {
   className?: string;
@@ -36,6 +37,8 @@ export function CreditDisplay({
     api.users.getUserByClerkId,
     user?.id ? { clerkId: user.id } : "skip",
   );
+
+  const sponsorship = useSponsorship();
 
   if (!user) {
     return null;
@@ -71,6 +74,15 @@ export function CreditDisplay({
           <>
             <Crown className={`${iconSizes[size]} text-gold`} />
             <span>Unlimited</span>
+          </>
+        ) : sponsorship?.coversYou ? (
+          <>
+            <Sparkles className={`${iconSizes[size]} text-gold`} />
+            <span
+              title={`Duels are free, sponsored by ${sponsorship.sponsorName}`}
+            >
+              Free
+            </span>
           </>
         ) : (
           <>

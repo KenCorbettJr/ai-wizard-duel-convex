@@ -68,8 +68,7 @@ export function CreditUsageHistory({
 
   const getTransactionIcon = (type: string, source: string) => {
     if (type === "EARNED") {
-      if (source === "PURCHASE")
-        return <Coins className="h-4 w-4 text-gold" />;
+      if (source === "PURCHASE") return <Coins className="h-4 w-4 text-gold" />;
       if (source === "AD_REWARD")
         return <Gift className="h-4 w-4 text-success" />;
       if (source === "REFERRAL_BONUS")
@@ -181,6 +180,11 @@ export function CreditUsageHistory({
                     <span className="text-sm font-medium">
                       {getSourceLabel(transaction.source)}
                     </span>
+                    {transaction.metadata?.sponsorName && (
+                      <span className="text-xs text-muted-foreground">
+                        Sponsored by {transaction.metadata.sponsorName}
+                      </span>
+                    )}
                     <Badge
                       variant="outline"
                       className={`text-xs ${getTransactionColor(transaction.type)}`}
@@ -198,11 +202,21 @@ export function CreditUsageHistory({
                 <div
                   className={`text-sm font-semibold ${getTransactionColor(transaction.type)}`}
                 >
-                  {transaction.type === "CONSUMED" ? "-" : "+"}
-                  {transaction.amount}
+                  {transaction.metadata?.sponsorName ? (
+                    "Free"
+                  ) : (
+                    <>
+                      {transaction.type === "CONSUMED" ? "-" : "+"}
+                      {transaction.amount}
+                    </>
+                  )}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {transaction.type === "CONSUMED" ? "used" : "earned"}
+                  {transaction.metadata?.sponsorName
+                    ? "sponsored"
+                    : transaction.type === "CONSUMED"
+                      ? "used"
+                      : "earned"}
                 </div>
               </div>
             </div>

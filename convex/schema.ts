@@ -200,6 +200,8 @@ export default defineSchema({
     // accept or decline it; nobody else can join by code.
     challengedUserId: v.optional(v.string()),
     challengedWizardId: v.optional(v.id("wizards")),
+    // Set when a sponsor paid for at least one player's entry
+    sponsorshipId: v.optional(v.id("sponsorships")),
   })
     .index("by_status", ["status"])
     .index("by_challenged_user_and_status", ["challengedUserId", "status"])
@@ -645,4 +647,32 @@ export default defineSchema({
     .index("by_live_views", ["liveViews"])
     .index("by_peak_onlookers", ["peakOnlookers"])
     .index("by_last_viewed_at", ["lastViewedAt"]),
+  // A sponsor paying for players' duels for a while. While one is running,
+  // duel entries and campaign battles cost players no tokens. Windows never
+  // overlap, so at most one runs at a time.
+  sponsorships: defineTable({
+    sponsorName: v.string(),
+    message: v.optional(v.string()), // Shown in the site banner
+    url: v.optional(v.string()), // The sponsor's site (https only)
+    logoStorageId: v.optional(v.id("_storage")), // PNG, JPEG, WebP or SVG
+    startsAt: v.number(),
+    endsAt: v.number(),
+    maxEntries: v.optional(v.number()), // Budget: total entries the sponsor covers
+    dailyEntriesPerPlayer: v.optional(v.number()), // Fair-use limit per player per UTC day
+    entriesUsed: v.number(),
+    endedEarlyAt: v.optional(v.number()),
+    createdBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_ends_at", ["endsAt"]),
+  // Sponsored entries per player per UTC day, for the fair-use limit and
+  // the admin's player count.
+  sponsorshipUsage: defineTable({
+    sponsorshipId: v.id("sponsorships"),
+    userId: v.string(),
+    day: v.string(), // YYYY-MM-DD, UTC
+    entries: v.number(),
+  })
+    .index("by_sponsorship_user_day", ["sponsorshipId", "userId", "day"])
+    .index("by_sponsorship", ["sponsorshipId"]),
 });

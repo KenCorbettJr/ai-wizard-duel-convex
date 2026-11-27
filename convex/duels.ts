@@ -79,6 +79,7 @@ export const getPlayerDuels = query({
       forfeitedBy: v.optional(v.id("wizards")),
       challengedUserId: v.optional(v.string()),
       challengedWizardId: v.optional(v.id("wizards")),
+      sponsorshipId: v.optional(v.id("sponsorships")),
     }),
   ),
   handler: async (ctx) => {
@@ -179,6 +180,7 @@ export const getDuelInternal = internalQuery({
       forfeitedBy: v.optional(v.id("wizards")),
       challengedUserId: v.optional(v.string()),
       challengedWizardId: v.optional(v.id("wizards")),
+      sponsorshipId: v.optional(v.id("sponsorships")),
       rounds: v.array(
         v.object({
           _id: v.id("duelRounds"),
@@ -1453,6 +1455,7 @@ export const getActiveDuels = query({
       forfeitedBy: v.optional(v.id("wizards")),
       challengedUserId: v.optional(v.string()),
       challengedWizardId: v.optional(v.id("wizards")),
+      sponsorshipId: v.optional(v.id("sponsorships")),
     }),
   ),
   handler: async (ctx) => {
@@ -1628,6 +1631,7 @@ export const getWatchableDuels = query({
         forfeitedBy: v.optional(v.id("wizards")),
         challengedUserId: v.optional(v.string()),
         challengedWizardId: v.optional(v.id("wizards")),
+        sponsorshipId: v.optional(v.id("sponsorships")),
         // Spoiler-free hook: the spells cast in the first resolved round.
         openings: v.array(
           v.object({ wizardId: v.id("wizards"), spell: v.string() }),

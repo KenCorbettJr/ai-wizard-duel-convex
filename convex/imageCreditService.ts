@@ -1,6 +1,7 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { refundWizardImageToken as refundToken } from "./lib/wizardImageTokens";
+import { sponsoredSeatsFor } from "./lib/sponsorship";
 
 // Credit source types
 const CreditSource = v.union(
@@ -73,8 +74,9 @@ export const hasImageCreditsForDuel = query({
       return true;
     }
 
-    // Check if user has at least 1 credit
-    return user.imageCredits > 0;
+    // Check if user has at least 1 credit, or a sponsor covers their entry
+    if (user.imageCredits > 0) return true;
+    return (await sponsoredSeatsFor(ctx, args.userId, 1, Date.now())) > 0;
   },
 });
 

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { LeftSidebar } from "./LeftSidebar";
+import { SponsorBanner } from "./SponsorBanner";
 import { UserInitializer } from "./UserInitializer";
 
 interface AppLayoutProps {
@@ -20,7 +21,10 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Don't show sidebar on home page */}
       {isHomePage ? (
-        <main id="main-content">{children}</main>
+        <main id="main-content">
+          <SponsorBanner />
+          {children}
+        </main>
       ) : (
         <div className="min-h-screen">
           <LeftSidebar />
@@ -30,6 +34,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             id="main-content"
             className="md:ml-64 pt-[var(--app-navbar-h)] pb-[var(--app-bottomnav-h)] md:pt-0 md:pb-0"
           >
+            <SponsorBanner />
             {children}
           </main>
         </div>

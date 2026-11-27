@@ -1198,6 +1198,9 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     Campaign Battle
                   </Badge>
                 )}
+                {duel.sponsorshipId && (
+                  <SponsorCredit sponsorshipId={duel.sponsorshipId} />
+                )}
                 {duel.status !== "CANCELLED" && (
                   <OnlookerCount
                     duelId={duel._id}
@@ -1779,5 +1782,46 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** "Sponsored by …" on a duel a sponsor paid for. */
+function SponsorCredit({
+  sponsorshipId,
+}: {
+  sponsorshipId: Id<"sponsorships">;
+}) {
+  const sponsor = useQuery(api.sponsorships.getDuelSponsor, { sponsorshipId });
+  if (!sponsor) return null;
+  const label = (
+    <>
+      {sponsor.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={sponsor.logoUrl}
+          alt=""
+          className="h-4 max-w-16 rounded-sm bg-white object-contain px-0.5"
+        />
+      ) : (
+        <Sparkles className="h-3 w-3 text-gold" aria-hidden="true" />
+      )}
+      Sponsored by {sponsor.sponsorName}
+    </>
+  );
+  return (
+    <Badge variant="outline" className="flex items-center gap-1 border-gold/50">
+      {sponsor.url ? (
+        <a
+          href={sponsor.url}
+          target="_blank"
+          rel="sponsored noopener noreferrer"
+          className="flex items-center gap-1 hover:underline"
+        >
+          {label}
+        </a>
+      ) : (
+        label
+      )}
+    </Badge>
   );
 }

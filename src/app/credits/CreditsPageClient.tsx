@@ -11,6 +11,7 @@ import {
   Coins,
   Gift,
   Infinity as InfinityIcon,
+  Sparkles,
   Swords,
   XCircle,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import { CreditUsageHistory } from "@/components/CreditUsageHistory";
 import { PageHeader } from "@/components/PageHeader";
 import { TokenPacks } from "@/components/TokenPacks";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { formatSponsorEnd, useSponsorship } from "@/components/SponsorBanner";
 
 export function CreditsPageClient() {
   const { user } = useUser();
@@ -37,6 +39,7 @@ export function CreditsPageClient() {
     api.imageCreditService.getUserImageCredits,
     user?.id ? { userId: user.id } : "skip",
   );
+  const sponsorship = useSponsorship();
   const referral = useQuery(
     api.referrals.getMyReferralInfo,
     user?.id ? {} : "skip",
@@ -124,6 +127,26 @@ export function CreditsPageClient() {
           </CardContent>
         </Card>
 
+        {/* A sponsor is paying for duels right now */}
+        {sponsorship && (
+          <div className="flex items-start gap-3 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm">
+            <Sparkles
+              className="mt-0.5 h-5 w-5 shrink-0 text-gold"
+              aria-hidden="true"
+            />
+            <p>
+              <strong>{sponsorship.sponsorName}</strong> is sponsoring AI Wizard
+              Duel, so duels and campaign battles are free until{" "}
+              {formatSponsorEnd(sponsorship.endsAt)}
+              {sponsorship.dailyEntriesPerPlayer !== null &&
+                ` (up to ${sponsorship.dailyEntriesPerPlayer} a day each)`}
+              . Your tokens stay put for later.
+              {sponsorship.coversYou === false &&
+                " You've used today's free entries, so duels use tokens again until tomorrow (UTC)."}
+            </p>
+          </div>
+        )}
+
         {/* Joined through an invite: their bonus waits on a first duel. */}
         {referral?.invitedBy && !referral.invitedBy.rewarded && (
           <div className="flex items-start gap-3 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm">
@@ -177,6 +200,15 @@ export function CreditsPageClient() {
           <p className="text-center text-xs text-muted-foreground">
             Secure checkout by Stripe. Tokens never expire and can&apos;t be
             exchanged for cash.
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Run a company that wants to make duels free for everyone?{" "}
+            <Link
+              href="/sponsor"
+              className="font-medium text-gold underline-offset-4 hover:underline"
+            >
+              Sponsor AI Wizard Duel
+            </Link>
           </p>
         </section>
 
