@@ -158,9 +158,9 @@ export function GrantCreditsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] sm:w-full">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center justify-center gap-2 sm:justify-start">
             <Coins className="h-5 w-5 text-gold" />
             Grant Tokens
           </DialogTitle>

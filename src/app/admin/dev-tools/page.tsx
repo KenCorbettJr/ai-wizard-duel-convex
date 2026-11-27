@@ -69,7 +69,8 @@ export default function DevToolsPage() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <PageHeader
-            title="Development Tools"
+            title="Dev Tools"
+            compactOnMobile
             description="Admin utilities for development and testing (development mode
               only)"
             icon={<Settings className="h-6 w-6" aria-hidden="true" />}
@@ -97,7 +98,7 @@ export default function DevToolsPage() {
                       <Label className="text-sm font-medium">
                         Clerk Subject
                       </Label>
-                      <p className="text-sm text-muted-foreground font-mono">
+                      <p className="text-sm text-muted-foreground font-mono break-all">
                         {currentUserDebug.subject}
                       </p>
                     </div>
@@ -107,7 +108,9 @@ export default function DevToolsPage() {
                       </Label>
                       {currentUserDebug.databaseUser ? (
                         <div className="text-sm text-muted-foreground">
-                          <p>Email: {currentUserDebug.databaseUser.email}</p>
+                          <p className="break-all">
+                            Email: {currentUserDebug.databaseUser.email}
+                          </p>
                           <p>
                             Role:{" "}
                             <span className="font-semibold">
@@ -172,7 +175,7 @@ export default function DevToolsPage() {
                       className="flex items-center justify-between p-3 border rounded-lg"
                     >
                       <div>
-                        <p className="font-medium">{user.email}</p>
+                        <p className="break-all font-medium">{user.email}</p>
                         <p className="text-sm text-muted-foreground">
                           Created:{" "}
                           {new Date(user.createdAt).toLocaleDateString()}

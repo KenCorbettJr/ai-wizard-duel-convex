@@ -2,74 +2,12 @@
 
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import {
-  Settings,
-  BarChart3,
-  Wrench,
-  Swords,
-  Users,
-  Shield,
-  ArrowRight,
-  Crown,
-  Coins,
-} from "lucide-react";
+import { ChevronRight, Swords, Users, Shield, Crown } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { PageHeader } from "@/components/PageHeader";
-
-const adminFeatures = [
-  {
-    title: "Platform Statistics",
-    description: "Monitor platform-wide duel analytics and user engagement",
-    href: "/admin/platform-stats",
-    icon: BarChart3,
-    color: "text-info",
-    bgColor: "bg-info/10",
-  },
-  {
-    title: "AI Costs",
-    description: "Track estimated spend on AI text and image generation",
-    href: "/admin/ai-costs",
-    icon: Coins,
-    color: "text-warning",
-    bgColor: "bg-warning/10",
-  },
-  {
-    title: "User Management",
-    description: "View and manage users, grant tokens, and monitor activity",
-    href: "/admin/users",
-    icon: Users,
-    color: "text-success",
-    bgColor: "bg-success/10",
-  },
-  {
-    title: "Campaign Opponents",
-    description: "Create, edit, and manage the 10 campaign opponents",
-    href: "/admin/campaign-opponents",
-    icon: Settings,
-    color: "text-primary",
-    bgColor: "bg-primary/8",
-  },
-  {
-    title: "Dev Tools",
-    description: "Development utilities and user management tools",
-    href: "/admin/dev-tools",
-    icon: Wrench,
-    color: "text-warning",
-    bgColor: "bg-warning/10",
-    developmentOnly: true,
-  },
-  {
-    title: "Duel Management",
-    description: "Advanced duel administration and moderation tools",
-    href: "/admin/duels",
-    icon: Swords,
-    color: "text-destructive",
-    bgColor: "bg-destructive/10",
-  },
-];
+import { getVisibleAdminNavItems } from "@/components/AdminNavigation";
 
 export default function AdminDashboardPage() {
   const platformStats = useQuery(api.adminUsers.getPlatformStats);
@@ -79,82 +17,70 @@ export default function AdminDashboardPage() {
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <SuperAdminOnly>
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <PageHeader
               className="mb-0"
-              title="Super Admin Dashboard"
+              title="Admin Dashboard"
               description="Administrative tools and platform management"
               icon={<Shield className="h-6 w-6" aria-hidden="true" />}
             />
 
             {/* Admin Access Notice */}
-            <Card className="border-warning/40 bg-warning/10">
-              <CardContent className="py-4">
-                <div className="flex items-center gap-3">
-                  <Crown className="h-5 w-5 text-warning" />
-                  <div>
-                    <p className="font-medium text-warning">
-                      Super Administrator Access
-                    </p>
-                    <p className="text-sm text-warning">
-                      You have full administrative privileges. All actions are
-                      logged and monitored.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <p className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+              <Crown className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                <span className="font-medium">Super administrator access.</span>{" "}
+                All actions are logged.
+              </span>
+            </p>
           </div>
 
-          {/* Admin Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminFeatures.map((feature) => {
-              const Icon = feature.icon;
-
-              return (
-                <Card
-                  key={feature.href}
-                  className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1"
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className={`p-3 rounded-lg ${feature.bgColor}`}>
-                        <Icon className={`h-6 w-6 ${feature.color}`} />
-                      </div>
-                      {feature.developmentOnly && (
-                        <span className="px-2 py-1 text-xs font-medium bg-muted text-foreground rounded">
-                          Dev Only
-                        </span>
-                      )}
-                    </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-                      {feature.description}
-                    </p>
-                    <Button
-                      asChild
-                      className="w-full group- transition-colors"
-                      size="sm"
-                    >
-                      <Link href={feature.href}>
-                        Access Tool
-                        <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          {/* Admin tools: the whole card is the link */}
+          <nav
+            aria-label="Admin tools"
+            className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-3"
+          >
+            {getVisibleAdminNavItems()
+              .filter((item) => item.href !== "/admin")
+              .map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="group flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/50 hover:bg-accent/40 active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  >
+                    <span className="rounded-lg bg-primary/10 p-2.5 text-primary">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2 font-semibold text-foreground">
+                        {item.label}
+                        {item.developmentOnly && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
+                            DEV
+                          </span>
+                        )}
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        {item.description}
+                      </span>
+                    </span>
+                    <ChevronRight
+                      className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                );
+              })}
+          </nav>
 
           {/* Quick Stats Section */}
-          <div className="mt-12">
-            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+          <div className="mt-8 sm:mt-12">
+            <h2 className="font-display text-xl font-bold text-foreground mb-4 sm:text-2xl sm:mb-6">
               Quick Overview
             </h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -193,7 +119,7 @@ export default function AdminDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="col-span-2 md:col-span-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     System Status

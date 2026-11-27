@@ -64,7 +64,9 @@ function Score({ label, value }: { label: string; value: number }) {
   return (
     <div className="text-center">
       <div className="text-lg font-semibold">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="truncate text-[11px] text-muted-foreground sm:text-xs">
+        {label}
+      </div>
     </div>
   );
 }
@@ -82,7 +84,7 @@ function RatingRow({
   const title = row.wizardNames.join(" vs ");
   return (
     <Card className={highlighted ? "ring-2 ring-gold/60" : undefined}>
-      <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center">
+      <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center">
         <Thumbnail storageId={row.featuredIllustration} alt={title} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -107,9 +109,10 @@ function RatingRow({
           </p>
           {row.summary && <p className="text-sm italic">{row.summary}</p>}
         </div>
-        <div className="flex items-center gap-4">
+        {/* Five equal columns on phones, so "surprising" never clips */}
+        <div className="grid grid-cols-3 items-end gap-x-1 gap-y-3 min-[360px]:grid-cols-5 sm:flex sm:items-center sm:gap-4">
           <div className="text-center">
-            <div className="flex items-center gap-1 text-2xl font-bold">
+            <div className="flex items-center justify-center gap-1 text-2xl font-bold">
               <Star className="size-5 text-gold" aria-hidden="true" />
               {row.overall.toFixed(1)}
             </div>
@@ -121,6 +124,7 @@ function RatingRow({
           <Score label="surprising" value={row.unpredictable} />
         </div>
         <Button
+          className="w-full lg:w-auto"
           variant={highlighted ? "outline" : "gold"}
           disabled={pending}
           onClick={() => onToggle(row.duelId, !highlighted)}
@@ -163,15 +167,20 @@ function DuelRatings() {
       <PageHeader
         title="Duel Ratings"
         description="Every finished player duel is rated by AI for how cool, funny, engaging and unpredictable it was. Highlight the best to feature them on the homepage. Ratings are private."
+        compactOnMobile
+        descriptionClassName="line-clamp-2 sm:line-clamp-none"
         icon={<Star className="h-6 w-6" aria-hidden="true" />}
       />
       <div className="mb-6 flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Sort by</span>
+        <span className="shrink-0 text-sm text-muted-foreground">Sort by</span>
         <Select
           value={sortBy}
           onValueChange={(value) => setSortBy(value as SortKey)}
         >
-          <SelectTrigger className="w-56" aria-label="Sort ratings">
+          <SelectTrigger
+            className="flex-1 sm:w-56 sm:flex-none"
+            aria-label="Sort ratings"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

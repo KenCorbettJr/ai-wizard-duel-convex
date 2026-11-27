@@ -436,7 +436,7 @@ export function UserListTable({
                     </h3>
                     {getRoleBadge(user.role)}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1 break-all">
                     {user.userId || user.clerkId.slice(0, 12)}
                   </p>
                   {user.email && (
@@ -536,8 +536,8 @@ export function UserListTable({
               )}
 
               {/* Action buttons */}
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1" asChild>
+              <div className="grid grid-cols-3 gap-2 pt-2 [&>*]:min-w-0 [&>*]:px-2 max-[399px]:[&_svg]:hidden">
+                <Button variant="outline" size="sm" asChild>
                   <Link
                     href={`/users/${user.userId || user.clerkId}`}
                     target="_blank"
@@ -550,7 +550,6 @@ export function UserListTable({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
                     onClick={() =>
                       onViewCreditHistory(
                         user.clerkId,
@@ -565,7 +564,7 @@ export function UserListTable({
                 <Button
                   variant="default"
                   size="sm"
-                  className="flex-1"
+                  className={onViewCreditHistory ? undefined : "col-span-2"}
                   onClick={() =>
                     onGrantCredits(
                       user.clerkId,

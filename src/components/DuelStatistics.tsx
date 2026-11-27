@@ -50,7 +50,7 @@ export function DuelStatistics({
 
   if (userId && !playerStats) {
     return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardContent className="p-6">
@@ -126,7 +126,7 @@ export function DuelStatistics({
   return (
     <div className="@container space-y-6">
       {/* Main Statistics Cards */}
-      <div className="grid @2xl:grid-cols-2 @5xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 @2xl:gap-4 @5xl:grid-cols-4">
         {userId && playerStats && (
           <>
             <Card>
@@ -337,17 +337,17 @@ export function DuelStatistics({
               {globalAnalytics.dailyActivity.map((day) => (
                 <div
                   key={day.date}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between gap-3"
                 >
-                  <span className="text-sm text-muted-foreground">
+                  <span className="shrink-0 text-sm text-muted-foreground">
                     {new Date(day.date).toLocaleDateString(undefined, {
                       weekday: "short",
                       month: "short",
                       day: "numeric",
                     })}
                   </span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-32 bg-muted rounded-full h-2">
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+                    <div className="h-2 max-w-32 flex-1 rounded-full bg-muted">
                       <div
                         className="bg-primary h-2 rounded-full"
                         style={{

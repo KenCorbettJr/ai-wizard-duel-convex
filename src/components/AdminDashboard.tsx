@@ -131,8 +131,35 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Time range for the analytics below */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 font-semibold">
+          <BarChart3 className="h-5 w-5" aria-hidden="true" />
+          Analytics
+        </h2>
+        <Select
+          value={selectedTimeRange}
+          onValueChange={(value: "24h" | "7d" | "30d" | "all") =>
+            setSelectedTimeRange(value)
+          }
+        >
+          <SelectTrigger
+            className="w-40 sm:w-48"
+            aria-label="Analytics time range"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="24h">Last 24 Hours</SelectItem>
+            <SelectItem value="7d">Last 7 Days</SelectItem>
+            <SelectItem value="30d">Last 30 Days</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Analytics Overview */}
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Duels</CardTitle>
@@ -204,34 +231,6 @@ export function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Time Range Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Analytics Time Range
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={selectedTimeRange}
-            onValueChange={(value: "24h" | "7d" | "30d" | "all") =>
-              setSelectedTimeRange(value)
-            }
-          >
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="24h">Last 24 Hours</SelectItem>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-              <SelectItem value="30d">Last 30 Days</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
       {/* Active Duel Monitoring */}
       <Card>
         <CardHeader>
@@ -253,9 +252,12 @@ export function AdminDashboard() {
           ) : (
             <div className="space-y-4">
               {activeMonitoring.map((item) => (
-                <div key={item.duel._id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                <div
+                  key={item.duel._id}
+                  className="rounded-lg border p-3 sm:p-4"
+                >
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       {getStatusBadge(item.duel.status)}
                       <span className="font-medium">
                         {typeof item.duel.numberOfRounds === "number"
@@ -273,7 +275,7 @@ export function AdminDashboard() {
                           }
                         >
                           <AlertTriangle className="h-4 w-4 mr-1" />
-                          Cancel
+                          Cancel duel
                         </Button>
                       </DialogTrigger>
                     </Dialog>
@@ -341,7 +343,7 @@ export function AdminDashboard() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filter Controls */}
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
             <div>
               <Label htmlFor="status-filter">Status</Label>
               <Select
@@ -360,7 +362,7 @@ export function AdminDashboard() {
                   })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="status-filter">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -378,6 +380,9 @@ export function AdminDashboard() {
               <Input
                 id="player-filter"
                 placeholder="Enter user ID"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 value={filters.playerUserId || ""}
                 onChange={(e) =>
                   setFilters({
@@ -404,7 +409,7 @@ export function AdminDashboard() {
                   })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="rounds-filter">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -447,25 +452,23 @@ export function AdminDashboard() {
                 </div>
                 <div className="space-y-2">
                   {searchResults.duels.map((duel: Doc<"duels">) => (
-                    <div key={duel._id} className="relative">
-                      <DuelListItem
-                        duel={duel}
-                        variant="card"
-                        showActions={false}
-                      />
-                      {duel.status !== "COMPLETED" && (
-                        <div className="absolute top-2 right-2">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() =>
-                              setDuelToCancel(duel._id as Id<"duels">)
-                            }
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      )}
+                    <div key={duel._id} className="space-y-2">
+                      {/* Compact rows: an admin scans many duels at once */}
+                      <DuelListItem duel={duel} variant="compact" />
+                      {duel.status !== "COMPLETED" &&
+                        duel.status !== "CANCELLED" && (
+                          <div className="flex justify-end">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() =>
+                                setDuelToCancel(duel._id as Id<"duels">)
+                              }
+                            >
+                              Cancel duel
+                            </Button>
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>
@@ -500,10 +503,10 @@ export function AdminDashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDuelToCancel(null)}>
-              Cancel
+              Keep duel
             </Button>
             <Button variant="destructive" onClick={handleCancelDuel}>
-              Confirm Cancellation
+              Cancel duel
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -212,15 +212,20 @@ function MostWatched() {
       <PageHeader
         title="Most Watched"
         description="Which duels draw a crowd. Views count onlookers only (duelists watching their own duel don't count), and repeat visits within 30 minutes count once. Anonymous numbers are indicative."
+        compactOnMobile
+        descriptionClassName="line-clamp-2 sm:line-clamp-none"
         icon={<Flame className="h-6 w-6" aria-hidden="true" />}
       />
       <div className="mb-6 flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Sort by</span>
+        <span className="shrink-0 text-sm text-muted-foreground">Sort by</span>
         <Select
           value={sortBy}
           onValueChange={(value) => setSortBy(value as SortKey)}
         >
-          <SelectTrigger className="w-56" aria-label="Sort duels">
+          <SelectTrigger
+            className="flex-1 sm:w-56 sm:flex-none"
+            aria-label="Sort duels"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
