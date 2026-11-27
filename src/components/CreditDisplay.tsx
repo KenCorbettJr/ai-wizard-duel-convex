@@ -38,6 +38,18 @@ export function CreditDisplay({
     return null;
   }
 
+  // Still loading: a quiet placeholder, never a red "0".
+  if (credits === undefined && !sponsorship?.coversYou) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <span
+          aria-hidden="true"
+          className="h-6 w-12 animate-pulse rounded-full bg-muted motion-reduce:animate-none"
+        />
+      </div>
+    );
+  }
+
   const sizeClasses = {
     sm: "text-sm px-2.5 py-1",
     md: "text-sm px-2.5 py-1.5",
@@ -57,7 +69,7 @@ export function CreditDisplay({
       )}
 
       <Badge
-        variant={hasCreditsForDuel ? "default" : "destructive"}
+        variant={hasCreditsForDuel === false ? "destructive" : "default"}
         className={`flex items-center gap-1 ${sizeClasses[size]}`}
       >
         {sponsorship?.coversYou ? (

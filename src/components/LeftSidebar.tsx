@@ -24,14 +24,18 @@ interface LeftSidebarProps {
  */
 export function LeftSidebar({ className }: LeftSidebarProps) {
   const pathname = usePathname();
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const { isSuperAdmin } = useSuperAdmin();
   const hasInvitePerk = useInvitePerk();
-  const groups = getVisibleGroups({
-    isSignedIn: !!isSignedIn,
-    isSuperAdmin: !!isSuperAdmin,
-    hasInvitePerk,
-  });
+  // Until sign-in state is known, show no links rather than the signed-out
+  // set, which would then reflow.
+  const groups = !isLoaded
+    ? []
+    : getVisibleGroups({
+        isSignedIn: !!isSignedIn,
+        isSuperAdmin: !!isSuperAdmin,
+        hasInvitePerk,
+      });
 
   return (
     <>

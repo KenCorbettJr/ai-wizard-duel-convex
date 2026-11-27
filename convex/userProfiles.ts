@@ -494,7 +494,7 @@ export const getUserProfile = query({
       wins: v.number(),
       losses: v.number(),
       winRate: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, { userId }) => {
     // Find user by userId (case-insensitive)
@@ -524,20 +524,12 @@ export const getUserProfile = query({
       totalLosses += wizard.losses || 0;
     });
 
-    // Get duels where user participated (filter by array contains)
-    const duels = await ctx.db
-      .query("duels")
-      .collect()
-      .then((allDuels) =>
-        allDuels.filter((duel) => duel.players.includes(user.clerkId))
-      );
-
-    const totalDuels = duels.length;
-
-    // Calculate win rate
-    const totalGames = totalWins + totalLosses;
+    // Count decided player-vs-player duels, the same way the dashboard and
+    // wizard pages do, so the numbers agree everywhere. Campaign battles
+    // don't touch wins and losses.
+    const totalDuels = totalWins + totalLosses;
     const winRate =
-      totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
+      totalDuels > 0 ? Math.round((totalWins / totalDuels) * 100) : 0;
 
     return {
       userId: user.userId,
@@ -567,7 +559,7 @@ export const getUserWizards = query({
       wins: v.optional(v.number()),
       losses: v.optional(v.number()),
       winRate: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, { userId }) => {
     // Find user by userId (case-insensitive)

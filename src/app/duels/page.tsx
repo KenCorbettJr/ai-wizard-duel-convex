@@ -4,44 +4,46 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DuelListItem } from "@/components/DuelListItem";
-import { SuperAdminOnly } from "@/components/SuperAdminOnly";
 import { RegistrationPrompt } from "@/components/RegistrationPrompt";
-import { Swords, Users, Search, Shield } from "lucide-react";
+import { Swords, Users, Search } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { IncomingChallenges } from "@/components/IncomingChallenges";
 
 export default function DuelsPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   const activeDuels = useQuery(api.duels.getActiveDuels);
-  const playerDuels = useQuery(
+  const rawPlayerDuels = useQuery(
     api.duels.getPlayerDuels,
     user?.id ? {} : "skip",
   );
+  // Duels still in play first, then the newest finished ones, matching the
+  // order everywhere else in the app.
+  const playerDuels = rawPlayerDuels
+    ? [...rawPlayerDuels].sort((a, b) => {
+        const aOpen = a.status !== "COMPLETED" && a.status !== "CANCELLED";
+        const bOpen = b.status !== "COMPLETED" && b.status !== "CANCELLED";
+        if (aOpen !== bOpen) return aOpen ? -1 : 1;
+        return (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt);
+      })
+    : rawPlayerDuels;
 
   return (
     <div className="min-h-screen">
       <div className="@container container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <PageHeader
-          title="Magical Duels"
-          description="Manage your active duels, join existing battles, or create new
-            magical encounters"
+          title="My Duels"
+          description="Your battles, and open duels you can jump into."
           icon={<Swords className="h-6 w-6" aria-hidden="true" />}
         />
 
-        {/* Registration Prompt for Anonymous Users */}
-        {!user && (
+        {/* Registration prompt for anonymous users, once Clerk knows */}
+        {isLoaded && !user && (
           <div className="mb-6">
             <RegistrationPrompt context="duel_access" />
           </div>
@@ -49,132 +51,56 @@ export default function DuelsPage() {
 
         {user && <IncomingChallenges />}
 
-        <div className="grid @3xl:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+        {(!isLoaded || user) && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/duels/create">
+                <Swords className="h-4 w-4" aria-hidden="true" />
+                Start a duel
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/duels/lobby">
+                <Users className="h-4 w-4" aria-hidden="true" />
                 Quick Match
-              </CardTitle>
-              <CardDescription>
-                Join the lobby and get matched with another player instantly
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {user ? (
-                <Button asChild className="w-full">
-                  <Link href="/duels/lobby">Join Lobby</Link>
-                </Button>
-              ) : (
-                <Button disabled className="w-full">
-                  Sign up to join
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/duels/join">
+                <Search className="h-4 w-4" aria-hidden="true" />
+                Join with a code
+              </Link>
+            </Button>
+          </div>
+        )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Swords className="h-5 w-5" />
-                Create New Duel
-              </CardTitle>
-              <CardDescription>
-                Start a new magical battle and challenge other wizards
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {user ? (
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/duels/create">Create Duel</Link>
-                </Button>
-              ) : (
-                <Button disabled variant="outline" className="w-full">
-                  Sign up to create
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Join by Code
-              </CardTitle>
-              <CardDescription>
-                Enter a duel code to join a specific magical battle
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {user ? (
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/duels/join">Join by Code</Link>
-                </Button>
-              ) : (
-                <Button disabled variant="outline" className="w-full">
-                  Sign up to join
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          <SuperAdminOnly fallback={null}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Super Admin Dashboard
-                </CardTitle>
-                <CardDescription>
-                  Monitor and manage duels across the platform (Super Admin
-                  Only)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/admin/duels">Super Admin Panel</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </SuperAdminOnly>
-        </div>
-
-        <div className="grid @5xl:grid-cols-2 gap-8">
+        <div className="space-y-10">
           <div>
             <h3 className="text-2xl font-bold text-foreground mb-4 font-display">
               Your Duels
             </h3>
-            {playerDuels === undefined ? (
+            {!isLoaded || (user && playerDuels === undefined) ? (
               <div className="text-center py-8">
                 <RuneSpinner size="md" label="Loading…" />
                 <p className="text-muted-foreground mt-2">
                   Loading your duels...
                 </p>
               </div>
-            ) : playerDuels.length === 0 ? (
+            ) : !playerDuels || playerDuels.length === 0 ? (
               <EmptyState
                 icon={<Swords className="size-7" aria-hidden="true" />}
                 title="No duels yet!"
-                description="Create or join a duel to start your magical battles."
-                action={
-                  <div className="flex gap-2 justify-center flex-wrap">
-                    <Button asChild>
-                      <Link href="/duels/lobby">Quick Match</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/duels/create">Create Duel</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/duels/join">Join by Code</Link>
-                    </Button>
-                  </div>
-                }
+                description="Start a duel or try Quick Match above to begin."
               />
             ) : (
-              <div className="space-y-4">
+              // Compact rows: the big scene cards live on Watch Duels.
+              <div className="grid gap-2 @3xl:grid-cols-2">
                 {playerDuels.map((duel) => (
-                  <DuelListItem key={duel._id} duel={duel} variant="card" />
+                  <DuelListItem
+                    key={duel._id}
+                    duel={duel}
+                    variant="dashboard"
+                  />
                 ))}
               </div>
             )}
@@ -182,7 +108,7 @@ export default function DuelsPage() {
 
           <div>
             <h3 className="text-2xl font-bold text-foreground mb-4 font-display">
-              Available Duels
+              Open duels you can join
             </h3>
             {activeDuels === undefined ? (
               <div className="text-center py-8">
@@ -210,13 +136,13 @@ export default function DuelsPage() {
                       <Link href="/duels/lobby">Quick Match</Link>
                     </Button>
                     <Button asChild variant="outline">
-                      <Link href="/duels/create">Create Duel</Link>
+                      <Link href="/duels/create">Start a duel</Link>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="grid gap-4 @3xl:grid-cols-2 @6xl:grid-cols-3">
                 {activeDuels
                   .filter((duel) => !duel.players.includes(user?.id || ""))
                   .map((duel) => (

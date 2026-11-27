@@ -23,15 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Users,
-  Swords,
-  Clock,
-  Trophy,
-  UserCheck,
-  Wand2,
-  ArrowLeft,
-} from "lucide-react";
+import { Users, Swords, Clock, UserCheck, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -42,9 +34,7 @@ import { PageHeader } from "@/components/PageHeader";
 export default function DuelLobbyPage() {
   const { user } = useUser();
   const router = useRouter();
-  const [selectedWizard, setSelectedWizard] = useState<Id<"wizards"> | null>(
-    null,
-  );
+  const [pickedWizard, setPickedWizard] = useState<Id<"wizards"> | null>(null);
   const [selectedDuelType, setSelectedDuelType] = useState<
     number | "TO_THE_DEATH"
   >(3);
@@ -52,9 +42,11 @@ export default function DuelLobbyPage() {
 
   // Queries
   const wizards = useQuery(api.wizards.getUserWizards, user?.id ? {} : "skip");
+  // Default to the first wizard so the form is ready to go.
+  const selectedWizard = pickedWizard ?? wizards?.[0]?._id ?? null;
+  const setSelectedWizard = setPickedWizard;
   const lobbyEntries = useQuery(api.duelLobby.getLobbyEntries);
   const userLobbyStatus = useQuery(api.duelLobby.getUserLobbyStatus);
-  const lobbyStats = useQuery(api.duelLobby.getLobbyStats);
   const userRecentDuel = useQuery(api.duelLobby.getUserRecentDuel);
 
   // Mutations
@@ -158,54 +150,12 @@ export default function DuelLobbyPage() {
       <div className="@container container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <div className="hidden md:flex items-center gap-4 mb-4">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/duels">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Duels
-              </Link>
-            </Button>
-          </div>
           <PageHeader
-            title="Duel Lobby"
-            description="Find opponents and engage in magical combat"
+            title="Quick Match"
+            description="Pick a wizard and we'll pair you with the next player who's ready."
             icon={<Users className="h-6 w-6" aria-hidden="true" />}
           />
         </div>
-
-        {/* Lobby Stats */}
-        {lobbyStats && (
-          <Card className="mb-6 bg-card/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Lobby Statistics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-info">
-                    {lobbyStats.totalWaiting}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Waiting</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-warning">
-                    {lobbyStats.totalMatched}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Matched</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {lobbyStats.averageWaitTime}s
-                  </div>
-                  <div className="text-sm text-muted-foreground">Avg Wait</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-6">
           {/* Join Lobby Section */}
@@ -213,12 +163,12 @@ export default function DuelLobbyPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Swords className="h-5 w-5" />
-                {userLobbyStatus ? "Lobby Status" : "Join Lobby"}
+                {userLobbyStatus ? "Finding your opponent" : "Find an opponent"}
               </CardTitle>
               <CardDescription>
                 {userLobbyStatus
-                  ? "You are currently in the lobby"
-                  : "Select a wizard and join the duel lobby"}
+                  ? "Stay on this page or come back later. We'll take you to the duel when someone joins."
+                  : "1 token, charged only when you're matched."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -298,7 +248,7 @@ export default function DuelLobbyPage() {
                   {/* Wizard Selection */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">
-                      Select Wizard
+                      Your wizard
                     </label>
                     <Select
                       value={selectedWizard || ""}
@@ -317,8 +267,7 @@ export default function DuelLobbyPage() {
                               {wizard.name}
                               {wizard.wins || wizard.losses ? (
                                 <span className="text-xs text-muted-foreground">
-                                  ({wizard.wins || 0}W/{wizard.losses || 0}
-                                  L)
+                                  {wizard.wins || 0}W · {wizard.losses || 0}L
                                 </span>
                               ) : null}
                             </div>
@@ -331,7 +280,7 @@ export default function DuelLobbyPage() {
                   {/* Duel Type Selection */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">
-                      Duel Type
+                      Length
                     </label>
                     <Select
                       value={selectedDuelType.toString()}
@@ -347,9 +296,8 @@ export default function DuelLobbyPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="3">3 Rounds (Standard)</SelectItem>
-                        <SelectItem value="5">5 Rounds (Extended)</SelectItem>
-                        <SelectItem value="10">10 Rounds (Epic)</SelectItem>
+                        <SelectItem value="3">3 Rounds</SelectItem>
+                        <SelectItem value="5">5 Rounds</SelectItem>
                         <SelectItem value="TO_THE_DEATH">
                           To the Death
                         </SelectItem>
@@ -362,19 +310,19 @@ export default function DuelLobbyPage() {
                     disabled={!selectedWizard || !wizards}
                     className="w-full"
                   >
-                    <Users className="h-4 w-4 mr-2" />
-                    Join Lobby
+                    <Swords className="h-4 w-4 mr-2" />
+                    Find a match
                   </Button>
 
-                  {(!wizards || wizards.length === 0) && (
+                  {wizards && wizards.length === 0 && (
                     <div className="text-center py-4">
                       <p className="text-sm text-muted-foreground mb-2">
                         You need a wizard to join the lobby
                       </p>
                       <Button asChild variant="outline" size="sm">
-                        <Link href="/wizards">
+                        <Link href="/wizards/create">
                           <Wand2 className="h-4 w-4 mr-2" />
-                          Create Wizard
+                          Create wizard
                         </Link>
                       </Button>
                     </div>
@@ -404,9 +352,16 @@ export default function DuelLobbyPage() {
               ) : lobbyEntries.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground">No players in lobby</p>
+                  <p className="text-muted-foreground">
+                    Nobody&apos;s waiting right now
+                  </p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Be the first to join!
+                    Jump in and you&apos;ll be first in line. Or challenge a
+                    friend from{" "}
+                    <Link href="/duels/create" className="underline">
+                      Start a duel
+                    </Link>
+                    .
                   </p>
                 </div>
               ) : (

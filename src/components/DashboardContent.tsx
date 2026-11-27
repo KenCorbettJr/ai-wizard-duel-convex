@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ConvexImage } from "@/components/ConvexImage";
 import { DuelListItem } from "@/components/DuelListItem";
-import { CreditDisplay } from "@/components/CreditDisplay";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
@@ -130,12 +129,12 @@ function DuelsSection({
               : "1 token. Both wizards cast at once."}
           </p>
         </div>
-        <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button
             asChild
             variant="secondary"
             size="sm"
-            className="col-span-3 border border-primary/40 font-semibold sm:col-span-1"
+            className="border border-primary/40 font-semibold"
           >
             <Link href="/duels/lobby">
               <Users className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -143,13 +142,7 @@ function DuelsSection({
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link href="/duels/create">Create</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/duels/join">Join by code</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/duels/watch">Watch</Link>
+            <Link href="/duels/create">Start a duel</Link>
           </Button>
         </div>
       </div>
@@ -237,10 +230,8 @@ function WizardRow({
   const portraitStage = usePortraitStage(wizard);
   const summary = getCampaignSummary(progress);
   const record = (wizard.wins ?? 0) + (wizard.losses ?? 0);
-  return (
-    <li
-      className={`min-w-0 items-center gap-3 rounded-xl border bg-card/80 p-3 ${className ?? "flex"}`}
-    >
+  const row = (
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border bg-card/80 p-3 @3xl:hidden">
       <Link
         href={`/wizards/${wizard._id}`}
         tabIndex={-1}
@@ -277,7 +268,7 @@ function WizardRow({
           {portraitStage
             ? "Generating portrait…"
             : record > 0
-              ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L`
+              ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L vs players`
               : "No duels yet"}
         </p>
         {summary.hasRelic && (
@@ -304,9 +295,64 @@ function WizardRow({
       <Button asChild variant="outline" size="sm" className="shrink-0">
         <Link href={`/duels/create?wizardId=${wizard._id}`}>
           <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
-          Challenge
+          Duel
+          <span className="sr-only"> with {wizard.name}</span>
         </Link>
       </Button>
+    </div>
+  );
+
+  // Wide screens: a portrait card, so the art leads.
+  const card = (
+    <div className="group relative hidden overflow-hidden rounded-xl border bg-card/80 @3xl:block">
+      <Link
+        href={`/wizards/${wizard._id}`}
+        className="relative block aspect-[4/3] overflow-hidden bg-muted"
+      >
+        {wizard.illustration ? (
+          <ConvexImage
+            storageId={wizard.illustration}
+            alt=""
+            width={480}
+            height={360}
+            sizes="(min-width: 1280px) 320px, 33vw"
+            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary to-gold text-4xl font-bold text-white">
+            {wizard.name.charAt(0)}
+          </span>
+        )}
+        <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/40 to-transparent px-3 pt-10 pb-2">
+          <span className="block truncate font-display text-lg font-bold text-white">
+            {wizard.name}
+          </span>
+          <span className="block text-xs text-white/80">
+            {portraitStage
+              ? "Generating portrait…"
+              : record > 0
+                ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L vs players`
+                : "No duels yet"}
+            {summary.hasRelic && " · Crowned"}
+          </span>
+        </span>
+      </Link>
+      <div className="flex gap-2 p-2">
+        <Button asChild size="sm" className="flex-1">
+          <Link href={`/duels/create?wizardId=${wizard._id}`}>
+            <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
+            Duel
+            <span className="sr-only"> with {wizard.name}</span>
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <li className={`min-w-0 ${className ?? ""}`}>
+      {row}
+      {card}
     </li>
   );
 }
@@ -449,11 +495,13 @@ export default function DashboardContent({
       ? ` · campaign ${bestCampaign}/10`
       : "";
   const summaryLine =
-    wizards !== undefined && wizards.length === 0
-      ? "Let's make your first wizard"
-      : totalDuels === 0
-        ? "Ready for your first battle"
-        : `${wizards?.length ?? 0} ${wizards?.length === 1 ? "wizard" : "wizards"} · ${totalDuels} duels · ${winRate}% wins${campaignLine}`;
+    wizards === undefined
+      ? "\u00a0"
+      : wizards.length === 0
+        ? "Let's make your first wizard"
+        : totalDuels === 0
+          ? "Ready for your first battle"
+          : `${wizards?.length ?? 0} ${wizards?.length === 1 ? "wizard" : "wizards"} · ${totalDuels} player ${totalDuels === 1 ? "duel" : "duels"} · ${winRate}% wins${campaignLine}`;
 
   return (
     <div className="min-h-screen">
@@ -472,25 +520,30 @@ export default function DashboardContent({
                   {summaryLine}
                 </p>
               </div>
-              {preview ? (
-                preview.tokens !== undefined && (
-                  <Link
-                    href="/credits"
-                    className="shrink-0"
-                    aria-label={`${preview.tokens} tokens. Get more`}
-                  >
-                    <Badge
-                      variant={preview.tokens <= 2 ? "destructive" : "default"}
-                      className="gap-1 px-2.5 py-1.5 text-sm"
-                    >
-                      <Coins className="h-4 w-4 text-gold" aria-hidden="true" />
-                      {preview.tokens} tokens
-                    </Badge>
-                  </Link>
-                )
-              ) : (
-                <CreditDisplay showLabel={false} />
-              )}
+              {
+                preview
+                  ? preview.tokens !== undefined && (
+                      <Link
+                        href="/credits"
+                        className="shrink-0"
+                        aria-label={`${preview.tokens} tokens. Get more`}
+                      >
+                        <Badge
+                          variant={
+                            preview.tokens <= 2 ? "destructive" : "default"
+                          }
+                          className="gap-1 px-2.5 py-1.5 text-sm"
+                        >
+                          <Coins
+                            className="h-4 w-4 text-gold"
+                            aria-hidden="true"
+                          />
+                          {preview.tokens} tokens
+                        </Badge>
+                      </Link>
+                    )
+                  : null /* The nav already shows the balance. */
+              }
             </header>
 
             {resumeDuel && <ResumeDuelBanner duel={resumeDuel} />}
@@ -577,15 +630,15 @@ export default function DashboardContent({
                         onClick={handleCreateWizard}
                       >
                         <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                        New wizard
+                        Create wizard
                       </Button>
                     </div>
                   </div>
-                  <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
+                  <ul className="grid grid-cols-1 gap-3 @3xl:grid-cols-3">
                     {wizards.slice(0, 6).map((wizard, i) => (
                       <WizardRow
                         key={wizard._id}
-                        className={i >= 3 ? "hidden @xl:flex" : "flex"}
+                        className={i >= 3 ? "hidden @xl:block" : ""}
                         wizard={wizard}
                         progress={campaignProgress?.find(
                           (p) => p.wizardId === wizard._id,

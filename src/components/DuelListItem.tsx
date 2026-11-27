@@ -4,7 +4,11 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexImage } from "@/components/ConvexImage";
-import { DuelCard, DuelCardSkeleton } from "@/components/DuelCard";
+import {
+  DuelCard,
+  DuelCardSkeleton,
+  shortTimeAgo,
+} from "@/components/DuelCard";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,7 +92,14 @@ export function DuelListItem({
     (duel.wizards[1] && wizard2 === undefined) ||
     (duel.wizards[2] && wizard3 === undefined);
 
-  const wizardNames = wizards.map((wizard) => wizard?.name).filter(Boolean);
+  // The viewer's own wizard first, so "Defeat · X vs Y" always reads from
+  // their side.
+  const wizardNames = [...wizards]
+    .sort(
+      (a, b) => Number(b?.owner === user?.id) - Number(a?.owner === user?.id),
+    )
+    .map((wizard) => wizard?.name)
+    .filter(Boolean);
   const duelTitle = wizardNames.length > 0 ? wizardNames.join(" vs ") : "Duel";
 
   // Determine if user won this duel by checking if any of their wizards are winners
@@ -232,9 +243,21 @@ export function DuelListItem({
         className={`flex flex-wrap items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded ${bgClass}`}
         data-testid="duel-list-item"
       >
-        {/* Wizard avatars or featured illustration */}
+        {/* The duel's scene when there is one (dashboard rows), else the
+            wizards' faces */}
         <div className="flex-shrink-0">
-          {wizards.length > 0 ? (
+          {variant === "dashboard" && duel.featuredIllustration ? (
+            <div className="relative h-12 w-20 overflow-hidden rounded-md">
+              <ConvexImage
+                storageId={duel.featuredIllustration}
+                alt=""
+                width={160}
+                height={96}
+                sizes="80px"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : wizards.length > 0 ? (
             <div className="flex -space-x-1">
               {wizards.slice(0, 2).map((wizard, index) => (
                 <div
@@ -283,6 +306,11 @@ export function DuelListItem({
         <div className="flex-1 min-w-[9rem]">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
             {getStatusBadge()}
+            {duel.isCampaignBattle && (
+              <Badge variant="outline" className="text-xs">
+                Campaign
+              </Badge>
+            )}
             {duel.shortcode && duel.status === "WAITING_FOR_PLAYERS" && (
               <code
                 className="text-xs px-1 py-0.5 bg-primary/12 text-primary rounded cursor-pointer hover:bg-primary/20 flex items-center gap-1"
@@ -300,7 +328,7 @@ export function DuelListItem({
           <p className="text-xs text-muted-foreground">
             {getRoundInfo()}
             {variant === "dashboard" && duel.status === "COMPLETED" && (
-              <> • {new Date(duel.createdAt).toLocaleDateString()}</>
+              <> • {shortTimeAgo(duel.createdAt)}</>
             )}
           </p>
         </div>
@@ -313,7 +341,11 @@ export function DuelListItem({
             className="ml-auto shrink-0"
           >
             <Link href={`/duels/${duel._id}`}>
-              {duel.status === "IN_PROGRESS" ? "Resume" : "View"}
+              {duel.status === "IN_PROGRESS"
+                ? "Resume"
+                : duel.status === "COMPLETED"
+                  ? "Replay"
+                  : "Open"}
             </Link>
           </Button>
         )}

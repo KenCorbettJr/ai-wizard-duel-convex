@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { CampaignRelicBadge } from "@/components/CampaignRelicBadge";
@@ -40,7 +41,7 @@ const MILESTONES: Record<number, string> = {
 };
 
 export default function WizardCampaignClient() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const params = useParams();
   const wizardId = params.wizardId as Id<"wizards">;
   const battle = useStartCampaignBattle();
@@ -48,6 +49,9 @@ export default function WizardCampaignClient() {
 
   // Get campaign opponents
   const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
+  const season = useQuery(api.campaignSeasons.getActiveCampaignSeason);
+  // One name for the reward everywhere: the season's own relic name.
+  const relicName = season?.completionRelic.name ?? "Campaign Relic";
 
   // Get the specific wizard
   const wizard = useQuery(
@@ -81,6 +85,16 @@ export default function WizardCampaignClient() {
     }
     window.localStorage.setItem(seenKey, String(liveDefeated));
   }, [liveDefeated, seenKey, wizardProgress?.lastBattleAt]);
+
+  // Wait for sign-in state before choosing a signed-in or signed-out view,
+  // so signed-in players never see the sign-up pitch flash by.
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <RuneSpinner size="md" label="Loading…" />
+      </div>
+    );
+  }
 
   // Show registration prompt for anonymous users
   if (!user) {
@@ -184,7 +198,7 @@ export default function WizardCampaignClient() {
             <Button asChild variant="ghost" size="sm">
               <Link href="/campaign/stats">
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Stats &amp; history
+                Stats &amp; battle history
               </Link>
             </Button>
           </nav>
@@ -208,7 +222,7 @@ export default function WizardCampaignClient() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {summary.isCompleted
-                    ? `${wizard.name} defeated all ${summary.total} opponents${summary.hasRelic ? " and earned the Campaign Relic (+1 Luck)" : ""}.`
+                    ? `${wizard.name} defeated all ${summary.total} opponents${summary.hasRelic ? ` and earned the ${relicName} relic (+1 Luck)` : ""}.`
                     : `${celebrate} of ${summary.total} down.${nextOpponentDoc ? ` Next up: ${nextOpponentDoc.name}.` : ""}`}
                 </p>
               </div>
@@ -271,8 +285,8 @@ export default function WizardCampaignClient() {
                             : "Campaign progress"}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {summary.defeatedCount} / {summary.total} defeated ·{" "}
-                        {summary.total - summary.defeatedCount} to go
+                        {summary.defeatedCount}/{summary.total} defeated ·{" "}
+                        {summary.total - summary.defeatedCount} to the relic
                       </span>
                     </div>
                     <Progress
@@ -288,14 +302,14 @@ export default function WizardCampaignClient() {
                       <span className="font-medium">
                         All 10 opponents defeated.
                         {summary.hasRelic &&
-                          " Campaign Relic earned (+1 Luck)."}
+                          ` ${relicName} relic earned (+1 Luck).`}
                       </span>
                     </div>
                   ) : (
                     nextOpponentDoc && (
                       <Button
                         size="lg"
-                        className="w-full sm:w-auto"
+                        className="h-auto min-h-11 w-full whitespace-normal py-2 sm:w-auto"
                         disabled={isBusy}
                         onClick={() => start(wizardId, summary.nextOpponent!)}
                       >
@@ -303,8 +317,8 @@ export default function WizardCampaignClient() {
                         {starting
                           ? "Entering the arena..."
                           : summary.nextOpponent === summary.total
-                            ? `Final boss: face ${nextOpponentDoc.name}`
-                            : `${summary.isFresh ? "Begin" : "Continue"}: face ${nextOpponentDoc.name}`}
+                            ? `Fight the boss · 1 token`
+                            : `Fight ${nextOpponentDoc.name} · 1 token`}
                       </Button>
                     )
                   )}
@@ -335,13 +349,13 @@ export default function WizardCampaignClient() {
                 <p className="text-sm">
                   {summary.hasRelic ? (
                     <>
-                      <strong>Campaign Relic earned.</strong> {wizard.name} has
-                      a permanent +1 Luck bonus.
+                      <strong>{relicName} relic earned.</strong> {wizard.name}{" "}
+                      has a permanent +1 Luck bonus.
                     </>
                   ) : (
                     <>
-                      <strong>Reward:</strong> defeat the final boss to earn the
-                      Campaign Relic, a permanent +1 Luck bonus.
+                      <strong>Reward:</strong> defeat the final boss to earn the{" "}
+                      {relicName} relic, a permanent +1 Luck bonus.
                     </>
                   )}
                 </p>
@@ -358,17 +372,23 @@ export default function WizardCampaignClient() {
               <Target className="h-6 w-6 text-primary" aria-hidden />
               Opponents
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <p className="-mt-2 mb-4 text-sm text-muted-foreground">
+              Luck is added to a wizard&apos;s d20 roll each round, so foes with
+              less Luck are easier to beat.{" "}
+              <Link href="/rules#luck-heading" className="underline">
+                How dice work
+              </Link>
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {sortedOpponents.map((opponent) => (
                 <CampaignOpponentCard
+                  relicName={relicName}
                   key={opponent._id}
                   opponent={opponent}
                   status={getOpponentStatus(
                     opponent.opponentNumber!,
                     wizardProgress,
                   )}
-                  wizardId={wizardId}
-                  battle={battle}
                 />
               ))}
             </div>

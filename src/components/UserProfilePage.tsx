@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useUser } from "@clerk/nextjs";
 import { api } from "../../convex/_generated/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WizardCard } from "@/components/WizardCard";
@@ -25,6 +26,7 @@ interface UserProfilePageProps {
 }
 
 export function UserProfilePage({ userId }: UserProfilePageProps) {
+  const { user } = useUser();
   const userProfile = useQuery(api.userProfiles.getUserProfile, { userId });
   const userWizards = useQuery(api.userProfiles.getUserWizards, { userId });
   const currentUserStatus = useQuery(
@@ -53,20 +55,6 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Stats skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader className="pb-2">
-                  <div className="h-4 bg-muted rounded w-20" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-8 bg-muted rounded w-16" />
-                </CardContent>
-              </Card>
-            ))}
           </div>
 
           {/* Wizards skeleton */}
@@ -119,10 +107,18 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
           {/* Profile Header */}
           <div className="bg-arcane-soft rounded-lg p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-              {/* Avatar placeholder */}
-              <div className="w-24 h-24 bg-arcane rounded-full flex items-center justify-center">
-                <Sparkles className="w-12 h-12 text-white" />
-              </div>
+              {isOwnProfile && user?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.imageUrl}
+                  alt=""
+                  className="h-24 w-24 rounded-full object-cover ring-2 ring-primary/40"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-arcane rounded-full flex items-center justify-center">
+                  <Sparkles className="w-12 h-12 text-white" />
+                </div>
+              )}
 
               <div className="flex-1 space-y-4">
                 <div className="space-y-2">
@@ -164,16 +160,17 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Target className="w-3 h-3" />
-                    {userProfile.totalDuels} Duel
+                    {userProfile.totalDuels} player duel
                     {userProfile.totalDuels !== 1 ? "s" : ""}
                   </Badge>
-                  {userProfile.winRate > 0 && (
+                  {userProfile.totalDuels > 0 && (
                     <Badge
                       variant="outline"
                       className="flex items-center gap-1"
                     >
                       <Trophy className="w-3 h-3" />
-                      {userProfile.winRate}% Win Rate
+                      {userProfile.wins}W · {userProfile.losses}L ·{" "}
+                      {userProfile.winRate}% wins
                     </Badge>
                   )}
                 </div>
@@ -188,65 +185,6 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Total Wizards
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {userProfile.totalWizards}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Total Duels
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {userProfile.totalDuels}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Trophy className="w-4 h-4" />
-                  Wins
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-success">
-                  {userProfile.wins}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Trophy className="w-4 h-4" />
-                  Win Rate
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">
-                  {userProfile.winRate}%
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Wizards Section */}
@@ -277,15 +215,17 @@ export function UserProfilePage({ userId }: UserProfilePageProps) {
                 {userWizards.map((wizard) => (
                   <div key={wizard._id} className="relative">
                     <WizardCard wizard={wizard} className="h-full" />
-                    {/* Wizard stats overlay */}
-                    <div className="absolute top-4 left-4">
-                      <Badge
-                        variant="secondary"
-                        className="bg-black/50 text-white border-0"
-                      >
-                        {wizard.winRate}% Win Rate
-                      </Badge>
-                    </div>
+                    {/* Wizard stats overlay, once it has a record */}
+                    {(wizard.wins ?? 0) + (wizard.losses ?? 0) > 0 && (
+                      <div className="absolute top-4 left-4">
+                        <Badge
+                          variant="secondary"
+                          className="bg-black/50 text-white border-0"
+                        >
+                          {wizard.winRate}% wins
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

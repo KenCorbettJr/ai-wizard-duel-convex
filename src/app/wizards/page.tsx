@@ -28,7 +28,7 @@ import { EmptyState } from "@/components/EmptyState";
  * stay roughly 14–17rem wide on larger screens (two-up on phones).
  */
 const ROSTER_GRID =
-  "grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5";
+  "grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4";
 
 /** Cards likely visible on the first screen get eager images. */
 const PRIORITY_CARDS = 6;
@@ -253,14 +253,14 @@ export default function MyWizardsPage() {
                   <span className="font-semibold text-foreground">
                     {roster.length}
                   </span>{" "}
-                  {roster.length === 1 ? "champion" : "champions"}
+                  {roster.length === 1 ? "wizard" : "wizards"}
                   {totalDuels > 0 ? (
                     <>
                       {" · "}
                       <span className="font-semibold text-success">
                         {totalWins}W
                       </span>
-                      {"–"}
+                      {" · "}
                       <span className="font-semibold text-destructive">
                         {totalLosses}L
                       </span>
@@ -282,18 +282,13 @@ export default function MyWizardsPage() {
                 />
               ) : (
                 <p className="mt-0.5 hidden text-muted-foreground sm:block">
-                  Your champions await their next duel.
+                  Your wizards await their next duel.
                 </p>
               )}
             </div>
           </div>
-          {user && (
-            <Button onClick={handleCreateWizard} className="shrink-0">
-              <Plus className="size-5" aria-hidden="true" />
-              <span className="hidden sm:inline">Create Wizard</span>
-              <span className="sm:hidden">Summon</span>
-            </Button>
-          )}
+          {/* Creating a wizard lives in the roster's last tile (or the empty
+              state), so there's one way to do it. */}
         </header>
 
         {/* Anonymous users */}
@@ -393,7 +388,7 @@ export default function MyWizardsPage() {
                       <Plus className="size-6 sm:size-7" aria-hidden="true" />
                     </span>
                     <span className="font-display text-sm font-semibold sm:text-base">
-                      Summon a wizard
+                      Create wizard
                     </span>
                     <span className="text-xs text-muted-foreground">
                       Design a new champion
@@ -433,7 +428,7 @@ export default function MyWizardsPage() {
                   </span>
                   <span className="block text-sm text-muted-foreground">
                     {campaignFocus
-                      ? `${defeatedByWizard.get(campaignFocus._id)}/${CAMPAIGN_OPPONENT_COUNT} foes defeated. Win them all for a luck relic.`
+                      ? `${defeatedByWizard.get(campaignFocus._id)}/${CAMPAIGN_OPPONENT_COUNT} defeated. Beat all ${CAMPAIGN_OPPONENT_COUNT} to earn the relic.`
                       : allHaveRelic
                         ? "Every wizard holds a relic. Face the foes again for glory."
                         : `Defeat ${CAMPAIGN_OPPONENT_COUNT} AI foes to earn a luck relic`}

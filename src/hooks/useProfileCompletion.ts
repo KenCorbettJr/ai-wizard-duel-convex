@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { api } from "../../convex/_generated/api";
@@ -13,9 +13,11 @@ export function useProfileCompletion() {
   const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
 
+  // Convex must hold the sign-in token first, or the answer is "no profile".
+  const { isAuthenticated: convexReady } = useConvexAuth();
   const profileStatus = useQuery(
     api.userProfiles.getCurrentUserProfileStatus,
-    isLoaded && isSignedIn ? {} : "skip"
+    isLoaded && isSignedIn && convexReady ? {} : "skip",
   );
 
   const isProfileComplete = profileStatus?.hasProfile ?? false;
@@ -51,7 +53,7 @@ export function useProfileCompletion() {
    * @returns object with prompt info and action handler
    */
   const getProfileCompletionPrompt = (
-    action: string = "perform this action"
+    action: string = "perform this action",
   ) => {
     if (!isLoaded) {
       return {

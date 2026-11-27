@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -15,9 +15,11 @@ export default function ProfilePage() {
   const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
 
+  // Convex must hold the sign-in token first, or the answer is "no profile".
+  const { isAuthenticated: convexReady } = useConvexAuth();
   const profileStatus = useQuery(
     api.userProfiles.getCurrentUserProfileStatus,
-    isLoaded && isSignedIn ? {} : "skip",
+    isLoaded && isSignedIn && convexReady ? {} : "skip",
   );
 
   useEffect(() => {

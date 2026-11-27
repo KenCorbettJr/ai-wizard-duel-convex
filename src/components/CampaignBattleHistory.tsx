@@ -39,6 +39,12 @@ export function CampaignBattleHistory({
     userId && opponentNumber ? { userId, opponentNumber } : "skip",
   );
 
+  // Just a player: all of their campaign battles, newest first.
+  const userBattles = useQuery(
+    api.campaigns.getRecentCampaignBattles,
+    userId && !wizardId && !opponentNumber ? { userId, limit } : "skip",
+  );
+
   // Get campaign opponents for display names
   const campaignOpponents = useQuery(api.campaigns.getCampaignOpponents);
 
@@ -49,7 +55,7 @@ export function CampaignBattleHistory({
   );
 
   // Determine which battles to show
-  const battles = wizardBattles || opponentBattles || [];
+  const battles = wizardBattles || opponentBattles || userBattles || [];
 
   // Show loading state
   if (battles === undefined || campaignOpponents === undefined) {

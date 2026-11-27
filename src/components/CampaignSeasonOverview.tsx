@@ -102,11 +102,11 @@ export function CampaignSeasonOverview({
                     Reward for finishing
                   </p>
                   <p className="font-bold leading-tight">{relic.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {relic.description}
-                  </p>
                   <p className="mt-1 text-sm font-semibold text-success">
                     +{luck} Luck, permanently
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Added to your wizard&apos;s d20 roll in every duel.
                   </p>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export function CampaignSeasonOverview({
             ) : (
               <ol
                 aria-label="Campaign opponents in order"
-                className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10"
+                className="grid grid-cols-3 gap-3 sm:grid-cols-5"
               >
                 {roster.map((o) => {
                   const n = o.opponentNumber!;
@@ -174,7 +174,7 @@ export function CampaignSeasonOverview({
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate text-xs font-semibold">
+                      <p className="mt-1 line-clamp-2 text-xs font-semibold leading-tight [overflow-wrap:anywhere]">
                         {isBoss && (
                           <span className="sr-only">Final boss: </span>
                         )}
@@ -195,7 +195,7 @@ export function CampaignSeasonOverview({
                       </p>
                       {wizardCount > 1 && beaten > 0 && !allBeat && (
                         <p className="text-[11px] font-medium text-success">
-                          {beaten}/{wizardCount} beat
+                          Beaten by {beaten} of {wizardCount}
                         </p>
                       )}
                     </li>

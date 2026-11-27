@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
@@ -142,18 +143,17 @@ function CampaignWizardCard({
           <CampaignPathMap progress={progress} compact />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>
-              {summary.defeatedCount} of {summary.total} defeated
+              {summary.defeatedCount}/{summary.total} defeated
+              {!summary.hasRelic &&
+                ` · ${summary.total - summary.defeatedCount} to the relic`}
             </span>
-            {!summary.hasRelic && (
-              <span>Relic: {summary.total - summary.defeatedCount} to go</span>
-            )}
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {summary.nextOpponent !== null ? (
             <Button
-              className="flex-1"
+              className="min-w-[9rem] flex-1"
               disabled={isBusy}
               onClick={() => start(wizard._id, summary.nextOpponent!)}
             >
@@ -161,17 +161,17 @@ function CampaignWizardCard({
               {starting
                 ? "Starting..."
                 : summary.isFresh
-                  ? "Begin campaign"
-                  : "Continue"}
+                  ? "Begin · 1 token"
+                  : "Continue · 1 token"}
             </Button>
           ) : null}
           <Button
             asChild
             variant={summary.isCompleted ? "default" : "outline"}
-            className={summary.isCompleted ? "flex-1" : ""}
+            className={summary.isCompleted ? "flex-1" : "flex-1 sm:flex-none"}
           >
             <Link href={`/campaign/wizard/${wizard._id}`}>
-              {summary.isCompleted ? "View campaign" : "Map"}
+              {summary.isCompleted ? "View campaign" : "Opponents"}
             </Link>
           </Button>
         </div>
@@ -181,7 +181,7 @@ function CampaignWizardCard({
 }
 
 export default function CampaignPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const battle = useStartCampaignBattle();
 
   // Get campaign opponents
@@ -198,6 +198,16 @@ export default function CampaignPage() {
     api.campaigns.getUserCampaignProgress,
     user?.id ? {} : "skip",
   );
+
+  // Wait for sign-in state before choosing a signed-in or signed-out view,
+  // so signed-in players never see the sign-up pitch flash by.
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <RuneSpinner size="md" label="Loading…" />
+      </div>
+    );
+  }
 
   // Show registration prompt for anonymous users
   if (!user) {
@@ -277,7 +287,7 @@ export default function CampaignPage() {
                 <Button asChild>
                   <Link href="/wizards/create">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Wizard
+                    Create wizard
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
@@ -331,12 +341,6 @@ export default function CampaignPage() {
   const completedWizards = userProgress.filter(
     (p) => getCampaignSummary(p).isCompleted,
   ).length;
-  const recentWizard = wizardsWithProgress.find(
-    (w) => w.wizard._id === recentId,
-  );
-  const recentNext = getCampaignSummary(recentWizard?.progress).nextOpponent;
-  const recentOpponentName =
-    recentNext !== null ? opponentNames[recentNext] : undefined;
 
   return (
     <CampaignErrorBoundary>
@@ -356,36 +360,6 @@ export default function CampaignPage() {
             }
           />
 
-          {recentWizard && recentOpponentName && (
-            <div className="flex flex-col gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <p>
-                <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Pick up where you left off
-                </span>
-                <span className="font-medium">
-                  {recentWizard.wizard.name} vs {recentOpponentName}
-                </span>
-              </p>
-              <Button
-                disabled={battle.isBusy}
-                onClick={() =>
-                  battle.start(recentWizard.wizard._id, recentNext!)
-                }
-              >
-                <Swords className="h-4 w-4 mr-2" aria-hidden />
-                {battle.isStarting(recentWizard.wizard._id, recentNext!)
-                  ? "Starting..."
-                  : "Continue"}
-              </Button>
-            </div>
-          )}
-
-          <CampaignSeasonOverview
-            season={season}
-            opponents={campaignOpponents}
-            wizards={wizardsWithProgress}
-          />
-
           <section aria-labelledby="wizards-heading">
             <h2
               id="wizards-heading"
@@ -398,7 +372,7 @@ export default function CampaignPage() {
               {completedWizards} of {wizardsWithProgress.length} completed. Each
               wizard has its own campaign and earns its own relic.
             </p>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
               {wizardsWithProgress.map((wizardData) => (
                 <CampaignWizardCard
                   key={wizardData.wizard._id}
@@ -410,6 +384,12 @@ export default function CampaignPage() {
               ))}
             </div>
           </section>
+
+          <CampaignSeasonOverview
+            season={season}
+            opponents={campaignOpponents}
+            wizards={wizardsWithProgress}
+          />
         </div>
       </div>
     </CampaignErrorBoundary>

@@ -20,9 +20,12 @@ export function UserInitializer() {
   const pathname = usePathname();
 
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  // Wait until Convex has the sign-in token too. Asked any earlier, the
+  // query sees an anonymous visitor, answers "no profile", and the redirect
+  // below bounces a signed-in player to setup (and from there, home).
   const profileStatus = useQuery(
     api.userProfiles.getCurrentUserProfileStatus,
-    isLoaded && user ? {} : "skip",
+    isLoaded && user && convexReady ? {} : "skip",
   );
 
   useEffect(() => {

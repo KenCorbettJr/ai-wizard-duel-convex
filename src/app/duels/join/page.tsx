@@ -49,10 +49,11 @@ function ShortcodeInput() {
         <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
         <Input
           type="text"
-          placeholder="ABC123"
+          placeholder="ABC123 or a duel link"
+          aria-label="Duel code or link"
           value={input}
           onChange={handleInputChange}
-          className="w-32 pl-10 text-center font-mono bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+          className="w-64 pl-10 text-center font-mono bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
         />
       </div>
       <Button
@@ -82,20 +83,14 @@ export default function JoinDuelPage() {
               <Swords className="h-8 w-8 text-primary scale-x-[-1]" />
             </div>
             <p className="text-muted-foreground text-lg">
-              Enter a shortcode to join a duel.
+              Got a duel code or link from a friend? Pop it in below.
             </p>
           </div>
 
           <div className="space-y-8">
             <div className="text-center">
               <div className="bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl p-6 shadow-lg dark:shadow-xl">
-                <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground mb-4">
-                  <span className="font-medium">Have a shortcode?</span>
-                </div>
                 <ShortcodeInput />
-                <p className="text-xs text-muted-foreground/60 mt-3">
-                  Enter the 6-character code or paste the full duel link
-                </p>
               </div>
             </div>
           </div>

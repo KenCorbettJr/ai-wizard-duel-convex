@@ -174,7 +174,7 @@ function Record({
   const losses = wizard.losses ?? 0;
   return (
     <p className="text-xs text-muted-foreground">
-      {wins || losses ? `${wins}W · ${losses}L` : "Untested"}
+      {wins || losses ? `${wins}W · ${losses}L` : "No duels yet"}
     </p>
   );
 }
@@ -652,7 +652,7 @@ export function CreateDuelForm({
                         className="flex min-h-32 flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed p-2 text-center text-sm font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                       >
                         <Sparkles className="size-5" aria-hidden="true" />
-                        New wizard
+                        Create wizard
                       </Link>
                     </div>
                   </DialogContent>
@@ -908,7 +908,7 @@ export function CreateDuelForm({
 
         {/* Commit: pinned to the bottom on phones so it's always in reach */}
         {/* Sits above the mobile tab bar; at md+ (no tab bar) it pins to the bottom */}
-        <div className="sticky bottom-[var(--app-bottomnav-h)] z-10 mx-[calc(50%-50vw)] space-y-2 border-t bg-background/90 px-[max(1rem,calc(50vw-50%))] py-3 backdrop-blur md:bottom-0 md:mx-0 md:px-0 md:pb-4">
+        <div className="sticky bottom-[var(--app-bottomnav-h)] z-10 mx-[calc(50%-50vw)] space-y-2 border-t bg-background/90 px-[max(1rem,calc(50vw-50%))] py-3 backdrop-blur md:static md:mx-0 md:border-t-0 md:bg-transparent md:px-0 md:pb-4 md:backdrop-blur-none">
           {error && (
             <div
               role="alert"

@@ -31,14 +31,7 @@ import {
   ownerLabelOf,
 } from "../../../../convex/lib/wizardNames";
 import { ConvexError } from "convex/values";
-import {
-  Swords,
-  Clock,
-  Sparkles,
-  ScrollText,
-  Star,
-  Share2,
-} from "lucide-react";
+import { Swords, Clock, Sparkles, ScrollText, Share2 } from "lucide-react";
 import { Crown } from "@/components/ui/crown-icon";
 
 import { DuelIntroduction } from "@/components/DuelIntroduction";
@@ -53,6 +46,7 @@ import {
   type WatcherRejection,
 } from "@/components/watcher/WatcherDialog";
 import { DuelScoreboard } from "@/components/DuelScoreboard";
+import { ConvexImage } from "@/components/ConvexImage";
 import { DuelVersusIntro } from "@/components/DuelVersusIntro";
 import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { explainDuelResult } from "@/lib/duelResult";
@@ -68,6 +62,8 @@ import {
 } from "@/components/WaitingDuelPanel";
 import { safeConvexId } from "../../../lib/utils";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { useSponsorship } from "@/components/SponsorBanner";
+import { DUEL_TOKEN_COST } from "../../../../convex/lib/pricing";
 import posthog from "posthog-js";
 
 interface DuelPageClientProps {
@@ -153,7 +149,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   // Hide the winner until the viewer reveals the conclusion. This applies when
   // the duel has a conclusion round, or finished recently enough that the
   // conclusion is probably still being generated.
-  const { revealed: conclusionRevealed, reveal: revealConclusion } =
+  const { revealed: storedRevealed, reveal: revealConclusion } =
     useConclusionReveal(id);
   const [mountedAt] = useState(() => Date.now());
   const hasConclusion = !!duel?.rounds?.some(
@@ -161,6 +157,15 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
   );
   const justCompleted =
     !!duel?.completedAt && duel.completedAt >= mountedAt - 3 * 60 * 1000;
+  // A player coming back to their own finished duel already knows how it
+  // went (their duel lists say so), so there's nothing to hide. The reveal
+  // still plays for a duel that has only just ended.
+  const conclusionRevealed =
+    storedRevealed ||
+    (duel?.status === "COMPLETED" &&
+      !justCompleted &&
+      !!user?.id &&
+      duel.players.includes(user.id));
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const castSpell = useAction(api.watcher.castSpell);
@@ -223,6 +228,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     return done.length ? Math.max(...done.map((r) => r.roundNumber)) : 0;
   }, [duel?.rounds]);
 
+  const sponsorship = useSponsorship();
   const isPlayerInDuel = useMemo(
     () => duel?.players.includes(user?.id || ""),
     [duel?.players, user?.id],
@@ -569,6 +575,56 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       : animating && !animating.impact
         ? Math.min(revealedThrough, animating.round - 1)
         : revealedThrough;
+  // Looking back over a finished duel: the scoreboard follows the round on
+  // screen, and only shows the final result once the reader reaches it.
+  const reviewing =
+    duel?.status === "COMPLETED" && caughtUp && showWinner && !animating;
+  const [followRound, setFollowRound] = useState<number | null>(0);
+  useEffect(() => {
+    if (!reviewing) return;
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const board = document.querySelector(".duel-scoreboard");
+      const line =
+        (board?.getBoundingClientRect().bottom ?? 0) +
+        window.innerHeight * 0.25;
+      const end = [
+        conclusionRoundNo !== undefined
+          ? document.getElementById(`round-${conclusionRoundNo}`)
+          : null,
+        document.getElementById("duel-result"),
+      ].find(Boolean);
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 4;
+      if (atBottom || (end && end.getBoundingClientRect().top < line)) {
+        setFollowRound(null);
+        return;
+      }
+      let current = 0;
+      for (const n of completedRoundNumbers) {
+        const el = document.getElementById(`round-${n}`);
+        if (el && el.getBoundingClientRect().top < line) current = n;
+      }
+      setFollowRound(current);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(measure);
+    };
+    raf = requestAnimationFrame(measure);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [reviewing, completedRoundNumbers, conclusionRoundNo]);
+  const followingRounds = reviewing && followRound !== null;
+  const scoreThrough =
+    reviewing && followRound !== null ? followRound : displayedThrough;
+
   const { shownHitPoints, shownPoints } = useMemo(() => {
     const hp: Record<string, number> = { ...(duel?.hitPoints ?? {}) };
     const pts: Record<string, number> = { ...(duel?.points ?? {}) };
@@ -576,7 +632,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
       if (
         r.type === "CONCLUSION" ||
         r.status !== "COMPLETED" ||
-        r.roundNumber <= displayedThrough
+        r.roundNumber <= scoreThrough
       ) {
         continue;
       }
@@ -586,7 +642,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         pts[w] = (pts[w] ?? 0) - change;
     }
     return { shownHitPoints: hp, shownPoints: pts };
-  }, [duel?.hitPoints, duel?.points, duel?.rounds, displayedThrough]);
+  }, [duel?.hitPoints, duel?.points, duel?.rounds, scoreThrough]);
 
   // Each new round starts with the composer tucked away on phones, so the
   // result the player is responding to stays readable.
@@ -693,6 +749,13 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
     } finally {
       setIsCasting(false);
     }
+  };
+
+  const skipToResult = () => {
+    const el = document.getElementById("duel-result");
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.focus({ preventScroll: true });
   };
 
   const handleReveal = () => {
@@ -877,15 +940,8 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           </Badge>
         );
       case "COMPLETED":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-info/80 text-info-foreground border-info/50 flex items-center gap-1"
-          >
-            <Star className="h-3 w-3" />
-            Completed
-          </Badge>
-        );
+        // The scoreboard already says it's final.
+        return null;
       case "CANCELLED":
         return (
           <Badge
@@ -925,7 +981,13 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           ? duel.numberOfRounds
           : undefined
       }
-      revealedThrough={revealedThrough === null ? undefined : displayedThrough}
+      revealedThrough={
+        followingRounds
+          ? (followRound ?? undefined)
+          : revealedThrough === null
+            ? undefined
+            : displayedThrough
+      }
       onRevealTo={revealTo}
     />
   );
@@ -951,6 +1013,84 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
         })
       : null;
 
+  const entryCost = sponsorship?.coversYou
+    ? "free"
+    : `${DUEL_TOKEN_COST} token${DUEL_TOKEN_COST === 1 ? "" : "s"}`;
+  const shareReplay = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url, title: document.title });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Replay link copied");
+      }
+    } catch {
+      // Share sheet dismissed or clipboard blocked.
+    }
+  };
+
+  // What to do now: play again, share, or move on.
+  const resultActions = (
+    <div className="flex flex-col items-center gap-2 pt-3">
+      <div className="flex flex-wrap justify-center gap-3">
+        {duel.isCampaignBattle && isPlayerInDuel ? (
+          <Button asChild size="lg" variant="gold">
+            <Link href="/campaign">
+              <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
+              {userDefeated ? "Back to the campaign" : "Next battle"}
+            </Link>
+          </Button>
+        ) : isPlayerInDuel ? (
+          <Button
+            size="lg"
+            variant="gold"
+            onClick={handleRematch}
+            disabled={isStartingRematch}
+          >
+            {isStartingRematch ? (
+              <RuneSpinner size="sm" label="Starting rematch" />
+            ) : (
+              <Swords className="mr-2 h-4 w-4" aria-hidden="true" />
+            )}
+            {!duel.rematchDuelId
+              ? `Rematch · ${entryCost}`
+              : rematchDuel?.players.includes(user?.id ?? "")
+                ? "Go to rematch"
+                : `Join rematch · ${entryCost}`}
+          </Button>
+        ) : (
+          <Button asChild size="lg" variant="gold">
+            <Link href="/wizards/create">
+              <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
+              Create your wizard
+            </Link>
+          </Button>
+        )}
+        <Button size="lg" variant="outline" onClick={shareReplay}>
+          <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
+          Share replay
+        </Button>
+        {isPlayerInDuel && (
+          <Button asChild size="lg" variant="ghost">
+            <Link href="/">Back to home</Link>
+          </Button>
+        )}
+      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        {duel.isCampaignBattle && isPlayerInDuel
+          ? userDefeated
+            ? `${winnerWizard?.name ?? "Your opponent"} still blocks your path. Try again.`
+            : "Your next opponent is waiting on the campaign map."
+          : isPlayerInDuel
+            ? duel.rematchDuelId
+              ? "A rematch is waiting."
+              : "Same wizards and length. Charged only when it starts."
+            : "Free to create. Then challenge anyone."}
+      </p>
+    </div>
+  );
+
   // Winner announcement for completed duels.
   const resultCard = duel.status === "COMPLETED" &&
     showWinner &&
@@ -967,8 +1107,23 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               : duel.isCampaignBattle
                 ? "bg-arcane-soft border-2 border-primary/50"
                 : "bg-linear-to-r from-warning/20 to-gold/10 border-2 border-warning/40"
-        } shadow-lg dark:shadow-xl`}
+        } overflow-hidden pt-0 shadow-lg dark:shadow-xl`}
       >
+        {/* Lead with the art: the duel's key scene sits above the verdict
+            when the result is shown before the rounds. */}
+        {!watchedHere && duel.featuredIllustration ? (
+          <ConvexImage
+            storageId={duel.featuredIllustration}
+            alt=""
+            width={1200}
+            height={675}
+            sizes="(min-width: 768px) 768px, 100vw"
+            priority
+            className="aspect-video w-full object-cover"
+          />
+        ) : (
+          <div aria-hidden="true" className="h-6" />
+        )}
         <CardHeader className="duel-reveal">
           <CardTitle
             className={`flex items-center justify-center gap-3 text-2xl ${
@@ -1029,7 +1184,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   : wizard2?.name}{" "}
                 {duel.isCampaignBattle
                   ? userDefeated
-                    ? "wins this time. Try again!"
+                    ? "wins this time."
                     : winnerIsAI
                       ? "holds the line for the campaign!"
                       : "defeats the AI opponent!"
@@ -1041,20 +1196,57 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               "The duel ends in an honorable draw!"
             )}
           </CardDescription>
-          {duel.winners.length === 1 && (
-            <p className="text-center text-sm text-foreground/80">
-              {duel.forfeitedBy ? "Forfeited after" : "After"}{" "}
-              {lastResolvedNumber} round
-              {lastResolvedNumber === 1 ? "" : "s"}. Final standing:{" "}
-              {duel.wizards
-                .slice(0, 2)
-                .map(
-                  (id, i) =>
-                    `${(i === 0 ? wizard1 : wizard2)?.name ?? "Wizard"} ${Math.max(0, duel.hitPoints[id] ?? 0)} HP, ${duel.points[id] ?? 0} pts`,
-                )
-                .join(" · ")}
-            </p>
-          )}
+          {/* The final score, once, as big numbers. */}
+          <div className="mx-auto flex w-full max-w-md items-stretch justify-center gap-3 pt-2">
+            {duel.wizards.slice(0, 2).map((id, i) => {
+              const wiz = i === 0 ? wizard1 : wizard2;
+              const won = duel.winners?.length === 1 && duel.winners[0] === id;
+              return (
+                <div key={id} className="contents">
+                  {i === 1 && (
+                    <div
+                      aria-hidden="true"
+                      className="self-center text-lg font-bold text-muted-foreground"
+                    >
+                      –
+                    </div>
+                  )}
+                  <div
+                    className={`min-w-0 flex-1 rounded-lg border px-3 py-2 text-center ${
+                      won
+                        ? "border-gold/60 bg-gold/10"
+                        : "border-border bg-background/40"
+                    }`}
+                  >
+                    <div className="truncate text-xs font-medium text-muted-foreground">
+                      {wiz?.name ?? "Wizard"}
+                    </div>
+                    <div
+                      className={`text-3xl font-bold tabular-nums ${won ? "text-gold" : "text-foreground"}`}
+                    >
+                      {duel.points[id] ?? 0}
+                      <span className="ml-1 text-sm font-medium text-muted-foreground">
+                        pts
+                      </span>
+                    </div>
+                    {(duel.hitPoints[id] ?? 0) <= 0 ? (
+                      <div className="text-xs font-semibold text-destructive">
+                        Knocked out
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">
+                        {duel.hitPoints[id]} HP left
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-center text-xs text-muted-foreground">
+            {duel.forfeitedBy ? "Forfeited after" : "After"}{" "}
+            {lastResolvedNumber} round{lastResolvedNumber === 1 ? "" : "s"}
+          </p>
           {resultExplanation && (
             <p className="mx-auto max-w-xl text-center text-sm text-foreground/90">
               {resultExplanation}{" "}
@@ -1068,15 +1260,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               </HowToWinDialog>
             </p>
           )}
-          {duel.isCampaignBattle && isPlayerInDuel && (
-            <div className="flex justify-center pt-2">
-              <Button asChild size="lg">
-                <Link href="/campaign">
-                  {userDefeated ? "Try again" : "Continue the campaign"}
-                </Link>
-              </Button>
-            </div>
-          )}
+          {resultActions}
         </CardHeader>
       </Card>
     );
@@ -1268,10 +1452,17 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   hitPoints={shownHitPoints}
                   points={shownPoints}
                   replay={
-                    replaying ? { round: revealedThrough ?? 0 } : undefined
+                    replaying
+                      ? { round: revealedThrough ?? 0 }
+                      : followingRounds
+                        ? { round: followRound ?? 0 }
+                        : undefined
                   }
+                  onSkipToResult={followingRounds ? skipToResult : undefined}
                   userWizardId={userWizardId}
-                  winnerIds={showWinner ? duel.winners : undefined}
+                  winnerIds={
+                    showWinner && !followingRounds ? duel.winners : undefined
+                  }
                   duelStatus={duel.status}
                   currentRound={duel.currentRound}
                   numberOfRounds={duel.numberOfRounds}
@@ -1304,58 +1495,65 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
               </>
             )}
 
-          {duel.status === "COMPLETED" && !showWinner && !watchedHere && (
-            <Card className="mb-8 border-2 border-primary/50 bg-card/95 text-center shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                  <Sparkles
-                    className="h-6 w-6 text-primary"
-                    aria-hidden="true"
-                  />
-                  The duel is over
-                </CardTitle>
-                <CardDescription>
-                  {caughtUp
-                    ? "You've seen every round. Find out how it ended."
-                    : revealedThrough === 0
-                      ? "Relive it round by round, as it happened."
-                      : `You're on round ${revealedThrough}. Pick up where you left off, or skip to the end.`}
-                </CardDescription>
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  {caughtUp ? (
-                    <Button size="lg" onClick={handleReveal}>
-                      Reveal the result
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        size="lg"
-                        onClick={() =>
-                          revealedThrough === 0 && nextUnwatched !== undefined
-                            ? revealTo(nextUnwatched)
-                            : document
-                                .getElementById("replay-next")
-                                ?.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "center",
-                                })
-                        }
-                      >
-                        {revealedThrough === 0
-                          ? "Watch the duel"
-                          : "Keep watching"}
+          {/* Once every round has been seen, the step under the last round
+              (and its floating pill) is the one way to reveal the ending. */}
+          {duel.status === "COMPLETED" &&
+            !showWinner &&
+            !watchedHere &&
+            !caughtUp && (
+              <Card className="mb-8 border-2 border-primary/50 bg-card/95 text-center shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+                    <Sparkles
+                      className="h-6 w-6 text-primary"
+                      aria-hidden="true"
+                    />
+                    The duel is over
+                  </CardTitle>
+                  <CardDescription>
+                    {caughtUp
+                      ? "You've seen every round. Find out how it ended."
+                      : revealedThrough === 0
+                        ? "Relive it round by round, as it happened."
+                        : `You're on round ${revealedThrough}. Pick up where you left off, or skip to the end.`}
+                  </CardDescription>
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    {caughtUp ? (
+                      <Button size="lg" onClick={handleReveal}>
+                        Reveal the result
                       </Button>
-                      <Button size="lg" variant="ghost" onClick={handleReveal}>
-                        Skip to the result
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardHeader>
-            </Card>
-          )}
-
-          {!watchedHere && resultCard}
+                    ) : (
+                      <>
+                        <Button
+                          size="lg"
+                          onClick={() =>
+                            revealedThrough === 0 && nextUnwatched !== undefined
+                              ? revealTo(nextUnwatched)
+                              : document
+                                  .getElementById("replay-next")
+                                  ?.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  })
+                          }
+                        >
+                          {revealedThrough === 0
+                            ? "Watch the duel"
+                            : "Keep watching"}
+                        </Button>
+                        <Button
+                          size="lg"
+                          variant="ghost"
+                          onClick={handleReveal}
+                        >
+                          Skip to the result
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardHeader>
+              </Card>
+            )}
 
           {duel.status === "CANCELLED" && (
             <Card className="mb-8 border-destructive/40 bg-card/90 shadow-lg">
@@ -1370,7 +1568,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                 </CardDescription>
                 <div className="flex gap-3 pt-2">
                   <Button asChild>
-                    <Link href="/duels/create">Start a new duel</Link>
+                    <Link href="/duels/create">Start a duel</Link>
                   </Button>
                   <Button asChild variant="outline">
                     <Link href="/duels">Browse duels</Link>
@@ -1438,7 +1636,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                           You need a wizard to join this duel.
                         </p>
                         <Button asChild>
-                          <Link href="/wizards/create">Create Wizard</Link>
+                          <Link href="/wizards/create">Create wizard</Link>
                         </Button>
                       </div>
                     ) : (
@@ -1665,6 +1863,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   wizard1={wizard1}
                   wizard2={wizard2}
                   isLatest={
+                    reviewing ||
                     round.roundNumber === latestRoundNumber ||
                     round.roundNumber >=
                       (revealedThrough ?? lastResolvedNumber) - 1
@@ -1676,6 +1875,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   }
                   onRevealImpact={onRevealImpact}
                   onRevealComplete={onRevealComplete}
+                  conclusionRevealed={conclusionRevealed}
                 />
               ))}
             </div>
@@ -1702,83 +1902,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </div>
           )}
 
-          {watchedHere && resultCard}
-
-          {duel.status === "COMPLETED" && showWinner && !isPlayerInDuel && (
-            <section
-              aria-label="What next"
-              className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-border/50 bg-card/90 px-4 py-6 text-center shadow-lg"
-            >
-              <h3 className="font-display text-xl font-bold text-foreground">
-                Think you could do better?
-              </h3>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                Create a wizard and step into the arena, or pass this duel on.
-              </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Button asChild size="lg">
-                  <Link href="/wizards/create">
-                    <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Create your wizard
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={async () => {
-                    const url = window.location.href;
-                    try {
-                      if (navigator.share) {
-                        await navigator.share({ url, title: document.title });
-                      } else {
-                        await navigator.clipboard.writeText(url);
-                        toast.success("Duel link copied");
-                      }
-                    } catch {
-                      // Share sheet dismissed or clipboard blocked.
-                    }
-                  }}
-                >
-                  <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Share this duel
-                </Button>
-                <Button asChild size="lg" variant="ghost">
-                  <Link href="/duels/watch">Watch another duel</Link>
-                </Button>
-              </div>
-            </section>
-          )}
-
-          {/* Rematch, shown once the result has been revealed */}
-          {duel.status === "COMPLETED" &&
-            showWinner &&
-            !duel.isCampaignBattle &&
-            !!user?.id &&
-            duel.players.includes(user.id) && (
-              <div className="mt-8 flex flex-col items-center gap-2 text-center">
-                <Button
-                  size="lg"
-                  onClick={handleRematch}
-                  disabled={isStartingRematch}
-                >
-                  {isStartingRematch ? (
-                    <RuneSpinner size="sm" label="Starting rematch" />
-                  ) : (
-                    <Swords className="h-4 w-4 mr-2" />
-                  )}
-                  {!duel.rematchDuelId
-                    ? "Rematch"
-                    : rematchDuel?.players.includes(user.id)
-                      ? "Go to Rematch"
-                      : "Join Rematch"}
-                </Button>
-                <p className="text-sm text-muted-foreground">
-                  {duel.rematchDuelId
-                    ? "A rematch is ready."
-                    : "Start a new duel with the same wizards and settings."}
-                </p>
-              </div>
-            )}
+          {resultCard}
         </div>
       </div>
     </div>

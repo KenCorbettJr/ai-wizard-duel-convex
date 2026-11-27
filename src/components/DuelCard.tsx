@@ -183,6 +183,13 @@ export function DuelCard({
               duel={duel}
               showResult={showResult}
               participant={participant}
+              viewerWon={
+                participant && completed
+                  ? wizards.some(
+                      (w) => w.owner === viewerId && winnerIds.includes(w._id),
+                    )
+                  : undefined
+              }
               watchedThrough={watchedThrough}
               now={now}
             />
@@ -255,7 +262,11 @@ export function DuelCard({
 
           {/* Every watchable card gets the box, so a missing quote never
               hints that a duel ended in its first round. */}
-          {(openings.length > 0 || live || completed) && (
+          {/* Your own finished duels have nothing to keep secret, so an
+              empty placeholder there is just noise. */}
+          {(openings.length > 0 ||
+            live ||
+            (completed && !(participant && showResult))) && (
             <div
               className={cn(
                 "mx-3 mt-3 rounded-lg bg-muted/40 px-2.5 py-2 sm:mx-4",
@@ -431,12 +442,15 @@ function StatusPill({
   duel,
   showResult,
   participant,
+  viewerWon,
   watchedThrough,
   now,
 }: {
   duel: DuelCardDuel;
   showResult: boolean;
   participant: boolean;
+  /** Set for the viewer's own finished duels. */
+  viewerWon?: boolean;
   watchedThrough: number | null | undefined;
   now: number;
 }) {
@@ -474,6 +488,33 @@ function StatusPill({
   if (duel.status === "CANCELLED") {
     return (
       <span className={cn(base, "bg-black/60 text-white/80")}>Cancelled</span>
+    );
+  }
+
+  if (showResult && viewerWon !== undefined) {
+    // Your own duel: say how it went, plainly.
+    return (
+      <span
+        className={cn(
+          base,
+          viewerWon
+            ? "bg-gold text-gold-foreground"
+            : "bg-black/70 text-white ring-1 ring-white/20",
+        )}
+      >
+        {viewerWon ? (
+          <Crown className="size-3.5" aria-hidden="true" />
+        ) : (
+          <History className="size-3.5" aria-hidden="true" />
+        )}
+        {viewerWon ? "Victory" : "Defeat"}
+        {duel.isCampaignBattle && (
+          <span className="font-medium opacity-80">· campaign</span>
+        )}
+        {duel.forfeitedBy && (
+          <span className="font-medium opacity-80">· forfeit</span>
+        )}
+      </span>
     );
   }
 

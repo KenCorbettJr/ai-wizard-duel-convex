@@ -1,7 +1,12 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Campaign Mode - AI Wizard Duel",
+  // Keep the site suffix for child pages too (a plain string title here
+  // would drop the root template for everything below).
+  title: {
+    default: "Campaign",
+    template: "%s | AI Wizard Duel",
+  },
   description:
     "Take your wizards through a challenging single-player campaign against 10 unique AI opponents. Earn powerful relics and permanent upgrades.",
 };

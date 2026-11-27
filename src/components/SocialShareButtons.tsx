@@ -94,10 +94,10 @@ export function SocialShareButtons({
           size="sm"
           onClick={handleTwitterShare}
           className="flex items-center gap-2"
-          title="Share on Twitter"
+          title="Share on X"
         >
           <MessageCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Twitter</span>
+          <span className="hidden sm:inline">Share on X</span>
         </Button>
 
         <Button

@@ -3,16 +3,13 @@ import {
   Home,
   Swords,
   Eye,
-  Users,
   Wand2,
-  Plus,
   Crown,
   Coins,
   User,
   Scroll,
   Shield,
   ShieldCheck,
-  KeyRound,
   Gift,
 } from "lucide-react";
 
@@ -33,61 +30,44 @@ export interface NavGroup {
 
 export const navGroups: NavGroup[] = [
   {
+    title: "Play",
     items: [
       { href: "/", label: "Home", icon: Home },
-      { href: "/profile", label: "Profile", icon: User, requiresAuth: true },
+      {
+        href: "/campaign",
+        label: "Campaign",
+        icon: Scroll,
+        requiresAuth: true,
+      },
+      {
+        href: "/duels",
+        label: "Duels",
+        icon: Swords,
+        requiresAuth: true,
+        // The lobby lives under My Duels; this shows when you're queued.
+        showStatus: true,
+      },
+      {
+        href: "/wizards",
+        label: "Wizards",
+        icon: Wand2,
+        requiresAuth: true,
+      },
+      { href: "/duels/watch", label: "Watch Duels", icon: Eye },
+      { href: "/leaderboard", label: "Leaderboard", icon: Crown },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
       { href: "/credits", label: "Tokens", icon: Coins, requiresAuth: true },
+      { href: "/profile", label: "Profile", icon: User, requiresAuth: true },
       {
         href: "/invite",
         label: "Invite Friends",
         icon: Gift,
         requiresAuth: true,
         requiresInvitePerk: true,
-      },
-    ],
-  },
-  {
-    title: "Wizards",
-    items: [
-      { href: "/leaderboard", label: "Leaderboard", icon: Crown },
-      {
-        href: "/wizards",
-        label: "My Wizards",
-        icon: Wand2,
-        requiresAuth: true,
-      },
-      {
-        href: "/wizards/create",
-        label: "Add Wizard",
-        icon: Plus,
-        requiresAuth: true,
-      },
-      { href: "/campaign", label: "Campaign", icon: Scroll, requiresAuth: true },
-    ],
-  },
-  {
-    title: "Duels",
-    items: [
-      { href: "/duels/watch", label: "Watch Duels", icon: Eye },
-      { href: "/duels", label: "My Duels", icon: Swords, requiresAuth: true },
-      {
-        href: "/duels/lobby",
-        label: "Quick Match",
-        icon: Users,
-        requiresAuth: true,
-        showStatus: true,
-      },
-      {
-        href: "/duels/create",
-        label: "Create Duel",
-        icon: Plus,
-        requiresAuth: true,
-      },
-      {
-        href: "/duels/join",
-        label: "Join by Code",
-        icon: KeyRound,
-        requiresAuth: true,
       },
     ],
   },
@@ -134,9 +114,6 @@ export function getVisibleGroups({
     .filter((group) => group.items.length > 0);
 }
 
-/** Sub-routes of /duels that have their own nav entry. */
-const DUEL_SUBSECTIONS = ["/duels/lobby", "/duels/watch", "/duels/create", "/duels/join"];
-
 const startsWithSegment = (pathname: string, base: string) =>
   pathname === base || pathname.startsWith(`${base}/`);
 
@@ -159,20 +136,18 @@ const homeTab: TabItem = {
 export const signedInTabs: TabItem[] = [
   homeTab,
   {
+    href: "/campaign",
+    label: "Campaign",
+    icon: Scroll,
+    isActive: (p) => startsWithSegment(p, "/campaign"),
+  },
+  {
     href: "/duels",
     label: "Duels",
     icon: Swords,
-    isActive: (p) =>
-      startsWithSegment(p, "/duels") &&
-      !DUEL_SUBSECTIONS.some((s) => startsWithSegment(p, s)),
-  },
-  {
-    href: "/duels/lobby",
-    label: "Quick Match",
-    icon: Users,
-    isActive: (p) => startsWithSegment(p, "/duels/lobby"),
+    // Creating, joining and the lobby all live under Duels.
+    isActive: (p) => startsWithSegment(p, "/duels"),
     showStatus: true,
-    primary: true,
   },
   {
     href: "/wizards",

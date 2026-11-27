@@ -32,6 +32,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { wizardRank } from "@/components/RosterWizardCard";
 import { cn, safeConvexId } from "../../../lib/utils";
 import { DEPARTED_OWNER } from "../../../../convex/lib/departed";
 
@@ -526,6 +527,24 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
             {/* Record (only once there is one) */}
             {decided > 0 && (
               <section aria-label="Record" className="space-y-1.5">
+                {(() => {
+                  const rank = wizardRank(wins);
+                  return (
+                    <p className="text-center text-sm">
+                      <span className="font-display font-bold uppercase tracking-wide text-gold">
+                        {rank.title}
+                      </span>
+                      {rank.next && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {rank.next.winsNeeded}{" "}
+                          {plural(rank.next.winsNeeded, "win", "wins")} to{" "}
+                          {rank.next.title}
+                        </span>
+                      )}
+                    </p>
+                  );
+                })()}
                 <div className="flex divide-x divide-border border-y border-border py-1">
                   <div className="flex-1 px-2 py-2 text-center">
                     <div className="text-xl font-bold leading-tight text-success">
@@ -570,7 +589,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
                     )}
                     {streak >= STREAK_MIN && campaignResults > 0 && " · "}
                     {campaignResults > 0 &&
-                      `Excludes ${campaignResults} campaign ${plural(campaignResults, "battle", "battles")}`}
+                      `Player duels only (${campaignResults} campaign ${plural(campaignResults, "battle", "battles")} not counted)`}
                   </p>
                 )}
               </section>
@@ -582,7 +601,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
                 <Button asChild size="lg" className="flex-1">
                   <Link href={`/duels/create?wizardId=${wizardId}`}>
                     <Swords className="size-5" />
-                    Start New Duel
+                    Start a duel
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" onClick={openEditor}>
