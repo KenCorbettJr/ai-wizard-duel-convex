@@ -2,11 +2,19 @@
 
 import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -255,17 +263,6 @@ export function CreateDuelForm({
     searchParams.get("chat") !== "0",
   );
   const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerRef = useRef<HTMLFieldSetElement>(null);
-  const changeChampionRef = useRef<HTMLButtonElement>(null);
-  // On phones the picker opens below the fold, behind the pinned button
-  useEffect(() => {
-    if (pickerOpen) {
-      pickerRef.current?.scrollIntoView({
-        block: "nearest",
-        behavior: "smooth",
-      });
-    }
-  }, [pickerOpen]);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -589,17 +586,77 @@ export function CreateDuelForm({
                 </p>
               )}
               {wizards.length > 1 && !blocker && (
-                <button
-                  ref={changeChampionRef}
-                  type="button"
-                  aria-expanded={pickerOpen}
-                  aria-controls={pickerOpen ? "champion-picker" : undefined}
-                  disabled={locked}
-                  onClick={() => setPickerOpen((open) => !open)}
-                  className="mt-1 min-h-11 rounded-full border border-primary/40 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {pickerOpen ? "Done" : "Change champion"}
-                </button>
+                <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={locked}
+                      className="mt-1 min-h-11 rounded-full border border-primary/40 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Change champion
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="font-display text-xl">
+                        Choose your champion
+                      </DialogTitle>
+                      <DialogDescription>
+                        Who steps into the arena for this duel?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-3 min-[400px]:grid-cols-3 sm:grid-cols-4">
+                      {(sortedWizards ?? wizards).map(
+                        (wizard: Doc<"wizards">) => {
+                          const selected = selectedWizard === wizard._id;
+                          return (
+                            <button
+                              key={wizard._id}
+                              type="button"
+                              aria-pressed={selected}
+                              onClick={() => {
+                                changed(setPickedWizard)(wizard._id);
+                                setPickerOpen(false);
+                              }}
+                              className={cn(
+                                "relative flex min-w-0 flex-col items-center gap-1.5 rounded-xl border p-2 text-center transition-all focus-visible:ring-2 focus-visible:ring-ring",
+                                selected
+                                  ? "border-primary bg-primary/10 ring-2 ring-gold/70"
+                                  : "border-border hover:border-primary/50",
+                              )}
+                            >
+                              <WizardPortrait
+                                wizard={wizard}
+                                size={128}
+                                decorative
+                                className="w-full"
+                              />
+                              <span className="line-clamp-1 w-full text-sm font-medium">
+                                {wizard.name}
+                              </span>
+                              <Record wizard={wizard} />
+                              {selected && (
+                                <span className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                  <Check
+                                    className="size-3"
+                                    aria-hidden="true"
+                                  />
+                                </span>
+                              )}
+                            </button>
+                          );
+                        },
+                      )}
+                      <Link
+                        href={`/wizards/create?${returnHereFresh}`}
+                        className="flex min-h-32 flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed p-2 text-center text-sm font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                      >
+                        <Sparkles className="size-5" aria-hidden="true" />
+                        New wizard
+                      </Link>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               )}
             </div>
 
@@ -781,66 +838,6 @@ export function CreateDuelForm({
                   : null}
           </p>
         </section>
-
-        {/* Champion picker, tucked away until the player wants to switch */}
-        {wizards.length > 1 && pickerOpen && !blocker && (
-          <fieldset
-            id="champion-picker"
-            ref={pickerRef}
-            disabled={locked}
-            className="min-w-0 scroll-mb-[calc(var(--app-bottomnav-h)+8rem)] md:scroll-mb-40"
-          >
-            <legend className="mb-3 font-display text-lg font-semibold">
-              Choose your champion
-            </legend>
-            <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0">
-              {(sortedWizards ?? wizards).map((wizard: Doc<"wizards">) => {
-                const selected = selectedWizard === wizard._id;
-                return (
-                  <button
-                    key={wizard._id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      changed(setPickedWizard)(wizard._id);
-                      setPickerOpen(false);
-                      changeChampionRef.current?.focus();
-                    }}
-                    className={cn(
-                      "relative flex w-24 shrink-0 snap-start flex-col items-center gap-1.5 rounded-xl border p-2 text-center transition-all focus-visible:ring-2 focus-visible:ring-ring sm:w-auto",
-                      selected
-                        ? "border-primary bg-primary/10 ring-2 ring-gold/70"
-                        : "border-border hover:border-primary/50",
-                    )}
-                  >
-                    <WizardPortrait
-                      wizard={wizard}
-                      size={96}
-                      decorative
-                      className="w-full"
-                    />
-                    <span className="line-clamp-1 w-full text-sm font-medium">
-                      {wizard.name}
-                    </span>
-                    <Record wizard={wizard} />
-                    {selected && (
-                      <span className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <Check className="size-3" aria-hidden="true" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-              <Link
-                href={`/wizards/create?${returnHereFresh}`}
-                className="flex w-24 shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed p-2 text-center text-sm font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground sm:w-auto"
-              >
-                <Sparkles className="size-5" aria-hidden="true" />
-                New wizard
-              </Link>
-            </div>
-          </fieldset>
-        )}
 
         {/* Secondary options */}
         {!blocker && (
