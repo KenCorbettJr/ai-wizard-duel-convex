@@ -26,7 +26,6 @@ interface WizardCardProps {
     ownerDisplayName?: string;
     hasCompletionRelic?: boolean;
     effectiveLuckScore?: number;
-    ownerSubscriptionTier?: "FREE" | "PREMIUM";
   };
   points?: number;
   hitPoints?: number;
@@ -55,9 +54,6 @@ export const WizardCard = memo(function WizardCard({
     if (isWinner) {
       return "border-4 border-warning/40 ring-4 ring-warning/30 shadow-warning/20";
     }
-    if (wizard.ownerSubscriptionTier === "PREMIUM") {
-      return "border-2 border-primary/70 ring-2 ring-primary/20 shadow-primary/20";
-    }
     if (isUserWizard) {
       return "border-2 border-info/70 ring-2 ring-info/20";
     }
@@ -84,17 +80,19 @@ export const WizardCard = memo(function WizardCard({
                 compact
               />
             </div>
-          ) : wizard.illustration && (
-            <div className="h-96 w-full overflow-hidden">
-              <ConvexImage
-                storageId={wizard.illustration}
-                alt={wizard.name}
-                width={768}
-                height={480}
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
+          ) : (
+            wizard.illustration && (
+              <div className="h-96 w-full overflow-hidden">
+                <ConvexImage
+                  storageId={wizard.illustration}
+                  alt={wizard.name}
+                  width={768}
+                  height={480}
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            )
           )}
           <div className="absolute top-4 right-4 flex gap-2">
             {wizard.hasCompletionRelic && (
@@ -105,15 +103,6 @@ export const WizardCard = memo(function WizardCard({
               >
                 <Award className="h-3 w-3" />
                 Relic
-              </Badge>
-            )}
-            {wizard.ownerSubscriptionTier === "PREMIUM" && !isWinner && (
-              <Badge
-                variant="default"
-                className="flex items-center gap-1 bg-primary text-primary-foreground border-primary/50 backdrop-blur-sm font-bold"
-              >
-                <Crown className="h-3 w-3" />
-                Premium
               </Badge>
             )}
             {isWinner && (

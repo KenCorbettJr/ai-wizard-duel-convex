@@ -345,20 +345,10 @@ export default function DashboardContent({
     api.imageCreditService.getUserImageCredits,
     user?.id ? { userId: user.id } : "skip",
   );
-  const liveUserInfo = useQuery(
-    api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip",
-  );
   const sponsorship = useSponsorship();
-  const premium =
-    !preview &&
-    liveUserInfo?.subscriptionTier === "PREMIUM" &&
-    liveUserInfo?.subscriptionStatus === "ACTIVE";
+  // Set while a sponsor makes this player's battles free
   const sponsorName =
-    !preview && !premium && sponsorship?.coversYou
-      ? sponsorship.sponsorName
-      : undefined;
-  const unlimited = premium || sponsorName !== undefined;
+    !preview && sponsorship?.coversYou ? sponsorship.sponsorName : undefined;
   const tokens = preview ? preview.tokens : liveCredits;
 
   const wizards = (preview?.wizards ?? liveWizards) as
@@ -516,7 +506,6 @@ export default function DashboardContent({
                 progress={campaignProgress}
                 onCreateWizard={handleCreateWizard}
                 tokens={tokens}
-                unlimited={unlimited}
                 sponsorName={sponsorName}
                 deferPrimary={!!resumeDuel}
               />

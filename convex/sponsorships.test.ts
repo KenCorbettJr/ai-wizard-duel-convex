@@ -155,23 +155,6 @@ describe("Sponsored duels", () => {
     expect(await tokens("alice")).toBe(2);
   });
 
-  it("does not use the sponsor's budget on Premium players", async () => {
-    await sponsor();
-    await ensureTestUser(t, "alice", 0);
-    await ensureTestUser(t, "bob", 0);
-    await t.run(async (ctx) => {
-      const alice = await ctx.db
-        .query("users")
-        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
-        .first();
-      await ctx.db.patch(alice!._id, { subscriptionTier: "PREMIUM" });
-    });
-
-    await playDuel("alice", "bob");
-    const [row] = await withSuperAdminAuth(t).query(api.sponsorships.list, {});
-    expect(row.entriesUsed).toBe(1);
-  });
-
   it("shows the running sponsor to signed-out visitors", async () => {
     await sponsor();
     const current = await t.query(api.sponsorships.getCurrent, {});

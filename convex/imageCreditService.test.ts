@@ -11,17 +11,17 @@ test("image credit service functionality", async () => {
   await t
     .withIdentity({ subject: "test_user_123" })
     .mutation(api.users.getOrCreateUser, {
-    clerkId: "test_user_123",
-    email: "test@example.com",
-    name: "Test User",
-  });
+      clerkId: "test_user_123",
+      email: "test@example.com",
+      name: "Test User",
+    });
 
   // Test getting user image credits
   const initialCredits = await t.query(
     api.imageCreditService.getUserImageCredits,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(initialCredits).toBe(STARTING_TOKENS); // Initial credits from user creation
 
@@ -30,28 +30,9 @@ test("image credit service functionality", async () => {
     api.imageCreditService.hasImageCreditsForDuel,
     {
       userId: "test_user_123",
-    }
+    },
   );
   expect(hasCredits).toBe(true);
-
-  // Test consuming a credit
-  const consumeResult = await t.mutation(
-    internal.imageCreditService.consumeImageCredit,
-    {
-      userId: "test_user_123",
-      metadata: { reason: "test_duel_image" },
-    }
-  );
-  expect(consumeResult).toBe(true);
-
-  // Check credits after consumption
-  const creditsAfterConsume = await t.query(
-    api.imageCreditService.getUserImageCredits,
-    {
-      userId: "test_user_123",
-    }
-  );
-  expect(creditsAfterConsume).toBe(STARTING_TOKENS - 1);
 
   // Test awarding credits
   await t.mutation(internal.imageCreditService.awardImageCredit, {
@@ -65,9 +46,9 @@ test("image credit service functionality", async () => {
     api.imageCreditService.getUserImageCredits,
     {
       userId: "test_user_123",
-    }
+    },
   );
-  expect(creditsAfterAward).toBe(STARTING_TOKENS + 4);
+  expect(creditsAfterAward).toBe(STARTING_TOKENS + 5);
 
   // Test credit history
   const history = await t.query(api.imageCreditService.getImageCreditHistory, {
@@ -79,100 +60,29 @@ test("image credit service functionality", async () => {
   expect(history[0].amount).toBe(5);
 });
 
-test("premium user unlimited credits", async () => {
+test("a player without tokens can't start a duel", async () => {
   const t = convexTest(schema, import.meta.glob("./**/*.*s"));
 
-  // Create a premium user
-  await t
-    .withIdentity({ subject: "premium_user_123" })
-    .mutation(api.users.getOrCreateUser, {
-    clerkId: "premium_user_123",
-    email: "premium@example.com",
-    name: "Premium User",
-  });
-
-  // Manually update user to premium status
-  const user = await t.query(api.users.getUserByClerkId, {
-    clerkId: "premium_user_123",
-  });
-
-  if (user) {
-    await t.mutation(internal.users.updateUserSubscription, {
-      userId: user._id,
-      subscriptionTier: "PREMIUM",
-      subscriptionStatus: "ACTIVE",
-    });
-  }
-
-  // Test that premium user has unlimited credits
-  const hasCredits = await t.query(
-    api.imageCreditService.hasImageCreditsForDuel,
-    {
-      userId: "premium_user_123",
-    }
-  );
-  expect(hasCredits).toBe(true);
-
-  // Test consuming credits as premium user (should always succeed)
-  const consumeResult = await t.mutation(
-    internal.imageCreditService.consumeImageCredit,
-    {
-      userId: "premium_user_123",
-      metadata: { reason: "premium_test" },
-    }
-  );
-  expect(consumeResult).toBe(true);
-
-  // Credits should remain the same for premium users
-  const creditsAfter = await t.query(
-    api.imageCreditService.getUserImageCredits,
-    {
-      userId: "premium_user_123",
-    }
-  );
-  expect(creditsAfter).toBe(STARTING_TOKENS); // Should still have initial credits
-});
-
-test("credit consumption when out of credits", async () => {
-  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
-
-  // Create a user with no credits
   await t
     .withIdentity({ subject: "broke_user_123" })
     .mutation(api.users.getOrCreateUser, {
-    clerkId: "broke_user_123",
-    email: "broke@example.com",
-    name: "Broke User",
-  });
-
-  // Consume all initial credits
-  for (let i = 0; i < STARTING_TOKENS; i++) {
-    await t.mutation(internal.imageCreditService.consumeImageCredit, {
-      userId: "broke_user_123",
+      clerkId: "broke_user_123",
+      email: "broke@example.com",
+      name: "Broke User",
     });
-  }
-
-  // Verify user has no credits
-  const credits = await t.query(api.imageCreditService.getUserImageCredits, {
-    userId: "broke_user_123",
+  await t.run(async (ctx) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", "broke_user_123"))
+      .first();
+    await ctx.db.patch(user!._id, { imageCredits: 0 });
   });
-  expect(credits).toBe(0);
 
-  // Test that user cannot consume more credits
-  const consumeResult = await t.mutation(
-    internal.imageCreditService.consumeImageCredit,
-    {
-      userId: "broke_user_123",
-    }
-  );
-  expect(consumeResult).toBe(false);
-
-  // Test that user cannot start duel without credits
   const hasCreditsForDuel = await t.query(
     api.imageCreditService.hasImageCreditsForDuel,
     {
       userId: "broke_user_123",
-    }
+    },
   );
   expect(hasCreditsForDuel).toBe(false);
 });

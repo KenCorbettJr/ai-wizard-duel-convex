@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { STARTING_TOKENS } from "./lib/pricing";
 
@@ -11,15 +11,15 @@ test("user creation and retrieval", async () => {
   const userId = await t
     .withIdentity({ subject: "new_user_123" })
     .mutation(api.users.getOrCreateUser, {
-    clerkId: "new_user_123",
-    email: "newuser@example.com",
-    name: "New User",
-  });
+      clerkId: "new_user_123",
+      email: "newuser@example.com",
+      name: "New User",
+    });
 
   expect(userId).toBeDefined();
 
   // Test retrieving the user
-  const user = await t.query(api.users.getUserByClerkId, {
+  const user = await t.query(internal.users.getUserByClerkId, {
     clerkId: "new_user_123",
   });
 
@@ -28,18 +28,18 @@ test("user creation and retrieval", async () => {
   expect(user?.email).toBe("newuser@example.com");
   expect(user?.name).toBe("New User");
   expect(user?.role).toBe("user");
-  expect(user?.subscriptionTier).toBe("FREE");
-  expect(user?.subscriptionStatus).toBe("ACTIVE");
+  expect(user).not.toHaveProperty("subscriptionTier");
+  expect(user).not.toHaveProperty("monthlyUsage");
   expect(user?.imageCredits).toBe(STARTING_TOKENS);
 
   // Test that calling getOrCreateUser again returns the same user
   const sameUserId = await t
     .withIdentity({ subject: "new_user_123" })
     .mutation(api.users.getOrCreateUser, {
-    clerkId: "new_user_123",
-    email: "newuser@example.com",
-    name: "New User",
-  });
+      clerkId: "new_user_123",
+      email: "newuser@example.com",
+      name: "New User",
+    });
 
   expect(sameUserId).toBe(userId);
 });
@@ -51,13 +51,13 @@ test("user creation with minimal info", async () => {
   const userId = await t
     .withIdentity({ subject: "minimal_user_456" })
     .mutation(api.users.getOrCreateUser, {
-    clerkId: "minimal_user_456",
-  });
+      clerkId: "minimal_user_456",
+    });
 
   expect(userId).toBeDefined();
 
   // Test retrieving the user
-  const user = await t.query(api.users.getUserByClerkId, {
+  const user = await t.query(internal.users.getUserByClerkId, {
     clerkId: "minimal_user_456",
   });
 
@@ -75,10 +75,10 @@ test("getUserImageCredits works after user creation", async () => {
   await t
     .withIdentity({ subject: "credit_test_user" })
     .mutation(api.users.getOrCreateUser, {
-    clerkId: "credit_test_user",
-    email: "credituser@example.com",
-    name: "Credit User",
-  });
+      clerkId: "credit_test_user",
+      email: "credituser@example.com",
+      name: "Credit User",
+    });
 
   // Test that getUserImageCredits works
   const credits = await t.query(api.imageCreditService.getUserImageCredits, {

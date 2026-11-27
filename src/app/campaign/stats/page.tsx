@@ -18,7 +18,7 @@ export default function CampaignStatsPage() {
     return (
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <div className="max-w-4xl mx-auto">
-          <RegistrationPrompt context="premium_features" />
+          <RegistrationPrompt context="create_wizard" />
         </div>
       </div>
     );

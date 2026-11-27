@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Badge } from "./ui/badge";
-import { Coins, Crown, Sparkles } from "lucide-react";
+import { Coins, Sparkles } from "lucide-react";
 import { useSponsorship } from "./SponsorBanner";
 
 interface CreditDisplayProps {
@@ -32,21 +32,11 @@ export function CreditDisplay({
     user?.id ? { userId: user.id } : "skip",
   );
 
-  // Get user info to check if premium
-  const userInfo = useQuery(
-    api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip",
-  );
-
   const sponsorship = useSponsorship();
 
   if (!user) {
     return null;
   }
-
-  const isPremium =
-    userInfo?.subscriptionTier === "PREMIUM" &&
-    userInfo?.subscriptionStatus === "ACTIVE";
 
   const sizeClasses = {
     sm: "text-sm px-2.5 py-1",
@@ -70,12 +60,7 @@ export function CreditDisplay({
         variant={hasCreditsForDuel ? "default" : "destructive"}
         className={`flex items-center gap-1 ${sizeClasses[size]}`}
       >
-        {isPremium ? (
-          <>
-            <Crown className={`${iconSizes[size]} text-gold`} />
-            <span>Unlimited</span>
-          </>
-        ) : sponsorship?.coversYou ? (
+        {sponsorship?.coversYou ? (
           <>
             <Sparkles className={`${iconSizes[size]} text-gold`} />
             <span

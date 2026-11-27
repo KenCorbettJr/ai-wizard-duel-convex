@@ -515,7 +515,7 @@ function Sponsorships() {
       <p className="mb-6 text-sm text-muted-foreground">
         While a sponsorship runs, every page shows a thank-you banner, duels it
         pays for show &ldquo;Sponsored by&rdquo;, and players keep their tokens.
-        Premium players don&apos;t use the budget. The public pitch is at{" "}
+        The public pitch is at{" "}
         <Link href="/sponsor" className="text-primary hover:underline">
           /sponsor
         </Link>

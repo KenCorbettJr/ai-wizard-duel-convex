@@ -56,7 +56,6 @@ export function UserListTableSkeleton({
               <TableHead className="text-center">Duels</TableHead>
               <TableHead className="text-center">Campaign</TableHead>
               <TableHead className="text-center">Tokens</TableHead>
-              <TableHead>Subscription</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -78,9 +77,6 @@ export function UserListTableSkeleton({
                 <TableCell>
                   <div className="h-4 w-24 bg-muted animate-pulse rounded" />
                 </TableCell>
-                <TableCell>
-                  <div className="h-6 w-16 bg-muted animate-pulse rounded-full" />
-                </TableCell>
                 <TableCell className="text-center">
                   <div className="h-4 w-8 bg-muted animate-pulse rounded mx-auto" />
                 </TableCell>
@@ -98,9 +94,6 @@ export function UserListTableSkeleton({
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="h-4 w-12 bg-muted animate-pulse rounded mx-auto" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-6 w-16 bg-muted animate-pulse rounded-full" />
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">

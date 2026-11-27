@@ -147,7 +147,7 @@ describe("Duel tokens", () => {
     expect(duel?.players).toEqual(["alice"]);
   });
 
-  it("does not charge active Premium players", async () => {
+  it("gives a leftover Premium record no free duels", async () => {
     const wizard = await makeWizard("alice");
     await ensureTestUser(t, "alice", 0);
     await t.run(async (ctx) => {
@@ -155,17 +155,18 @@ describe("Duel tokens", () => {
         .query("users")
         .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
         .first();
-      await ctx.db.patch(user!._id, { subscriptionTier: "PREMIUM" });
+      await ctx.db.patch(user!._id, {
+        subscriptionTier: "PREMIUM",
+        subscriptionStatus: "ACTIVE",
+      });
     });
 
-    const duelId = await withAuth(t, "alice").mutation(api.duels.createDuel, {
-      numberOfRounds: 3,
-      wizards: [wizard],
-    });
-
-    expect(await tokens("alice")).toBe(0);
-    const duel = await t.run(async (ctx) => ctx.db.get(duelId));
-    expect(duel?.tokensCharged ?? []).toEqual([]);
+    await expect(
+      withAuth(t, "alice").mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [wizard],
+      }),
+    ).rejects.toThrow(/at least 1 token/);
   });
 
   it("won't let a player cancel a duel in progress, so no tokens move", async () => {
@@ -503,23 +504,6 @@ describe("Wizard illustration tokens", () => {
 
     const wizard = await t.run(async (ctx) => ctx.db.get(wizardId));
     expect(wizard?.illustrationVersion).toBeUndefined();
-  });
-
-  it("does not charge Premium players for regenerating", async () => {
-    await ensureTestUser(t, "alice", 0);
-    await t.run(async (ctx) => {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "alice"))
-        .first();
-      await ctx.db.patch(user!._id, { subscriptionTier: "PREMIUM" });
-    });
-    const wizardId = await makeWizard("alice", true);
-
-    await withAuth(t, "alice").mutation(api.wizards.regenerateIllustration, {
-      wizardId,
-    });
-    expect(await tokens("alice")).toBe(0);
   });
 
   it("refunds the token when generation fails", async () => {

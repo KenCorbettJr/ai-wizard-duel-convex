@@ -132,16 +132,7 @@ const user = (clerkId: string, displayName: string) => ({
   clerkId,
   role: "user" as const,
   displayName,
-  subscriptionTier: "FREE" as const,
-  subscriptionStatus: "ACTIVE" as const,
   imageCredits: 0,
-  monthlyUsage: {
-    duelsPlayed: 0,
-    wizardsCreated: 0,
-    imageGenerations: 0,
-    adsWatched: 0,
-    resetDate: 0,
-  },
   createdAt: 0,
   updatedAt: 0,
 });
