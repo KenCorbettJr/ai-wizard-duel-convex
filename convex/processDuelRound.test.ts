@@ -3,7 +3,7 @@ import { expect, test, describe, beforeEach, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
-import { withAuth } from "./test_utils";
+import { withAuth, createTestDuel } from "./test_utils";
 
 // Mock the AI text generation
 const mockGenerateObject = vi.fn();
@@ -27,7 +27,7 @@ describe("Process Duel Round", () => {
       {
         name: "Gandalf",
         description: "A wise wizard with a long beard",
-      }
+      },
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -35,7 +35,7 @@ describe("Process Duel Round", () => {
       {
         name: "Saruman",
         description: "A powerful wizard with dark magic",
-      }
+      },
     );
 
     // Update stats using internal function
@@ -45,7 +45,7 @@ describe("Process Duel Round", () => {
     });
 
     // Create test duel
-    duelId = await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    duelId = await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });
@@ -99,7 +99,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -112,10 +112,10 @@ describe("Process Duel Round", () => {
       expect(updatedRound?.status).toBe("COMPLETED");
       expect(updatedRound?.outcome?.narrative).toContain("lightning bolt");
       expect(
-        updatedRound?.outcome?.pointsAwarded[wizard1Id]
+        updatedRound?.outcome?.pointsAwarded[wizard1Id],
       ).toBeGreaterThanOrEqual(0);
       expect(
-        updatedRound?.outcome?.pointsAwarded[wizard2Id]
+        updatedRound?.outcome?.pointsAwarded[wizard2Id],
       ).toBeGreaterThanOrEqual(0);
 
       // Verify duel was updated
@@ -123,7 +123,7 @@ describe("Process Duel Round", () => {
         api.duels.getDuel,
         {
           duelId,
-        }
+        },
       );
       expect(updatedDuel?.points[wizard1Id]).toBe(8);
       expect(updatedDuel?.points[wizard2Id]).toBe(2); // Lightning case gives wizard2 2 points
@@ -168,7 +168,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       // Verify health changes were applied correctly
@@ -179,7 +179,7 @@ describe("Process Duel Round", () => {
         api.duels.getDuel,
         {
           duelId,
-        }
+        },
       );
       expect(updatedDuel?.hitPoints[wizard1Id]).toBe(55); // 5 + 50
       expect(updatedDuel?.hitPoints[wizard2Id]).toBe(0); // Bounded to 0
@@ -236,7 +236,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       // Verify duel ended
@@ -244,7 +244,7 @@ describe("Process Duel Round", () => {
         api.duels.getDuel,
         {
           duelId,
-        }
+        },
       );
       expect(updatedDuel?.status).toBe("COMPLETED");
       expect(updatedDuel?.hitPoints[wizard2Id]).toBe(0); // wizard2 dies from death spell
@@ -282,7 +282,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -328,7 +328,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -384,7 +384,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       // Verify values were sanitized
@@ -393,16 +393,16 @@ describe("Process Duel Round", () => {
       });
 
       expect(
-        updatedRound?.outcome?.pointsAwarded[wizard1Id]
+        updatedRound?.outcome?.pointsAwarded[wizard1Id],
       ).toBeLessThanOrEqual(20);
       expect(
-        updatedRound?.outcome?.pointsAwarded[wizard2Id]
+        updatedRound?.outcome?.pointsAwarded[wizard2Id],
       ).toBeGreaterThanOrEqual(0);
       expect(
-        updatedRound?.outcome?.healthChange[wizard1Id]
+        updatedRound?.outcome?.healthChange[wizard1Id],
       ).toBeLessThanOrEqual(0);
       expect(
-        updatedRound?.outcome?.healthChange[wizard2Id]
+        updatedRound?.outcome?.healthChange[wizard2Id],
       ).toBeGreaterThanOrEqual(-50);
     });
   });
@@ -430,8 +430,8 @@ describe("Process Duel Round", () => {
           {
             duelId,
             roundId: tempRoundId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Round not found");
     });
 
@@ -483,8 +483,8 @@ describe("Process Duel Round", () => {
           {
             duelId: badDuelId,
             roundId: badRoundId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Could not fetch all wizard data");
     });
 
@@ -520,8 +520,8 @@ describe("Process Duel Round", () => {
           {
             duelId: singleWizardDuelId,
             roundId: singleWizardRoundId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Could not fetch all wizard data");
     });
   });
@@ -557,7 +557,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -607,7 +607,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -623,13 +623,10 @@ describe("Process Duel Round", () => {
 
     test("should handle TO_THE_DEATH duel type", async () => {
       // Create TO_THE_DEATH duel
-      const deathDuelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: "TO_THE_DEATH",
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const deathDuelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: "TO_THE_DEATH",
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       await t.run(async (ctx) => {
         await ctx.db.patch(deathDuelId, { status: "IN_PROGRESS" });
@@ -675,14 +672,14 @@ describe("Process Duel Round", () => {
         {
           duelId: deathDuelId,
           roundId,
-        }
+        },
       );
 
       const updatedDuel = await withAuth(t, "test-user-1").query(
         api.duels.getDuel,
         {
           duelId: deathDuelId,
-        }
+        },
       );
 
       // Death spell should end the duel
@@ -742,7 +739,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId,
-        }
+        },
       );
 
       // Verify duel ended and conclusion was generated
@@ -750,7 +747,7 @@ describe("Process Duel Round", () => {
         api.duels.getDuel,
         {
           duelId,
-        }
+        },
       );
       expect(updatedDuel?.status).toBe("COMPLETED");
 
@@ -827,7 +824,7 @@ describe("Process Duel Round", () => {
         {
           duelId,
           roundId: currentRoundId,
-        }
+        },
       );
 
       // In test mode, we use mock functions instead of the real AI

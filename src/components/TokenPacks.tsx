@@ -24,10 +24,16 @@ interface TokenPacksProps {
    */
   mode: "buy" | "display";
   className?: string;
+  /** Same-site page to offer a way back to after checkout. */
+  returnTo?: string;
 }
 
 /** The token packs from the shared pricing config, as a grid of cards. */
-export function TokenPacks({ mode, className = "" }: TokenPacksProps) {
+export function TokenPacks({
+  mode,
+  className = "",
+  returnTo,
+}: TokenPacksProps) {
   const createCheckout = useAction(api.stripe.createTokenCheckout);
   const [pendingPack, setPendingPack] = useState<TokenPackId | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +47,7 @@ export function TokenPacks({ mode, className = "" }: TokenPacksProps) {
       price_cents: pack.priceCents,
     });
     try {
-      const { url } = await createCheckout({ packId: pack.id });
+      const { url } = await createCheckout({ packId: pack.id, returnTo });
       window.location.assign(url);
     } catch (err) {
       console.error("Failed to start checkout:", err);

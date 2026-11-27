@@ -1,5 +1,5 @@
 import { ConvexError } from "convex/values";
-import type { MutationCtx } from "../_generated/server";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 
 import { DUEL_TOKEN_COST } from "./pricing";
@@ -15,6 +15,53 @@ async function getUserByClerkId(ctx: MutationCtx, userId: string) {
     .query("users")
     .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
     .first();
+}
+
+/**
+ * Entries this player has already promised: their duels still waiting for an
+ * opponent, which charge them (1 seat, or 2 when they cover their opponent)
+ * the moment someone joins. A new duel is only affordable on top of these,
+ * so every open duel can actually start, and "Free" is only shown while the
+ * sponsor's entries aren't already spoken for.
+ */
+export async function seatsPromised(
+  ctx: QueryCtx,
+  userId: string,
+): Promise<number> {
+  const rows = await ctx.db
+    .query("duelParticipants")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  let seats = 0;
+  for (const { duelId } of rows) {
+    const d = await ctx.db.get(duelId);
+    if (
+      d?.status === "WAITING_FOR_PLAYERS" &&
+      d.players.length === 1 &&
+      d.players[0] === userId
+    ) {
+      seats += d.creatorCoversEntry ? 2 : 1;
+    }
+  }
+  return seats;
+}
+
+/**
+ * Whether the player could open one more duel needing `seats` entries,
+ * counting what their waiting duels have already promised. Sponsored entries
+ * are used first, as they are when duels start.
+ */
+export async function canAffordNewDuel(
+  ctx: QueryCtx,
+  userId: string,
+  credits: number,
+  seats = 1,
+  now = Date.now(),
+): Promise<{ ok: boolean; needed: number }> {
+  const total = (await seatsPromised(ctx, userId)) + seats;
+  const sponsored = await sponsoredSeatsFor(ctx, userId, total, now);
+  const needed = DUEL_TOKEN_COST * (total - sponsored);
+  return { ok: credits >= needed, needed };
 }
 
 /**
@@ -34,20 +81,35 @@ export async function assertCanAffordDuelToken(
   if (!user) {
     throw new Error("User not found");
   }
-  const sponsored = await sponsoredSeatsFor(ctx, userId, seats, Date.now());
-  const needed = DUEL_TOKEN_COST * (seats - sponsored);
-  if (user.imageCredits < needed) {
-    if (who === "creator") {
+  if (who === "you") {
+    // Creating a duel: it must be affordable on top of the duels this
+    // player already has waiting.
+    const promised = await seatsPromised(ctx, userId);
+    const { ok, needed } = await canAffordNewDuel(
+      ctx,
+      userId,
+      user.imageCredits,
+      seats,
+    );
+    if (!ok) {
       throw new ConvexError(
-        seats > 1
-          ? "The duel's creator no longer has enough tokens to cover your entry, so this duel can't start."
-          : "The duel's creator no longer has a token, so this duel can't start.",
+        promised > 0
+          ? "Your open duels already use your tokens and free entries. Get more tokens, or wait for one to start."
+          : seats > 1
+            ? `You need ${needed} tokens to cover your opponent's entry as well as your own.`
+            : INSUFFICIENT_TOKENS_ERROR,
       );
     }
+    return;
+  }
+  const sponsored = await sponsoredSeatsFor(ctx, userId, seats, Date.now());
+  const needed = DUEL_TOKEN_COST * (seats - sponsored);
+  // The creator again, as their duel starts
+  if (user.imageCredits < needed) {
     throw new ConvexError(
       seats > 1
-        ? `You need ${needed} tokens to cover your opponent's entry as well as your own.`
-        : INSUFFICIENT_TOKENS_ERROR,
+        ? "The duel's creator no longer has enough tokens to cover your entry, so this duel can't start."
+        : "The duel's creator no longer has a token, so this duel can't start.",
     );
   }
 }

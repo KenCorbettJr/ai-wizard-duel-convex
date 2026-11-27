@@ -1166,3 +1166,99 @@
     animation: versus-fade 0.3s ease-in reverse both;
   }
 }
+
+/* ---- Create duel ---- */
+@keyframes create-duel-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes create-duel-charge {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 12px var(--gold));
+  }
+}
+@keyframes create-duel-await {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@keyframes create-duel-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 24px 4px var(--gold);
+  }
+}
+@keyframes create-duel-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes create-duel-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px) rotate(4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.create-duel-in-left {
+  animation: create-duel-in-left 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.create-duel-in-right {
+  animation: create-duel-in-right 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* The VS slams down once both sides are in */
+.create-duel-stamp {
+  animation: versus-stamp 0.35s cubic-bezier(0.3, 1.4, 0.5, 1) 0.4s both;
+}
+.create-duel-await {
+  animation: create-duel-await 2.4s ease-in-out infinite;
+}
+.create-duel-glow {
+  animation: create-duel-glow 0.9s ease-in-out infinite;
+}
+.create-duel-pop {
+  animation: create-duel-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.create-duel-charge {
+  animation: create-duel-charge 0.9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .create-duel-pop,
+  .create-duel-charge,
+  .create-duel-await,
+  .create-duel-glow,
+  .create-duel-in-left,
+  .create-duel-in-right,
+  .create-duel-stamp {
+    animation: none;
+  }
+}

@@ -4,6 +4,7 @@ import {
   internalQuery,
   internalMutation,
   MutationCtx,
+  QueryCtx,
 } from "./_generated/server";
 import { scheduleDuelRating } from "./lib/scheduleDuelRating";
 import { syncDuelParticipants } from "./lib/duelParticipants";
@@ -23,7 +24,7 @@ import {
   chargeDuelToken,
   refundDuelTokens,
 } from "./lib/duelTokens";
-import { TO_THE_DEATH_MAX_ROUNDS } from "./lib/pricing";
+import { TO_THE_DEATH_MAX_ROUNDS, isAllowedDuelLength } from "./lib/pricing";
 import { scheduleRoundNarration } from "./lib/scheduleNarration";
 import { pickTeaserIllustration } from "./lib/socialIllustration";
 import {
@@ -306,8 +307,31 @@ function generateShortcode(): string {
   return result;
 }
 
-// Insert a new duel that is waiting for an opponent
-async function insertWaitingDuel(
+/**
+ * Rules every player-created duel must meet, whatever the client sent: a
+ * length from the menu (so one token covers a known cost) and a username
+ * (so opponents know who they're facing).
+ */
+async function assertCanCreateDuel(
+  ctx: MutationCtx,
+  userId: string,
+  numberOfRounds: number | "TO_THE_DEATH",
+) {
+  if (!isAllowedDuelLength(numberOfRounds)) {
+    throw new ConvexError("That isn't a duel length you can pick.");
+  }
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
+    .first();
+  if (!user?.userId) {
+    throw new ConvexError("Pick a username before your first duel.");
+  }
+}
+
+// Insert a new duel that is waiting for an opponent.
+// Exported for tests that need a duel without createDuel's player rules.
+export async function insertWaitingDuel(
   ctx: MutationCtx,
   {
     userId,
@@ -400,13 +424,15 @@ export const createDuel = mutation({
       throw new Error("Not authenticated");
     }
 
-    // Verify that all wizards belong to the authenticated user
-    for (const wizardId of wizards) {
-      const wizard = await ctx.db.get(wizardId);
-      if (!wizard || wizard.owner !== identity.subject) {
-        throw new Error("Not authorized to use one or more of these wizards");
-      }
+    // One wizard per player
+    if (wizards.length !== 1) {
+      throw new ConvexError("Bring exactly one wizard to a duel.");
     }
+    const wizard = await ctx.db.get(wizards[0]);
+    if (!wizard || wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to use one or more of these wizards");
+    }
+    await assertCanCreateDuel(ctx, identity.subject, numberOfRounds);
 
     const duelId = await insertWaitingDuel(ctx, {
       userId: identity.subject,
@@ -508,12 +534,13 @@ export const joinDuel = mutation({
       throw new Error("Not authenticated");
     }
 
-    // Verify that all wizards belong to the authenticated user
-    for (const wizardId of wizards) {
-      const wizard = await ctx.db.get(wizardId);
-      if (!wizard || wizard.owner !== identity.subject) {
-        throw new Error("Not authorized to use one or more of these wizards");
-      }
+    // One wizard per player
+    if (wizards.length !== 1) {
+      throw new ConvexError("Bring exactly one wizard to a duel.");
+    }
+    const wizard = await ctx.db.get(wizards[0]);
+    if (!wizard || wizard.owner !== identity.subject) {
+      throw new Error("Not authorized to use one or more of these wizards");
     }
 
     const userId = identity.subject;
@@ -552,6 +579,74 @@ export const joinDuel = mutation({
 // How many unanswered challenges one player can have out at once
 export const MAX_PENDING_CHALLENGES = 5;
 
+/**
+ * The challenge this player already has out to a wizard, and how many
+ * unanswered challenges they have out in total.
+ */
+async function pendingChallenges(
+  ctx: QueryCtx,
+  userId: string,
+  opponentWizardId: Id<"wizards">,
+): Promise<{
+  existing: { duelId: Id<"duels">; wizardId: Id<"wizards"> } | null;
+  pending: number;
+}> {
+  const myLive = await ctx.db
+    .query("duelParticipants")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  let pending = 0;
+  let existing: { duelId: Id<"duels">; wizardId: Id<"wizards"> } | null = null;
+  for (const { duelId } of myLive) {
+    const d = await ctx.db.get(duelId);
+    if (
+      !d ||
+      d.status !== "WAITING_FOR_PLAYERS" ||
+      !d.challengedUserId ||
+      d.players[0] !== userId
+    ) {
+      continue;
+    }
+    if (d.challengedWizardId === opponentWizardId) {
+      existing = { duelId: d._id, wizardId: d.wizards[0] };
+    }
+    pending++;
+  }
+  return { existing, pending };
+}
+
+// What would stop the caller challenging this wizard right now, so the
+// create-duel page can say so before they set everything up.
+export const getChallengeBlocker = query({
+  // A plain string: the id comes straight from a shared link
+  args: { opponentWizardId: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      kind: v.literal("alreadyChallenged"),
+      duelId: v.id("duels"),
+      // The wizard the caller sent into that challenge
+      wizardId: v.id("wizards"),
+    }),
+    v.object({ kind: v.literal("tooManyPending"), max: v.number() }),
+  ),
+  handler: async (ctx, { opponentWizardId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const wizardId = ctx.db.normalizeId("wizards", opponentWizardId);
+    if (!identity || !wizardId) return null;
+    const { existing, pending } = await pendingChallenges(
+      ctx,
+      identity.subject,
+      wizardId,
+    );
+    if (existing) return { kind: "alreadyChallenged" as const, ...existing };
+    if (pending >= MAX_PENDING_CHALLENGES) {
+      return { kind: "tooManyPending" as const, max: MAX_PENDING_CHALLENGES };
+    }
+    return null;
+  },
+});
+
 // Challenge another player's wizard to a duel. Creates a waiting duel that
 // only that wizard's owner can join, and tells them about it.
 export const challengeWizard = mutation({
@@ -585,6 +680,7 @@ export const challengeWizard = mutation({
     if (!wizard || wizard.owner !== userId) {
       throw new ConvexError("Not authorized to use this wizard");
     }
+    await assertCanCreateDuel(ctx, userId, numberOfRounds);
     const opponent = await ctx.db.get(opponentWizardId);
     if (!opponent) {
       throw new ConvexError("That wizard no longer exists.");
@@ -603,27 +699,15 @@ export const challengeWizard = mutation({
       throw new ConvexError("This wizard can't be challenged.");
     }
 
-    const myLive = await ctx.db
-      .query("duelParticipants")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    let pending = 0;
-    for (const { duelId } of myLive) {
-      const d = await ctx.db.get(duelId);
-      if (
-        !d ||
-        d.status !== "WAITING_FOR_PLAYERS" ||
-        !d.challengedUserId ||
-        d.players[0] !== userId
-      ) {
-        continue;
-      }
-      if (d.challengedWizardId === opponentWizardId) {
-        throw new ConvexError(
-          `You've already challenged ${opponent.name}. Wait for an answer.`,
-        );
-      }
-      pending++;
+    const { existing, pending } = await pendingChallenges(
+      ctx,
+      userId,
+      opponentWizardId,
+    );
+    if (existing) {
+      throw new ConvexError(
+        `You've already challenged ${opponent.name}. Wait for an answer.`,
+      );
     }
     if (pending >= MAX_PENDING_CHALLENGES) {
       throw new ConvexError(

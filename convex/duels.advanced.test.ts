@@ -3,7 +3,7 @@ import { expect, test, describe, beforeEach } from "vitest";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
-import { withAuth } from "./test_utils";
+import { withAuth, createTestDuel } from "./test_utils";
 
 describe("Duels - Advanced Tests", () => {
   let t: ReturnType<typeof convexTest>;
@@ -20,7 +20,7 @@ describe("Duels - Advanced Tests", () => {
       {
         name: "Gandalf",
         description: "A wise wizard",
-      }
+      },
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -28,7 +28,7 @@ describe("Duels - Advanced Tests", () => {
       {
         name: "Saruman",
         description: "A powerful wizard",
-      }
+      },
     );
 
     wizard3Id = await withAuth(t, "test-user-1").mutation(
@@ -36,7 +36,7 @@ describe("Duels - Advanced Tests", () => {
       {
         name: "Merlin",
         description: "An ancient wizard",
-      }
+      },
     );
 
     // Update stats using internal function
@@ -49,13 +49,10 @@ describe("Duels - Advanced Tests", () => {
 
   describe("Duel Creation Edge Cases", () => {
     test("should handle TO_THE_DEATH duel type", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: "TO_THE_DEATH",
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: "TO_THE_DEATH",
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
         duelId,
@@ -65,15 +62,15 @@ describe("Duels - Advanced Tests", () => {
 
     test("should generate unique shortcodes for multiple duels", async () => {
       const duelIds = await Promise.all([
-        withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+        createTestDuel(t, "test-user-1", {
           numberOfRounds: 3,
           wizards: [wizard1Id, wizard2Id],
         }),
-        withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+        createTestDuel(t, "test-user-1", {
           numberOfRounds: 5,
           wizards: [wizard2Id, wizard3Id],
         }),
-        withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+        createTestDuel(t, "test-user-1", {
           numberOfRounds: 2,
           wizards: [wizard1Id, wizard3Id],
         }),
@@ -81,8 +78,8 @@ describe("Duels - Advanced Tests", () => {
 
       const duels = await Promise.all(
         duelIds.map((id) =>
-          withAuth(t, "test-user-1").query(api.duels.getDuel, { duelId: id })
-        )
+          withAuth(t, "test-user-1").query(api.duels.getDuel, { duelId: id }),
+        ),
       );
 
       const shortcodes = duels.map((d) => d?.shortcode);
@@ -96,13 +93,10 @@ describe("Duels - Advanced Tests", () => {
     });
 
     test("should initialize points and hit points correctly for multiple wizards", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id, wizard3Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id, wizard3Id],
+      });
 
       const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
         duelId,
@@ -126,16 +120,13 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard",
           description: "A wizard owned by user 2",
-        }
+        },
       );
 
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id],
+      });
 
       await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
         duelId,
@@ -158,16 +149,13 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard",
           description: "A wizard for user 2",
-        }
+        },
       );
 
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Change status to IN_PROGRESS
       await t.run(async (ctx) => {
@@ -178,35 +166,32 @@ describe("Duels - Advanced Tests", () => {
         withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
           duelId,
           wizards: [user2WizardId],
-        })
+        }),
       ).rejects.toThrow("Duel is not accepting new players");
     });
 
     test("should prevent duplicate player joining", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id],
+      });
 
       await expect(
         withAuth(t, "test-user-1").mutation(api.duels.joinDuel, {
           duelId,
           wizards: [wizard2Id],
-        })
+        }),
       ).rejects.toThrow("User is already in this duel");
     });
 
-    test("should handle joining with multiple wizards", async () => {
+    test("refuses a player joining with more than one wizard", async () => {
       // Create wizards for different users
       const user2Wizard1 = await withAuth(t, "test-user-2").mutation(
         internal.wizards.createWizard,
         {
           name: "User2 Wizard 1",
           description: "First wizard owned by user 2",
-        }
+        },
       );
 
       const user2Wizard2 = await withAuth(t, "test-user-2").mutation(
@@ -214,29 +199,26 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard 2",
           description: "Second wizard owned by user 2",
-        }
+        },
       );
 
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id],
-        }
-      );
-
-      await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
-        duelId,
-        wizards: [user2Wizard1, user2Wizard2],
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id],
       });
+
+      await expect(
+        withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
+          duelId,
+          wizards: [user2Wizard1, user2Wizard2],
+        }),
+      ).rejects.toThrow("exactly one wizard");
 
       const duel = await withAuth(t, "test-user-1").query(api.duels.getDuel, {
         duelId,
       });
-      expect(duel?.wizards).toContain(user2Wizard1);
-      expect(duel?.wizards).toContain(user2Wizard2);
-      expect(duel?.points[user2Wizard1]).toBe(0);
-      expect(duel?.points[user2Wizard2]).toBe(0);
+      expect(duel?.wizards).toEqual([wizard1Id]);
+      expect(duel?.players).toEqual(["test-user-1"]);
     });
 
     test("should remain in WAITING_FOR_PLAYERS status when 2 players join (auto-start scheduled)", async () => {
@@ -246,16 +228,13 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "User2 Wizard",
           description: "A wizard owned by user 2",
-        }
+        },
       );
 
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id],
+      });
 
       await withAuth(t, "test-user-2").mutation(api.duels.joinDuel, {
         duelId,
@@ -274,13 +253,10 @@ describe("Duels - Advanced Tests", () => {
 
   describe("Spell Casting", () => {
     test("should allow casting spells when duel is in progress", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Start the duel manually
       await t.run(async (ctx) => {
@@ -310,18 +286,15 @@ describe("Duels - Advanced Tests", () => {
 
       expect(round?.spells[wizard1Id]).toBeDefined();
       expect(round?.spells[wizard1Id]?.description).toBe(
-        "Fireball of destruction"
+        "Fireball of destruction",
       );
     });
 
     test("should prevent casting spells when duel is not in progress", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Duel is still WAITING_FOR_PLAYERS
       await expect(
@@ -329,18 +302,15 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Premature spell",
-        })
+        }),
       ).rejects.toThrow("Duel is not in progress");
     });
 
     test("should prevent casting spells when round is not waiting for spells", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Start the duel manually
       await t.run(async (ctx) => {
@@ -363,7 +333,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Late spell",
-        })
+        }),
       ).rejects.toThrow("Round is not accepting spells");
     });
 
@@ -373,16 +343,13 @@ describe("Duels - Advanced Tests", () => {
         {
           name: "Outside Wizard",
           description: "Not in this duel",
-        }
+        },
       );
 
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Start the duel manually
       await t.run(async (ctx) => {
@@ -405,18 +372,15 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: outsideWizard,
           spellDescription: "Unauthorized spell",
-        })
+        }),
       ).rejects.toThrow("Wizard is not participating in this duel");
     });
 
     test("should prevent duplicate spell casting in same round", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Start the duel manually
       await t.run(async (ctx) => {
@@ -447,20 +411,17 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Second spell",
-        })
+        }),
       ).rejects.toThrow("Wizard has already cast a spell this round");
     });
   });
 
   describe("Duel Status Management", () => {
     test("should handle duel cancellation", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
         duelId,
@@ -473,13 +434,10 @@ describe("Duels - Advanced Tests", () => {
     });
 
     test("should prevent actions on cancelled duels", async () => {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
         duelId,
@@ -491,7 +449,7 @@ describe("Duels - Advanced Tests", () => {
           duelId,
           wizardId: wizard1Id,
           spellDescription: "Spell on cancelled duel",
-        })
+        }),
       ).rejects.toThrow("Duel is not in progress");
     });
   });

@@ -1,7 +1,12 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import {
+  query,
+  mutation,
+  internalMutation,
+  QueryCtx,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { refundWizardImageToken as refundToken } from "./lib/wizardImageTokens";
-import { sponsoredSeatsFor } from "./lib/sponsorship";
+import { canAffordNewDuel } from "./lib/duelTokens";
 
 // Credit source types
 const CreditSource = v.union(
@@ -25,18 +30,29 @@ const TransactionType = v.union(
   v.literal("EXPIRED"),
 );
 
+// These queries only ever answer for the signed-in player. They used to take
+// a userId, which let anyone read anyone's balance and history. Older clients
+// may still send one, so it's accepted and ignored.
+const legacyUserIdArg = { userId: v.optional(v.string()) };
+
+/** The signed-in player's Clerk id, or null when signed out. */
+async function callerId(ctx: QueryCtx): Promise<string | null> {
+  const identity = await ctx.auth.getUserIdentity();
+  return identity?.subject ?? null;
+}
+
 /**
- * Get user's current image credit balance
+ * The signed-in player's token balance (0 when signed out)
  */
 export const getUserImageCredits = query({
-  args: {
-    userId: v.string(),
-  },
+  args: legacyUserIdArg,
   returns: v.number(),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const userId = await callerId(ctx);
+    if (!userId) return 0;
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
       .first();
 
     if (!user) {
@@ -49,26 +65,26 @@ export const getUserImageCredits = query({
 });
 
 /**
- * Check if user has sufficient image credits for a duel
+ * Whether the signed-in player can afford to enter a duel
  */
 export const hasImageCreditsForDuel = query({
-  args: {
-    userId: v.string(),
-  },
+  args: legacyUserIdArg,
   returns: v.boolean(),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const userId = await callerId(ctx);
+    if (!userId) return false;
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
       .first();
 
     if (!user) {
       return false;
     }
 
-    // Check if user has at least 1 credit, or a sponsor covers their entry
-    if (user.imageCredits > 0) return true;
-    return (await sponsoredSeatsFor(ctx, args.userId, 1, Date.now())) > 0;
+    // Enough tokens or sponsored entries for one more duel, on top of what
+    // their waiting duels will take when they start
+    return (await canAffordNewDuel(ctx, userId, user.imageCredits)).ok;
   },
 });
 
@@ -132,11 +148,11 @@ export const awardImageCredit = internalMutation({
 });
 
 /**
- * Get user's image credit transaction history
+ * The signed-in player's token transaction history
  */
 export const getImageCreditHistory = query({
   args: {
-    userId: v.string(),
+    ...legacyUserIdArg,
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -150,11 +166,13 @@ export const getImageCreditHistory = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const limit = args.limit || 50;
+    const userId = await callerId(ctx);
+    if (!userId) return [];
+    const limit = Math.min(Math.max(args.limit || 50, 1), 200);
 
     const transactions = await ctx.db
       .query("imageCreditTransactions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .take(limit);
 

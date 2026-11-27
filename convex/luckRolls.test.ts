@@ -3,7 +3,7 @@ import { expect, test, describe, beforeEach } from "vitest";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
-import { withAuth } from "./test_utils";
+import { withAuth, createTestDuel } from "./test_utils";
 
 describe("Luck Rolls", () => {
   let t: ReturnType<typeof convexTest>;
@@ -20,7 +20,7 @@ describe("Luck Rolls", () => {
       {
         name: "Gandalf",
         description: "A wise wizard with a long beard",
-      }
+      },
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -28,11 +28,11 @@ describe("Luck Rolls", () => {
       {
         name: "Saruman",
         description: "A powerful wizard with dark magic",
-      }
+      },
     );
 
     // Create test duel
-    duelId = await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    duelId = await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });

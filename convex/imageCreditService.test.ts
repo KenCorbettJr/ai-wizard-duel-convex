@@ -17,21 +17,15 @@ test("image credit service functionality", async () => {
     });
 
   // Test getting user image credits
-  const initialCredits = await t.query(
-    api.imageCreditService.getUserImageCredits,
-    {
-      userId: "test_user_123",
-    },
-  );
+  const initialCredits = await t
+    .withIdentity({ subject: "test_user_123" })
+    .query(api.imageCreditService.getUserImageCredits, {});
   expect(initialCredits).toBe(STARTING_TOKENS); // Initial credits from user creation
 
   // Test checking if user has credits for duel
-  const hasCredits = await t.query(
-    api.imageCreditService.hasImageCreditsForDuel,
-    {
-      userId: "test_user_123",
-    },
-  );
+  const hasCredits = await t
+    .withIdentity({ subject: "test_user_123" })
+    .query(api.imageCreditService.hasImageCreditsForDuel, {});
   expect(hasCredits).toBe(true);
 
   // Test awarding credits
@@ -42,19 +36,15 @@ test("image credit service functionality", async () => {
     metadata: { reason: "test_award" },
   });
 
-  const creditsAfterAward = await t.query(
-    api.imageCreditService.getUserImageCredits,
-    {
-      userId: "test_user_123",
-    },
-  );
+  const creditsAfterAward = await t
+    .withIdentity({ subject: "test_user_123" })
+    .query(api.imageCreditService.getUserImageCredits, {});
   expect(creditsAfterAward).toBe(STARTING_TOKENS + 5);
 
   // Test credit history
-  const history = await t.query(api.imageCreditService.getImageCreditHistory, {
-    userId: "test_user_123",
-    limit: 10,
-  });
+  const history = await t
+    .withIdentity({ subject: "test_user_123" })
+    .query(api.imageCreditService.getImageCreditHistory, { limit: 10 });
   expect(history.length).toBeGreaterThan(0);
   expect(history[0].type).toBe("EARNED"); // Most recent should be the award
   expect(history[0].amount).toBe(5);
@@ -78,11 +68,51 @@ test("a player without tokens can't start a duel", async () => {
     await ctx.db.patch(user!._id, { imageCredits: 0 });
   });
 
-  const hasCreditsForDuel = await t.query(
-    api.imageCreditService.hasImageCreditsForDuel,
-    {
-      userId: "broke_user_123",
-    },
-  );
+  const hasCreditsForDuel = await t
+    .withIdentity({ subject: "broke_user_123" })
+    .query(api.imageCreditService.hasImageCreditsForDuel, {});
   expect(hasCreditsForDuel).toBe(false);
+});
+
+test("token queries only answer for the signed-in player", async () => {
+  const t = convexTest(schema, import.meta.glob("./**/*.*s"));
+  await t.run(async (ctx) => {
+    for (const [clerkId, imageCredits] of [
+      ["rich_user", 40],
+      ["snoop_user", 0],
+    ] as const) {
+      await ctx.db.insert("users", {
+        clerkId,
+        role: "user",
+        imageCredits,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+    await ctx.db.insert("imageCreditTransactions", {
+      userId: "rich_user",
+      type: "EARNED",
+      amount: 40,
+      source: "PURCHASE",
+      createdAt: Date.now(),
+    });
+  });
+
+  // Asking about someone else returns your own figures, not theirs
+  const snoop = t.withIdentity({ subject: "snoop_user" });
+  const spoof = { userId: "rich_user" };
+  expect(
+    await snoop.query(api.imageCreditService.getUserImageCredits, spoof),
+  ).toBe(0);
+  expect(
+    await snoop.query(api.imageCreditService.hasImageCreditsForDuel, spoof),
+  ).toBe(false);
+  expect(
+    await snoop.query(api.imageCreditService.getImageCreditHistory, spoof),
+  ).toEqual([]);
+
+  // Signed out: nothing
+  expect(await t.query(api.imageCreditService.getUserImageCredits, spoof)).toBe(
+    0,
+  );
 });

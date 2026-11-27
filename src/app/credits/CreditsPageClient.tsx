@@ -1,5 +1,6 @@
 "use client";
 
+import { isSafeRedirectPath } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -25,6 +26,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditUsageHistory } from "@/components/CreditUsageHistory";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
 import { TokenPacks } from "@/components/TokenPacks";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { formatSponsorEnd, useSponsorship } from "@/components/SponsorBanner";
@@ -34,10 +36,16 @@ export function CreditsPageClient() {
   const searchParams = useSearchParams();
   const purchase = searchParams.get("purchase");
   const sessionId = searchParams.get("session_id");
+  // Where the player was when they came to buy (e.g. a duel they were
+  // setting up). Same-site paths only.
+  const redirectParam = searchParams.get("redirect_url");
+  const returnTo = isSafeRedirectPath(redirectParam)
+    ? redirectParam
+    : undefined;
 
   const tokens = useQuery(
     api.imageCreditService.getUserImageCredits,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
   const sponsorship = useSponsorship();
   const referral = useQuery(
@@ -96,6 +104,19 @@ export function CreditsPageClient() {
             }
             tokens={purchaseStatus?.tokens}
           />
+        )}
+        {returnTo && (
+          <Button
+            asChild
+            size="lg"
+            variant={purchase === "success" ? "gold" : "outline"}
+            className="w-full sm:w-auto"
+          >
+            <Link href={returnTo}>
+              <Swords aria-hidden="true" />
+              Back to Duel Setup
+            </Link>
+          </Button>
         )}
         {purchase === "cancelled" && (
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-4 text-sm">
@@ -196,7 +217,7 @@ export function CreditsPageClient() {
           >
             Buy Tokens
           </h2>
-          <TokenPacks mode="buy" />
+          <TokenPacks mode="buy" returnTo={returnTo} />
           <p className="text-center text-xs text-muted-foreground">
             Secure checkout by Stripe. Tokens never expire and can&apos;t be
             exchanged for cash.

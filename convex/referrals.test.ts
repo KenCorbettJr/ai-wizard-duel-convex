@@ -55,7 +55,9 @@ async function createSupporter(t: T, clerkId: string) {
 }
 
 const credits = (t: T, clerkId: string) =>
-  t.query(api.imageCreditService.getUserImageCredits, { userId: clerkId });
+  t
+    .withIdentity({ subject: clerkId })
+    .query(api.imageCreditService.getUserImageCredits, {});
 
 const finishDuel = (t: T, players: string[]) =>
   t.run((ctx) => rewardReferralsForCompletedDuel(ctx, players));

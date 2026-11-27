@@ -1,5 +1,6 @@
 "use client";
 
+import { isSafeRedirectPath } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
@@ -11,10 +12,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import { PageHeader } from "@/components/PageHeader";
-import {
-  clearPendingWizard,
-  peekPendingWizard,
-} from "@/lib/pendingWizard";
+import { clearPendingWizard, peekPendingWizard } from "@/lib/pendingWizard";
 
 export default function CreateWizardPage() {
   const { user, isLoaded } = useUser();
@@ -38,7 +36,16 @@ export default function CreateWizardPage() {
   };
 
   // Go to the new wizard's page to watch their portrait being painted.
+  // ...unless they came from somewhere they want to get back to, like a
+  // duel challenge (same-site paths only).
   const handleSuccess = (wizardId?: string) => {
+    const redirectUrl = new URLSearchParams(window.location.search).get(
+      "redirect_url",
+    );
+    if (isSafeRedirectPath(redirectUrl)) {
+      router.push(redirectUrl);
+      return;
+    }
     router.push(wizardId ? `/wizards/${wizardId}` : "/wizards");
   };
 
@@ -82,7 +89,9 @@ export default function CreateWizardPage() {
           )}
 
           <PageHeader
-            title={isFirstWizard ? "Create Your First Wizard" : "Create New Wizard"}
+            title={
+              isFirstWizard ? "Create Your First Wizard" : "Create New Wizard"
+            }
             description={
               isFirstWizard
                 ? "Describe them however you like. The AI generates their portrait, and they fight as your champion in every duel."

@@ -15,7 +15,9 @@ describe("Duel tokens", () => {
   });
 
   const tokens = async (userId: string) =>
-    await t.query(api.imageCreditService.getUserImageCredits, { userId });
+    await t
+      .withIdentity({ subject: userId })
+      .query(api.imageCreditService.getUserImageCredits, {});
 
   const makeWizard = async (owner: string): Promise<Id<"wizards">> =>
     await t.run(
@@ -69,6 +71,27 @@ describe("Duel tokens", () => {
 
     const duels = await t.run(async (ctx) => ctx.db.query("duels").collect());
     expect(duels).toHaveLength(0);
+  });
+
+  it("only opens as many duels as the creator can pay for when they start", async () => {
+    await ensureTestUser(t, "alice", 1);
+    const alice = withAuth(t, "alice");
+    const open = async () =>
+      await alice.mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [await makeWizard("alice")],
+      });
+
+    const first = await open();
+    // The one token is spoken for by the waiting duel
+    expect(
+      await alice.query(api.imageCreditService.hasImageCreditsForDuel, {}),
+    ).toBe(false);
+    await expect(open()).rejects.toThrow("open duels");
+
+    // Cancelling frees it again
+    await alice.mutation(api.duels.cancelDuel, { duelId: first });
+    await expect(open()).resolves.toBeDefined();
   });
 
   it("takes a token from each player in a PvP duel", async () => {
@@ -433,7 +456,9 @@ describe("Wizard illustration tokens", () => {
   });
 
   const tokens = async (userId: string) =>
-    await t.query(api.imageCreditService.getUserImageCredits, { userId });
+    await t
+      .withIdentity({ subject: userId })
+      .query(api.imageCreditService.getUserImageCredits, {});
 
   const makeWizard = async (owner: string, withIllustration: boolean) =>
     await t.run(
