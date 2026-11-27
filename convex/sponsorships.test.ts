@@ -22,7 +22,9 @@ describe("Sponsored duels", () => {
   });
 
   const tokens = async (userId: string) =>
-    await t.query(api.imageCreditService.getUserImageCredits, { userId });
+    await t
+      .withIdentity({ subject: userId })
+      .query(api.imageCreditService.getUserImageCredits, {});
 
   const makeWizard = async (owner: string): Promise<Id<"wizards">> =>
     await t.run(
@@ -128,6 +130,31 @@ describe("Sponsored duels", () => {
     await playDuel("carol", "bob");
     expect(await tokens("bob")).toBe(1);
     expect(await tokens("carol")).toBe(2);
+  });
+
+  it("counts waiting duels against free entries, so Free stays true", async () => {
+    await sponsor({ dailyEntriesPerPlayer: 2 });
+    await ensureTestUser(t, "alice", 0);
+    const alice = withAuth(t, "alice");
+    const open = async () =>
+      await alice.mutation(api.duels.createDuel, {
+        numberOfRounds: 3,
+        wizards: [await makeWizard("alice")],
+      });
+
+    await open();
+    let current = await alice.query(api.sponsorships.getCurrent, {});
+    expect(current).toMatchObject({ coversYou: true, entriesLeftToday: 1 });
+
+    await open();
+    current = await alice.query(api.sponsorships.getCurrent, {});
+    expect(current).toMatchObject({ coversYou: false, entriesLeftToday: 0 });
+    expect(
+      await alice.query(api.imageCreditService.hasImageCreditsForDuel, {}),
+    ).toBe(false);
+
+    // A third would have nothing to pay with when its rival joined
+    await expect(open()).rejects.toThrow("open duels");
   });
 
   it("does nothing before it starts or after it ends", async () => {

@@ -343,7 +343,7 @@ export default function DashboardContent({
 
   const liveCredits = useQuery(
     api.imageCreditService.getUserImageCredits,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
   const sponsorship = useSponsorship();
   // Set while a sponsor makes this player's battles free

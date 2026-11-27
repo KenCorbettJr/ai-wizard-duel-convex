@@ -1,5 +1,6 @@
 "use client";
 
+import { isSafeRedirectPath } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ProfileSetupForm } from "../../../components/ProfileSetupForm";
@@ -24,7 +25,8 @@ export default function ProfileSetupPage() {
     );
     const redirectUrl = urlParams.get("redirect_url");
 
-    if (redirectUrl) {
+    // Same-site paths only, so the link can't send anyone elsewhere
+    if (isSafeRedirectPath(redirectUrl)) {
       router.push(redirectUrl);
     } else {
       // Redirect to dashboard after successful profile creation

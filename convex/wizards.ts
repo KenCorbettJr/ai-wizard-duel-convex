@@ -860,7 +860,9 @@ export const backfillWizardStats = internalMutation({
 
 // Get wizard with owner information and campaign relic status - public information
 export const getWizardWithOwner = query({
-  args: { wizardId: v.id("wizards") },
+  // A plain string, so a mangled or wrong-table id in a link reads as "no
+  // such wizard" instead of failing argument validation.
+  args: { wizardId: v.string() },
   returns: v.union(
     v.null(),
     v.object({
@@ -900,7 +902,9 @@ export const getWizardWithOwner = query({
       illustrationPrompt: v.optional(v.string()),
     }),
   ),
-  handler: async (ctx, { wizardId }) => {
+  handler: async (ctx, args) => {
+    const wizardId = ctx.db.normalizeId("wizards", args.wizardId);
+    if (!wizardId) return null;
     const wizard = await ctx.db.get(wizardId);
     if (!wizard) {
       return null;

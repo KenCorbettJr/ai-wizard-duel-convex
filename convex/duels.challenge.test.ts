@@ -10,6 +10,7 @@ async function setup() {
     for (const clerkId of ["alice", "bob", "carol"]) {
       await ctx.db.insert("users", {
         clerkId,
+        userId: clerkId,
         role: "user",
         imageCredits: 10,
         createdAt: Date.now(),
@@ -136,6 +137,47 @@ describe("wizard challenges", () => {
 });
 
 describe("joinDuel", () => {
+  test("reports what would block a challenge before it's sent", async () => {
+    const { t, ids, alice, challenge } = await setup();
+    const blocker = () =>
+      alice.query(api.duels.getChallengeBlocker, {
+        opponentWizardId: ids.bobWiz,
+      });
+    expect(await blocker()).toBeNull();
+
+    const duelId = await challenge();
+    expect(await blocker()).toEqual({
+      kind: "alreadyChallenged",
+      duelId,
+      wizardId: ids.aliceWiz,
+    });
+
+    // At the cap, a new target is blocked too
+    const more = await t.run(async (ctx) =>
+      Promise.all(
+        [1, 2, 3, 4, 5].map((n) =>
+          ctx.db.insert("wizards", {
+            owner: "carol",
+            name: `Extra ${n}`,
+            description: "x",
+          }),
+        ),
+      ),
+    );
+    for (const opponentWizardId of more.slice(0, 4)) {
+      await alice.mutation(api.duels.challengeWizard, {
+        wizardId: ids.aliceWiz,
+        opponentWizardId,
+        numberOfRounds: 3,
+      });
+    }
+    expect(
+      await alice.query(api.duels.getChallengeBlocker, {
+        opponentWizardId: more[4],
+      }),
+    ).toEqual({ kind: "tooManyPending", max: 5 });
+  });
+
   test("a third player can't join while the duel is being prepared", async () => {
     const { ids, alice, bob, carol } = await setup();
     const duelId = await alice.mutation(api.duels.createDuel, {

@@ -40,6 +40,17 @@ export const REFERRAL_LIFETIME_CAP = 50;
  */
 export const TO_THE_DEATH_MAX_ROUNDS = 10;
 
+/** Fixed duel lengths players can pick, besides "To the Death". */
+export const DUEL_ROUND_OPTIONS = [3, 5, 10] as const;
+
+/** A duel length a player is allowed to ask for. */
+export function isAllowedDuelLength(rounds: number | "TO_THE_DEATH"): boolean {
+  return (
+    rounds === "TO_THE_DEATH" ||
+    (DUEL_ROUND_OPTIONS as readonly number[]).includes(rounds)
+  );
+}
+
 export interface TokenPack {
   id: "pouch" | "satchel" | "chest";
   name: string;

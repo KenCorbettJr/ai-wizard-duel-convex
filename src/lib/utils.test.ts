@@ -1,4 +1,4 @@
-import { isValidConvexId, safeConvexId } from "./utils";
+import { isValidConvexId, safeConvexId, isSafeRedirectPath } from "./utils";
 
 describe("Convex ID validation", () => {
   describe("isValidConvexId", () => {
@@ -35,5 +35,26 @@ describe("Convex ID validation", () => {
       expect(safeConvexId(validId)).toBe(validId);
       expect(safeConvexId(validId)).toBe(validId);
     });
+  });
+});
+
+describe("isSafeRedirectPath", () => {
+  it("accepts same-site paths", () => {
+    expect(isSafeRedirectPath("/duels/create?rounds=5&chat=1")).toBe(true);
+  });
+
+  it("rejects anything a browser would treat as another site", () => {
+    for (const path of [
+      "https://evil.com",
+      "//evil.com",
+      "/\\evil.com",
+      "/\t/evil.com",
+      "/\n/evil.com",
+      "",
+      null,
+      undefined,
+    ]) {
+      expect(isSafeRedirectPath(path)).toBe(false);
+    }
   });
 });

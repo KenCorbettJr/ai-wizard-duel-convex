@@ -81,9 +81,9 @@ test("getUserImageCredits works after user creation", async () => {
     });
 
   // Test that getUserImageCredits works
-  const credits = await t.query(api.imageCreditService.getUserImageCredits, {
-    userId: "credit_test_user",
-  });
+  const credits = await t
+    .withIdentity({ subject: "credit_test_user" })
+    .query(api.imageCreditService.getUserImageCredits, {});
 
   expect(credits).toBe(STARTING_TOKENS);
 });

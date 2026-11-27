@@ -24,9 +24,9 @@ describe("token purchases", () => {
   });
 
   const tokens = async () =>
-    await t.query(api.imageCreditService.getUserImageCredits, {
-      userId: "alice",
-    });
+    await t
+      .withIdentity({ subject: "alice" })
+      .query(api.imageCreditService.getUserImageCredits, {});
 
   it("grants the pack's tokens once, even if Stripe retries", async () => {
     const complete = () =>

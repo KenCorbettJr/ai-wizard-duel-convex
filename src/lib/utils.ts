@@ -37,3 +37,22 @@ export function safeConvexId<T extends TableNames>(id: string): Id<T> | null {
   }
   return id as Id<T>;
 }
+
+/**
+ * A same-site path that's safe to redirect to. Rejects "//x" and "/\x"
+ * (other sites to a browser) and control characters, which browsers strip
+ * (so "/\t/x" would become "//x").
+ */
+export function isSafeRedirectPath(
+  path: string | null | undefined,
+): path is string {
+  if (!path || !path.startsWith("/")) return false;
+  if (/[\u0000-\u001f\u007f\\]/.test(path)) return false;
+  if (path.startsWith("//")) return false;
+  try {
+    const base = "https://same.invalid";
+    return new URL(path, base).origin === base;
+  } catch {
+    return false;
+  }
+}

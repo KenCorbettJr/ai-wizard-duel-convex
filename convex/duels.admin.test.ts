@@ -2,7 +2,12 @@ import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
-import { withAuth, withSuperAdminAuth, createTestUser } from "./test_utils";
+import {
+  withAuth,
+  withSuperAdminAuth,
+  createTestUser,
+  createTestDuel,
+} from "./test_utils";
 
 describe("Duel Admin Functions", () => {
   test("searchDuels should filter duels by status", async () => {
@@ -18,7 +23,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Test Wizard 1",
         description: "A test wizard",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -26,22 +31,19 @@ describe("Duel Admin Functions", () => {
       {
         name: "Test Wizard 2",
         description: "Another test wizard",
-      }
+      },
     );
 
     // Create test duels with different statuses
-    await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });
 
-    const duel2Id = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 5,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const duel2Id = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 5,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
     // Cancel one duel
     await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
@@ -53,7 +55,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         status: "WAITING_FOR_PLAYERS",
-      }
+      },
     );
     expect(waitingDuels.duels).toHaveLength(1);
 
@@ -61,7 +63,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         status: "CANCELLED",
-      }
+      },
     );
     expect(cancelledDuels.duels).toHaveLength(1);
     expect(cancelledDuels.duels[0]._id).toBe(duel2Id);
@@ -71,7 +73,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         playerUserId: "test-user-1",
-      }
+      },
     );
     expect(user1Duels.duels).toHaveLength(2);
 
@@ -80,7 +82,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         numberOfRounds: 3,
-      }
+      },
     );
     expect(threeRoundDuels.duels).toHaveLength(1);
     expect(threeRoundDuels.duels[0]._id).toBeDefined();
@@ -99,7 +101,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Analytics Wizard 1",
         description: "A test wizard for analytics",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -107,24 +109,21 @@ describe("Duel Admin Functions", () => {
       {
         name: "Analytics Wizard 2",
         description: "Another test wizard for analytics",
-      }
+      },
     );
 
     // Create multiple duels with different statuses
-    await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });
 
-    const duel2Id = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: "TO_THE_DEATH",
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const duel2Id = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: "TO_THE_DEATH",
+      wizards: [wizard1Id, wizard2Id],
+    });
 
-    await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    await createTestDuel(t, "test-user-1", {
       numberOfRounds: 5,
       wizards: [wizard1Id, wizard2Id],
     });
@@ -139,7 +138,7 @@ describe("Duel Admin Functions", () => {
       api.duels.getDuelAnalytics,
       {
         timeRange: "all",
-      }
+      },
     );
 
     expect(analytics).toBeDefined();
@@ -167,7 +166,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Monitor Wizard 1",
         description: "A test wizard for monitoring",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -175,41 +174,32 @@ describe("Duel Admin Functions", () => {
       {
         name: "Monitor Wizard 2",
         description: "Another test wizard for monitoring",
-      }
+      },
     );
 
     // Create active duels
-    const waitingDuelId = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 3,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const waitingDuelId = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 3,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
-    const inProgressDuelId = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 5,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const inProgressDuelId = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 5,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
     // Create a completed duel (should not appear in monitoring)
-    const completedDuelId = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 3,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const completedDuelId = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 3,
+      wizards: [wizard1Id, wizard2Id],
+    });
     await withAuth(t, "test-user-1").mutation(api.duels.cancelDuel, {
       duelId: completedDuelId,
     });
 
     // Get monitoring data
     const monitoring = await withSuperAdminAuth(t).query(
-      api.duels.getActiveDuelMonitoring
+      api.duels.getActiveDuelMonitoring,
     );
 
     expect(monitoring).toBeDefined();
@@ -217,7 +207,7 @@ describe("Duel Admin Functions", () => {
 
     const waitingDuel1 = monitoring.find((m) => m.duel._id === waitingDuelId);
     const waitingDuel2 = monitoring.find(
-      (m) => m.duel._id === inProgressDuelId
+      (m) => m.duel._id === inProgressDuelId,
     );
 
     expect(waitingDuel1).toBeDefined();
@@ -249,7 +239,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Cancel Wizard 1",
         description: "A test wizard for cancellation",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -257,22 +247,19 @@ describe("Duel Admin Functions", () => {
       {
         name: "Cancel Wizard 2",
         description: "Another test wizard for cancellation",
-      }
+      },
     );
 
     // Create and start a duel
-    const duelId = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 3,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const duelId = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 3,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
     // Verify duel is waiting for players
     const duelBefore = await withAuth(t, "test-user-1").query(
       api.duels.getDuel,
-      { duelId }
+      { duelId },
     );
     expect(duelBefore?.status).toBe("WAITING_FOR_PLAYERS");
 
@@ -285,7 +272,7 @@ describe("Duel Admin Functions", () => {
     // Verify duel is cancelled
     const duelAfter = await withAuth(t, "test-user-1").query(
       api.duels.getDuel,
-      { duelId }
+      { duelId },
     );
     expect(duelAfter?.status).toBe("CANCELLED");
   });
@@ -303,7 +290,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Complete Wizard 1",
         description: "A test wizard",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -311,17 +298,14 @@ describe("Duel Admin Functions", () => {
       {
         name: "Complete Wizard 2",
         description: "Another test wizard",
-      }
+      },
     );
 
     // Create a duel and manually set it to completed
-    const duelId = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 1,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const duelId = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 1,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
     // Start the duel
     await t.mutation(api.duels.startDuel, { duelId });
@@ -374,7 +358,7 @@ describe("Duel Admin Functions", () => {
     // Verify duel is completed
     const completedDuel = await withAuth(t, "test-user-1").query(
       api.duels.getDuel,
-      { duelId }
+      { duelId },
     );
     expect(completedDuel?.status).toBe("COMPLETED");
 
@@ -383,7 +367,7 @@ describe("Duel Admin Functions", () => {
       withSuperAdminAuth(t).mutation(api.duels.forceCancelDuel, {
         duelId,
         reason: "Should not work",
-      })
+      }),
     ).rejects.toThrow("Cannot cancel a completed duel");
   });
 
@@ -400,7 +384,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Page Wizard 1",
         description: "A test wizard for pagination",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -408,19 +392,24 @@ describe("Duel Admin Functions", () => {
       {
         name: "Page Wizard 2",
         description: "Another test wizard for pagination",
-      }
+      },
     );
 
-    // Create multiple duels
+    // Create multiple duels. Each waiting duel holds a token until it
+    // starts, so the creator needs enough for all five.
+    await t.run(async (ctx) => {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", "test-user-1"))
+        .first();
+      await ctx.db.patch(user!._id, { imageCredits: 10 });
+    });
     const duelIds = [];
     for (let i = 0; i < 5; i++) {
-      const duelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const duelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, wizard2Id],
+      });
       duelIds.push(duelId);
     }
 
@@ -463,7 +452,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Date Wizard 1",
         description: "A test wizard for date filtering",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -471,11 +460,11 @@ describe("Duel Admin Functions", () => {
       {
         name: "Date Wizard 2",
         description: "Another test wizard for date filtering",
-      }
+      },
     );
 
     // Create a duel
-    await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });
@@ -489,7 +478,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         createdAfter: oneHourAgo,
-      }
+      },
     );
     expect(duelsAfter.duels).toHaveLength(1);
 
@@ -497,7 +486,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         createdBefore: oneHourFromNow,
-      }
+      },
     );
     expect(duelsBefore.duels).toHaveLength(1);
 
@@ -505,7 +494,7 @@ describe("Duel Admin Functions", () => {
       api.duels.searchDuels,
       {
         createdAfter: oneHourFromNow,
-      }
+      },
     );
     expect(duelsInFuture.duels).toHaveLength(0);
   });
@@ -519,7 +508,7 @@ describe("Duel Admin Functions", () => {
       {
         name: "Stats Wizard 1",
         description: "A test wizard for stats",
-      }
+      },
     );
 
     const wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -527,27 +516,21 @@ describe("Duel Admin Functions", () => {
       {
         name: "Stats Wizard 2",
         description: "Another test wizard for stats",
-      }
+      },
     );
 
     // Create duels with different outcomes
-    const duel1Id = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 3,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const duel1Id = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 3,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
-    const duel2Id = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        numberOfRounds: 5,
-        wizards: [wizard1Id, wizard2Id],
-      }
-    );
+    const duel2Id = await createTestDuel(t, "test-user-1", {
+      numberOfRounds: 5,
+      wizards: [wizard1Id, wizard2Id],
+    });
 
-    await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });
@@ -565,7 +548,7 @@ describe("Duel Admin Functions", () => {
     // Get player stats
     const user1Stats = await withAuth(t, "test-user-1").query(
       api.duels.getPlayerDuelStats,
-      {}
+      {},
     );
 
     expect(user1Stats).toBeDefined();
@@ -585,15 +568,15 @@ describe("Duel Admin Functions", () => {
 
     // Test that regular users can't access admin functions
     await expect(
-      withAuth(t, "regular-user").query(api.duels.searchDuels, {})
+      withAuth(t, "regular-user").query(api.duels.searchDuels, {}),
     ).rejects.toThrow("Access denied: Super admin privileges required");
 
     await expect(
-      withAuth(t, "regular-user").query(api.duels.getDuelAnalytics, {})
+      withAuth(t, "regular-user").query(api.duels.getDuelAnalytics, {}),
     ).rejects.toThrow("Access denied: Super admin privileges required");
 
     await expect(
-      withAuth(t, "regular-user").query(api.duels.getActiveDuelMonitoring, {})
+      withAuth(t, "regular-user").query(api.duels.getActiveDuelMonitoring, {}),
     ).rejects.toThrow("Access denied: Super admin privileges required");
 
     // Create a test duel first
@@ -602,22 +585,19 @@ describe("Duel Admin Functions", () => {
       {
         name: "Test Wizard",
         description: "A test wizard",
-      }
+      },
     );
 
-    const duelId = await withAuth(t, "test-user-1").mutation(
-      api.duels.createDuel,
-      {
-        wizards: [wizard1Id],
-        numberOfRounds: 3,
-      }
-    );
+    const duelId = await createTestDuel(t, "test-user-1", {
+      wizards: [wizard1Id],
+      numberOfRounds: 3,
+    });
 
     await expect(
       withAuth(t, "regular-user").mutation(api.duels.forceCancelDuel, {
         duelId,
         reason: "Should not work",
-      })
+      }),
     ).rejects.toThrow("Access denied: Super admin privileges required");
   });
 });

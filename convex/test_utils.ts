@@ -2,6 +2,7 @@ import type { TestConvex } from "convex-test";
 import { Id, TableNames } from "./_generated/dataModel";
 import { getFunctionName, type FunctionReference } from "convex/server";
 import { api } from "./_generated/api";
+import { insertWaitingDuel } from "./duels";
 import schema from "./schema";
 
 // Generate a proper Convex ID for testing
@@ -92,6 +93,8 @@ export async function ensureTestUser(
       role: "user",
       email: `${userId}@test.com`,
       name: `Test User ${userId}`,
+      // A username: creating a duel needs a finished profile
+      userId: userId.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 20),
       imageCredits: tokens,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -136,4 +139,31 @@ export async function createTestUser(
       }
       return userId;
     });
+}
+
+/**
+ * A waiting duel owned by `ownerId`, skipping createDuel's player-facing rules
+ * (one wizard, menu lengths, username). For tests that need unusual duels,
+ * like several of one player's wizards or a 1-round duel.
+ */
+export async function createTestDuel(
+  t: TestConvex<typeof schema>,
+  ownerId: string,
+  args: {
+    numberOfRounds: number | "TO_THE_DEATH";
+    wizards: Id<"wizards">[];
+    coverOpponentEntry?: boolean;
+    enableChat?: boolean;
+  },
+): Promise<Id<"duels">> {
+  await ensureTestUser(t, ownerId);
+  return await t.run((ctx) =>
+    insertWaitingDuel(ctx, {
+      userId: ownerId,
+      numberOfRounds: args.numberOfRounds,
+      wizards: args.wizards,
+      coverOpponentEntry: args.coverOpponentEntry,
+      chatEnabled: args.enableChat,
+    }),
+  );
 }

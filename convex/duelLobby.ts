@@ -1,5 +1,6 @@
 import { query, mutation, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { isAllowedDuelLength } from "./lib/pricing";
 import { syncDuelParticipants } from "./lib/duelParticipants";
 
 import { api, internal } from "./_generated/api";
@@ -114,6 +115,10 @@ export const joinLobby = mutation({
     const wizard = await ctx.db.get(wizardId);
     if (!wizard || wizard.owner !== userId) {
       throw new Error("Not authorized to use this wizard");
+    }
+
+    if (!isAllowedDuelLength(duelType)) {
+      throw new ConvexError("That isn't a duel length you can pick.");
     }
 
     // Check if user is already in lobby

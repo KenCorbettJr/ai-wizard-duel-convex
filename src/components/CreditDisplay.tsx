@@ -23,13 +23,13 @@ export function CreditDisplay({
   // Get user's current credit balance
   const credits = useQuery(
     api.imageCreditService.getUserImageCredits,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
 
   // Check if user has credits for duels
   const hasCreditsForDuel = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
 
   const sponsorship = useSponsorship();

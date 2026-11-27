@@ -19,6 +19,8 @@ export function useProfileCompletion() {
   );
 
   const isProfileComplete = profileStatus?.hasProfile ?? false;
+  // True once we know whether the profile exists (false while loading)
+  const isProfileLoaded = profileStatus !== undefined;
   const userId = profileStatus?.userId;
   const displayName = profileStatus?.displayName;
 
@@ -94,6 +96,7 @@ export function useProfileCompletion() {
     isLoaded,
     isSignedIn,
     isProfileComplete,
+    isProfileLoaded,
     userId,
     displayName,
     requireProfileCompletion,

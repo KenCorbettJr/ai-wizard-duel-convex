@@ -3,7 +3,7 @@ import { expect, test, describe, beforeEach } from "vitest";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
-import { withAuth } from "./test_utils";
+import { withAuth, createTestDuel } from "./test_utils";
 
 // Note: AI text generation now uses schema-based approach with built-in test mocks
 
@@ -22,7 +22,7 @@ describe("Duel Introduction", () => {
       {
         name: "Gandalf the Grey",
         description: "A wise wizard with a long grey beard and staff",
-      }
+      },
     );
 
     wizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -31,11 +31,11 @@ describe("Duel Introduction", () => {
         name: "Saruman the White",
         description:
           "A powerful wizard with white robes and commanding presence",
-      }
+      },
     );
 
     // Create test duel
-    duelId = await withAuth(t, "test-user-1").mutation(api.duels.createDuel, {
+    duelId = await createTestDuel(t, "test-user-1", {
       numberOfRounds: 3,
       wizards: [wizard1Id, wizard2Id],
     });
@@ -51,7 +51,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -84,13 +84,10 @@ describe("Duel Introduction", () => {
     }, 10000);
 
     test("should handle TO_THE_DEATH duel type", async () => {
-      const deathDuelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: "TO_THE_DEATH",
-          wizards: [wizard1Id, wizard2Id],
-        }
-      );
+      const deathDuelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: "TO_THE_DEATH",
+        wizards: [wizard1Id, wizard2Id],
+      });
 
       // Test will use the new schema-based mock functions
 
@@ -98,7 +95,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId: deathDuelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -117,7 +114,7 @@ describe("Duel Introduction", () => {
         {
           name: "Merlin",
           description: "Ancient wizard of legend",
-        }
+        },
       );
 
       // Update stats using internal function
@@ -133,22 +130,19 @@ describe("Duel Introduction", () => {
         {
           name: "Young Apprentice",
           description: "A novice wizard learning the arts",
-        }
+        },
       );
 
-      const statsDuelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 5,
-          wizards: [veteranWizardId, rookieWizardId],
-        }
-      );
+      const statsDuelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 5,
+        wizards: [veteranWizardId, rookieWizardId],
+      });
 
       const result = await withAuth(t, "test-user-1").action(
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId: statsDuelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -170,7 +164,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -191,7 +185,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -212,7 +206,7 @@ describe("Duel Introduction", () => {
         {
           name: "Wizard™ 🧙‍♂️",
           description: "A wizard with special characters",
-        }
+        },
       );
 
       const specialWizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -220,16 +214,13 @@ describe("Duel Introduction", () => {
         {
           name: "Mágico Español",
           description: "A wizard with accented characters",
-        }
+        },
       );
 
-      const specialDuelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [specialWizard1Id, specialWizard2Id],
-        }
-      );
+      const specialDuelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [specialWizard1Id, specialWizard2Id],
+      });
 
       // Test will use the new schema-based mock functions
 
@@ -237,7 +228,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId: specialDuelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -277,8 +268,8 @@ describe("Duel Introduction", () => {
           api.duelIntroduction.generateDuelIntroduction,
           {
             duelId: tempDuelId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Duel not found");
     });
 
@@ -319,8 +310,8 @@ describe("Duel Introduction", () => {
           api.duelIntroduction.generateDuelIntroduction,
           {
             duelId: badDuelId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Could not fetch all wizard data");
     });
 
@@ -345,8 +336,8 @@ describe("Duel Introduction", () => {
           api.duelIntroduction.generateDuelIntroduction,
           {
             duelId: singleWizardDuelId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Could not fetch all wizard data");
     });
 
@@ -357,16 +348,13 @@ describe("Duel Introduction", () => {
         {
           name: "Temp Wizard",
           description: "Temporary wizard",
-        }
+        },
       );
 
-      const tempDuelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [wizard1Id, tempWizardId],
-        }
-      );
+      const tempDuelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [wizard1Id, tempWizardId],
+      });
 
       // Delete the wizard after duel creation
       await t.run(async (ctx) => {
@@ -378,8 +366,8 @@ describe("Duel Introduction", () => {
           api.duelIntroduction.generateDuelIntroduction,
           {
             duelId: tempDuelId,
-          }
-        )
+          },
+        ),
       ).rejects.toThrow("Could not fetch all wizard data");
     });
   });
@@ -392,7 +380,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       const introRound = await t.run(async (ctx) => {
@@ -409,7 +397,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       const introRound = await t.run(async (ctx) => {
@@ -426,7 +414,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       const introRound = await t.run(async (ctx) => {
@@ -442,7 +430,7 @@ describe("Duel Introduction", () => {
         {
           name: "Fresh Wizard",
           description: "Brand new to magic",
-        }
+        },
       );
 
       const newWizard2Id = await withAuth(t, "test-user-1").mutation(
@@ -450,16 +438,13 @@ describe("Duel Introduction", () => {
         {
           name: "Another Newbie",
           description: "Also new to magic",
-        }
+        },
       );
 
-      const newbieDuelId = await withAuth(t, "test-user-1").mutation(
-        api.duels.createDuel,
-        {
-          numberOfRounds: 3,
-          wizards: [newWizard1Id, newWizard2Id],
-        }
-      );
+      const newbieDuelId = await createTestDuel(t, "test-user-1", {
+        numberOfRounds: 3,
+        wizards: [newWizard1Id, newWizard2Id],
+      });
 
       // Test will use the new schema-based mock functions
 
@@ -467,7 +452,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId: newbieDuelId,
-        }
+        },
       );
 
       const introRound = await t.run(async (ctx) => {
@@ -493,7 +478,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       // Verify final state
@@ -512,7 +497,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId,
-        }
+        },
       );
 
       const rounds = await t.query(api.duels.getDuelRounds, { duelId });
@@ -536,7 +521,7 @@ describe("Duel Introduction", () => {
       await t.run(async (ctx) => {
         await ctx.runMutation(api.campaigns.seedCampaignOpponents);
         await ctx.runMutation(
-          internal.campaignSeasons.createDefaultSeasonInternal
+          internal.campaignSeasons.createDefaultSeasonInternal,
         );
       });
 
@@ -546,7 +531,7 @@ describe("Duel Introduction", () => {
         {
           wizardId: wizard1Id,
           opponentNumber: 1,
-        }
+        },
       );
 
       expect(battleResult.duelId).toBeDefined();
@@ -558,7 +543,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId: battleResult.duelId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -590,7 +575,7 @@ describe("Duel Introduction", () => {
       await t.run(async (ctx) => {
         await ctx.runMutation(api.campaigns.seedCampaignOpponents);
         await ctx.runMutation(
-          internal.campaignSeasons.createDefaultSeasonInternal
+          internal.campaignSeasons.createDefaultSeasonInternal,
         );
       });
 
@@ -600,7 +585,7 @@ describe("Duel Introduction", () => {
         {
           wizardId: wizard1Id,
           opponentNumber: 1,
-        }
+        },
       );
 
       // Generate introduction to start the duel
@@ -608,7 +593,7 @@ describe("Duel Introduction", () => {
         api.duelIntroduction.generateDuelIntroduction,
         {
           duelId: battleResult.duelId,
-        }
+        },
       );
 
       // Cast a spell for the human player
@@ -623,7 +608,7 @@ describe("Duel Introduction", () => {
         internal.campaignOpponentAI.processCampaignOpponentActions,
         {
           duelId: battleResult.duelId,
-        }
+        },
       );
 
       expect(actionResult.actionsGenerated).toBe(1);

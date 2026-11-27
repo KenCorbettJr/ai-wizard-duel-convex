@@ -34,9 +34,14 @@ function getSiteUrl(): string {
 
 /** Start a Stripe Checkout for a token pack. Returns the URL to redirect to. */
 export const createTokenCheckout = action({
-  args: { packId: v.string() },
+  args: {
+    packId: v.string(),
+    // A page on this site to offer a way back to after checkout, such as the
+    // duel the player was setting up when they ran out of tokens.
+    returnTo: v.optional(v.string()),
+  },
   returns: v.object({ url: v.string() }),
-  handler: async (ctx, { packId }) => {
+  handler: async (ctx, { packId, returnTo }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Not authenticated");
@@ -48,6 +53,13 @@ export const createTokenCheckout = action({
     }
 
     const siteUrl = getSiteUrl();
+    // Same-site paths only, so the link can't send anyone elsewhere
+    const back =
+      returnTo &&
+      returnTo.length <= 500 &&
+      /^\/(?!\/)[^\u0000-\u001f\u007f\\]*$/.test(returnTo)
+        ? `&redirect_url=${encodeURIComponent(returnTo)}`
+        : "";
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -71,8 +83,8 @@ export const createTokenCheckout = action({
         packId: pack.id,
         tokens: String(pack.tokens),
       },
-      success_url: `${siteUrl}/credits?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/credits?purchase=cancelled`,
+      success_url: `${siteUrl}/credits?purchase=success&session_id={CHECKOUT_SESSION_ID}${back}`,
+      cancel_url: `${siteUrl}/credits?purchase=cancelled${back}`,
     });
 
     if (!session.url) {

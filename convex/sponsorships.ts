@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { verifySuperAdmin } from "./auth.utils";
+import { seatsPromised } from "./lib/duelTokens";
 import {
   budgetLeft,
   findRunningSponsorship,
@@ -72,8 +73,14 @@ export const getCurrent = query({
     if (!s) return null;
 
     const identity = await ctx.auth.getUserIdentity();
+    // Entries the player's waiting duels will use when they start are
+    // already spoken for, so they don't count as free for a new duel
     const left = identity
-      ? await playerEntriesLeft(ctx, s, identity.subject, now)
+      ? Math.max(
+          0,
+          (await playerEntriesLeft(ctx, s, identity.subject, now)) -
+            (await seatsPromised(ctx, identity.subject)),
+        )
       : null;
     return {
       sponsorName: s.sponsorName,
