@@ -324,7 +324,7 @@ export const RosterWizardCard = memo(function RosterWizardCard({
             <p className="mb-0.5 text-xs font-semibold text-amber-200">
               {portraitStage === "sketching"
                 ? "Sketching portrait…"
-                : "Painting the scene…"}
+                : "Generating the scene…"}
             </p>
           )}
           <h2

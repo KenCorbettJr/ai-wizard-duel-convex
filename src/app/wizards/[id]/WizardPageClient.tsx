@@ -25,7 +25,6 @@ import {
   RefreshCw,
   Info,
   Scroll,
-  Paintbrush,
   Bot,
   Sparkles,
 } from "lucide-react";
@@ -342,7 +341,7 @@ export default function WizardPageClient({ params }: WizardPageClientProps) {
       disabled={retrying}
       className="flex w-full items-center justify-center gap-3 bg-arcane px-4 py-5 text-left text-white transition-opacity hover:opacity-90 disabled:opacity-60 md:rounded-xl"
     >
-      <Paintbrush className="h-6 w-6 shrink-0" aria-hidden />
+      <Sparkles className="h-6 w-6 shrink-0" aria-hidden />
       <span>
         <span className="block font-semibold">
           Give {wizard.name} a portrait

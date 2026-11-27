@@ -114,7 +114,7 @@ const PROCESSING_STAGES = [
   "Reading both actions",
   "Rolling for luck",
   "Writing the tale",
-  "Painting the scene",
+  "Generating the scene",
 ];
 
 /** Processing starts when the last wizard submits, so use the newest spell time. */
@@ -837,9 +837,9 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                 id={`round-${round.roundNumber}-art`}
                 className={`${at(STAGE.IMAGE)} mb-4 max-w-2xl mx-auto flex items-center justify-center gap-3 rounded-lg border border-dashed border-border/60 bg-card/50 p-6`}
               >
-                <RuneSpinner size="sm" label="Painting the scene" />
+                <RuneSpinner size="sm" label="Generating the scene" />
                 <span className="text-sm text-muted-foreground">
-                  Painting the scene...
+                  Generating the scene...
                 </span>
               </div>
             ) : round.illustrationStatus === "FAILED" && isDuelist ? (
@@ -848,7 +848,7 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                 className={`${at(STAGE.IMAGE)} mb-4 max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-3 rounded-lg border border-dashed border-border/60 bg-card/50 p-6`}
               >
                 <span className="text-sm text-muted-foreground">
-                  The scene for this round couldn&apos;t be painted.
+                  The scene for this round couldn&apos;t be generated.
                 </span>
                 <MediaRetryButton
                   onRetry={() => retryIllustration({ roundId: round._id })}

@@ -275,7 +275,7 @@ function WizardRow({
         </Link>
         <p className="truncate text-xs text-muted-foreground">
           {portraitStage
-            ? "Painting portrait…"
+            ? "Generating portrait…"
             : record > 0
               ? `${wizard.wins ?? 0}W · ${wizard.losses ?? 0}L`
               : "No duels yet"}
@@ -521,7 +521,7 @@ export default function DashboardContent({
                       Create your first wizard
                     </h2>
                     <p className="mt-1 text-muted-foreground">
-                      Describe them however you like. The AI paints their
+                      Describe them however you like. The AI generates their
                       portrait, and they fight as your champion in every duel.
                     </p>
                   </div>

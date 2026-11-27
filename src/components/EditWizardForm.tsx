@@ -11,6 +11,7 @@ interface EditWizardFormProps {
     description: string;
     isAIPowered?: boolean;
     owner: string;
+    illustration?: string;
   };
   onClose: () => void;
   onSuccess: () => void;
@@ -37,6 +38,7 @@ export function EditWizardForm({
         isAIPowered: wizard.isAIPowered || false,
       }}
       wizardId={wizard._id}
+      hasPortrait={!!wizard.illustration}
       onClose={onClose}
       onSuccess={onSuccess}
     />
