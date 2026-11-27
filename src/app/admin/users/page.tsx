@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +47,8 @@ function UserManagementPageContent() {
     numItems: 50,
     cursor: null as string | null,
   });
+  // Cursors of the pages before this one
+  const [pageCursors, setPageCursors] = useState<(string | null)[]>([]);
 
   // Modal state
   const [grantCreditsUser, setGrantCreditsUser] = useState<{
@@ -75,6 +77,7 @@ function UserManagementPageContent() {
     if (paginationOpts.cursor !== null) {
       setPaginationOpts({ numItems: 50, cursor: null });
     }
+    if (pageCursors.length > 0) setPageCursors([]);
   }
 
   // Fetch users
@@ -108,21 +111,39 @@ function UserManagementPageContent() {
     });
   }
 
-  // Handle pagination
+  // After paging, bring the top of the new page into view (the pager sits
+  // below 50 cards, so otherwise a phone is left at the bottom of the list)
+  const userListRef = useRef<HTMLDivElement>(null);
+  const scrollToList = () => {
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    userListRef.current?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
+  // Handle pagination: remember each page's cursor so Previous steps back one page
   const handleNextPage = () => {
     if (usersResult && !usersResult.isDone) {
+      setPageCursors([...pageCursors, paginationOpts.cursor]);
       setPaginationOpts({
         numItems: 50,
         cursor: usersResult.continueCursor,
       });
+      scrollToList();
     }
   };
 
   const handlePreviousPage = () => {
+    const previous = pageCursors.at(-1) ?? null;
+    setPageCursors(pageCursors.slice(0, -1));
     setPaginationOpts({
       numItems: 50,
-      cursor: null,
+      cursor: previous,
     });
+    scrollToList();
   };
 
   const isLoading = usersResult === undefined;
@@ -130,8 +151,8 @@ function UserManagementPageContent() {
   const hasPreviousPage = paginationOpts.cursor !== null;
 
   // Calculate display info
-  const startIndex = 1;
-  const endIndex = users.length;
+  const startIndex = users.length === 0 ? 0 : pageCursors.length * 50 + 1;
+  const endIndex = pageCursors.length * 50 + users.length;
   const totalDisplay = platformStats?.totalUsers || "...";
 
   // Check for query errors
@@ -140,11 +161,12 @@ function UserManagementPageContent() {
 
   return (
     <div className="min-h-screen">
-      <div className="w-full px-6 py-12">
+      <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <PageHeader
             className="mb-0"
+            compactOnMobile
             title="User Management"
             description="View and manage all platform users"
             icon={<Users className="h-6 w-6" aria-hidden="true" />}
@@ -163,7 +185,7 @@ function UserManagementPageContent() {
         )}
 
         {/* Quick Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="mb-6 grid grid-cols-2 gap-3 md:mb-8 md:grid-cols-4 md:gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -279,21 +301,33 @@ function UserManagementPageContent() {
 
         {/* Search and Filters */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="grid md:grid-cols-3 gap-4">
+          <CardContent className="px-4 pt-4 sm:px-6 sm:pt-6">
+            <div className="grid gap-3 md:grid-cols-3 md:gap-4">
               {/* Search */}
               <div className="relative">
-                {isLoading && debouncedSearch ? (
-                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
-                ) : (
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                )}
+                {/* Spinner and icon share one fixed slot, so the field never jumps */}
+                <span className="pointer-events-none absolute left-3 top-1/2 z-10 flex h-4 w-4 -translate-y-1/2 items-center justify-center">
+                  {isLoading && debouncedSearch ? (
+                    <RuneSpinner size="xs" label="Searching…" />
+                  ) : (
+                    <Search
+                      className="h-4 w-4 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
+                {/* Never disabled: disabling a focused input closes the phone keyboard */}
                 <Input
-                  placeholder="Search by name, email, or user ID..."
+                  type="search"
+                  enterKeyHint="search"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  aria-label="Search users"
+                  placeholder="Search name, email, or user ID"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
-                  disabled={isLoading}
                 />
               </div>
 
@@ -304,7 +338,7 @@ function UserManagementPageContent() {
                   value={sortBy}
                   onValueChange={(value) => setSortBy(value as SortOption)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Sort users">
                     <SelectValue placeholder="Sort by..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -324,7 +358,7 @@ function UserManagementPageContent() {
                     setActivityFilter(value as ActivityFilter)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Filter by activity">
                     <SelectValue placeholder="Filter by activity..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -344,7 +378,7 @@ function UserManagementPageContent() {
         {hasQueryError && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
+            <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <span>
                 Failed to load user list. This may be due to a network error or
                 authorization issue.
@@ -361,11 +395,14 @@ function UserManagementPageContent() {
         )}
 
         {/* User List Table */}
-        <Card>
-          <CardHeader>
+        <Card
+          ref={userListRef}
+          className="scroll-mt-[calc(var(--app-navbar-h)+4rem)] md:scroll-mt-6"
+        >
+          <CardHeader className="px-4 sm:px-6">
             <CardTitle>Users</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6">
             <UserListTable
               users={users}
               userStats={userStats}
@@ -380,11 +417,11 @@ function UserManagementPageContent() {
             />
 
             {/* Pagination Controls */}
-            <div className="flex items-center justify-between mt-6 pt-6 border-t">
+            <div className="mt-6 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
                 Showing {startIndex}-{endIndex} of {totalDisplay} users
               </div>
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                 <Button
                   variant="outline"
                   size="sm"

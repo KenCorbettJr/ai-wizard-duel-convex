@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { SuperAdminOnly } from "@/components/SuperAdminOnly";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,8 +76,10 @@ function OpponentImage({
     return (
       <>
         <div className="flex-shrink-0">
-          <div
-            className="relative group cursor-pointer"
+          <button
+            type="button"
+            aria-label={`View or regenerate ${opponent.name}'s image`}
+            className="relative group block cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             onClick={() => setIsImageModalOpen(true)}
           >
             <Image
@@ -85,21 +87,23 @@ function OpponentImage({
               alt={opponent.name}
               width={80}
               height={80}
-              className="w-20 h-20 rounded-lg object-cover border-2 border-primary/30 hover:border-primary/50 transition-colors"
+              className="h-16 w-16 rounded-lg border-2 border-primary/30 object-cover transition-colors hover:border-primary/50 sm:h-20 sm:w-20"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-card/90 rounded-full p-1">
-                <ImageIcon className="h-4 w-4 text-foreground" />
-              </div>
-            </div>
-          </div>
+            {/* Always visible, so touch users know the image opens */}
+            <span className="pointer-events-none absolute bottom-1 right-1 rounded-full bg-card/90 p-1 shadow-sm md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
+              <ImageIcon
+                className="h-3.5 w-3.5 text-foreground"
+                aria-hidden="true"
+              />
+            </span>
+          </button>
         </div>
 
         {/* Image Modal */}
         <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center justify-center gap-2 sm:justify-start">
                 <ImageIcon className="h-5 w-5" />
                 {opponent.name}
               </DialogTitle>
@@ -116,7 +120,7 @@ function OpponentImage({
                 className="max-w-full h-auto rounded-lg border border-border"
               />
             </div>
-            <DialogFooter className="flex justify-between">
+            <DialogFooter>
               <Button
                 variant="outline"
                 onClick={onRegenerateImage}
@@ -135,18 +139,48 @@ function OpponentImage({
 
   return (
     <div className="flex-shrink-0">
-      <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-border">
+      <div className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted sm:h-20 sm:w-20">
         <Button
-          size="sm"
+          size="icon"
           variant="outline"
           onClick={onRegenerateImage}
-          className="flex items-center gap-1"
+          aria-label={`Generate ${opponent.name}'s image`}
+          title="Generate image"
         >
-          <ImageIcon className="h-3 w-3" />
-          Generate
+          <ImageIcon className="h-4 w-4" />
         </Button>
       </div>
     </div>
+  );
+}
+
+/** Removable trait chips with real, touch-sized remove buttons. */
+function TraitChips({
+  traits,
+  onRemove,
+}: {
+  traits: string[];
+  onRemove: (index: number) => void;
+}) {
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {traits.map((trait, index) => (
+        <li
+          key={index}
+          className="inline-flex items-center gap-1 rounded-full bg-secondary py-0.5 pl-3 pr-0.5 text-sm text-secondary-foreground"
+        >
+          {trait}
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            aria-label={`Remove ${trait}`}
+            className="-my-1.5 -mr-1 inline-flex size-11 items-center justify-center rounded-full hover:bg-background/60 active:bg-background/60"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -365,19 +399,19 @@ export default function CampaignOpponentsPage() {
       <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <SuperAdminOnly>
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <PageHeader
                 className="mb-0"
-                title="Campaign Opponents Management"
-                description="Create, edit, and manage the 10 campaign opponents that players
-                will face"
+                compactOnMobile
+                title="Campaign Opponents"
+                description="Create, edit, and manage the 10 campaign opponents that players will face"
                 icon={<Settings className="h-6 w-6" aria-hidden="true" />}
               />
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-3">
+            {/* Action buttons: a 2x2 grid on phones */}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 [&_button]:w-full [&_button]:px-2 sm:[&_button]:w-auto sm:[&_button]:px-4 max-[399px]:[&_button_svg]:hidden">
               <Dialog
                 open={isCreateDialogOpen}
                 onOpenChange={setIsCreateDialogOpen}
@@ -385,7 +419,7 @@ export default function CampaignOpponentsPage() {
                 <DialogTrigger asChild>
                   <Button className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
-                    Create Opponent
+                    New opponent
                   </Button>
                 </DialogTrigger>
               </Dialog>
@@ -396,7 +430,7 @@ export default function CampaignOpponentsPage() {
                 className="flex items-center gap-2"
               >
                 <Database className="h-4 w-4" />
-                Seed Default Opponents
+                Seed defaults
               </Button>
 
               {campaignOpponents && campaignOpponents.length > 0 && (
@@ -407,14 +441,14 @@ export default function CampaignOpponentsPage() {
                     className="flex items-center gap-2"
                   >
                     <ImageIcon className="h-4 w-4" />
-                    Generate All Images
+                    Generate images
                   </Button>
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="destructive"
-                        className="flex items-center gap-2"
+                        className="flex w-full items-center gap-2 sm:w-auto"
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete All
@@ -432,7 +466,10 @@ export default function CampaignOpponentsPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Keep them</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteAllOpponents}>
+                        <AlertDialogAction
+                          className={buttonVariants({ variant: "destructive" })}
+                          onClick={handleDeleteAllOpponents}
+                        >
                           Delete all
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -452,8 +489,8 @@ export default function CampaignOpponentsPage() {
             </Card>
           ) : campaignOpponents.length === 0 ? (
             <Card>
-              <CardContent className="text-center py-12">
-                <AlertTriangle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <CardContent className="px-4 py-10 text-center sm:py-12">
+                <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-muted-foreground sm:h-16 sm:w-16" />
                 <h3 className="text-xl font-semibold mb-2">
                   No Campaign Opponents
                 </h3>
@@ -462,7 +499,7 @@ export default function CampaignOpponentsPage() {
                   &quot;Seed Default Opponents&quot; or &quot;Create
                   Opponent&quot; button to get started.
                 </p>
-                <div className="flex gap-3 justify-center">
+                <div className="flex flex-col justify-center gap-3 sm:flex-row">
                   <Button
                     onClick={handleSeedOpponents}
                     className="flex items-center gap-2"
@@ -482,7 +519,7 @@ export default function CampaignOpponentsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-4 sm:gap-6">
               {campaignOpponents
                 .sort(
                   (a, b) => (a.opponentNumber || 0) - (b.opponentNumber || 0),
@@ -490,8 +527,8 @@ export default function CampaignOpponentsPage() {
                 .map((opponent) => (
                   <Card key={opponent._id} className="relative">
                     <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                           {/* Opponent Image */}
                           <OpponentImage
                             opponent={opponent}
@@ -501,101 +538,39 @@ export default function CampaignOpponentsPage() {
                           />
 
                           {/* Opponent Info */}
-                          <div className="flex items-center gap-3">
-                            <div className="text-2xl font-bold text-primary">
-                              #{opponent.opponentNumber}
-                            </div>
-                            <div>
-                              <CardTitle className="text-xl">
-                                {editingOpponent === opponent._id ? (
-                                  <Input
-                                    value={formData.name}
-                                    onChange={(e) =>
-                                      setFormData({
-                                        ...formData,
-                                        name: e.target.value,
-                                      })
-                                    }
-                                    className="text-xl font-semibold"
-                                  />
-                                ) : (
-                                  opponent.name
-                                )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xl font-bold text-primary sm:text-2xl">
+                                #{opponent.opponentNumber}
+                              </span>
+                              <CardTitle className="min-w-0 break-words text-lg sm:text-xl">
+                                {opponent.name}
                               </CardTitle>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge
-                                  className={getDifficultyColor(
-                                    opponent.difficulty || "BEGINNER",
-                                  )}
-                                >
-                                  {editingOpponent === opponent._id ? (
-                                    <Select
-                                      value={formData.difficulty}
-                                      onValueChange={(
-                                        value:
-                                          | "BEGINNER"
-                                          | "INTERMEDIATE"
-                                          | "ADVANCED",
-                                      ) =>
-                                        setFormData({
-                                          ...formData,
-                                          difficulty: value,
-                                        })
-                                      }
-                                    >
-                                      <SelectTrigger className="w-32 h-6 text-xs">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="BEGINNER">
-                                          BEGINNER
-                                        </SelectItem>
-                                        <SelectItem value="INTERMEDIATE">
-                                          INTERMEDIATE
-                                        </SelectItem>
-                                        <SelectItem value="ADVANCED">
-                                          ADVANCED
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  ) : (
-                                    opponent.difficulty
-                                  )}
-                                </Badge>
-                                <Badge variant="outline">
-                                  Luck:{" "}
-                                  {editingOpponent === opponent._id ? (
-                                    <Input
-                                      type="number"
-                                      value={formData.luckModifier}
-                                      onChange={(e) =>
-                                        setFormData({
-                                          ...formData,
-                                          luckModifier:
-                                            parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      className="w-16 h-6 ml-1"
-                                      min={-5}
-                                      max={5}
-                                    />
-                                  ) : (
-                                    `${(opponent.luckModifier || 0) > 0 ? "+" : ""}${
-                                      opponent.luckModifier || 0
-                                    }`
-                                  )}
-                                </Badge>
-                              </div>
+                            </div>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <Badge
+                                className={getDifficultyColor(
+                                  opponent.difficulty || "BEGINNER",
+                                )}
+                              >
+                                {opponent.difficulty}
+                              </Badge>
+                              <Badge variant="outline">
+                                Luck:{" "}
+                                {`${(opponent.luckModifier || 0) > 0 ? "+" : ""}${
+                                  opponent.luckModifier || 0
+                                }`}
+                              </Badge>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex gap-2 sm:shrink-0">
                           {editingOpponent === opponent._id ? (
                             <>
                               <Button
                                 size="sm"
                                 onClick={handleSaveOpponent}
-                                className="flex items-center gap-1"
+                                className="flex flex-1 items-center gap-1 sm:flex-none"
                               >
                                 <Save className="h-3 w-3" />
                                 Save
@@ -607,7 +582,7 @@ export default function CampaignOpponentsPage() {
                                   setEditingOpponent(null);
                                   setFormData(defaultFormData);
                                 }}
-                                className="flex items-center gap-1"
+                                className="flex flex-1 items-center gap-1 sm:flex-none"
                               >
                                 <X className="h-3 w-3" />
                                 Cancel
@@ -618,7 +593,7 @@ export default function CampaignOpponentsPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditOpponent(opponent)}
-                              className="flex items-center gap-1"
+                              className="flex flex-1 items-center gap-1 sm:flex-none"
                             >
                               <Edit className="h-3 w-3" />
                               Edit
@@ -626,14 +601,90 @@ export default function CampaignOpponentsPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Edit mode: name, difficulty and luck as a normal form */}
+                      {editingOpponent === opponent._id && (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+                          <div className="space-y-1">
+                            <Label htmlFor={`name-${opponent._id}`}>Name</Label>
+                            <Input
+                              id={`name-${opponent._id}`}
+                              value={formData.name}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  name: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor={`difficulty-${opponent._id}`}>
+                              Difficulty
+                            </Label>
+                            <Select
+                              value={formData.difficulty}
+                              onValueChange={(
+                                value: "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
+                              ) =>
+                                setFormData({
+                                  ...formData,
+                                  difficulty: value,
+                                })
+                              }
+                            >
+                              <SelectTrigger
+                                id={`difficulty-${opponent._id}`}
+                                className="w-full"
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="BEGINNER">
+                                  BEGINNER
+                                </SelectItem>
+                                <SelectItem value="INTERMEDIATE">
+                                  INTERMEDIATE
+                                </SelectItem>
+                                <SelectItem value="ADVANCED">
+                                  ADVANCED
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor={`luck-${opponent._id}`}>
+                              Luck (-5 to 5)
+                            </Label>
+                            <Input
+                              id={`luck-${opponent._id}`}
+                              type="number"
+                              inputMode="numeric"
+                              value={formData.luckModifier}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  luckModifier: parseInt(e.target.value) || 0,
+                                })
+                              }
+                              min={-5}
+                              max={5}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label className="text-sm font-medium">
+                        <Label
+                          htmlFor={`description-${opponent._id}`}
+                          className="text-sm font-medium"
+                        >
                           Description
                         </Label>
                         {editingOpponent === opponent._id ? (
                           <Textarea
+                            id={`description-${opponent._id}`}
                             value={formData.description}
                             onChange={(e) =>
                               setFormData({
@@ -652,11 +703,15 @@ export default function CampaignOpponentsPage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">
+                        <Label
+                          htmlFor={`spellStyle-${opponent._id}`}
+                          className="text-sm font-medium"
+                        >
                           Spell Style
                         </Label>
                         {editingOpponent === opponent._id ? (
                           <Input
+                            id={`spellStyle-${opponent._id}`}
                             value={formData.spellStyle}
                             onChange={(e) =>
                               setFormData({
@@ -674,20 +729,26 @@ export default function CampaignOpponentsPage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">
+                        <Label
+                          htmlFor={`traits-${opponent._id}`}
+                          className="text-sm font-medium"
+                        >
                           Personality Traits
                         </Label>
                         {editingOpponent === opponent._id ? (
                           <div className="mt-1 space-y-2">
                             <div className="flex gap-2">
                               <Input
+                                id={`traits-${opponent._id}`}
                                 value={personalityTraitInput}
                                 onChange={(e) =>
                                   setPersonalityTraitInput(e.target.value)
                                 }
                                 placeholder="Add personality trait..."
-                                onKeyPress={(e) => {
+                                enterKeyHint="enter"
+                                onKeyDown={(e) => {
                                   if (e.key === "Enter") {
+                                    e.preventDefault();
                                     handleAddPersonalityTrait();
                                   }
                                 }}
@@ -700,20 +761,10 @@ export default function CampaignOpponentsPage() {
                               </Button>
                             </div>
                             <div className="flex flex-wrap gap-1">
-                              {formData.personalityTraits.map(
-                                (trait, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="cursor-pointer"
-                                    onClick={() =>
-                                      handleRemovePersonalityTrait(index)
-                                    }
-                                  >
-                                    {trait} ×
-                                  </Badge>
-                                ),
-                              )}
+                              <TraitChips
+                                traits={formData.personalityTraits}
+                                onRemove={handleRemovePersonalityTrait}
+                              />
                             </div>
                           </div>
                         ) : (
@@ -728,11 +779,15 @@ export default function CampaignOpponentsPage() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">
+                        <Label
+                          htmlFor={`illustrationPrompt-${opponent._id}`}
+                          className="text-sm font-medium"
+                        >
                           Illustration Prompt
                         </Label>
                         {editingOpponent === opponent._id ? (
                           <Textarea
+                            id={`illustrationPrompt-${opponent._id}`}
                             value={formData.illustrationPrompt}
                             onChange={(e) =>
                               setFormData({
@@ -749,6 +804,25 @@ export default function CampaignOpponentsPage() {
                           </p>
                         )}
                       </div>
+
+                      {/* Save again at the bottom, next to the last field edited */}
+                      {editingOpponent === opponent._id && (
+                        <div className="flex gap-2 border-t border-border pt-4 [&>button]:flex-1 sm:justify-end sm:[&>button]:flex-none">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setEditingOpponent(null);
+                              setFormData(defaultFormData);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button onClick={handleSaveOpponent}>
+                            <Save className="h-4 w-4" />
+                            Save changes
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -760,7 +834,7 @@ export default function CampaignOpponentsPage() {
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
           >
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Campaign Opponent</DialogTitle>
                 <DialogDescription>
@@ -768,7 +842,7 @@ export default function CampaignOpponentsPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4">
+              <div className="space-y-4 [&_label]:mb-1.5">
                 <div>
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -794,7 +868,7 @@ export default function CampaignOpponentsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="difficulty">Difficulty</Label>
                     <Select
@@ -826,6 +900,7 @@ export default function CampaignOpponentsPage() {
                     <Input
                       id="luckModifier"
                       type="number"
+                      inputMode="numeric"
                       value={formData.luckModifier}
                       onChange={(e) =>
                         setFormData({
@@ -852,17 +927,20 @@ export default function CampaignOpponentsPage() {
                 </div>
 
                 <div>
-                  <Label>Personality Traits</Label>
+                  <Label htmlFor="create-traits">Personality Traits</Label>
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input
+                        id="create-traits"
                         value={personalityTraitInput}
                         onChange={(e) =>
                           setPersonalityTraitInput(e.target.value)
                         }
                         placeholder="Add personality trait..."
-                        onKeyPress={(e) => {
+                        enterKeyHint="enter"
+                        onKeyDown={(e) => {
                           if (e.key === "Enter") {
+                            e.preventDefault();
                             handleAddPersonalityTrait();
                           }
                         }}
@@ -872,16 +950,10 @@ export default function CampaignOpponentsPage() {
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {formData.personalityTraits.map((trait, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="cursor-pointer"
-                          onClick={() => handleRemovePersonalityTrait(index)}
-                        >
-                          {trait} ×
-                        </Badge>
-                      ))}
+                      <TraitChips
+                        traits={formData.personalityTraits}
+                        onRemove={handleRemovePersonalityTrait}
+                      />
                     </div>
                   </div>
                 </div>

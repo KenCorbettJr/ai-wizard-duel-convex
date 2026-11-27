@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "convex/react";
 import { Coins, AlertTriangle } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
@@ -38,21 +39,24 @@ function TotalsTable({
   title,
   rows,
   keyLabel,
+  hrefFor,
 }: {
   title: string;
   rows: Array<{ key: string; costUsd: number; calls: number }>;
   keyLabel: string;
+  /** Makes each key a link, e.g. a duel ID to its duel page. */
+  hrefFor?: (key: string) => string;
 }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 sm:px-6">
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">No data</p>
         ) : (
-          <Table>
+          <Table className="[&_td]:px-2 [&_th]:px-2 sm:[&_td]:px-4 sm:[&_th]:px-4">
             <TableHeader>
               <TableRow>
                 <TableHead>{keyLabel}</TableHead>
@@ -64,7 +68,16 @@ function TotalsTable({
               {rows.map((row) => (
                 <TableRow key={row.key}>
                   <TableCell className="font-mono text-xs break-all">
-                    {row.key}
+                    {hrefFor && row.key !== "unknown" ? (
+                      <Link
+                        href={hrefFor(row.key)}
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        {row.key}
+                      </Link>
+                    ) : (
+                      row.key
+                    )}
                   </TableCell>
                   <TableCell className="text-right">{row.calls}</TableCell>
                   <TableCell className="text-right">
@@ -75,6 +88,17 @@ function TotalsTable({
             </TableBody>
           </Table>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <Card>
+      <CardContent className="space-y-1 p-4 sm:p-6">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-2xl font-bold tabular-nums sm:text-3xl">{value}</p>
       </CardContent>
     </Card>
   );
@@ -97,11 +121,16 @@ export default function AiCostsPage() {
         <SuperAdminOnly>
           <PageHeader
             title="AI Costs"
+            compactOnMobile
+            className="mb-6 sm:mb-8"
             description="Estimated spend on AI text and image generation"
             icon={<Coins className="h-6 w-6" aria-hidden="true" />}
             actions={
               <Select value={range} onValueChange={changeRange}>
-                <SelectTrigger className="w-40" aria-label="Time range">
+                <SelectTrigger
+                  className="w-full sm:w-40"
+                  aria-label="Time range"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,7 +152,7 @@ export default function AiCostsPage() {
               {summary.truncated && (
                 <Card className="border-warning/40 bg-warning/10">
                   <CardContent className="flex items-center gap-2 py-4 text-sm text-warning">
-                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
                     This range has more than 8000 calls. Only the oldest 8000
                     are included, so totals are understated. Choose a shorter
                     range.
@@ -131,48 +160,24 @@ export default function AiCostsPage() {
                 </Card>
               )}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total estimated cost</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-3xl font-bold">
-                    {formatUsd(summary.totalCostUsd)}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>AI calls</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-3xl font-bold">
-                    {summary.totalCalls}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Average cost per duel</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-3xl font-bold">
-                    {formatUsd(summary.avgCostPerDuelUsd)}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Duels with AI usage</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-3xl font-bold">
-                    {summary.duelCount}
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                <Stat
+                  label="Total estimated cost"
+                  value={formatUsd(summary.totalCostUsd)}
+                />
+                <Stat label="AI calls" value={summary.totalCalls} />
+                <Stat
+                  label="Average cost per duel"
+                  value={formatUsd(summary.avgCostPerDuelUsd)}
+                />
+                <Stat label="Duels with AI usage" value={summary.duelCount} />
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2">
                 <TotalsTable
                   title="Most expensive duels"
                   keyLabel="Duel ID"
+                  hrefFor={(id) => `/duels/${id}`}
                   rows={summary.byDuel}
                 />
                 <TotalsTable

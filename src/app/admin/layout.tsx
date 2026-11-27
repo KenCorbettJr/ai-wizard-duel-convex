@@ -11,9 +11,11 @@ export default function AdminLayout({
   return (
     <SuperAdminOnly>
       {/* Admin pages show other players' details, so replay never records them */}
-      <div className="flex min-h-screen ph-no-capture">
+      <div className="min-h-screen ph-no-capture">
         <AdminNavigation />
-        <div className="flex-1">{children}</div>
+        <div id="admin-content" className="min-w-0">
+          {children}
+        </div>
       </div>
     </SuperAdminOnly>
   );

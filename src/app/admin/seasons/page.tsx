@@ -1,6 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
@@ -49,6 +60,14 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Edit, Archive, Calendar } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { RuneSpinner } from "@/components/ui/rune-spinner";
+
+/** Scrolls a just-opened form into view, below the phone's sticky bars. */
+const scrollIntoViewOnMount = (el: HTMLElement | null) => {
+  if (!el) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+};
 
 export default function AdminSeasonsPage() {
   const seasons = useQuery(api.campaignSeasons.getAllCampaignSeasons);
@@ -161,32 +180,34 @@ export default function AdminSeasonsPage() {
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12">
       <PageHeader
-        title="Campaign Seasons Management"
+        title="Campaign Seasons"
+        compactOnMobile
+        className="mb-6 sm:mb-8"
         icon={<Calendar className="h-6 w-6" aria-hidden="true" />}
         actions={
           <>
-            <Button onClick={() => setShowCreateForm(true)}>
-              Create New Season
+            <Button
+              className="flex-1 sm:flex-none"
+              onClick={() => setShowCreateForm(true)}
+            >
+              New season
             </Button>
-            <Button variant="outline" onClick={handleCreateDefaultSeason}>
-              Create Default Season
+            <Button
+              className="flex-1 sm:flex-none"
+              variant="outline"
+              onClick={handleCreateDefaultSeason}
+            >
+              Default season
             </Button>
           </>
         }
       />
 
-      {editingSeason && (
-        <div className="mb-6">
-          <SeasonEditForm
-            season={editingSeason}
-            onClose={handleCloseEdit}
-            onSuccess={handleEditSuccess}
-          />
-        </div>
-      )}
-
       {showCreateForm && (
-        <Card className="mb-6">
+        <Card
+          ref={scrollIntoViewOnMount}
+          className="mb-6 scroll-mt-[calc(var(--app-navbar-h)+4rem)] md:scroll-mt-6"
+        >
           <CardHeader>
             <CardTitle>Create New Season</CardTitle>
             <CardDescription>
@@ -196,11 +217,11 @@ export default function AdminSeasonsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateSeason} className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
                 <div>
-                  <Label htmlFor="name">Season Name</Label>
+                  <Label htmlFor="create-name">Season Name</Label>
                   <Input
-                    id="name"
+                    id="create-name"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -210,24 +231,14 @@ export default function AdminSeasonsPage() {
                   />
                 </div>
                 <div>
-                  <DragDropOpponentSelector
-                    selectedOpponents={formData.opponents}
-                    onOpponentsChange={(opponents) =>
-                      setFormData({ ...formData, opponents })
-                    }
-                    availableOpponents={campaignOpponents || []}
-                    maxOpponents={10}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="create-status">Status</Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value: "ACTIVE" | "ARCHIVED") =>
                       setFormData({ ...formData, status: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="create-status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -238,10 +249,21 @@ export default function AdminSeasonsPage() {
                 </div>
               </div>
 
+              <div className="rounded-lg border border-border p-3 sm:p-4">
+                <DragDropOpponentSelector
+                  selectedOpponents={formData.opponents}
+                  onOpponentsChange={(opponents) =>
+                    setFormData({ ...formData, opponents })
+                  }
+                  availableOpponents={campaignOpponents || []}
+                  maxOpponents={10}
+                />
+              </div>
+
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="create-description">Description</Label>
                 <Textarea
-                  id="description"
+                  id="create-description"
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
@@ -251,11 +273,13 @@ export default function AdminSeasonsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="relicName">Completion Relic Name</Label>
+                  <Label htmlFor="create-relicName">
+                    Completion Relic Name
+                  </Label>
                   <Input
-                    id="relicName"
+                    id="create-relicName"
                     value={formData.relicName}
                     onChange={(e) =>
                       setFormData({ ...formData, relicName: e.target.value })
@@ -265,10 +289,11 @@ export default function AdminSeasonsPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="luckBonus">Luck Bonus</Label>
+                  <Label htmlFor="create-luckBonus">Luck Bonus</Label>
                   <Input
-                    id="luckBonus"
+                    id="create-luckBonus"
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     max="5"
                     value={formData.luckBonus}
@@ -284,9 +309,11 @@ export default function AdminSeasonsPage() {
               </div>
 
               <div>
-                <Label htmlFor="relicDescription">Relic Description</Label>
+                <Label htmlFor="create-relicDescription">
+                  Relic Description
+                </Label>
                 <Textarea
-                  id="relicDescription"
+                  id="create-relicDescription"
                   value={formData.relicDescription}
                   onChange={(e) =>
                     setFormData({
@@ -300,12 +327,13 @@ export default function AdminSeasonsPage() {
               </div>
 
               <div>
-                <Label htmlFor="maxParticipants">
+                <Label htmlFor="create-maxParticipants">
                   Max Participants (optional)
                 </Label>
                 <Input
-                  id="maxParticipants"
+                  id="create-maxParticipants"
                   type="number"
+                  inputMode="numeric"
                   min="1"
                   value={formData.maxParticipants}
                   onChange={(e) =>
@@ -318,7 +346,7 @@ export default function AdminSeasonsPage() {
                 />
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <Button type="submit">Create Season</Button>
                 <Button
                   type="button"
@@ -333,101 +361,140 @@ export default function AdminSeasonsPage() {
         </Card>
       )}
 
-      <div className="grid gap-4">
-        {seasons?.map((season: SeasonWithParticipantCount) => (
-          <Card key={season._id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {season.name}
-                    <Badge className={getStatusColor(season.status)}>
-                      {season.status}
-                    </Badge>
-                    {season.isDefault && (
-                      <Badge variant="outline">DEFAULT</Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>{season.description}</CardDescription>
-                </div>
-                <div className="text-right text-sm text-muted-foreground">
-                  {season.participantCount} participants
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <strong>Opponents:</strong>
-                  <Badge variant="secondary" className="ml-2">
-                    {season.opponents.length} selected
-                  </Badge>
-                </div>
-                <div>
-                  <strong>Max Participants:</strong>{" "}
-                  {season.maxParticipants || "Unlimited"}
-                </div>
-              </div>
+      {seasons === undefined && (
+        <div className="flex justify-center py-12">
+          <RuneSpinner size="md" label="Loading seasons…" />
+        </div>
+      )}
 
-              {season.opponents.length > 0 && (
-                <div className="mb-4">
-                  <strong>Battle Order:</strong>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {season.opponents.slice(0, 5).map((opponentId, index) => (
-                      <Badge
-                        key={opponentId}
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        {index + 1}. {getOpponentName(opponentId)}
+      <div className="grid gap-4">
+        {seasons?.map((season: SeasonWithParticipantCount) =>
+          editingSeason?._id === season._id ? (
+            // Edit in place, so the form opens where the admin tapped Edit
+            <div
+              key={season._id}
+              ref={scrollIntoViewOnMount}
+              className="scroll-mt-[calc(var(--app-navbar-h)+4rem)] md:scroll-mt-6"
+            >
+              <SeasonEditForm
+                season={editingSeason}
+                onClose={handleCloseEdit}
+                onSuccess={handleEditSuccess}
+              />
+            </div>
+          ) : (
+            <Card key={season._id}>
+              <CardHeader>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <CardTitle className="flex flex-wrap items-center gap-2 break-words">
+                      {season.name}
+                      <Badge className={getStatusColor(season.status)}>
+                        {season.status}
                       </Badge>
-                    ))}
-                    {season.opponents.length > 5 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{season.opponents.length - 5} more
-                      </Badge>
-                    )}
+                      {season.isDefault && (
+                        <Badge variant="outline">DEFAULT</Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>{season.description}</CardDescription>
+                  </div>
+                  <div className="shrink-0 text-sm text-muted-foreground sm:text-right">
+                    {season.participantCount} participants
                   </div>
                 </div>
-              )}
-
-              <div className="mb-4">
-                <strong>Completion Relic:</strong> {season.completionRelic.name}{" "}
-                (+
-                {season.completionRelic.luckBonus} luck)
-                <p className="text-sm text-muted-foreground mt-1">
-                  {season.completionRelic.description}
-                </p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  Created {formatDistanceToNow(season.createdAt)} ago
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 grid gap-2 text-sm sm:grid-cols-2 sm:gap-4 sm:text-base">
+                  <div>
+                    <strong>Opponents:</strong>
+                    <Badge variant="secondary" className="ml-2">
+                      {season.opponents.length} selected
+                    </Badge>
+                  </div>
+                  <div>
+                    <strong>Max Participants:</strong>{" "}
+                    {season.maxParticipants || "Unlimited"}
+                  </div>
                 </div>
-                <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditSeason(season)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  {season.status === "ACTIVE" && (
+
+                {season.opponents.length > 0 && (
+                  <div className="mb-4">
+                    <strong>Battle Order:</strong>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {season.opponents.slice(0, 5).map((opponentId, index) => (
+                        <Badge
+                          key={opponentId}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {index + 1}. {getOpponentName(opponentId)}
+                        </Badge>
+                      ))}
+                      {season.opponents.length > 5 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{season.opponents.length - 5} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <strong>Completion Relic:</strong>{" "}
+                  {season.completionRelic.name} (+
+                  {season.completionRelic.luckBonus} luck)
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {season.completionRelic.description}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Created {formatDistanceToNow(season.createdAt)} ago
+                  </div>
+                  <div className="flex gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleArchiveSeason(season._id)}
+                      onClick={() => handleEditSeason(season)}
                     >
-                      <Archive className="h-4 w-4 mr-1" />
-                      Archive
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
                     </Button>
-                  )}
+                    {season.status === "ACTIVE" && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Archive className="h-4 w-4 mr-1" />
+                            Archive
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Archive {season.name}?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Archived seasons can no longer be edited.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Keep active</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleArchiveSeason(season._id)}
+                            >
+                              Archive season
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ),
+        )}
       </div>
 
       {seasons?.length === 0 && (

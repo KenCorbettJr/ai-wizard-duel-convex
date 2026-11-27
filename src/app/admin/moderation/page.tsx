@@ -62,9 +62,11 @@ function EventRow({ row }: { row: Row }) {
           <Badge variant="secondary">
             {row.source === "ai" ? "AI" : "Wordlist"}
           </Badge>
-          <span className="font-medium">{who}</span>
+          <span className="min-w-0 break-all font-medium">{who}</span>
           {row.user.handle && row.user.handle !== who && (
-            <span className="text-muted-foreground">@{row.user.handle}</span>
+            <span className="min-w-0 break-all text-muted-foreground">
+              @{row.user.handle}
+            </span>
           )}
           <span className="ml-auto text-xs text-muted-foreground">
             {formatDistanceToNow(row.createdAt, { addSuffix: true })}
@@ -79,7 +81,7 @@ function EventRow({ row }: { row: Row }) {
             {row.duelId && (
               <Link
                 href={`/duels/${row.duelId}`}
-                className="text-primary underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-primary underline-offset-4 hover:underline sm:min-h-0 sm:px-0"
               >
                 Open duel
               </Link>
@@ -132,6 +134,7 @@ function Moderation() {
     <>
       <PageHeader
         title="The Watcher"
+        compactOnMobile
         description="Everything the Watcher rejected: spells, wizards, profile names and duel chat messages that broke the PG-13 rules. Each row is a strike; sexual and hateful content counts as two. Five strikes in an hour silences a player for ten minutes."
         icon={
           <span className="relative block size-8 overflow-hidden rounded-full">
@@ -163,7 +166,10 @@ function Moderation() {
           value={surface}
           onValueChange={(v) => setSurface(v as typeof surface)}
         >
-          <SelectTrigger className="w-44" aria-label="Filter by surface">
+          <SelectTrigger
+            className="min-w-36 flex-1 sm:w-44 sm:flex-none"
+            aria-label="Filter by surface"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -178,7 +184,10 @@ function Moderation() {
           value={sortBy}
           onValueChange={(v) => setSortBy(v as typeof sortBy)}
         >
-          <SelectTrigger className="w-48" aria-label="Sort">
+          <SelectTrigger
+            className="min-w-36 flex-1 sm:w-48 sm:flex-none"
+            aria-label="Sort"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -86,37 +86,43 @@ function NewTeaser() {
     <Card className="mb-8">
       <CardContent className="space-y-3 pt-6">
         <Label htmlFor="teaser-duel">Make a teaser for a specific duel</Label>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <form
+          className="flex flex-col gap-3 sm:flex-row sm:items-center"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (busy || !duel.trim()) return;
+            void run(async () => {
+              await create({
+                duelId: duelIdFrom(duel) as Id<"duels">,
+                aiMotion,
+              });
+              setDuel("");
+            });
+          }}
+        >
           <Input
             id="teaser-duel"
             placeholder="Duel link or ID"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="go"
             value={duel}
             onChange={(e) => setDuel(e.target.value)}
             className="sm:max-w-md"
           />
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex min-h-11 items-center gap-2 text-sm">
             <Checkbox
               checked={aiMotion}
               onCheckedChange={(v) => setAiMotion(v === true)}
             />
             Animate pictures with AI (about $1)
           </label>
-          <Button
-            disabled={busy || !duel.trim()}
-            onClick={() =>
-              run(async () => {
-                await create({
-                  duelId: duelIdFrom(duel) as Id<"duels">,
-                  aiMotion,
-                });
-                setDuel("");
-              })
-            }
-          >
+          <Button type="submit" disabled={busy || !duel.trim()}>
             <Clapperboard aria-hidden="true" />
             Make teaser
           </Button>
-        </div>
+        </form>
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {error}
@@ -152,7 +158,8 @@ function TeaserCard({
       className={row.status === "READY" ? "ring-2 ring-gold/60" : undefined}
     >
       <CardContent className="flex flex-col gap-6 pt-6 lg:flex-row">
-        <div className="w-full shrink-0 lg:w-64">
+        {/* Capped on phones so status and actions aren't a screen away */}
+        <div className="mx-auto w-full max-w-[220px] shrink-0 lg:mx-0 lg:w-64 lg:max-w-none">
           {row.videoUrl ? (
             <video
               src={row.videoUrl}
@@ -259,14 +266,20 @@ function TeaserCard({
               href={row.youtubeUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+              className="inline-flex min-h-11 max-w-full min-w-0 items-center gap-1 text-sm text-primary hover:underline"
             >
-              <MonitorPlay className="size-4" aria-hidden="true" />{" "}
-              {row.youtubeUrl}
-              <ExternalLink className="size-3" aria-hidden="true" />
+              <MonitorPlay className="size-4 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{row.youtubeUrl}</span>
+              <ExternalLink className="size-3 shrink-0" aria-hidden="true" />
             </a>
           )}
 
+          {row.status === "READY" && !youtubeConnected && (
+            <p className="text-sm text-muted-foreground">
+              Posting to YouTube is off until YouTube is connected (see
+              video/README.md).
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             {row.status === "READY" && (
               <>
@@ -385,6 +398,12 @@ function TeaserCard({
           {row.status === "PUBLISHED" && !row.youtubeUrl && (
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
+                type="url"
+                inputMode="url"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-label="YouTube link"
                 placeholder="Uploaded it yourself? Paste the YouTube link"
                 value={youtubeLink}
                 onChange={(e) => setYoutubeLink(e.target.value)}
@@ -419,6 +438,7 @@ function Teasers() {
       <PageHeader
         title="Duel Teasers"
         description="Short, spoiler-free trailers of popular duels for YouTube Shorts. One is drafted each morning from yesterday's most popular duel. Nothing is posted until you approve it, and approved teasers appear on their duel page."
+        compactOnMobile
         icon={<Clapperboard className="h-6 w-6" aria-hidden="true" />}
       />
       {data && !data.youtubeConnected && (

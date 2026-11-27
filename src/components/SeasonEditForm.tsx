@@ -253,11 +253,11 @@ export function SeasonEditForm({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="name">Season Name</Label>
+                <Label htmlFor="edit-name">Season Name</Label>
                 <Input
-                  id="name"
+                  id="edit-name"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -268,7 +268,7 @@ export function SeasonEditForm({
                 />
               </div>
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="edit-status">Status</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value: "ACTIVE" | "ARCHIVED") =>
@@ -276,7 +276,7 @@ export function SeasonEditForm({
                   }
                   disabled={season.status === "ARCHIVED"}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,9 +288,9 @@ export function SeasonEditForm({
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="edit-description">Description</Label>
               <Textarea
-                id="description"
+                id="edit-description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -324,10 +324,11 @@ export function SeasonEditForm({
             </div>
 
             <div>
-              <Label htmlFor="maxParticipants">Max Participants</Label>
+              <Label htmlFor="edit-maxParticipants">Max Participants</Label>
               <Input
-                id="maxParticipants"
+                id="edit-maxParticipants"
                 type="number"
+                inputMode="numeric"
                 min="1"
                 value={formData.maxParticipants}
                 onChange={(e) =>
@@ -341,11 +342,11 @@ export function SeasonEditForm({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="relicName">Completion Relic Name</Label>
+                <Label htmlFor="edit-relicName">Completion Relic Name</Label>
                 <Input
-                  id="relicName"
+                  id="edit-relicName"
                   value={formData.relicName}
                   onChange={(e) =>
                     setFormData({ ...formData, relicName: e.target.value })
@@ -356,10 +357,11 @@ export function SeasonEditForm({
                 />
               </div>
               <div>
-                <Label htmlFor="luckBonus">Luck Bonus</Label>
+                <Label htmlFor="edit-luckBonus">Luck Bonus</Label>
                 <Input
-                  id="luckBonus"
+                  id="edit-luckBonus"
                   type="number"
+                  inputMode="numeric"
                   min="1"
                   max="5"
                   value={formData.luckBonus}
@@ -382,9 +384,9 @@ export function SeasonEditForm({
             </div>
 
             <div>
-              <Label htmlFor="relicDescription">Relic Description</Label>
+              <Label htmlFor="edit-relicDescription">Relic Description</Label>
               <Textarea
-                id="relicDescription"
+                id="edit-relicDescription"
                 value={formData.relicDescription}
                 onChange={(e) =>
                   setFormData({
@@ -398,24 +400,26 @@ export function SeasonEditForm({
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1">
               <Checkbox
-                id="isDefault"
+                id="edit-isDefault"
                 checked={formData.isDefault}
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, isDefault: checked as boolean })
                 }
                 disabled={season.status === "ARCHIVED"}
               />
-              <Label htmlFor="isDefault">Set as default season</Label>
+              <Label htmlFor="edit-isDefault" className="py-2">
+                Set as default season
+              </Label>
               {formData.isDefault && !season.isDefault && (
-                <p className="text-sm text-info">
+                <p className="w-full text-sm text-info">
                   This will remove default status from other seasons
                 </p>
               )}
             </div>
 
-            <div className="flex space-x-2 pt-4">
+            <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row">
               <Button
                 type="submit"
                 disabled={isSubmitting || season.status === "ARCHIVED"}

@@ -21,7 +21,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { GripVertical, X, Plus } from "lucide-react";
 import { Id, Doc } from "../../convex/_generated/dataModel";
@@ -115,8 +116,8 @@ function SortableOpponentItem({
               </span>
             </div>
 
-            {/* Opponent Image */}
-            <div className="flex-shrink-0">
+            {/* Opponent Image: hidden on phones to leave room for the name */}
+            <div className="hidden flex-shrink-0 sm:block">
               {opponent.illustration && imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -136,8 +137,9 @@ function SortableOpponentItem({
 
             {/* Opponent Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h4 className="font-medium text-sm truncate">
+              {/* Phones: name on its own line, difficulty underneath */}
+              <div className="flex flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                <h4 className="w-full truncate text-sm font-medium sm:w-auto">
                   #{opponent.opponentNumber} {opponent.name}
                 </h4>
                 <Badge
@@ -148,20 +150,22 @@ function SortableOpponentItem({
                   {opponent.difficulty}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="hidden truncate text-xs text-muted-foreground sm:block">
                 {opponent.description}
               </p>
             </div>
 
             {/* Remove Button */}
             <Button
-              size="sm"
+              type="button"
+              size="icon"
               variant="ghost"
               onClick={onRemove}
               disabled={disabled}
-              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+              aria-label={`Remove ${opponent.name}`}
+              className="shrink-0 text-destructive transition-opacity duration-200 hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 pointer-fine:md:opacity-0 pointer-fine:md:group-hover:opacity-100"
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
@@ -201,58 +205,61 @@ function AvailableOpponentItem({
   };
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-md cursor-pointer group">
-      <CardContent className="p-2">
-        <div className="flex items-center gap-2">
+    <Card className="group transition-all duration-200 hover:shadow-md has-[button:disabled]:opacity-60">
+      <CardContent className="p-0">
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={disabled}
+          aria-label={`Add ${opponent.name}`}
+          className="flex min-h-14 w-full items-center gap-2 rounded-[inherit] p-2 text-left transition-colors hover:bg-success/5 active:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed"
+        >
           {/* Opponent Image */}
-          <div className="flex-shrink-0">
+          <span className="flex-shrink-0">
             {opponent.illustration && imageUrl ? (
               <Image
                 src={imageUrl}
-                alt={opponent.name}
+                alt=""
                 width={32}
                 height={32}
-                className="w-8 h-8 rounded-md object-cover border border-primary/30"
+                className="h-8 w-8 rounded-md border border-primary/30 object-cover"
               />
             ) : (
-              <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center border border-dashed border-border">
-                <span className="text-xs text-muted-foreground">
-                  #{opponent.opponentNumber}
-                </span>
-              </div>
+              <span className="flex h-8 w-8 items-center justify-center rounded-md border border-dashed border-border bg-muted text-xs text-muted-foreground">
+                #{opponent.opponentNumber}
+              </span>
             )}
-          </div>
+          </span>
 
           {/* Opponent Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="font-medium text-sm truncate">
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+              <span className="w-full truncate text-sm font-medium sm:w-auto">
                 #{opponent.opponentNumber} {opponent.name}
-              </h4>
-              <Badge
-                className={`text-xs ${getDifficultyColor(
-                  opponent.difficulty || "BEGINNER",
-                )}`}
+              </span>
+              <span
+                className={cn(
+                  badgeVariants(),
+                  "text-xs",
+                  getDifficultyColor(opponent.difficulty || "BEGINNER"),
+                )}
               >
                 {opponent.difficulty}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
+              </span>
+            </span>
+            <span className="hidden truncate text-xs text-muted-foreground sm:block">
               {opponent.spellStyle}
-            </p>
-          </div>
+            </span>
+          </span>
 
-          {/* Add Button */}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onAdd}
-            disabled={disabled}
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-success hover:text-success hover:bg-success/10 h-6 w-6 p-0"
+          {/* Add affordance: always visible on touch */}
+          <span
+            aria-hidden="true"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-success group-hover:bg-success/10"
           >
-            <Plus className="h-3 w-3" />
-          </Button>
-        </div>
+            <Plus className="h-4 w-4" />
+          </span>
+        </button>
       </CardContent>
     </Card>
   );
@@ -417,8 +424,9 @@ export function DragDropOpponentSelector({
       )}
 
       {/* Quick Actions */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
           onClick={() => onOpponentsChange([])}
@@ -427,6 +435,7 @@ export function DragDropOpponentSelector({
           Clear All
         </Button>
         <Button
+          type="button"
           variant="outline"
           size="sm"
           onClick={() => {
