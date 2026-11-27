@@ -85,7 +85,7 @@ export default function CreateWizardPage() {
             title={isFirstWizard ? "Create Your First Wizard" : "Create New Wizard"}
             description={
               isFirstWizard
-                ? "Describe them however you like. The AI paints their portrait, and they fight as your champion in every duel."
+                ? "Describe them however you like. The AI generates their portrait, and they fight as your champion in every duel."
                 : "Design your magical champion for epic duels"
             }
             icon={<Wand2 className="h-6 w-6" aria-hidden="true" />}

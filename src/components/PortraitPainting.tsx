@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Paintbrush, Sparkles, Wand2 } from "lucide-react";
+import { Check, Sparkles, Wand2 } from "lucide-react";
 import { ConvexImage } from "@/components/ConvexImage";
 import { cn } from "@/lib/utils";
 import type { PortraitStage } from "../../convex/lib/portrait";
@@ -12,9 +12,9 @@ const MESSAGES: Record<PortraitStage, (name: string) => string[]> = {
     "Getting the face just right…",
   ],
   painting: () => [
-    "Painting the scene…",
+    "Generating the scene…",
     "Adding magic and lighting…",
-    "Final brushstrokes…",
+    "Final enchantments…",
   ],
 };
 
@@ -47,7 +47,7 @@ function Step({
       {state === "done" ? (
         <Check className="size-3.5 shrink-0 text-emerald-300" aria-hidden />
       ) : state === "active" ? (
-        <Paintbrush
+        <Sparkles
           className="size-3.5 shrink-0 text-amber-200 motion-safe:animate-pulse"
           aria-hidden
         />
@@ -91,7 +91,7 @@ export function PortraitPainting({
       )}
       role="status"
       aria-live="polite"
-      aria-label={`Painting ${name}'s portrait, step ${step} of 2: ${messages[0]}`}
+      aria-label={`Generating ${name}'s portrait, step ${step} of 2: ${messages[0]}`}
     >
       {backdropStorageId && (
         <ConvexImage
@@ -147,7 +147,7 @@ export function PortraitPainting({
             )}
           />
         ) : (
-          <Paintbrush
+          <Sparkles
             className={cn(
               "relative text-white drop-shadow-lg motion-safe:animate-[rune-pulse_2.5s_ease-in-out_infinite]",
               compact ? "size-9" : "size-12 sm:size-16",
@@ -186,7 +186,7 @@ export function PortraitPainting({
           compact={compact}
         />
         <Step
-          label={compact ? "Painting" : "Painting the scene"}
+          label={compact ? "Generating" : "Generating the scene"}
           state={stage === "painting" ? "active" : "waiting"}
           compact={compact}
         />

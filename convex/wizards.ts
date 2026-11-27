@@ -480,7 +480,7 @@ export const updateWizard = internalMutation({
     if (detailsChanged) {
       if (activePortraitStage(wizard, Date.now())) {
         throw new ConvexError(
-          "This wizard's portrait is still being painted. Save your changes once it's done.",
+          "This wizard's portrait is still being generated. Save your changes once it's done.",
         );
       }
       if (
@@ -488,7 +488,7 @@ export const updateWizard = internalMutation({
         !(await hasWizardImageToken(ctx, identity.subject))
       ) {
         throw new ConvexError(
-          "Changing your wizard repaints its portrait, which costs 1 token. You're out of tokens.",
+          "Changing your wizard generates a new portrait, which costs 1 token. You're out of tokens.",
         );
       }
     }
@@ -583,7 +583,7 @@ export const regenerateIllustration = mutation({
     // Don't start (or charge for) a second job while one is still painting.
     if (activePortraitStage(wizard, Date.now())) {
       throw new ConvexError(
-        "This wizard's portrait is still being painted. Give it a moment.",
+        "This wizard's portrait is still being generated. Give it a moment.",
       );
     }
 

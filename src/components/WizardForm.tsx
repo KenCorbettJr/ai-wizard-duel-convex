@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Save, X, Plus } from "lucide-react";
+import { Save, X, Plus, Wand2 } from "lucide-react";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
 import posthog from "posthog-js";
 import {
@@ -37,6 +37,8 @@ interface WizardFormProps {
   mode: "create" | "edit";
   initialData?: WizardFormData;
   wizardId?: Id<"wizards">;
+  /** Edit mode: redoing an existing portrait costs a token; the first is free. */
+  hasPortrait?: boolean;
   onClose: () => void;
   /** Called after a save. Creates pass the new wizard's id. */
   onSuccess: (wizardId?: Id<"wizards">) => void;
@@ -47,6 +49,7 @@ export function WizardForm({
   mode,
   initialData,
   wizardId,
+  hasPortrait = false,
   onClose,
   onSuccess,
   inModal = false,
@@ -68,12 +71,23 @@ export function WizardForm({
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Editing always repaints the portrait, so with nothing changed the one
+  // button just redraws it; with changes it saves and redraws.
+  const detailsChanged =
+    !initialData ||
+    formData.name.trim() !== initialData.name.trim() ||
+    formData.description.trim() !== initialData.description.trim();
+  const redrawOnly = mode === "edit" && !detailsChanged;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id || !formData.name.trim() || !formData.description.trim())
       return;
+    if (redrawOnly) {
+      await handleRegenerateIllustration();
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -130,7 +144,7 @@ export function WizardForm({
   const handleRegenerateIllustration = async () => {
     if (!wizardId) return;
 
-    setIsRegenerating(true);
+    setIsSubmitting(true);
     try {
       await regenerateIllustration({ wizardId });
       posthog.capture("wizard_illustration_regenerated", {
@@ -146,7 +160,7 @@ export function WizardForm({
           : "Couldn't regenerate the illustration. Please try again.",
       );
     } finally {
-      setIsRegenerating(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -181,36 +195,6 @@ export function WizardForm({
         />
       </div>
 
-      {mode === "edit" && (
-        <div className="p-4 bg-info/10 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-info">Portrait</h4>
-              <p className="text-sm text-info">
-                Saving a new name or description repaints the portrait to
-                match (1 token). Want a fresh take without changing anything?
-                Redraw it here.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerateIllustration}
-              disabled={isRegenerating || isSubmitting}
-            >
-              {isRegenerating ? (
-                <>
-                  <RuneSpinner size="xs" label="Working…" className="mr-2" />
-                  Generating...
-                </>
-              ) : (
-                "Redraw (1 token)"
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
       <div className="flex gap-3 pt-4">
         <Button
           type="submit"
@@ -220,16 +204,30 @@ export function WizardForm({
           {isSubmitting ? (
             <>
               <RuneSpinner size="xs" label="Working…" className="mr-2" />
-              {mode === "create" ? "Creating..." : "Saving..."}
+              {mode === "create"
+                ? "Creating..."
+                : redrawOnly
+                  ? "Regenerating..."
+                  : "Saving..."}
             </>
           ) : (
             <>
               {mode === "create" ? (
                 <Plus className="w-4 h-4 mr-2" />
+              ) : redrawOnly ? (
+                <Wand2 className="w-4 h-4 mr-2" />
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              {mode === "create" ? "Create Wizard" : "Save Changes"}
+              {mode === "create"
+                ? "Create Wizard"
+                : redrawOnly
+                  ? hasPortrait
+                    ? "Regenerate Portrait"
+                    : "Generate Portrait"
+                  : hasPortrait
+                    ? "Save & Regenerate"
+                    : "Save"}
             </>
           )}
         </Button>
@@ -242,6 +240,13 @@ export function WizardForm({
           Cancel
         </Button>
       </div>
+      {mode === "edit" && hasPortrait && (
+        <p className="-mt-3 text-sm text-muted-foreground">
+          {redrawOnly
+            ? "Generates a new portrait of your wizard. Costs 1 token."
+            : "Saving generates a new portrait to match your changes. Costs 1 token."}
+        </p>
+      )}
       <WatcherDialog
         rejection={watcherRejection}
         onClose={() => setWatcherRejection(null)}
@@ -265,7 +270,7 @@ export function WizardForm({
             <CardDescription>
               {mode === "create"
                 ? "Design your magical companion"
-                : "Update your wizard's details. Changes repaint the portrait (1 token)."}
+                : "Update your wizard's details or generate a new portrait."}
             </CardDescription>
           </div>
           {mode === "edit" && (

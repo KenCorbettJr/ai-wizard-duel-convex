@@ -67,7 +67,7 @@ export default function HeroWizardCard() {
   return (
     <div
       className="relative overflow-hidden rounded-2xl border border-amber-300/40 bg-[oklch(0.17_0.05_285)]/90 text-left shadow-2xl shadow-black/60 backdrop-blur-md"
-      aria-label="Example: a short description becomes an AI-painted wizard"
+      aria-label="Example: a short description becomes an AI-generated wizard"
     >
       <div className="p-4">
         <p className="min-h-16 text-sm text-white sm:text-base">
@@ -106,7 +106,7 @@ export default function HeroWizardCard() {
               className="size-3.5 animate-pulse text-amber-300"
               aria-hidden
             />
-            Painting your wizard…
+            Generating your wizard…
           </div>
         )}
       </div>

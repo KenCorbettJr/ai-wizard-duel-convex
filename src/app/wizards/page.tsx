@@ -324,7 +324,7 @@ export default function MyWizardsPage() {
             icon={<Wand2 className="size-7" aria-hidden="true" />}
             title="Discover Magical Wizards!"
             description="Create an account to design your own wizards, have their
-                portraits painted, and send them into magical duels."
+                portraits generated, and send them into magical duels."
             action={
               <SignUpButton mode="modal">
                 <Button size="lg" className="flex items-center gap-2">
@@ -348,7 +348,7 @@ export default function MyWizardsPage() {
           <EmptyState
             icon={<Wand2 className="size-7" aria-hidden="true" />}
             title="Summon your first wizard"
-            description={`Describe a wizard in a sentence and we'll paint their portrait. Then send them into a duel against other players, or take on the campaign's ${CAMPAIGN_OPPONENT_COUNT} AI foes.`}
+            description={`Describe a wizard in a sentence and we'll generate their portrait. Then send them into a duel against other players, or take on the campaign's ${CAMPAIGN_OPPONENT_COUNT} AI foes.`}
             action={
               <Button
                 onClick={handleCreateWizard}

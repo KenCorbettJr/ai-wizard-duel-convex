@@ -40,7 +40,7 @@ import { CREATE_WIZARD_SIGN_UP_URL } from "@/lib/pendingWizard";
 export const metadata: Metadata = {
   title: "AI Wizard Duel: Create Your Wizard, Send Them Into Battle",
   description:
-    "Describe any wizard you can imagine and an AI paints their portrait. Then send them into duels against friends, rivals and a ten-wizard campaign, with every battle narrated and illustrated by AI.",
+    "Describe any wizard you can imagine and AI generates their portrait. Then send them into duels against friends, rivals and a ten-wizard campaign, with every battle narrated and illustrated by AI.",
 };
 
 export default function Home() {
@@ -125,12 +125,12 @@ const LEGEND_STEPS = [
   {
     icon: ImageIcon,
     title: "Watch them come to life",
-    text: "The AI paints a portrait of the wizard you imagined. Your first portrait is free.",
+    text: "The AI generates a portrait of the wizard you imagined. Your first portrait is free.",
   },
   {
     icon: Swords,
     title: "Battle as your champion",
-    text: "The AI paints your wizard into every duel scene, so they look like themselves round after round. Every win, loss and relic stays with them.",
+    text: "The AI puts your wizard into every duel scene it generates, so they look like themselves round after round. Every win, loss and relic stays with them.",
   },
 ];
 
@@ -203,7 +203,7 @@ function LandingPage() {
               <span className="text-gold-gradient">Send Them Into Battle.</span>
             </h1>
             <p className="mx-auto mb-8 max-w-xl text-lg text-white/90 sm:text-xl lg:mx-0">
-              Describe any wizard you can dream up. The AI paints their
+              Describe any wizard you can dream up. The AI generates their
               portrait, and they become your champion in every duel, building a
               record and a reputation.
             </p>
@@ -365,7 +365,7 @@ function LandingPage() {
               image="/images/epic-duel.jpeg"
               icon={Share2}
               title="Challenge a Friend by Link"
-              text="Your friend casts from their phone, you cast from yours, and you both watch it get painted. You can even cover their entry."
+              text="Your friend casts from their phone, you cast from yours, and you both watch it come to life. You can even cover their entry."
             >
               <div
                 aria-hidden
@@ -511,7 +511,7 @@ function LandingPage() {
           </h2>
           <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
             Describe a wizard no one has ever imagined and see what the AI
-            paints.
+            generates.
           </p>
           <HeroWizardForm
             id="final-cta-wizard"

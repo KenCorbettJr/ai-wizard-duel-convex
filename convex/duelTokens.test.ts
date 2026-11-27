@@ -563,7 +563,7 @@ describe("Wizard illustration tokens", () => {
         wizardId,
         description: "Changed mid-paint",
       }),
-    ).rejects.toThrow(/still being painted/);
+    ).rejects.toThrow(/still being generated/);
     expect(await tokens("alice")).toBe(3);
   });
 
