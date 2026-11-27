@@ -521,15 +521,64 @@ describe("Wizard illustration tokens", () => {
     expect(await tokens("alice")).toBe(3);
   });
 
-  it("saving a new name or description does not take a token", async () => {
+  it("saving a new name or description repaints the portrait for 1 token", async () => {
     await ensureTestUser(t, "alice", 3);
     const wizardId = await makeWizard("alice", true);
 
-    await withAuth(t, "alice").mutation(internal.wizards.updateWizard, {
-      wizardId,
-      name: "Renamed",
-      description: "New description",
-    });
+    const portrait = await withAuth(t, "alice").mutation(
+      internal.wizards.updateWizard,
+      { wizardId, name: "Renamed", description: "New description" },
+    );
+    expect(portrait).toBe("redrawing");
+    expect(await tokens("alice")).toBe(2);
+    const wizard = await t.run(async (ctx) => ctx.db.get(wizardId));
+    expect(wizard?.illustrationVersion).toBe(2);
+  });
+
+  it("saving unchanged details leaves the portrait and tokens alone", async () => {
+    await ensureTestUser(t, "alice", 3);
+    const wizardId = await makeWizard("alice", true);
+    const before = await t.run(async (ctx) => ctx.db.get(wizardId));
+
+    const portrait = await withAuth(t, "alice").mutation(
+      internal.wizards.updateWizard,
+      { wizardId, name: before!.name, description: before!.description },
+    );
+    expect(portrait).toBe("unchanged");
     expect(await tokens("alice")).toBe(3);
+  });
+
+  it("refuses to save new details while the portrait is still painting", async () => {
+    await ensureTestUser(t, "alice", 3);
+    const wizardId = await makeWizard("alice", true);
+    await t.run(async (ctx) =>
+      ctx.db.patch(wizardId, {
+        illustrationStatus: "painting",
+        illustrationRequestedAt: Date.now(),
+      }),
+    );
+
+    await expect(
+      withAuth(t, "alice").mutation(internal.wizards.updateWizard, {
+        wizardId,
+        description: "Changed mid-paint",
+      }),
+    ).rejects.toThrow(/still being painted/);
+    expect(await tokens("alice")).toBe(3);
+  });
+
+  it("refuses to save new details without a token to repaint", async () => {
+    await ensureTestUser(t, "alice", 0);
+    const wizardId = await makeWizard("alice", true);
+
+    await expect(
+      withAuth(t, "alice").mutation(internal.wizards.updateWizard, {
+        wizardId,
+        description: "Typo fixed",
+      }),
+    ).rejects.toThrow(/costs 1 token/);
+    const wizard = await t.run(async (ctx) => ctx.db.get(wizardId));
+    expect(wizard?.description).toBe("A test wizard");
+    expect(wizard?.illustrationVersion).toBeUndefined();
   });
 });

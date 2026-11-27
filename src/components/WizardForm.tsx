@@ -98,6 +98,11 @@ export function WizardForm({
       }
 
       posthog.capture(mode === "create" ? "wizard_created" : "wizard_updated");
+      if ("portrait" in result && result.portrait === "redrawing") {
+        posthog.capture("wizard_illustration_regenerated", {
+          trigger: "details_changed",
+        });
+      }
       // The caller decides where to go next (create → the new wizard's page,
       // where the portrait paints in).
       onSuccess(
@@ -128,7 +133,9 @@ export function WizardForm({
     setIsRegenerating(true);
     try {
       await regenerateIllustration({ wizardId });
-      posthog.capture("wizard_illustration_regenerated");
+      posthog.capture("wizard_illustration_regenerated", {
+        trigger: "button",
+      });
       // Back to the wizard's page, where the new portrait paints in.
       onSuccess();
     } catch (error) {
@@ -178,11 +185,11 @@ export function WizardForm({
         <div className="p-4 bg-info/10 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-info">Illustration Generation</h4>
+              <h4 className="font-medium text-info">Portrait</h4>
               <p className="text-sm text-info">
-                Saving changes to the name or description does not change the
-                illustration. Regenerating it costs 1 token. Your first
-                illustration is free.
+                Saving a new name or description repaints the portrait to
+                match (1 token). Want a fresh take without changing anything?
+                Redraw it here.
               </p>
             </div>
             <Button
@@ -198,7 +205,7 @@ export function WizardForm({
                   Generating...
                 </>
               ) : (
-                "Regenerate (1 token)"
+                "Redraw (1 token)"
               )}
             </Button>
           </div>
@@ -258,7 +265,7 @@ export function WizardForm({
             <CardDescription>
               {mode === "create"
                 ? "Design your magical companion"
-                : "Update your wizard's details. Regenerating the illustration costs 1 token."}
+                : "Update your wizard's details. Changes repaint the portrait (1 token)."}
             </CardDescription>
           </div>
           {mode === "edit" && (

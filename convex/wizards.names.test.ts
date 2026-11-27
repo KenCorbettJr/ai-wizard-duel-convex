@@ -48,7 +48,7 @@ describe("wizard names are unique within one player's roster", () => {
         name: "stormcaller",
         description: "Now with more thunder",
       }),
-    ).resolves.toBeNull();
+    ).resolves.toBe("redrawing");
   });
 });
 
@@ -72,7 +72,7 @@ test("wizards that already share a name can still be edited", async () => {
       name: "Twin",
       description: "Edited",
     }),
-  ).resolves.toBeNull();
+  ).resolves.toBe("redrawing");
   await expect(
     t.query(internal.wizards.assertNameFreeForOwner, {
       owner: "ken",
