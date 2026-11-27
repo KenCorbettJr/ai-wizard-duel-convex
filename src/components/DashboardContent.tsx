@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { getCampaignSummary } from "@/lib/campaignStatus";
 import { RuneSpinner } from "@/components/ui/rune-spinner";
+import { useSponsorship } from "@/components/SponsorBanner";
 import {
   CampaignHomeCard,
   type CampaignHomeOpponent,
@@ -348,10 +349,16 @@ export default function DashboardContent({
     api.users.getUserByClerkId,
     user?.id ? { clerkId: user.id } : "skip",
   );
-  const unlimited =
+  const sponsorship = useSponsorship();
+  const premium =
     !preview &&
     liveUserInfo?.subscriptionTier === "PREMIUM" &&
     liveUserInfo?.subscriptionStatus === "ACTIVE";
+  const sponsorName =
+    !preview && !premium && sponsorship?.coversYou
+      ? sponsorship.sponsorName
+      : undefined;
+  const unlimited = premium || sponsorName !== undefined;
   const tokens = preview ? preview.tokens : liveCredits;
 
   const wizards = (preview?.wizards ?? liveWizards) as
@@ -510,6 +517,7 @@ export default function DashboardContent({
                 onCreateWizard={handleCreateWizard}
                 tokens={tokens}
                 unlimited={unlimited}
+                sponsorName={sponsorName}
                 deferPrimary={!!resumeDuel}
               />
             )}

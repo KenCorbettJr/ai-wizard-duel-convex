@@ -3,6 +3,7 @@ import type { MutationCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 
 import { DUEL_TOKEN_COST } from "./pricing";
+import { sponsoredSeatsFor, takeSponsoredEntry } from "./sponsorship";
 
 export { DUEL_TOKEN_COST };
 
@@ -29,7 +30,8 @@ async function getUserByClerkId(ctx: MutationCtx, userId: string) {
  * Throw unless the player could pay for a duel right now, without charging.
  * Used when a duel is created. The token is only taken when the duel starts,
  * so a waiting duel never holds one. `seats` is 2 when the creator also
- * covers their opponent's entry.
+ * covers their opponent's entry. Seats a running sponsorship would cover
+ * cost nothing.
  */
 export async function assertCanAffordDuelToken(
   ctx: MutationCtx,
@@ -41,8 +43,10 @@ export async function assertCanAffordDuelToken(
   if (!user) {
     throw new Error("User not found");
   }
-  const needed = DUEL_TOKEN_COST * seats;
-  if (!isActivePremium(user) && user.imageCredits < needed) {
+  if (isActivePremium(user)) return;
+  const sponsored = await sponsoredSeatsFor(ctx, userId, seats, Date.now());
+  const needed = DUEL_TOKEN_COST * (seats - sponsored);
+  if (user.imageCredits < needed) {
     if (who === "creator") {
       throw new ConvexError(
         seats > 1
@@ -61,7 +65,8 @@ export async function assertCanAffordDuelToken(
 /**
  * Take one token from a player for a duel. Throws if the player has none, so
  * the calling mutation rolls back. Active Premium subscribers are not charged
- * (same as before tokens), but the entry is still written to the ledger.
+ * (same as before tokens), and neither is anyone a running sponsorship
+ * covers; the entry is still written to the ledger either way.
  * The charge is recorded on the duel so it can be refunded exactly once.
  * `coveredFor` is set when this token pays for another player's entry.
  */
@@ -77,13 +82,38 @@ export async function chargeDuelToken(
     throw new Error("User not found");
   }
 
+  const now = Date.now();
   const premium = isActivePremium(user);
+
+  // A running sponsorship pays for the entry. Premium players don't use up
+  // the sponsor's budget, since they aren't charged anyway.
+  const sponsorship = premium
+    ? null
+    : await takeSponsoredEntry(ctx, userId, now);
+  if (sponsorship) {
+    await ctx.db.patch(duelId, { sponsorshipId: sponsorship._id });
+    await ctx.db.insert("imageCreditTransactions", {
+      userId,
+      type: "CONSUMED",
+      amount: 0,
+      source: "DUEL_ENTRY",
+      metadata: {
+        duelId,
+        purpose,
+        sponsorshipId: sponsorship._id,
+        sponsorName: sponsorship.sponsorName,
+        ...(coveredFor ? { coveredFor } : {}),
+      },
+      createdAt: now,
+    });
+    return;
+  }
+
   if (!premium && user.imageCredits < DUEL_TOKEN_COST) {
     // ConvexError so the message reaches the client in production
     throw new ConvexError(INSUFFICIENT_TOKENS_ERROR);
   }
 
-  const now = Date.now();
   if (!premium) {
     await ctx.db.patch(user._id, {
       imageCredits: user.imageCredits - DUEL_TOKEN_COST,

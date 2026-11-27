@@ -20,7 +20,14 @@ import { Id, Doc } from "../../convex/_generated/dataModel";
 import { WizardSelectionCard } from "./WizardSelectionCard";
 import { ProfileCompletionPrompt } from "./ProfileCompletionPrompt";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
-import { AlertTriangle, Info, Gift, MessageCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Info,
+  Gift,
+  MessageCircle,
+  Sparkles,
+} from "lucide-react";
+import { useSponsorship } from "./SponsorBanner";
 import Link from "next/link";
 import {
   DUEL_TOKEN_COST,
@@ -72,6 +79,9 @@ export function CreateDuelForm({
     api.imageCreditService.hasImageCreditsForDuel,
     user?.id ? { userId: user.id } : "skip",
   );
+
+  // A running sponsorship makes this player's entry free
+  const sponsorship = useSponsorship();
 
   // Get user info to check if premium
   const userInfo = useQuery(
@@ -157,7 +167,9 @@ export function CreateDuelForm({
 
   const canAffordCover =
     isPremium || (tokenBalance ?? 0) >= DUEL_TOKEN_COST * 2;
-  const coversEntry = coverOpponentEntry && canAffordCover;
+  const sponsored = !isPremium && sponsorship?.coversYou === true;
+  // Nothing to gift while a sponsor pays everyone's entry
+  const coversEntry = coverOpponentEntry && canAffordCover && !sponsored;
 
   const profilePrompt = getProfileCompletionPrompt("create duels");
 
@@ -262,33 +274,35 @@ export function CreateDuelForm({
               </div>
 
               {/* Gift the opponent's entry */}
-              <div className="flex items-center justify-between gap-3 p-4 border rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Gift
-                    className={`h-5 w-5 flex-shrink-0 ${coversEntry ? "text-gold" : "text-muted-foreground"}`}
-                    aria-hidden="true"
-                  />
-                  <div className="flex-1">
-                    <label
-                      htmlFor="cover-opponent-entry"
-                      className="font-medium text-foreground"
-                    >
-                      Cover my opponent&apos;s entry
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      {canAffordCover
-                        ? "Pay 1 extra token so your friend can play without spending one."
-                        : "You need 2 tokens to cover your opponent's entry."}
-                    </p>
+              {!sponsored && (
+                <div className="flex items-center justify-between gap-3 p-4 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Gift
+                      className={`h-5 w-5 flex-shrink-0 ${coversEntry ? "text-gold" : "text-muted-foreground"}`}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1">
+                      <label
+                        htmlFor="cover-opponent-entry"
+                        className="font-medium text-foreground"
+                      >
+                        Cover my opponent&apos;s entry
+                      </label>
+                      <p className="text-sm text-muted-foreground">
+                        {canAffordCover
+                          ? "Pay 1 extra token so your friend can play without spending one."
+                          : "You need 2 tokens to cover your opponent's entry."}
+                      </p>
+                    </div>
                   </div>
+                  <Switch
+                    id="cover-opponent-entry"
+                    checked={coversEntry}
+                    disabled={!canAffordCover}
+                    onCheckedChange={setCoverOpponentEntry}
+                  />
                 </div>
-                <Switch
-                  id="cover-opponent-entry"
-                  checked={coversEntry}
-                  disabled={!canAffordCover}
-                  onCheckedChange={setCoverOpponentEntry}
-                />
-              </div>
+              )}
 
               {/* Token Information */}
               <div className="space-y-3">
@@ -297,6 +311,20 @@ export function CreateDuelForm({
                     <Info className="h-4 w-4 text-primary" />
                     <span className="text-sm text-primary">
                       Premium: duels are included
+                    </span>
+                  </div>
+                ) : sponsored && sponsorship ? (
+                  <div className="flex items-center gap-2 p-3 bg-gold/10 border border-gold/40 rounded-lg">
+                    <Sparkles className="h-4 w-4 shrink-0 text-gold" />
+                    <span className="text-sm">
+                      This duel is free, thanks to{" "}
+                      <strong>{sponsorship.sponsorName}</strong>.
+                      {sponsorship.entriesLeftToday !== null &&
+                        ` You have ${sponsorship.entriesLeftToday} free ${
+                          sponsorship.entriesLeftToday === 1
+                            ? "entry"
+                            : "entries"
+                        } left today.`}
                     </span>
                   </div>
                 ) : hasImageCredits ? (

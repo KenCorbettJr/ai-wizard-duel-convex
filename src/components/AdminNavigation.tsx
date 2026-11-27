@@ -22,6 +22,7 @@ import {
   Eye,
   Flame,
   Clapperboard,
+  HeartHandshake,
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -156,6 +157,12 @@ export const adminNavItems: AdminNavItem[] = [
     label: "User Management",
     description: "Find users, grant tokens, review activity",
     icon: Users,
+  },
+  {
+    href: "/admin/sponsorships",
+    label: "Sponsorships",
+    description: "Let a sponsor make duels free for a while",
+    icon: HeartHandshake,
   },
   {
     href: "/admin/seasons",

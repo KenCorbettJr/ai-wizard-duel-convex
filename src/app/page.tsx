@@ -92,11 +92,10 @@ const FAQS: Array<{ q: string; a: React.ReactNode }> = [
     q: "Is it safe for kids?",
     a: (
       <>
-        Yes. Everything stays PG-13. Every spell, wizard and username is
-        checked by a word filter and an AI moderator before anyone sees it, and
-        the AI storyteller follows the same rules. There are no private
-        messages: duel chat is short, checked the same way, and either player
-        can turn it off.{" "}
+        Yes. Everything stays PG-13. Every spell, wizard and username is checked
+        by a word filter and an AI moderator before anyone sees it, and the AI
+        storyteller follows the same rules. There are no private messages: duel
+        chat is short, checked the same way, and either player can turn it off.{" "}
         <Link
           href="/rules"
           className="text-primary underline-offset-4 hover:underline"
@@ -205,8 +204,8 @@ function LandingPage() {
             </h1>
             <p className="mx-auto mb-8 max-w-xl text-lg text-white/90 sm:text-xl lg:mx-0">
               Describe any wizard you can dream up. The AI paints their
-              portrait, and they become your champion in every duel, building
-              a record and a reputation.
+              portrait, and they become your champion in every duel, building a
+              record and a reputation.
             </p>
             <HeroWizardForm />
             <p className="mt-3 text-sm text-white/85">
@@ -357,8 +356,8 @@ function LandingPage() {
               Duel Friends and Rivals
             </h2>
             <p className="text-lg text-muted-foreground">
-              No rules to memorize. If you can describe it, your wizard can
-              cast it.
+              No rules to memorize. If you can describe it, your wizard can cast
+              it.
             </p>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
@@ -473,7 +472,10 @@ function LandingPage() {
           </h2>
           <div className="relative mx-auto max-w-3xl divide-y rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm">
             {FAQS.map((faq) => (
-              <details key={faq.q} className="group px-5 [&_summary::-webkit-details-marker]:hidden">
+              <details
+                key={faq.q}
+                className="group px-5 [&_summary::-webkit-details-marker]:hidden"
+              >
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-base font-semibold sm:text-lg">
                   {faq.q}
                   <ChevronDown
@@ -489,7 +491,10 @@ function LandingPage() {
       </section>
 
       {/* Call to Action */}
-      <section id="final-cta" className="relative isolate overflow-hidden py-24 text-white">
+      <section
+        id="final-cta"
+        className="relative isolate overflow-hidden py-24 text-white"
+      >
         <Image
           src="/images/duel-bg.jpg"
           alt=""
@@ -541,6 +546,9 @@ function LandingPage() {
             </Link>
             <Link href="/rules" className="hover:text-foreground">
               Rules &amp; Safety
+            </Link>
+            <Link href="/sponsor" className="hover:text-foreground">
+              Sponsor the Duels
             </Link>
             <Link href="/terms" className="hover:text-foreground">
               Terms
