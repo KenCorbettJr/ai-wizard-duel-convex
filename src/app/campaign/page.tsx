@@ -210,7 +210,7 @@ export default function CampaignPage() {
             icon={<Scroll className="h-6 w-6" aria-hidden="true" />}
           />
 
-          <RegistrationPrompt context="premium_features" />
+          <RegistrationPrompt context="create_wizard" />
 
           {season !== undefined && campaignOpponents !== undefined && (
             <div className="mt-8">

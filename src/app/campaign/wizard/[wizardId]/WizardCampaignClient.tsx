@@ -100,7 +100,7 @@ export default function WizardCampaignClient() {
             </p>
           </div>
 
-          <RegistrationPrompt context="premium_features" />
+          <RegistrationPrompt context="create_wizard" />
         </div>
       </div>
     );

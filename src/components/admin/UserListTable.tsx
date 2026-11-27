@@ -33,8 +33,6 @@ type UserData = {
   name?: string;
   userId?: string;
   displayName?: string;
-  subscriptionTier: "FREE" | "PREMIUM";
-  subscriptionStatus: "ACTIVE" | "CANCELED" | "PAST_DUE" | "TRIALING";
   imageCredits: number;
   createdAt: number;
   role: "user" | "admin" | "super_admin";
@@ -132,17 +130,6 @@ export function UserListTable({
     }
   };
 
-  const getSubscriptionBadge = (tier: "FREE" | "PREMIUM") => {
-    if (tier === "PREMIUM") {
-      return <Badge variant="gold">Premium</Badge>;
-    }
-    return (
-      <Badge variant="outline" className="text-muted-foreground">
-        Free
-      </Badge>
-    );
-  };
-
   const getRoleBadge = (role: "user" | "admin" | "super_admin") => {
     switch (role) {
       case "super_admin":
@@ -238,7 +225,6 @@ export function UserListTable({
               <TableHead className="text-center w-24">Duels</TableHead>
               <TableHead className="text-center w-24">Campaign</TableHead>
               <TableHead className="text-center w-20">Tokens</TableHead>
-              <TableHead className="w-28">Subscription</TableHead>
               <TableHead className="text-right min-w-[280px] sticky right-0 bg-background">
                 Actions
               </TableHead>
@@ -348,9 +334,6 @@ export function UserListTable({
                           {user.imageCredits}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {getSubscriptionBadge(user.subscriptionTier)}
                     </TableCell>
                     <TableCell className="text-right sticky right-0 bg-background">
                       <div className="flex items-center justify-end gap-2">
@@ -493,12 +476,6 @@ export function UserListTable({
                   <p className="font-medium mt-1">
                     {formatDate(user.createdAt)}
                   </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Subscription</p>
-                  <div className="mt-1">
-                    {getSubscriptionBadge(user.subscriptionTier)}
-                  </div>
                 </div>
               </div>
 

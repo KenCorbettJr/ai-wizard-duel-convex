@@ -49,10 +49,9 @@ interface CampaignHomeCardProps {
   wizards: CampaignHomeWizard[];
   progress: CampaignHomeProgress[];
   onCreateWizard: () => void;
-  /** Token balance, when known. Premium players pass `unlimited` instead. */
+  /** Token balance, when known. */
   tokens?: number;
-  unlimited?: boolean;
-  /** Set while a sponsor makes battles free; pass `unlimited` too. */
+  /** Set while a sponsor makes battles free. */
   sponsorName?: string;
   /** A duel is waiting on the player, so it owns the filled button. */
   deferPrimary?: boolean;
@@ -246,7 +245,6 @@ export function CampaignHomeCard({
   progress,
   onCreateWizard,
   tokens,
-  unlimited,
   sponsorName,
   deferPrimary,
 }: CampaignHomeCardProps) {
@@ -329,9 +327,7 @@ export function CampaignHomeCard({
         </div>
         <p className="text-sm text-muted-foreground">
           Describe a wizard, cast spells, and the AI narrates the clash.
-          {!unlimited && tokens !== undefined
-            ? ` You start with ${tokens} free tokens.`
-            : ""}
+          {tokens !== undefined ? ` You start with ${tokens} free tokens.` : ""}
         </p>
       </div>,
     );
@@ -349,12 +345,10 @@ export function CampaignHomeCard({
       !getCampaignSummary(byWizard.get(w._id)).isCompleted,
   );
   const href = `/campaign/wizard/${wizard._id}`;
-  const outOfTokens = !unlimited && tokens === 0;
-  const lowTokens = !unlimited && tokens !== undefined && tokens <= 2;
-  const tokenNote = unlimited
-    ? sponsorName
-      ? `Free battles, thanks to ${sponsorName}`
-      : "Premium: battles are free"
+  const outOfTokens = !sponsorName && tokens === 0;
+  const lowTokens = !sponsorName && tokens !== undefined && tokens <= 2;
+  const tokenNote = sponsorName
+    ? `Free battles, thanks to ${sponsorName}`
     : outOfTokens
       ? "You are out of tokens"
       : lowTokens

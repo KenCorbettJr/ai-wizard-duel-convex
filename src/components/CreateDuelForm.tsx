@@ -74,7 +74,7 @@ export function CreateDuelForm({
     user?.id ? { userId: user.id } : "skip",
   );
 
-  // Entering a duel costs 1 token (legacy Premium subscribers are included)
+  // Entering a duel costs 1 token
   const hasImageCredits = useQuery(
     api.imageCreditService.hasImageCreditsForDuel,
     user?.id ? { userId: user.id } : "skip",
@@ -82,12 +82,6 @@ export function CreateDuelForm({
 
   // A running sponsorship makes this player's entry free
   const sponsorship = useSponsorship();
-
-  // Get user info to check if premium
-  const userInfo = useQuery(
-    api.users.getUserByClerkId,
-    user?.id ? { clerkId: user.id } : "skip",
-  );
 
   const createDuel = useMutation(api.duels.createDuel);
   const challengeWizard = useMutation(api.duels.challengeWizard);
@@ -161,13 +155,8 @@ export function CreateDuelForm({
     }
   };
 
-  const isPremium =
-    userInfo?.subscriptionTier === "PREMIUM" &&
-    userInfo?.subscriptionStatus === "ACTIVE";
-
-  const canAffordCover =
-    isPremium || (tokenBalance ?? 0) >= DUEL_TOKEN_COST * 2;
-  const sponsored = !isPremium && sponsorship?.coversYou === true;
+  const canAffordCover = (tokenBalance ?? 0) >= DUEL_TOKEN_COST * 2;
+  const sponsored = sponsorship?.coversYou === true;
   // Nothing to gift while a sponsor pays everyone's entry
   const coversEntry = coverOpponentEntry && canAffordCover && !sponsored;
 
@@ -306,14 +295,7 @@ export function CreateDuelForm({
 
               {/* Token Information */}
               <div className="space-y-3">
-                {isPremium ? (
-                  <div className="flex items-center gap-2 p-3 bg-primary/8 border border-primary/30 rounded-lg">
-                    <Info className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-primary">
-                      Premium: duels are included
-                    </span>
-                  </div>
-                ) : sponsored && sponsorship ? (
+                {sponsored && sponsorship ? (
                   <div className="flex items-center gap-2 p-3 bg-gold/10 border border-gold/40 rounded-lg">
                     <Sparkles className="h-4 w-4 shrink-0 text-gold" />
                     <span className="text-sm">

@@ -193,9 +193,6 @@ export const getWizard = query({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-      ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM")),
-      ),
     }),
   ),
   handler: async (ctx, { wizardId }) => {
@@ -213,11 +210,6 @@ export const getWizard = query({
     if (wizard.owner !== identity.subject) {
       return null;
     }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
 
     // Get campaign progress to check for completion relic
     const campaignProgress = await ctx.db
@@ -238,7 +230,6 @@ export const getWizard = query({
       ...wizard,
       hasCompletionRelic,
       effectiveLuckScore,
-      ownerSubscriptionTier: user?.subscriptionTier,
     };
   },
 });
@@ -519,9 +510,10 @@ export const regenerateIllustration = mutation({
 
     // The first illustration is free. Redoing one that already exists costs a
     // token. Throws (rolling back) if the player has none.
-    const tokenCharged = wizard.illustration
-      ? await chargeWizardImageToken(ctx, identity.subject, wizardId)
-      : false;
+    const tokenCharged = !!wizard.illustration;
+    if (tokenCharged) {
+      await chargeWizardImageToken(ctx, identity.subject, wizardId);
+    }
 
     // Increment illustration version immediately
     const currentVersion = wizard.illustrationVersion || 1;
@@ -707,9 +699,6 @@ export const getWizardLeaderboard = query({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-      ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM")),
-      ),
     }),
   ),
   handler: async (ctx, { limit = 50, minDuels = 1 }) => {
@@ -757,7 +746,6 @@ export const getWizardLeaderboard = query({
         ownerDisplayName: owner?.displayName,
         hasCompletionRelic,
         effectiveLuckScore,
-        ownerSubscriptionTier: owner?.subscriptionTier,
       });
     }
 
@@ -862,9 +850,6 @@ export const getWizardWithOwner = query({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-      ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM")),
-      ),
     }),
   ),
   handler: async (ctx, { wizardId }) => {
@@ -901,7 +886,6 @@ export const getWizardWithOwner = query({
       ownerDisplayName: owner?.displayName,
       hasCompletionRelic,
       effectiveLuckScore,
-      ownerSubscriptionTier: owner?.subscriptionTier,
     };
   },
 });
@@ -945,9 +929,6 @@ export const getAllWizardsWithOwners = query({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-      ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM")),
-      ),
     }),
   ),
   handler: async (ctx, { limit = 50 }) => {
@@ -966,7 +947,6 @@ export const getAllWizardsWithOwners = query({
           ...wizard,
           ownerUserId: owner?.userId,
           ownerDisplayName: owner?.displayName,
-          ownerSubscriptionTier: owner?.subscriptionTier,
         };
       }),
     );
@@ -1024,9 +1004,6 @@ export const getWizardLeaderboardByPeriod = query({
       difficulty: v.optional(v.string()),
       luckModifier: v.optional(v.number()),
       illustrationPrompt: v.optional(v.string()),
-      ownerSubscriptionTier: v.optional(
-        v.union(v.literal("FREE"), v.literal("PREMIUM")),
-      ),
     }),
   ),
   handler: async (ctx, { period, limit = 50, minDuels = 1 }) => {
@@ -1195,7 +1172,6 @@ export const getWizardLeaderboardByPeriod = query({
           rank: index + 1,
           ownerUserId: owner?.userId,
           ownerDisplayName: owner?.displayName,
-          ownerSubscriptionTier: owner?.subscriptionTier,
         };
       }),
     );

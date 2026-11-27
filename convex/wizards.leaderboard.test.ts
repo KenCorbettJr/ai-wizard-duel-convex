@@ -11,16 +11,7 @@ test("time-based leaderboard functionality", async () => {
     return await ctx.db.insert("users", {
       clerkId: "user1",
       role: "user",
-      subscriptionTier: "FREE",
-      subscriptionStatus: "ACTIVE",
       imageCredits: 10,
-      monthlyUsage: {
-        duelsPlayed: 0,
-        wizardsCreated: 0,
-        imageGenerations: 0,
-        adsWatched: 0,
-        resetDate: Date.now(),
-      },
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -30,16 +21,7 @@ test("time-based leaderboard functionality", async () => {
     return await ctx.db.insert("users", {
       clerkId: "user2",
       role: "user",
-      subscriptionTier: "FREE",
-      subscriptionStatus: "ACTIVE",
       imageCredits: 10,
-      monthlyUsage: {
-        duelsPlayed: 0,
-        wizardsCreated: 0,
-        imageGenerations: 0,
-        adsWatched: 0,
-        resetDate: Date.now(),
-      },
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -113,7 +95,7 @@ test("time-based leaderboard functionality", async () => {
       period: "all",
       limit: 10,
       minDuels: 1,
-    }
+    },
   );
 
   expect(allTimeLeaderboard).toHaveLength(2);
@@ -128,7 +110,7 @@ test("time-based leaderboard functionality", async () => {
       period: "week",
       limit: 10,
       minDuels: 1,
-    }
+    },
   );
 
   expect(weeklyLeaderboard).toHaveLength(2);
@@ -145,7 +127,7 @@ test("time-based leaderboard functionality", async () => {
       period: "month",
       limit: 10,
       minDuels: 1,
-    }
+    },
   );
 
   expect(monthlyLeaderboard).toHaveLength(2);

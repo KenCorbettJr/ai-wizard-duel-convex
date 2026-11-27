@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
 interface RegistrationPromptProps {
-  context?: "duel_access" | "ad_removal" | "premium_features";
+  context?: "duel_access" | "ad_removal" | "create_wizard";
   className?: string;
 }
 
@@ -50,7 +50,7 @@ export function RegistrationPrompt({
           ],
         };
 
-      case "premium_features":
+      case "create_wizard":
         return {
           title: "🌟 Create Your Wizard",
           description: `Create an account to design wizards, take on the campaign and duel friends. You start with ${STARTING_TOKENS} free tokens.`,

@@ -158,16 +158,7 @@ describe("getMostViewedDuels", () => {
       ctx.db.insert("users", {
         clerkId: "admin",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 0,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: 0,
-        },
         createdAt: 0,
         updatedAt: 0,
       }),

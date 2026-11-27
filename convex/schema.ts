@@ -16,30 +16,38 @@ export default defineSchema({
     userId: v.optional(v.string()), // Unique user handle (3-20 chars, alphanumeric + underscore/hyphen)
     displayName: v.optional(v.string()), // User's chosen display name
     profileCreatedAt: v.optional(v.number()), // When profile was completed
-    subscriptionTier: v.union(v.literal("FREE"), v.literal("PREMIUM")),
-    subscriptionStatus: v.union(
-      v.literal("ACTIVE"),
-      v.literal("CANCELED"),
-      v.literal("PAST_DUE"),
-      v.literal("TRIALING"),
+    // Legacy subscription fields. Subscriptions are gone; these stay optional
+    // until internal.migrations.clearLegacySubscriptionFields has removed them
+    // from every user, then they can be deleted from the schema.
+    subscriptionTier: v.optional(
+      v.union(v.literal("FREE"), v.literal("PREMIUM")),
+    ),
+    subscriptionStatus: v.optional(
+      v.union(
+        v.literal("ACTIVE"),
+        v.literal("CANCELED"),
+        v.literal("PAST_DUE"),
+        v.literal("TRIALING"),
+      ),
     ),
     stripeCustomerId: v.optional(v.string()),
     stripeSubscriptionId: v.optional(v.string()),
     subscriptionEndsAt: v.optional(v.number()),
-    imageCredits: v.number(), // Remaining image generation credits
-    monthlyUsage: v.object({
-      duelsPlayed: v.number(),
-      wizardsCreated: v.number(),
-      imageGenerations: v.number(),
-      adsWatched: v.number(),
-      resetDate: v.number(), // When usage resets
-    }),
+    monthlyUsage: v.optional(
+      v.object({
+        duelsPlayed: v.number(),
+        wizardsCreated: v.number(),
+        imageGenerations: v.number(),
+        adsWatched: v.number(),
+        resetDate: v.number(),
+      }),
+    ),
+    imageCredits: v.number(), // Token balance
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_user_id", ["userId"])
-    .index("by_stripe_customer", ["stripeCustomerId"])
     .index("by_role", ["role"]),
   wizards: defineTable({
     owner: v.string(), // User ID from Clerk, "campaign" for AI opponents, or "departed" once the owner deleted their account
@@ -189,7 +197,7 @@ export default defineSchema({
     textOnlyReason: v.optional(v.string()), // Reason for text-only mode (insufficient_credits, image_generation_failed, etc.)
     imageCreditConsumed: v.optional(v.boolean()), // Whether an image credit has been consumed for this duel
     imageCreditConsumedBy: v.optional(v.string()), // User ID who had the credit consumed for this duel
-    tokensCharged: v.optional(v.array(v.string())), // Users who paid a token for this duel (Premium users are not charged)
+    tokensCharged: v.optional(v.array(v.string())), // Users who paid a token for this duel
     tokensRefunded: v.optional(v.boolean()), // True once those tokens have been given back
     creatorCoversEntry: v.optional(v.boolean()), // Creator pays the joiner's token too (gifted entry)
     isCampaignBattle: v.optional(v.boolean()), // Excludes from leaderboards and watchable duels

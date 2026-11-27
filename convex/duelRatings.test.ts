@@ -16,16 +16,7 @@ async function makeSuperAdmin(t: T) {
     await ctx.db.insert("users", {
       clerkId: "super-admin-user",
       role: "super_admin",
-      subscriptionTier: "FREE",
-      subscriptionStatus: "ACTIVE",
       imageCredits: 0,
-      monthlyUsage: {
-        duelsPlayed: 0,
-        wizardsCreated: 0,
-        imageGenerations: 0,
-        adsWatched: 0,
-        resetDate: Date.now(),
-      },
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });

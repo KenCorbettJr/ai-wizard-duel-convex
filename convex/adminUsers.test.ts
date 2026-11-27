@@ -13,16 +13,7 @@ async function createSuperAdminUser(t: {
     await ctx.db.insert("users", {
       clerkId: "super-admin-user",
       role: "super_admin",
-      subscriptionTier: "FREE",
-      subscriptionStatus: "ACTIVE",
       imageCredits: 10,
-      monthlyUsage: {
-        duelsPlayed: 0,
-        wizardsCreated: 0,
-        imageGenerations: 0,
-        adsWatched: 0,
-        resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-      },
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -38,16 +29,7 @@ describe("Admin Users - listUsers", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -63,16 +45,7 @@ describe("Admin Users - listUsers", () => {
           userId: `testuser${i}`,
           displayName: `User ${i}`,
           role: "user",
-          subscriptionTier: "FREE",
-          subscriptionStatus: "ACTIVE",
           imageCredits: i * 10,
-          monthlyUsage: {
-            duelsPlayed: 0,
-            wizardsCreated: 0,
-            imageGenerations: 0,
-            adsWatched: 0,
-            resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-          },
           createdAt: Date.now() - i * 1000,
           updatedAt: Date.now(),
         });
@@ -97,16 +70,7 @@ describe("Admin Users - listUsers", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -120,16 +84,7 @@ describe("Admin Users - listUsers", () => {
         name: "Alice Smith",
         displayName: "Alice",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -140,16 +95,7 @@ describe("Admin Users - listUsers", () => {
         name: "Bob Jones",
         displayName: "Bob",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -173,16 +119,7 @@ describe("Admin Users - listUsers", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -195,16 +132,7 @@ describe("Admin Users - listUsers", () => {
         email: "unique@example.com",
         name: "Test User",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -228,16 +156,7 @@ describe("Admin Users - listUsers", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -250,16 +169,7 @@ describe("Admin Users - listUsers", () => {
         clerkId: "old-user",
         name: "Old User",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: now + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: now - 10000,
         updatedAt: now,
       });
@@ -268,16 +178,7 @@ describe("Admin Users - listUsers", () => {
         clerkId: "new-user",
         name: "New User",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: now + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: now,
         updatedAt: now,
       });
@@ -302,16 +203,7 @@ describe("Admin Users - listUsers", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -323,16 +215,7 @@ describe("Admin Users - listUsers", () => {
         clerkId: "zebra-user",
         displayName: "Zebra",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -341,16 +224,7 @@ describe("Admin Users - listUsers", () => {
         clerkId: "alpha-user",
         displayName: "Alpha",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -374,16 +248,7 @@ describe("Admin Users - listUsers", () => {
       await ctx.db.insert("users", {
         clerkId: "regular-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -407,16 +272,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -427,16 +283,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "test-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -469,16 +316,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -489,16 +327,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "test-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -586,16 +415,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -606,16 +426,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "test-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -700,16 +511,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -721,16 +523,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "inactive-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: oldDate,
         updatedAt: oldDate,
       });
@@ -752,16 +545,7 @@ describe("Admin Users - getUserStatistics", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -784,16 +568,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -804,16 +579,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "target-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 5,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -855,16 +621,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -875,16 +632,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "target-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 5,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -926,16 +674,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -946,16 +685,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "target-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 5,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -988,16 +718,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1020,16 +741,7 @@ describe("Admin Users - grantImageCredits", () => {
       await ctx.db.insert("users", {
         clerkId: "regular-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1054,16 +766,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1074,16 +777,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "test-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1136,16 +830,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1156,16 +841,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "test-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1222,16 +898,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1242,16 +909,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "test-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1292,16 +950,7 @@ describe("Admin Users - getCreditHistory", () => {
       await ctx.db.insert("users", {
         clerkId: "regular-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1325,16 +974,7 @@ describe("Admin Users - getPlatformStats", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1346,16 +986,7 @@ describe("Admin Users - getPlatformStats", () => {
         await ctx.db.insert("users", {
           clerkId: `user-${i}`,
           role: "user",
-          subscriptionTier: "FREE",
-          subscriptionStatus: "ACTIVE",
           imageCredits: 10,
-          monthlyUsage: {
-            duelsPlayed: 0,
-            wizardsCreated: 0,
-            imageGenerations: 0,
-            adsWatched: 0,
-            resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-          },
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -1378,16 +1009,7 @@ describe("Admin Users - getPlatformStats", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1398,16 +1020,7 @@ describe("Admin Users - getPlatformStats", () => {
       await ctx.db.insert("users", {
         clerkId: "active-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1439,16 +1052,7 @@ describe("Admin Users - getPlatformStats", () => {
       await ctx.db.insert("users", {
         clerkId: "super-admin-user",
         role: "super_admin",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -1515,16 +1119,7 @@ describe("Admin Users - getPlatformStats", () => {
       await ctx.db.insert("users", {
         clerkId: "regular-user",
         role: "user",
-        subscriptionTier: "FREE",
-        subscriptionStatus: "ACTIVE",
         imageCredits: 10,
-        monthlyUsage: {
-          duelsPlayed: 0,
-          wizardsCreated: 0,
-          imageGenerations: 0,
-          adsWatched: 0,
-          resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        },
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });

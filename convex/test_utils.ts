@@ -92,16 +92,7 @@ export async function ensureTestUser(
       role: "user",
       email: `${userId}@test.com`,
       name: `Test User ${userId}`,
-      subscriptionTier: "FREE",
-      subscriptionStatus: "ACTIVE",
       imageCredits: tokens,
-      monthlyUsage: {
-        duelsPlayed: 0,
-        wizardsCreated: 0,
-        imageGenerations: 0,
-        adsWatched: 0,
-        resetDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
-      },
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });

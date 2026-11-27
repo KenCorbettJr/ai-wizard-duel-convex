@@ -303,7 +303,7 @@ export default function MyWizardsPage() {
               <CreditDisplay />
             </div>
             <div className="mb-6">
-              <RegistrationPrompt context="premium_features" />
+              <RegistrationPrompt context="create_wizard" />
             </div>
           </>
         )}

@@ -10,15 +10,6 @@ export { DUEL_TOKEN_COST };
 export const INSUFFICIENT_TOKENS_ERROR =
   "You need at least 1 token to start a duel.";
 
-function isActivePremium(user: {
-  subscriptionTier: string;
-  subscriptionStatus: string;
-}): boolean {
-  return (
-    user.subscriptionTier === "PREMIUM" && user.subscriptionStatus === "ACTIVE"
-  );
-}
-
 async function getUserByClerkId(ctx: MutationCtx, userId: string) {
   return await ctx.db
     .query("users")
@@ -43,7 +34,6 @@ export async function assertCanAffordDuelToken(
   if (!user) {
     throw new Error("User not found");
   }
-  if (isActivePremium(user)) return;
   const sponsored = await sponsoredSeatsFor(ctx, userId, seats, Date.now());
   const needed = DUEL_TOKEN_COST * (seats - sponsored);
   if (user.imageCredits < needed) {
@@ -64,9 +54,8 @@ export async function assertCanAffordDuelToken(
 
 /**
  * Take one token from a player for a duel. Throws if the player has none, so
- * the calling mutation rolls back. Active Premium subscribers are not charged
- * (same as before tokens), and neither is anyone a running sponsorship
- * covers; the entry is still written to the ledger either way.
+ * the calling mutation rolls back. A running sponsorship pays instead when it
+ * covers the player; the entry is still written to the ledger either way.
  * The charge is recorded on the duel so it can be refunded exactly once.
  * `coveredFor` is set when this token pays for another player's entry.
  */
@@ -83,13 +72,8 @@ export async function chargeDuelToken(
   }
 
   const now = Date.now();
-  const premium = isActivePremium(user);
-
-  // A running sponsorship pays for the entry. Premium players don't use up
-  // the sponsor's budget, since they aren't charged anyway.
-  const sponsorship = premium
-    ? null
-    : await takeSponsoredEntry(ctx, userId, now);
+  // A running sponsorship pays for the entry
+  const sponsorship = await takeSponsoredEntry(ctx, userId, now);
   if (sponsorship) {
     await ctx.db.patch(duelId, { sponsorshipId: sponsorship._id });
     await ctx.db.insert("imageCreditTransactions", {
@@ -109,29 +93,27 @@ export async function chargeDuelToken(
     return;
   }
 
-  if (!premium && user.imageCredits < DUEL_TOKEN_COST) {
+  if (user.imageCredits < DUEL_TOKEN_COST) {
     // ConvexError so the message reaches the client in production
     throw new ConvexError(INSUFFICIENT_TOKENS_ERROR);
   }
 
-  if (!premium) {
-    await ctx.db.patch(user._id, {
-      imageCredits: user.imageCredits - DUEL_TOKEN_COST,
-      updatedAt: now,
-    });
-    const duel = await ctx.db.get(duelId);
-    if (!duel) {
-      throw new Error("Duel not found");
-    }
-    await ctx.db.patch(duelId, {
-      tokensCharged: [...(duel.tokensCharged ?? []), userId],
-    });
+  await ctx.db.patch(user._id, {
+    imageCredits: user.imageCredits - DUEL_TOKEN_COST,
+    updatedAt: now,
+  });
+  const duel = await ctx.db.get(duelId);
+  if (!duel) {
+    throw new Error("Duel not found");
   }
+  await ctx.db.patch(duelId, {
+    tokensCharged: [...(duel.tokensCharged ?? []), userId],
+  });
 
   await ctx.db.insert("imageCreditTransactions", {
     userId,
     type: "CONSUMED",
-    amount: premium ? 0 : DUEL_TOKEN_COST,
+    amount: DUEL_TOKEN_COST,
     source: "DUEL_ENTRY",
     metadata: coveredFor
       ? { duelId, purpose, coveredFor }
