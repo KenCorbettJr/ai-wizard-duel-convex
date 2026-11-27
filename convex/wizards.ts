@@ -4,16 +4,20 @@ import {
   internalMutation,
   internalQuery,
   type QueryCtx,
+  type MutationCtx,
 } from "./_generated/server";
-import { ConvexError, v } from "convex/values";
-import { activePortraitStage } from "./lib/portrait";
+import { ConvexError, v, type Infer } from "convex/values";
+import { activePortraitStage, portraitRedrawValidator } from "./lib/portrait";
 import { api } from "./_generated/api";
-import { chargeWizardImageToken } from "./lib/wizardImageTokens";
+import {
+  chargeWizardImageToken,
+  hasWizardImageToken,
+} from "./lib/wizardImageTokens";
 import { Wizard } from "@/types/wizard";
 import { computeWinRate, recordWizardResult } from "./lib/wizardStats";
 import { DEPARTED_OWNER } from "./lib/departed";
 import { labelDuplicateNames, normalizeWizardName } from "./lib/wizardNames";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 
 /**
  * The owner's other wizard already using this name, if any. Names only need
@@ -426,7 +430,8 @@ export const scheduleWizardIllustrationInternal = internalMutation({
 });
 
 // Update wizard details (only for owned wizards). Called by watcher.updateWizard
-// after the Watcher approves.
+// after the Watcher approves. Changing the name or description always repaints
+// the portrait so it matches (1 token once the wizard has one).
 export const updateWizard = internalMutation({
   args: {
     wizardId: v.id("wizards"),
@@ -436,7 +441,11 @@ export const updateWizard = internalMutation({
     illustration: v.optional(v.string()),
     isAIPowered: v.optional(v.boolean()),
   },
-  handler: async (ctx, { wizardId, ...updates }) => {
+  returns: portraitRedrawValidator,
+  handler: async (
+    ctx,
+    { wizardId, ...updates },
+  ): Promise<Infer<typeof portraitRedrawValidator>> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Not authenticated");
@@ -460,6 +469,30 @@ export const updateWizard = internalMutation({
       await assertWizardNameFree(ctx, wizard.owner, updates.name, wizardId);
     }
 
+    // The portrait always matches the details, so a change to the name or
+    // description must repaint it. Refuse the whole save (rather than leave a
+    // stale portrait) when that can't happen.
+    const detailsChanged =
+      !updates.illustration &&
+      ((updates.name !== undefined && updates.name !== wizard.name) ||
+        (updates.description !== undefined &&
+          updates.description !== wizard.description));
+    if (detailsChanged) {
+      if (activePortraitStage(wizard, Date.now())) {
+        throw new ConvexError(
+          "This wizard's portrait is still being painted. Save your changes once it's done.",
+        );
+      }
+      if (
+        wizard.illustration &&
+        !(await hasWizardImageToken(ctx, identity.subject))
+      ) {
+        throw new ConvexError(
+          "Changing your wizard repaints its portrait, which costs 1 token. You're out of tokens.",
+        );
+      }
+    }
+
     await ctx.db.patch(wizardId, {
       ...updates,
       illustrationVersion: updates.illustration
@@ -469,6 +502,11 @@ export const updateWizard = internalMutation({
         ? Date.now()
         : wizard.illustrationGeneratedAt,
     });
+
+    if (!detailsChanged) return "unchanged";
+    const updated = (await ctx.db.get(wizardId))!;
+    await startIllustrationRedraw(ctx, updated, identity.subject);
+    return "redrawing";
   },
 });
 
@@ -479,6 +517,47 @@ export const getIllustrationUrl = query({
     return await ctx.storage.getUrl(storageId);
   },
 });
+
+/**
+ * Charge for (when the wizard already has a portrait) and schedule a new
+ * illustration from the wizard's current name and description. The first
+ * illustration is free; redoing one costs a token, and this throws (rolling
+ * back the caller) if the player has none.
+ */
+async function startIllustrationRedraw(
+  ctx: MutationCtx,
+  wizard: Doc<"wizards">,
+  userId: string,
+): Promise<void> {
+  const tokenCharged = !!wizard.illustration;
+  if (tokenCharged) {
+    await chargeWizardImageToken(ctx, userId, wizard._id);
+  }
+
+  // Increment illustration version immediately
+  await ctx.db.patch(wizard._id, {
+    illustrationVersion: (wizard.illustrationVersion || 1) + 1,
+  });
+
+  // Skip scheduling in test environment to avoid transaction escape errors
+  if (process.env.NODE_ENV !== "test") {
+    await ctx.scheduler.runAfter(
+      100, // Add small delay to ensure database transaction is committed
+      api.generateWizardIllustration.generateWizardIllustration,
+      {
+        wizardId: wizard._id,
+        name: wizard.name,
+        description: wizard.description,
+        userId,
+        refundTokenOnFailure: tokenCharged,
+      },
+    );
+    await ctx.db.patch(wizard._id, {
+      illustrationStatus: "sketching",
+      illustrationRequestedAt: Date.now(),
+    });
+  }
+}
 
 // Manually trigger illustration generation for a wizard (only for owned wizards)
 export const regenerateIllustration = mutation({
@@ -508,38 +587,7 @@ export const regenerateIllustration = mutation({
       );
     }
 
-    // The first illustration is free. Redoing one that already exists costs a
-    // token. Throws (rolling back) if the player has none.
-    const tokenCharged = !!wizard.illustration;
-    if (tokenCharged) {
-      await chargeWizardImageToken(ctx, identity.subject, wizardId);
-    }
-
-    // Increment illustration version immediately
-    const currentVersion = wizard.illustrationVersion || 1;
-    await ctx.db.patch(wizardId, {
-      illustrationVersion: currentVersion + 1,
-    });
-
-    // Schedule wizard illustration generation
-    // Skip scheduling in test environment to avoid transaction escape errors
-    if (process.env.NODE_ENV !== "test") {
-      await ctx.scheduler.runAfter(
-        100, // Add small delay to ensure database transaction is committed
-        api.generateWizardIllustration.generateWizardIllustration,
-        {
-          wizardId,
-          name: wizard.name,
-          description: wizard.description,
-          userId: identity.subject,
-          refundTokenOnFailure: tokenCharged,
-        },
-      );
-      await ctx.db.patch(wizardId, {
-        illustrationStatus: "sketching",
-        illustrationRequestedAt: Date.now(),
-      });
-    }
+    await startIllustrationRedraw(ctx, wizard, identity.subject);
 
     return { success: true };
   },

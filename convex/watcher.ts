@@ -18,6 +18,7 @@ import { z } from "genkit/beta";
 import { generateObject } from "./aiTextGeneration";
 import { isEmulatorMode, isTestMode } from "./mocks/mockServices";
 import { captureServerEvent } from "./lib/posthog";
+import { portraitRedrawValidator } from "./lib/portrait";
 import {
   WATCHER_CATEGORIES,
   MODERATION_SYSTEM_PROMPT,
@@ -244,14 +245,22 @@ export const createWizard = action({
   },
 });
 
+const updateWizardResultValidator = v.union(
+  v.object({ ok: v.literal(true), portrait: portraitRedrawValidator }),
+  rejectedValidator,
+);
+
 export const updateWizard = action({
   args: {
     wizardId: v.id("wizards"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
   },
-  returns: v.union(v.object({ ok: v.literal(true) }), rejectedValidator),
-  handler: async (ctx, args) => {
+  returns: updateWizardResultValidator,
+  handler: async (
+    ctx,
+    args,
+  ): Promise<Infer<typeof updateWizardResultValidator>> => {
     const userId = await requireUser(ctx);
     if (args.name !== undefined) {
       await ctx.runQuery(internal.wizards.assertNameFreeForOwner, {
@@ -266,8 +275,9 @@ export const updateWizard = action({
     ]);
     if (rejection) return rejected(rejection);
 
-    await ctx.runMutation(internal.wizards.updateWizard, args);
-    return { ok: true as const };
+    const portrait: Infer<typeof portraitRedrawValidator> =
+      await ctx.runMutation(internal.wizards.updateWizard, args);
+    return { ok: true as const, portrait };
   },
 });
 

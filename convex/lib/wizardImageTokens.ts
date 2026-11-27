@@ -9,6 +9,18 @@ export { WIZARD_IMAGE_TOKEN_COST };
 export const INSUFFICIENT_WIZARD_TOKENS_ERROR =
   "You need at least 1 token to regenerate this wizard's illustration.";
 
+/** Whether the player can afford to regenerate a wizard illustration. */
+export async function hasWizardImageToken(
+  ctx: MutationCtx,
+  userId: string,
+): Promise<boolean> {
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_clerk_id", (q) => q.eq("clerkId", userId))
+    .first();
+  return !!user && user.imageCredits >= WIZARD_IMAGE_TOKEN_COST;
+}
+
 /**
  * Charge one token for regenerating an existing wizard illustration. Throws
  * if the player has none, so the calling mutation rolls back.

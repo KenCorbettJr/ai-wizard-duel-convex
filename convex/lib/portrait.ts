@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 /**
  * Portrait-job status shared by the backend and the UI.
  *
@@ -25,3 +26,11 @@ export function activePortraitStage(
   if (at === undefined || now - at > PORTRAIT_JOB_STALE_MS) return null;
   return status;
 }
+
+/** What saving new wizard details did to the portrait. */
+export const portraitRedrawValidator = v.union(
+  // Name and description were unchanged, so the portrait stays.
+  v.literal("unchanged"),
+  // A new portrait is being painted from the new details.
+  v.literal("redrawing"),
+);
