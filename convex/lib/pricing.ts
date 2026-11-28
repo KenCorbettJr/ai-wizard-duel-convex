@@ -36,7 +36,7 @@ export const REFERRAL_LIFETIME_CAP = 50;
 
 /**
  * "To the Death" duels end after this many rounds even if both wizards are
- * still standing (winner by points), so one token always has a known cost.
+ * still standing (most health left wins), so one token always has a known cost.
  */
 export const TO_THE_DEATH_MAX_ROUNDS = 10;
 

@@ -58,10 +58,10 @@ export const generateCampaignOpponentAction = internalAction({
       // Get current round and previous rounds for context
       const rounds = await ctx.runQuery(api.duels.getDuelRounds, { duelId });
       const currentRound = rounds.find(
-        (r) => r.roundNumber === duel.currentRound
+        (r) => r.roundNumber === duel.currentRound,
       );
       const previousRounds = rounds.filter(
-        (r) => r.roundNumber < duel.currentRound && r.roundNumber > 0
+        (r) => r.roundNumber < duel.currentRound && r.roundNumber > 0,
       );
 
       if (!currentRound || currentRound.status !== "WAITING_FOR_SPELLS") {
@@ -141,14 +141,14 @@ export const processCampaignOpponentActions = internalAction({
           {
             duelId,
             wizardId,
-          }
+          },
         );
 
         if (result.success) {
           actionsGenerated++;
         } else {
           errors.push(
-            `Failed to generate action for ${wizard.name}: ${result.error}`
+            `Failed to generate action for ${wizard.name}: ${result.error}`,
           );
         }
       }
@@ -172,7 +172,7 @@ async function generateCampaignOpponentSpell(
     spellDescription: z
       .string()
       .describe(
-        "One or two vivid sentences describing the wizard's action this round. It fits the wizard's personality and spell style, responds to the duel so far, and uses a different tactic from the wizard's earlier spells"
+        "One or two vivid sentences describing the wizard's action this round. It fits the wizard's personality and spell style, responds to the duel so far, and uses a different tactic from the wizard's earlier spells",
       ),
   });
 
@@ -194,7 +194,6 @@ async function generateCampaignOpponentSpell(
       roundNumber: currentRound.roundNumber,
       totalRounds: duel.numberOfRounds,
       hitPoints: duel.hitPoints,
-      points: duel.points,
       previousRounds,
     });
 

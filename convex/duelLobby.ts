@@ -306,6 +306,7 @@ export const createMatchedDuel = internalMutation({
       createdAt: Date.now(),
       points: initialPoints,
       hitPoints: initialHitPoints,
+      scoring: "health",
       needActionsFrom: wizards,
       shortcode,
     });

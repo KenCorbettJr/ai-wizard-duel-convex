@@ -222,7 +222,7 @@ export function buildDirectorInput(input: DirectorInput): string {
           ? `healed ${w.healthChange}`
           : "took no damage";
     lines.push(
-      `- ${w.name} ${change} and earned ${w.pointsEarned} points. Health now ${w.healthAfter}/100, so they look ${healthCondition(w.healthAfter)}.`,
+      `- ${w.name} ${change}. Health now ${w.healthAfter}/100, so they look ${healthCondition(w.healthAfter)}.`,
     );
   }
   if (wizards.length === 2) {

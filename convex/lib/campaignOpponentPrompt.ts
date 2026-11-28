@@ -54,11 +54,9 @@ export function buildOpponentSpellPrompt(params: {
   roundNumber: number;
   totalRounds: number | "TO_THE_DEATH";
   hitPoints: Record<string, number>;
-  points: Record<string, number>;
   previousRounds: OpponentPromptRound[];
 }): string {
-  const { wizard, opponent, roundNumber, totalRounds, hitPoints, points } =
-    params;
+  const { wizard, opponent, roundNumber, totalRounds, hitPoints } = params;
   const previousRounds = params.previousRounds
     .filter((r) => r.roundNumber > 0)
     .sort((a, b) => a.roundNumber - b.roundNumber);
@@ -79,13 +77,9 @@ export function buildOpponentSpellPrompt(params: {
       ? `Round ${roundNumber} (a duel to the death)`
       : `Round ${roundNumber} of ${totalRounds}${roundNumber === totalRounds ? " (the final round)" : ""}`;
   lines.push("", `=== Current situation: ${roundLabel} ===`);
-  lines.push(
-    `You: ${hitPoints[wizard.id] ?? 100}/100 health, ${points[wizard.id] ?? 0} points`,
-  );
+  lines.push(`You: ${hitPoints[wizard.id] ?? 100}/100 health`);
   if (opponent) {
-    lines.push(
-      `${opponent.name}: ${hitPoints[opponent.id] ?? 100}/100 health, ${points[opponent.id] ?? 0} points`,
-    );
+    lines.push(`${opponent.name}: ${hitPoints[opponent.id] ?? 100}/100 health`);
   }
 
   if (previousRounds.length > 0) {
@@ -104,8 +98,9 @@ export function buildOpponentSpellPrompt(params: {
       const pts = round.outcome?.pointsAwarded;
       const hp = round.outcome?.healthChange;
       if (pts && opponent) {
+        const mineWon = (pts[wizard.id] ?? 0) - (pts[opponent.id] ?? 0);
         lines.push(
-          `- Points: you +${pts[wizard.id] ?? 0}, ${opponent.name} +${pts[opponent.id] ?? 0}`,
+          `- Round went to: ${mineWon > 0 ? "you" : mineWon < 0 ? opponent.name : "neither (even)"}`,
         );
       }
       if (hp && opponent && (hp[wizard.id] || hp[opponent.id])) {

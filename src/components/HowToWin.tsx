@@ -1,29 +1,30 @@
-import { Heart, Star, Skull, Trophy, Scale, Sparkles } from "lucide-react";
+import { Heart, Swords, Skull, Trophy, Scale, Sparkles } from "lucide-react";
 import { TO_THE_DEATH_MAX_ROUNDS } from "../../convex/lib/pricing";
+import { HEALING, HIT_DAMAGE } from "../../convex/lib/duelJudging";
 
 const WAYS_TO_WIN = [
   {
     icon: Skull,
     title: "Knockout",
-    text: "Drop your rival to 0 health and you win on the spot, whatever the points.",
+    text: "Drop your rival to 0 health and you win on the spot.",
   },
   {
     icon: Trophy,
-    title: "Most points",
-    text: "Both still standing after the last round? Most points wins, even with less health.",
+    title: "Most health",
+    text: "Both still standing after the last round? Whoever has more health left wins.",
   },
   {
     icon: Scale,
     title: "Tiebreaker",
-    text: "Points exactly tied? More health wins. Tied on both? It's a draw.",
+    text: "Health exactly tied? Whoever won more rounds wins. Tied on both? It's a draw.",
   },
 ];
 
-const POINT_TIPS = [
+const HIT_TIPS = [
   "Be specific: “a swarm of lightning bees” beats “I attack”",
   "React to your rival's last move",
-  "Don't repeat the same spell",
-  "Clever attacks outscore just blocking",
+  "Don't repeat the same spell: it works less well each time",
+  "Just blocking gives your rival a free shot",
 ];
 
 /**
@@ -37,7 +38,7 @@ export function HowToWin() {
         <div className="rounded-lg border border-border bg-card/60 p-4">
           <h3 className="flex items-center gap-2 font-semibold">
             <Heart className="size-4 text-success" aria-hidden="true" />
-            Health keeps you in the fight
+            Health is the score
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Everyone starts with 100. Hit 0 and you&apos;re knocked out.
@@ -45,12 +46,13 @@ export function HowToWin() {
         </div>
         <div className="rounded-lg border border-border bg-card/60 p-4">
           <h3 className="flex items-center gap-2 font-semibold">
-            <Star className="size-4 text-gold" aria-hidden="true" />
-            Points win it
+            <Swords className="size-4 text-gold" aria-hidden="true" />
+            Better magic hits harder
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Each round the judge awards 0 to 10 for clever, creative magic,
-            with a dash of luck.
+            The judge decides whose spell wins each clash. A graze costs{" "}
+            {HIT_DAMAGE.graze}, a solid hit {HIT_DAMAGE.solid} and a devastating
+            blow {HIT_DAMAGE.devastating}. Luck tips close calls.
           </p>
         </div>
       </div>
@@ -69,21 +71,20 @@ export function HowToWin() {
         ))}
       </ol>
 
-      <p className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm text-muted-foreground">
-        <strong className="text-foreground">
-          Yes, you can lose with more health!
-        </strong>{" "}
-        A wizard with 85 health and 31 points loses to one with 40 health and
-        36 points. Tougher isn&apos;t the same as more impressive.
+      <p className="rounded-lg border border-border bg-card/60 p-4 text-sm text-muted-foreground">
+        <strong className="text-foreground">Healing works.</strong> A healing
+        spell wins back {HEALING.minor} or {HEALING.major} health, but you still
+        take whatever your rival lands that round, so heal when it&apos;s worth
+        more than an attack.
       </p>
 
       <div className="text-sm text-muted-foreground">
         <p className="mb-1 flex items-center gap-2 font-semibold text-foreground">
           <Sparkles className="size-4 text-gold" aria-hidden="true" />
-          Score more points
+          Land bigger hits
         </p>
         <ul className="list-disc space-y-0.5 pl-5">
-          {POINT_TIPS.map((tip) => (
+          {HIT_TIPS.map((tip) => (
             <li key={tip}>{tip}</li>
           ))}
         </ul>
@@ -91,7 +92,7 @@ export function HowToWin() {
 
       <p className="text-xs text-muted-foreground">
         To the Death duels stop at {TO_THE_DEATH_MAX_ROUNDS} rounds. If nobody
-        has fallen by then, points decide.
+        has fallen by then, more health wins.
       </p>
     </div>
   );
