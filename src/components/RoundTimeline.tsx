@@ -116,7 +116,8 @@ export const RoundTimeline = memo(function RoundTimeline({
           const changes = wizardIds
             .slice(0, 2)
             .map((id) => r.outcome?.healthChange?.[id] ?? 0);
-          // Who took the round: more points, or (on equal points) less hurt.
+          // Who took the round: more points (1 for the winner in health
+          // scoring), or on equal points, whoever was hurt less.
           const pts = wizardIds
             .slice(0, 2)
             .map((id) => r.outcome?.pointsAwarded?.[id] ?? 0);

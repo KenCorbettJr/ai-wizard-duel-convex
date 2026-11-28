@@ -62,6 +62,7 @@ export const getPlayerDuels = query({
       completedAt: v.optional(v.number()),
       points: v.record(v.string(), v.number()),
       hitPoints: v.record(v.string(), v.number()),
+      scoring: v.optional(v.literal("health")),
       needActionsFrom: v.array(v.id("wizards")),
       featuredIllustration: v.optional(v.string()),
       winners: v.optional(v.array(v.id("wizards"))),
@@ -163,6 +164,7 @@ export const getDuelInternal = internalQuery({
       completedAt: v.optional(v.number()),
       points: v.record(v.string(), v.number()),
       hitPoints: v.record(v.string(), v.number()),
+      scoring: v.optional(v.literal("health")),
       needActionsFrom: v.array(v.id("wizards")),
       featuredIllustration: v.optional(v.string()),
       winners: v.optional(v.array(v.id("wizards"))),
@@ -391,6 +393,7 @@ export async function insertWaitingDuel(
     createdAt: Date.now(),
     points: initialPoints,
     hitPoints: initialHitPoints,
+    scoring: "health",
     needActionsFrom: wizards, // All wizards need to act initially
     shortcode,
     // Every duel is illustrated; images are core to the game.
@@ -1190,7 +1193,7 @@ export const completeRound = internalMutation({
       return roundId;
     }
 
-    // Update duel points and hit points
+    // Update rounds won (points) and hit points
     const updatedPoints: Record<string, number> = { ...duel.points };
     const updatedHitPoints: Record<string, number> = { ...duel.hitPoints };
 
@@ -1389,6 +1392,7 @@ function checkDuelEndConditions(
     numberOfRounds: number | "TO_THE_DEATH";
     currentRound: number;
     points: Record<string, number>;
+    scoring?: "health";
   },
   hitPoints: Record<string, number>,
 ): {
@@ -1418,41 +1422,26 @@ function checkDuelEndConditions(
       ? duel.numberOfRounds
       : TO_THE_DEATH_MAX_ROUNDS;
   if (duel.currentRound >= maxRounds) {
-    // Determine winner by points, then by hit points
-    const wizardScores = duel.wizards.map((wizardId: Id<"wizards">) => ({
-      wizardId,
-      points: duel.points[wizardId] || 0,
-      hitPoints: hitPoints[wizardId] || 0,
-    }));
-
-    wizardScores.sort(
-      (
-        a: { points: number; hitPoints: number },
-        b: { points: number; hitPoints: number },
-      ) => {
-        if (a.points !== b.points) return b.points - a.points;
-        return b.hitPoints - a.hitPoints;
-      },
-    );
-
-    const highestScore = wizardScores[0];
-    const winners = wizardScores
-      .filter(
-        (w: { points: number; hitPoints: number; wizardId: Id<"wizards"> }) =>
-          w.points === highestScore.points &&
-          w.hitPoints === highestScore.hitPoints,
-      )
-      .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
-
-    const losers = wizardScores
-      .filter(
-        (w: { points: number; hitPoints: number; wizardId: Id<"wizards"> }) =>
-          !(
-            w.points === highestScore.points &&
-            w.hitPoints === highestScore.hitPoints
-          ),
-      )
-      .map((w: { wizardId: Id<"wizards"> }) => w.wizardId);
+    // Most health left wins, and rounds won (stored in `points`) breaks a
+    // tie. Duels started before health scoring finish under their old rule:
+    // most points wins, and health breaks a tie. A tie on both is a draw.
+    const healthFirst = duel.scoring === "health";
+    const score = (wizardId: Id<"wizards">): [number, number] => {
+      const health = hitPoints[wizardId] || 0;
+      const points = duel.points[wizardId] || 0;
+      return healthFirst ? [health, points] : [points, health];
+    };
+    const beats = (a: [number, number], b: [number, number]) =>
+      a[0] > b[0] || (a[0] === b[0] && a[1] > b[1]);
+    const best = duel.wizards
+      .map(score)
+      .reduce((a, b) => (beats(b, a) ? b : a));
+    const isBest = (wizardId: Id<"wizards">) => {
+      const s = score(wizardId);
+      return s[0] === best[0] && s[1] === best[1];
+    };
+    const winners = duel.wizards.filter(isBest);
+    const losers = duel.wizards.filter((id) => !isBest(id));
 
     return {
       shouldEnd: true,
@@ -1523,6 +1512,7 @@ export const getActiveDuels = query({
       completedAt: v.optional(v.number()),
       points: v.record(v.string(), v.number()),
       hitPoints: v.record(v.string(), v.number()),
+      scoring: v.optional(v.literal("health")),
       needActionsFrom: v.array(v.id("wizards")),
       featuredIllustration: v.optional(v.string()),
       winners: v.optional(v.array(v.id("wizards"))),
@@ -1699,6 +1689,7 @@ export const getWatchableDuels = query({
         completedAt: v.optional(v.number()),
         points: v.record(v.string(), v.number()),
         hitPoints: v.record(v.string(), v.number()),
+        scoring: v.optional(v.literal("health")),
         needActionsFrom: v.array(v.id("wizards")),
         featuredIllustration: v.optional(v.string()),
         winners: v.optional(v.array(v.id("wizards"))),
@@ -2657,6 +2648,7 @@ export const createDuelInternal = internalMutation({
       createdAt: Date.now(),
       points,
       hitPoints,
+      scoring: "health",
       needActionsFrom: wizards,
       textOnlyMode: false,
       isCampaignBattle: isCampaignBattle || false,

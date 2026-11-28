@@ -22,7 +22,7 @@ export function HowToWinDialog({ children }: { children: ReactNode }) {
             How to Win a Duel
           </DialogTitle>
           <DialogDescription className="sr-only">
-            How health and points decide the winner.
+            How health decides the winner.
           </DialogDescription>
         </DialogHeader>
         <HowToWin />

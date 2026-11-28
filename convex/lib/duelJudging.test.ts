@@ -3,6 +3,8 @@ import {
   describeLuckEdge,
   getDuelResult,
   isFullStalemate,
+  roundWinner,
+  tierHealthChange,
   stalemateWarning,
   trailingStalemateCount,
 } from "./duelJudging";
@@ -50,9 +52,7 @@ describe("stalemates", () => {
   it("needs equal points and no damage", () => {
     expect(isFullStalemate(round(1, [7, 7]), ["a", "b"])).toBe(true);
     expect(isFullStalemate(round(1, [7, 6]), ["a", "b"])).toBe(false);
-    expect(isFullStalemate(round(1, [7, 7], [-5, 0]), ["a", "b"])).toBe(
-      false,
-    );
+    expect(isFullStalemate(round(1, [7, 7], [-5, 0]), ["a", "b"])).toBe(false);
   });
 
   it("counts only the trailing run of stalemates, ignoring the intro", () => {
@@ -102,5 +102,28 @@ describe("getDuelResult", () => {
         hitPoints: { a: 0, b: 0 },
       }),
     ).toEqual({ kind: "draw", bothFell: true });
+  });
+});
+
+describe("hit and healing levels", () => {
+  it("turns levels into a health change", () => {
+    expect(tierHealthChange("none", "none")).toBe(0);
+    expect(tierHealthChange("graze", "none")).toBe(-10);
+    expect(tierHealthChange("solid", "none")).toBe(-20);
+    expect(tierHealthChange("devastating", "none")).toBe(-35);
+    expect(tierHealthChange("graze", "major")).toBe(10);
+    expect(tierHealthChange("solid", "minor")).toBe(-10);
+  });
+});
+
+describe("roundWinner", () => {
+  it("gives the round to whoever came out better on health", () => {
+    expect(roundWinner([-10, -20], 2)).toBe(1);
+    expect(roundWinner([-20, 0], 1)).toBe(2);
+  });
+
+  it("falls back to the judge's verdict on equal changes", () => {
+    expect(roundWinner([-10, -10], 2)).toBe(2);
+    expect(roundWinner([0, 0], null)).toBeNull();
   });
 });

@@ -183,6 +183,7 @@ The two wizards for this duel are:
 - The duel will be ${duelType}
 - Each wizard begins with 100 health points
 - A wizard losing all health points results in immediate defeat
+- If all rounds complete without a knockout, the wizard with more health left wins
 
 ${CONTENT_STANDARDS}`;
 

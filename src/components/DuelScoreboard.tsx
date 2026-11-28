@@ -10,6 +10,7 @@ import {
   Skull,
   Check,
   CircleHelp,
+  Trophy,
 } from "lucide-react";
 import { HowToWinDialog } from "@/components/HowToWinDialog";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,10 @@ interface DuelScoreboardProps {
   ];
   wizardIds: Id<"wizards">[];
   hitPoints: Record<string, number>;
+  /** Rounds won in health scoring; the judge's points in older duels. */
   points: Record<string, number>;
+  /** "health" when health decides the duel. Absent on older duels. */
+  scoring?: "health";
   maxHitPoints?: number;
   userWizardId?: Id<"wizards">;
   winnerIds?: Id<"wizards">[];
@@ -177,12 +181,15 @@ function Combatant({
   hideOutcome,
   align,
   decidedBy,
+  healthScoring,
   quietDeltas = false,
 }: {
+  /** Health decides the duel, so it leads and points are rounds won. */
+  healthScoring: boolean;
   /** Skip the floating +/- numbers, e.g. while scrolling a replay. */
   quietDeltas?: boolean;
   /** What settled a finished duel, so that stat can stand out. */
-  decidedBy?: "knockout" | "points" | null;
+  decidedBy?: "knockout" | "health" | "points" | null;
   wizard: ScoreboardWizard | null | undefined;
   hp: number;
   maxHp: number;
@@ -194,7 +201,7 @@ function Combatant({
   align: "left" | "right";
 }) {
   const hpDelta = useDelta(hp, -1, quietDeltas);
-  const pointsDelta = useDelta(points, 1, quietDeltas);
+  const pointsDelta = useDelta(points, 1, quietDeltas || healthScoring);
   const ratio = Math.max(0, Math.min(1, hp / maxHp));
   const state = hideOutcome
     ? null
@@ -300,35 +307,75 @@ function Combatant({
             aria-hidden="true"
             className="duel-scoreboard-mini hidden shrink-0 text-xs text-muted-foreground"
           >
-            {Math.max(0, hp)} HP · {points} pts
+            {healthScoring
+              ? `${Math.max(0, hp)} HP`
+              : `${Math.max(0, hp)} HP · ${points} pts`}
           </span>
         </div>
-        {/* Points decide the duel unless someone is knocked out, so they
-            lead. HP sits below as a slimmer knockout gauge. */}
-        <div
-          className={`duel-scoreboard-points mt-0.5 flex items-baseline gap-1 ${right ? "justify-end" : ""}`}
-        >
-          <span className="sr-only">Points: </span>
-          <Star className="h-4 w-4 self-center text-gold" aria-hidden="true" />
-          <span
-            className={`text-xl font-bold tabular-nums leading-none sm:text-2xl ${
-              decidedBy === "points" ? "text-gold" : "text-foreground"
-            }`}
+        {/* Health decides the duel, so it leads with the bar right under it.
+            Older duels were decided on points, so there points lead and HP
+            sits below as a slimmer knockout gauge. */}
+        {healthScoring ? (
+          <div
+            className={`duel-scoreboard-points mt-0.5 flex items-baseline gap-1 ${right ? "justify-end" : ""}`}
           >
-            {points}
-          </span>
-          <span className="text-xs text-muted-foreground">pts</span>
-          {pointsDelta && (
+            <span className="sr-only">Health: </span>
+            {hp <= 0 && !hideOutcome ? (
+              <Skull
+                className="h-4 w-4 self-center text-destructive"
+                aria-hidden="true"
+              />
+            ) : (
+              <Heart
+                className={`h-4 w-4 self-center ${ratio <= 0.3 ? "text-destructive" : "text-success"}`}
+                aria-hidden="true"
+              />
+            )}
             <span
-              key={pointsDelta.key}
-              aria-hidden="true"
-              className="animate-in fade-in text-sm font-bold text-success motion-reduce:animate-none"
+              className={`text-xl font-bold tabular-nums leading-none sm:text-2xl ${
+                decidedBy === "health" && isWinner
+                  ? "text-gold"
+                  : "text-foreground"
+              }`}
             >
-              {pointsDelta.amount > 0 ? "+" : ""}
-              {pointsDelta.amount}
+              {Math.max(0, hp)}
             </span>
-          )}
-        </div>
+            <span className="text-xs text-muted-foreground">HP</span>
+            {state && (
+              <span className="ml-1 self-center rounded bg-destructive/15 px-1 text-[10px] font-bold uppercase text-destructive">
+                {state}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div
+            className={`duel-scoreboard-points mt-0.5 flex items-baseline gap-1 ${right ? "justify-end" : ""}`}
+          >
+            <span className="sr-only">Points: </span>
+            <Star
+              className="h-4 w-4 self-center text-gold"
+              aria-hidden="true"
+            />
+            <span
+              className={`text-xl font-bold tabular-nums leading-none sm:text-2xl ${
+                decidedBy === "points" ? "text-gold" : "text-foreground"
+              }`}
+            >
+              {points}
+            </span>
+            <span className="text-xs text-muted-foreground">pts</span>
+            {pointsDelta && (
+              <span
+                key={pointsDelta.key}
+                aria-hidden="true"
+                className="animate-in fade-in text-sm font-bold text-success motion-reduce:animate-none"
+              >
+                {pointsDelta.amount > 0 ? "+" : ""}
+                {pointsDelta.amount}
+              </span>
+            )}
+          </div>
+        )}
         <div className="relative mt-1.5">
           <div
             role="progressbar"
@@ -341,7 +388,7 @@ function Combatant({
                 ? "Hidden until the result is revealed"
                 : `${Math.max(0, hp)} of ${maxHp} health${state ? `, ${state.toLowerCase()}` : ""}`
             }
-            className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+            className={`${healthScoring ? "h-2.5" : "h-1.5"} w-full overflow-hidden rounded-full bg-muted`}
           >
             <div
               className={`h-full rounded-full transition-all duration-700 ease-out motion-reduce:transition-none ${barColor} ${right ? "ml-auto" : ""}`}
@@ -364,28 +411,40 @@ function Combatant({
         <div
           className={`duel-scoreboard-details mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground ${right ? "justify-end" : ""}`}
         >
-          <span
-            className={`inline-flex items-center gap-1 ${
-              decidedBy === "knockout" && hp <= 0
-                ? "font-semibold text-destructive"
-                : ""
-            }`}
-          >
-            {hp <= 0 && !hideOutcome ? (
-              <Skull className="h-3 w-3 text-destructive" aria-hidden="true" />
-            ) : (
-              <Heart
-                className={`h-3 w-3 ${ratio <= 0.3 ? "text-destructive" : ""}`}
-                aria-hidden="true"
-              />
-            )}
-            <span className="whitespace-nowrap">{`${Math.max(0, hp)}/${maxHp} HP`}</span>
-            {state && (
-              <span className="ml-1 rounded bg-destructive/15 px-1 text-[10px] font-bold uppercase text-destructive">
-                {state}
+          {healthScoring ? (
+            <span className="inline-flex items-center gap-1">
+              <Trophy className="h-3 w-3" aria-hidden="true" />
+              <span className="whitespace-nowrap">
+                {points} {points === 1 ? "round" : "rounds"} won
               </span>
-            )}
-          </span>
+            </span>
+          ) : (
+            <span
+              className={`inline-flex items-center gap-1 ${
+                decidedBy === "knockout" && hp <= 0
+                  ? "font-semibold text-destructive"
+                  : ""
+              }`}
+            >
+              {hp <= 0 && !hideOutcome ? (
+                <Skull
+                  className="h-3 w-3 text-destructive"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Heart
+                  className={`h-3 w-3 ${ratio <= 0.3 ? "text-destructive" : ""}`}
+                  aria-hidden="true"
+                />
+              )}
+              <span className="whitespace-nowrap">{`${Math.max(0, hp)}/${maxHp} HP`}</span>
+              {state && (
+                <span className="ml-1 rounded bg-destructive/15 px-1 text-[10px] font-bold uppercase text-destructive">
+                  {state}
+                </span>
+              )}
+            </span>
+          )}
           {hasSubmitted !== null && (
             <span
               className={`inline-flex items-center gap-1 ${hasSubmitted ? "text-success" : "text-warning animate-pulse motion-reduce:animate-none"}`}
@@ -411,6 +470,7 @@ export const DuelScoreboard = memo(function DuelScoreboard({
   wizardIds,
   hitPoints,
   points,
+  scoring,
   maxHitPoints = 100,
   userWizardId,
   winnerIds,
@@ -502,14 +562,18 @@ export const DuelScoreboard = memo(function DuelScoreboard({
             : `Round ${currentRound} · To the death`;
   const showReadiness = inRound && roundStatus === "WAITING_FOR_SPELLS";
 
-  // What settled a finished duel: a knockout, or points after the last round.
+  // What settled a finished duel: a knockout, or health (points, in older
+  // duels) after the last round.
+  const healthScoring = scoring === "health";
   const finished =
     duelStatus === "COMPLETED" && !hideOutcome && !replay && !!winnerIds;
   const knockedOut = wizardIds.some((id) => (hitPoints[id] ?? 1) <= 0);
-  const decidedBy: "knockout" | "points" | null = finished
+  const decidedBy: "knockout" | "health" | "points" | null = finished
     ? knockedOut
       ? "knockout"
-      : "points"
+      : healthScoring
+        ? "health"
+        : "points"
     : null;
   const verdict = (() => {
     if (!finished || !winnerIds) return null;
@@ -518,6 +582,13 @@ export const DuelScoreboard = memo(function DuelScoreboard({
     const loser = wizardIds.find((id) => id !== winner);
     const name = userWizardId === winner ? "You" : nameOf(winner);
     if (decidedBy === "knockout") return `${name} won by knockout`;
+    if (healthScoring) {
+      const hp = (id?: Id<"wizards">) =>
+        id ? Math.max(0, hitPoints[id] ?? 0) : 0;
+      return hp(winner) === hp(loser)
+        ? `${name} won on rounds, ${points[winner] ?? 0}–${loser ? (points[loser] ?? 0) : 0}`
+        : `${name} won on health, ${hp(winner)}–${hp(loser)}`;
+    }
     return `${name} won on points, ${points[winner] ?? 0}–${loser ? (points[loser] ?? 0) : 0}`;
   })();
 
@@ -702,6 +773,7 @@ export const DuelScoreboard = memo(function DuelScoreboard({
                   }
                   align={i === 0 ? "left" : "right"}
                   decidedBy={decidedBy}
+                  healthScoring={healthScoring}
                   quietDeltas={!!onSkipToResult}
                 />
               </div>

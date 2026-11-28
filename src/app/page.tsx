@@ -70,10 +70,9 @@ const FAQS: Array<{ q: string; a: React.ReactNode }> = [
     a: (
       <>
         Knock your rival down to 0 health and you win on the spot. If both
-        wizards are still standing after the last round, the one with the most
-        points wins, even if they have less health left. The AI judge awards
-        points each round for clever, creative spells. Health only breaks a
-        points tie.{" "}
+        wizards are still standing after the last round, the one with more
+        health left wins. The AI judge decides whose spell wins each clash, so
+        clever, creative spells land harder hits.{" "}
         <Link
           href="/rules#how-to-win"
           className="text-primary underline-offset-4 hover:underline"

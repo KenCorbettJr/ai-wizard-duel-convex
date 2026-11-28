@@ -22,7 +22,6 @@ describe("buildOpponentSpellPrompt", () => {
     roundNumber: 3,
     totalRounds: 5,
     hitPoints: { felix: 90, bard: 100 },
-    points: { felix: 12, bard: 15 },
     previousRounds: [
       { roundNumber: 0 },
       {
@@ -33,7 +32,7 @@ describe("buildOpponentSpellPrompt", () => {
         },
         outcome: {
           result: "Embers scorch a giant beard.",
-          pointsAwarded: { felix: 5, bard: 8 },
+          pointsAwarded: { felix: 0, bard: 1 },
           healthChange: { felix: -10, bard: 0 },
         },
       },
@@ -50,15 +49,13 @@ describe("buildOpponentSpellPrompt", () => {
   it("shows both wizards' earlier spells in round order", () => {
     expect(prompt).toContain("Your spell: Felix sweeps up a wall of flame.");
     expect(prompt).toContain("Baph'ra'ph's spell: I animate my beard.");
-    expect(prompt.indexOf("Round 1:")).toBeLessThan(
-      prompt.indexOf("Round 2:"),
-    );
+    expect(prompt.indexOf("Round 1:")).toBeLessThan(prompt.indexOf("Round 2:"));
     expect(prompt).not.toContain("Round 0:");
   });
 
   it("includes the outcome of earlier rounds", () => {
     expect(prompt).toContain("What happened: Embers scorch a giant beard.");
-    expect(prompt).toContain("Points: you +5, Baph'ra'ph +8");
+    expect(prompt).toContain("Round went to: Baph'ra'ph");
     expect(prompt).toContain("Health: you -10, Baph'ra'ph 0");
   });
 
@@ -66,7 +63,7 @@ describe("buildOpponentSpellPrompt", () => {
     expect(prompt).toContain("passionate, hot-tempered");
     expect(prompt).toContain("intermediate duelist");
     expect(prompt).toContain("Round 3 of 5");
-    expect(prompt).toContain("You: 90/100 health, 12 points");
+    expect(prompt).toContain("You: 90/100 health");
   });
 
   it("asks for variety and an attempt to win", () => {
@@ -82,7 +79,6 @@ describe("buildOpponentSpellPrompt", () => {
       roundNumber: 5,
       totalRounds: 5,
       hitPoints: {},
-      points: {},
       previousRounds: [],
     });
     expect(last).toContain("Round 5 of 5 (the final round)");

@@ -125,8 +125,9 @@ describe("Process Duel Round", () => {
           duelId,
         },
       );
-      expect(updatedDuel?.points[wizard1Id]).toBe(8);
-      expect(updatedDuel?.points[wizard2Id]).toBe(2); // Lightning case gives wizard2 2 points
+      // Points are rounds won: wizard1 came out of the round better on health
+      expect(updatedDuel?.points[wizard1Id]).toBe(1);
+      expect(updatedDuel?.points[wizard2Id]).toBe(0);
       expect(updatedDuel?.hitPoints[wizard1Id]).toBe(100); // No damage from lightning case
       expect(updatedDuel?.hitPoints[wizard2Id]).toBe(85); // 100 - 15 from lightning case
     });
@@ -617,8 +618,10 @@ describe("Process Duel Round", () => {
       });
 
       expect(updatedRound?.status).toBe("COMPLETED");
-      expect(updatedRound?.outcome?.pointsAwarded[wizard1Id]).toBe(7); // (11 % 6) + 2
-      expect(updatedRound?.outcome?.pointsAwarded[wizard2Id]).toBe(5); // (9 % 6) + 2
+      // Mock health: wizard1 +1 (capped at full, so 0), wizard2 -1, so
+      // wizard1 takes the round
+      expect(updatedRound?.outcome?.pointsAwarded[wizard1Id]).toBe(1);
+      expect(updatedRound?.outcome?.pointsAwarded[wizard2Id]).toBe(0);
     });
 
     test("should handle TO_THE_DEATH duel type", async () => {

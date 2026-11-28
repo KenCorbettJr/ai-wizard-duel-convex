@@ -1291,7 +1291,7 @@
 }
 
 /* Once pinned on phones, the scoreboard becomes a slim one-line bar:
-   faces, names, HP bars and "65 HP · 20 pts", nothing else. */
+   faces, names, HP bars and "65 HP", nothing else. */
 @media (max-width: 767px) {
   .duel-scoreboard[data-stuck] {
     padding-top: 0.375rem;

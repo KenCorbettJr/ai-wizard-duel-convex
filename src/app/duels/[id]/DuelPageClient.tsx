@@ -1056,6 +1056,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
           winners: duel.winners,
           hitPoints: duel.hitPoints,
           points: duel.points,
+          scoring: duel.scoring,
           forfeited: !!duel.forfeitedBy,
           nameOf: (id) =>
             (id === duel.wizards[0] ? wizard1?.name : wizard2?.name) ??
@@ -1271,22 +1272,44 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                     <div className="truncate text-xs font-medium text-muted-foreground">
                       {wiz?.name ?? "Wizard"}
                     </div>
-                    <div
-                      className={`text-3xl font-bold tabular-nums ${won ? "text-gold" : "text-foreground"}`}
-                    >
-                      {duel.points[id] ?? 0}
-                      <span className="ml-1 text-sm font-medium text-muted-foreground">
-                        pts
-                      </span>
-                    </div>
-                    {(duel.hitPoints[id] ?? 0) <= 0 ? (
-                      <div className="text-xs font-semibold text-destructive">
-                        Knocked out
-                      </div>
+                    {duel.scoring === "health" ? (
+                      <>
+                        <div
+                          className={`text-3xl font-bold tabular-nums ${won ? "text-gold" : "text-foreground"}`}
+                        >
+                          {Math.max(0, duel.hitPoints[id] ?? 0)}
+                          <span className="ml-1 text-sm font-medium text-muted-foreground">
+                            HP
+                          </span>
+                        </div>
+                        <div
+                          className={`text-xs ${(duel.hitPoints[id] ?? 0) <= 0 ? "font-semibold text-destructive" : "text-muted-foreground"}`}
+                        >
+                          {(duel.hitPoints[id] ?? 0) <= 0
+                            ? "Knocked out"
+                            : `${duel.points[id] ?? 0} ${(duel.points[id] ?? 0) === 1 ? "round" : "rounds"} won`}
+                        </div>
+                      </>
                     ) : (
-                      <div className="text-xs text-muted-foreground">
-                        {duel.hitPoints[id]} HP left
-                      </div>
+                      <>
+                        <div
+                          className={`text-3xl font-bold tabular-nums ${won ? "text-gold" : "text-foreground"}`}
+                        >
+                          {duel.points[id] ?? 0}
+                          <span className="ml-1 text-sm font-medium text-muted-foreground">
+                            pts
+                          </span>
+                        </div>
+                        {(duel.hitPoints[id] ?? 0) <= 0 ? (
+                          <div className="text-xs font-semibold text-destructive">
+                            Knocked out
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground">
+                            {duel.hitPoints[id]} HP left
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -1505,7 +1528,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
             </div>
           )}
 
-          {/* Sticky scoreboard: round, whose move it is, HP and points */}
+          {/* Sticky scoreboard: round, whose move it is, HP and rounds won */}
           {duel.wizards.length >= 1 &&
             (wizard1 || wizard2) &&
             revealedThrough !== null && (
@@ -1515,6 +1538,7 @@ export default function DuelPageClient({ params }: DuelPageClientProps) {
                   wizardIds={duel.wizards}
                   hitPoints={shownHitPoints}
                   points={shownPoints}
+                  scoring={duel.scoring}
                   replay={
                     replaying
                       ? { round: revealedThrough ?? 0 }

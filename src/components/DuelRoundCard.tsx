@@ -19,6 +19,7 @@ import {
   RotateCcw,
   FastForward,
   ChevronRight,
+  Trophy,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -552,8 +553,9 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     return `Round ${round.roundNumber}`;
   };
 
-  // Winner of this round: more points awarded, else the smaller health loss.
-  // Hidden until the reveal reaches the damage step.
+  // Winner of this round: more points awarded (1 for the round's winner in
+  // health scoring), else the smaller health loss. Hidden until the reveal
+  // reaches the damage step.
   const isWinner = (wizardId: string) =>
     (!animated || stage >= STAGE.IMPACT) && roundWinner(wizardId);
   const roundWinner = (wizardId: string) => {
@@ -927,14 +929,24 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                                 )}
                               </span>
                             )}
-                            {pts !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
-                                <span className="text-muted-foreground">
-                                  Points
-                                </span>
-                                <DeltaValue value={pts} />
-                              </span>
-                            )}
+                            {duel.scoring === "health"
+                              ? pts === 1 && (
+                                  <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5 font-semibold text-gold">
+                                    <Trophy
+                                      className="h-3.5 w-3.5"
+                                      aria-hidden="true"
+                                    />
+                                    Won the round
+                                  </span>
+                                )
+                              : pts !== undefined && (
+                                  <span className="inline-flex items-center gap-1 rounded bg-background px-2 py-0.5">
+                                    <span className="text-muted-foreground">
+                                      Points
+                                    </span>
+                                    <DeltaValue value={pts} />
+                                  </span>
+                                )}
                           </div>
                         )}
                       </div>

@@ -185,8 +185,14 @@ export default defineSchema({
     currentRound: v.number(),
     createdAt: v.number(),
     completedAt: v.optional(v.number()), // When the duel was completed
-    points: v.record(v.string(), v.number()), // Dictionary of wizard ID to points
+    // Wizard ID to score. In "health" scoring this is rounds won, used only to
+    // break a health tie. In older duels (no `scoring`) it's the judge's 0-10
+    // points per round, which decided the winner.
+    points: v.record(v.string(), v.number()),
     hitPoints: v.record(v.string(), v.number()), // Dictionary of wizard ID to hit points
+    // "health": health decides the duel. Absent on duels from before the
+    // switch, which were decided on points.
+    scoring: v.optional(v.literal("health")),
     needActionsFrom: v.array(v.id("wizards")),
     featuredIllustration: v.optional(v.string()),
     winners: v.optional(v.array(v.id("wizards"))),
@@ -257,7 +263,9 @@ export default defineSchema({
         result: v.optional(v.string()),
         illustration: v.optional(v.string()),
         illustrationPrompt: v.optional(v.string()),
-        pointsAwarded: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to points
+        // Wizard ID to points. In "health" scoring, 1 for the round's winner
+        // and 0 otherwise (both 0 for an even round).
+        pointsAwarded: v.optional(v.record(v.string(), v.number())),
         healthChange: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to health change
         luckRolls: v.optional(v.record(v.string(), v.number())), // Dictionary of wizard ID to luck roll (1-20)
         firstWizard: v.optional(v.id("wizards")), // Who acted first this round

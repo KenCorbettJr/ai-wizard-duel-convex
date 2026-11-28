@@ -33,7 +33,6 @@ import {
   AlertCircle,
   XCircle,
   Hash,
-  Star,
   Heart,
   LogIn,
   Gift,
@@ -243,15 +242,6 @@ function JoinShortcodeContent({ params }: JoinShortcodePageProps) {
 
                   {/* Duel Stats */}
                   <div className="absolute top-6 right-6 flex gap-2">
-                    {duel?.points && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-warning/90 text-warning-foreground border-warning/50 backdrop-blur-sm flex items-center gap-1"
-                      >
-                        <Star className="h-3 w-3" />
-                        {duel.points[challengerWizard._id] || 0}
-                      </Badge>
-                    )}
                     {duel?.hitPoints && (
                       <Badge
                         variant="destructive"

@@ -1041,6 +1041,7 @@ export const startCampaignBattle = mutation({
       createdAt: Date.now(),
       points: {},
       hitPoints: {},
+      scoring: "health",
       needActionsFrom: [],
       isCampaignBattle: true, // Mark as campaign battle
     });
