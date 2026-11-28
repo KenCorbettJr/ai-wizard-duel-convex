@@ -1,6 +1,13 @@
 "use client";
 
-import { memo, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Heart,
   Star,
@@ -446,16 +453,38 @@ export const DuelScoreboard = memo(function DuelScoreboard({
     io.observe(el);
     return () => io.disconnect();
   }, []);
+  // Collapsing the pinned board must not change the page's height. If it
+  // did, the content below would jump up, the browser would shift the scroll
+  // position to compensate, the board would unpin and grow back, and so on:
+  // a flicker loop, made worse when Chrome's URL bar hides mid-scroll. So
+  // while pinned, the height the board gives up is kept as bottom margin.
+  // The board's height when not pinned, kept for that.
+  const fullHeightRef = useRef(0);
+  const stuckRef = useRef(false);
+  const syncCollapseGap = (el: HTMLElement, height: number) => {
+    if (!stuckRef.current) {
+      fullHeightRef.current = height;
+      el.style.marginBottom = "";
+      return;
+    }
+    const gap = Math.max(0, fullHeightRef.current - height);
+    el.style.marginBottom = gap ? `calc(1.5rem + ${gap}px)` : "";
+  };
+  useLayoutEffect(() => {
+    stuckRef.current = stuck;
+    const el = sectionRef.current;
+    if (el) syncCollapseGap(el, el.getBoundingClientRect().height);
+  }, [stuck]);
   // Publish the real height so scroll offsets match the sticky header.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
     const root = document.documentElement;
-    const update = () =>
-      root.style.setProperty(
-        "--duel-sticky-h",
-        `${Math.ceil(el.getBoundingClientRect().height)}px`,
-      );
+    const update = () => {
+      const height = el.getBoundingClientRect().height;
+      syncCollapseGap(el, height);
+      root.style.setProperty("--duel-sticky-h", `${Math.ceil(height)}px`);
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
