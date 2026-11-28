@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 
@@ -69,11 +69,71 @@ describe("DuelRoundCard reveal", () => {
     );
     expect(screen.getByText("Skip")).toBeInTheDocument();
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(10_000);
-    });
+    // Each action waits for the viewer, then the scene plays itself.
+    await tapThrough(["See Morgana's move", "The Arbiter decides"]);
 
     expect(screen.queryByText("Skip")).not.toBeInTheDocument();
     expect(onRevealComplete).toHaveBeenCalledWith(2);
   });
+
+  it("waits on each beat until the viewer continues", async () => {
+    const onRevealComplete = vi.fn();
+    render(
+      <DuelRoundCard
+        round={round}
+        duel={duel}
+        wizard1={wizard(w1, "Merlin")}
+        wizard2={wizard(w2, "Morgana")}
+        revealToken={7}
+        onRevealComplete={onRevealComplete}
+      />,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(onRevealComplete).not.toHaveBeenCalled();
+    expect(screen.getByText("See Morgana's move")).toBeInTheDocument();
+  });
+
+  it("shows who acted first and reveals them first", async () => {
+    const onRevealComplete = vi.fn();
+    render(
+      <DuelRoundCard
+        round={
+          {
+            ...round,
+            outcome: { ...round.outcome, firstWizard: w2 },
+          } as unknown as Doc<"duelRounds">
+        }
+        duel={duel}
+        wizard1={wizard(w1, "Merlin")}
+        wizard2={wizard(w2, "Morgana")}
+        revealToken={9}
+        onRevealComplete={onRevealComplete}
+      />,
+    );
+    expect(screen.getByText("strikes first")).toBeInTheDocument();
+    expect(screen.getByText("Acted first")).toBeInTheDocument();
+    await tapThrough([
+      "See Morgana's move",
+      "See Merlin's answer",
+      "The Arbiter decides",
+    ]);
+    expect(onRevealComplete).toHaveBeenCalledWith(2);
+  });
 });
+
+/** Press each continue button in turn, then let the scene play out. */
+async function tapThrough(labels: string[]) {
+  for (const label of labels) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: label }));
+    });
+  }
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(10_000);
+  });
+}

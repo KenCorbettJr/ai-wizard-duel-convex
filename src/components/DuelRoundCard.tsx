@@ -18,6 +18,8 @@ import {
   Check,
   RotateCcw,
   FastForward,
+  ChevronRight,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Doc } from "../../convex/_generated/dataModel";
@@ -54,40 +56,52 @@ interface DuelRoundCardProps {
   conclusionRevealed?: boolean;
 }
 
-/** Reveal steps, in order. */
+/**
+ * Reveal steps, in order. INITIATIVE, FIRST and SECOND are beats: the reveal
+ * waits on each until the viewer continues. From the scene on it plays itself.
+ */
 const STAGE = {
   START: 0,
-  SPELL_A: 1,
-  SPELL_B: 2,
-  DICE: 3,
+  /** Who acts first this round. Skipped for rounds that didn't record it. */
+  INITIATIVE: 1,
+  /** The first wizard's action and luck roll. */
+  FIRST: 2,
+  /** The second wizard's action and luck roll. */
+  SECOND: 3,
   IMAGE: 4,
   RESULT: 5,
   IMPACT: 6,
   DONE: 7,
 } as const;
 
-/** When each step starts, in ms from the start of the reveal. */
-function revealSchedule(
-  hasImage: boolean,
-  hasSpells: boolean,
-): Array<[number, number]> {
-  const imageGap = hasImage ? 1300 : 300;
-  const spells = 150;
-  // Rounds without spells (the conclusion) go straight to the scene.
-  const dice = hasSpells ? spells + 1100 : spells;
-  // Hold on the dice long enough to read them before the view moves on.
-  const image = hasSpells ? dice + 1300 : dice;
-  const result = image + imageGap;
+const BEATS: ReadonlySet<number> = new Set([
+  STAGE.INITIATIVE,
+  STAGE.FIRST,
+  STAGE.SECOND,
+]);
+
+/** When each scene step starts, in ms from the scene appearing. */
+function sceneSchedule(hasImage: boolean): Array<[number, number]> {
+  const result = hasImage ? 1300 : 300;
   const impact = result + 1300;
   return [
-    [STAGE.SPELL_A, spells],
-    [STAGE.SPELL_B, spells + 450],
-    [STAGE.DICE, dice],
-    [STAGE.IMAGE, image],
     [STAGE.RESULT, result],
     [STAGE.IMPACT, impact],
     [STAGE.DONE, impact + 700],
   ];
+}
+
+/** Keys that continue a waiting beat, unless typing or on a control. */
+function isContinueKey(e: KeyboardEvent): boolean {
+  if (e.key !== "ArrowRight" && e.key !== "Enter" && e.key !== " ")
+    return false;
+  if (e.altKey || e.ctrlKey || e.metaKey) return false;
+  const t = e.target as HTMLElement | null;
+  if (!t) return true;
+  if (t.closest("input, textarea, select, [contenteditable], [role=dialog]"))
+    return false;
+  // Enter and Space already press whatever button or link has focus.
+  return e.key === "ArrowRight" || !t.closest("button, a");
 }
 
 /** The result line, one word at a time. Whitespace (and line breaks) kept. */
@@ -244,7 +258,12 @@ export const DuelRoundCard = memo(function DuelRoundCard({
 
   // Staged reveal. `animated` stays true after a run so the classes that
   // played don't snap back; a static card never sets it.
-  const [stage, setStage] = useState<number>(STAGE.DONE);
+  const [stage, setStageState] = useState<number>(STAGE.DONE);
+  const stageRef = useRef<number>(STAGE.DONE);
+  const setStage = useCallback((s: number) => {
+    stageRef.current = s;
+    setStageState(s);
+  }, []);
   const [animated, setAnimated] = useState(false);
   const [playSignal, setPlaySignal] = useState<NarrationPlaySignal>();
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -258,9 +277,10 @@ export const DuelRoundCard = memo(function DuelRoundCard({
   // Read at the moment a reveal starts. Keeping these out of startReveal's
   // dependencies stops images or spell data arriving mid-reveal from
   // restarting it (and with it the narration).
-  const revealInputs = useRef({ hasImage, spells: round.spells });
+  const firstWizard = round.outcome?.firstWizard;
+  const revealInputs = useRef({ hasImage, spells: round.spells, firstWizard });
   useEffect(() => {
-    revealInputs.current = { hasImage, spells: round.spells };
+    revealInputs.current = { hasImage, spells: round.spells, firstWizard };
   });
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
@@ -278,7 +298,70 @@ export const DuelRoundCard = memo(function DuelRoundCard({
       callbacks.current.onRevealImpact?.(round.roundNumber);
       callbacks.current.onRevealComplete?.(round.roundNumber);
     }
-  }, [round.roundNumber]);
+  }, [round.roundNumber, setStage]);
+
+  const scrollToPart = useCallback(
+    (part: string, block: ScrollLogicalPosition) => {
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      document
+        .getElementById(`round-${round.roundNumber}-${part}`)
+        ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block });
+    },
+    [round.roundNumber],
+  );
+
+  /** The scene, verdict and damage play on their own once the viewer asks. */
+  const playScene = useCallback(() => {
+    clearTimers();
+    setStage(STAGE.IMAGE);
+    pendingAudio.current?.();
+    scrollToPart("art", "center");
+    // Keep following unless the viewer starts scrolling themselves.
+    let follow = true;
+    const stop = () => {
+      follow = false;
+    };
+    const events = ["wheel", "touchmove"] as const;
+    events.forEach((ev) =>
+      window.addEventListener(ev, stop, { passive: true, once: true }),
+    );
+    const cleanup = () =>
+      events.forEach((ev) => window.removeEventListener(ev, stop));
+    for (const [step, at] of sceneSchedule(revealInputs.current.hasImage)) {
+      timers.current.push(
+        setTimeout(() => {
+          if (step === STAGE.DONE) {
+            cleanup();
+            finish();
+            return;
+          }
+          setStage(step);
+          if (step === STAGE.RESULT && follow)
+            scrollToPart("result", "nearest");
+          if (step === STAGE.IMPACT && notify.current) {
+            callbacks.current.onRevealImpact?.(round.roundNumber);
+          }
+        }, at),
+      );
+    }
+  }, [finish, round.roundNumber, scrollToPart, setStage]);
+
+  /** Move on from the beat the reveal is waiting on. */
+  const advance = useCallback(() => {
+    const cur = stageRef.current;
+    if (cur === STAGE.INITIATIVE) {
+      setStage(STAGE.FIRST);
+      scrollToPart("spell-0", "nearest");
+    } else if (cur === STAGE.FIRST) {
+      setStage(STAGE.SECOND);
+      scrollToPart("spell-1", "nearest");
+    } else if (cur === STAGE.SECOND) {
+      playScene();
+    }
+  }, [playScene, scrollToPart, setStage]);
+
   const startReveal = useCallback(
     (fromPage: boolean, forceAudio: boolean) => {
       clearTimers();
@@ -289,60 +372,22 @@ export const DuelRoundCard = memo(function DuelRoundCard({
       };
       pendingAudio.current = playAudio;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        playAudio();
         finish();
         return;
       }
       setAnimated(true);
       setStage(STAGE.START);
-      // Follow the reveal down the card unless the viewer takes over scrolling.
-      let follow = true;
-      const stop = () => {
-        follow = false;
-      };
-      const events = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
-      events.forEach((ev) =>
-        window.addEventListener(ev, stop, { passive: true, once: true }),
-      );
-      const followTo = (id: string, block: ScrollLogicalPosition) => {
-        if (!follow) return;
-        document
-          .getElementById(id)
-          ?.scrollIntoView({ behavior: "smooth", block });
-      };
+      const { spells, firstWizard: first } = revealInputs.current;
+      const hasSpells = Object.keys(spells ?? {}).length > 0;
       timers.current.push(
-        setTimeout(
-          () => events.forEach((ev) => window.removeEventListener(ev, stop)),
-          8000,
-        ),
+        setTimeout(() => {
+          // Rounds without spells (the conclusion) go straight to the scene.
+          if (!hasSpells) playScene();
+          else setStage(first ? STAGE.INITIATIVE : STAGE.FIRST);
+        }, 150),
       );
-      const { hasImage: withImage, spells } = revealInputs.current;
-      for (const [step, at] of revealSchedule(
-        withImage,
-        Object.keys(spells ?? {}).length > 0,
-      )) {
-        timers.current.push(
-          setTimeout(() => {
-            if (step === STAGE.DONE) {
-              finish();
-              return;
-            }
-            setStage(step);
-            const base = `round-${round.roundNumber}`;
-            if (step === STAGE.IMAGE) {
-              // The announcer starts as the scene appears.
-              playAudio();
-              followTo(`${base}-art`, "center");
-            }
-            if (step === STAGE.RESULT) followTo(`${base}-result`, "nearest");
-            if (step === STAGE.IMPACT && notify.current) {
-              callbacks.current.onRevealImpact?.(round.roundNumber);
-            }
-          }, at),
-        );
-      }
     },
-    [finish, round.roundNumber],
+    [finish, playScene, setStage],
   );
   const completed = round.status === "COMPLETED";
   // Each reveal token starts one reveal, even if this effect re-runs.
@@ -364,6 +409,26 @@ export const DuelRoundCard = memo(function DuelRoundCard({
     startReveal(true, false);
   }, [revealToken, completed, startReveal]);
   const revealing = animated && stage < STAGE.DONE;
+  const waitingOnBeat = animated && BEATS.has(stage);
+  // Right arrow, Enter or Space continues. Captured first, so the page's own
+  // round navigation doesn't also act on it.
+  useEffect(() => {
+    if (!waitingOnBeat) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!isContinueKey(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      advance();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [waitingOnBeat, advance]);
+  // Hand focus to the continue button, so keyboard and screen reader users
+  // land on it. Without scrolling: the beat already brought itself into view.
+  const continueRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (waitingOnBeat) continueRef.current?.focus({ preventScroll: true });
+  }, [waitingOnBeat, stage]);
   /** Class for an element that appears at `at`: hidden before, animated on. */
   const at = (step: number, anim = "reveal-pop") =>
     !animated ? "" : stage < step ? "reveal-wait" : anim;
@@ -529,6 +594,13 @@ export const DuelRoundCard = memo(function DuelRoundCard({
       </div>
     );
   };
+
+  // Turn order, as indexes into duel.wizards. Older rounds didn't record it.
+  const turnOrderKnown =
+    !!firstWizard && duel.wizards.slice(0, 2).includes(firstWizard);
+  const turnOrder = firstWizard === duel.wizards[1] ? [1, 0] : [0, 1];
+  const nameAt = (i: number) =>
+    (i === 0 ? wizard1 : wizard2)?.name ?? "The wizard";
 
   const canCollapse =
     round.status === "COMPLETED" && round.type !== "CONCLUSION" && !isLatest;
@@ -725,10 +797,43 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                 </Button>
               )}
             </div>
-            {/* Face-off: each wizard's action, luck roll and result */}
+            {/* Who acted first. The Arbiter hears the actions in this order. */}
+            {round.spells && turnOrderKnown && (
+              <div
+                id={`round-${round.roundNumber}-initiative`}
+                className={`flex scroll-mt-[calc(var(--app-navbar-h)+var(--duel-sticky-h,10rem)+1rem)] items-center justify-center gap-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 md:scroll-mt-[calc(var(--duel-sticky-h,10rem)+1rem)] ${at(STAGE.INITIATIVE, "reveal-initiative")}`}
+              >
+                <Zap
+                  className="h-5 w-5 shrink-0 text-gold"
+                  aria-hidden="true"
+                />
+                <p className="min-w-0 text-center font-display text-lg font-semibold text-foreground sm:text-xl">
+                  <span className="text-gold">{nameAt(turnOrder[0])}</span>{" "}
+                  strikes first
+                </p>
+                <Zap
+                  className="h-5 w-5 shrink-0 text-gold"
+                  aria-hidden="true"
+                />
+              </div>
+            )}
+            {/* Face-off: each wizard's action, luck roll and result. On
+                phones they stack in the order they acted; side by side, each
+                wizard keeps their side of the scoreboard. */}
             {round.spells && duel.wizards.length >= 2 && (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div
+                className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${waitingOnBeat ? "cursor-pointer" : ""}`}
+                onClick={
+                  waitingOnBeat
+                    ? (e) => {
+                        if (!(e.target as HTMLElement).closest("button, a"))
+                          advance();
+                      }
+                    : undefined
+                }
+              >
                 {[0, 1].map((i) => {
+                  const slot = turnOrder.indexOf(i);
                   const id = duel.wizards[i];
                   const wiz = i === 0 ? wizard1 : wizard2;
                   const spell = round.spells?.[id];
@@ -740,24 +845,37 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                   return (
                     <div
                       key={id}
-                      className={`min-w-0 rounded-lg border p-3 transition-colors duration-500 ${
+                      id={`round-${round.roundNumber}-spell-${slot}`}
+                      className={`min-w-0 scroll-mb-24 rounded-lg border p-3 transition-colors duration-500 ${
+                        slot === 0 ? "order-1" : "order-2"
+                      } ${i === 0 ? "md:order-1" : "md:order-2"} ${
                         isWinner(id)
                           ? "border-warning/60 bg-warning/10"
                           : "border-border/60 bg-muted/30"
                       } ${at(
-                        i === 0 ? STAGE.SPELL_A : STAGE.SPELL_B,
+                        slot === 0 ? STAGE.FIRST : STAGE.SECOND,
                         i === 0 ? "reveal-slide-left" : "reveal-slide-right",
                       )} ${impact && isWinner(id) ? "reveal-winner" : ""}`}
                     >
                       <div className={impact && hurt ? "duel-hit" : ""}>
                         <div className="mb-2 flex items-center gap-3">
                           {renderWizardThumbnail(id)}
-                          <span className="min-w-0 flex-1 truncate font-semibold">
-                            {wiz?.name ?? "Wizard"}
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-semibold">
+                              {wiz?.name ?? "Wizard"}
+                            </span>
+                            {turnOrderKnown && (
+                              <span className="block text-xs text-muted-foreground">
+                                {slot === 0 ? "Acted first" : "Acted second"}
+                              </span>
+                            )}
                           </span>
                           {roll !== undefined && (
                             <div
-                              className={`flex items-center gap-1.5 ${at(STAGE.DICE, "reveal-roll")}`}
+                              className={`flex items-center gap-1.5 ${at(
+                                slot === 0 ? STAGE.FIRST : STAGE.SECOND,
+                                "reveal-roll reveal-delayed",
+                              )}`}
                               title={`Luck roll: ${roll} on a d20`}
                             >
                               {(roll >= 20 || roll <= 1) && (
@@ -910,6 +1028,30 @@ export const DuelRoundCard = memo(function DuelRoundCard({
                     </div>
                   </div>
                 </NarratedText>
+              </div>
+            )}
+
+            {/* The reveal waits here until the viewer moves it on. Sticks to
+                the bottom of the screen, so it's always within reach. */}
+            {waitingOnBeat && (
+              <div
+                className="sticky z-10 flex justify-center pb-1"
+                style={{ bottom: "calc(var(--app-bottomnav-h, 0px) + 12px)" }}
+              >
+                <Button
+                  ref={continueRef}
+                  size="lg"
+                  variant="gold"
+                  onClick={advance}
+                  className="reveal-cta rounded-full px-6"
+                >
+                  {stage === STAGE.INITIATIVE
+                    ? `See ${nameAt(turnOrder[0])}'s move`
+                    : stage === STAGE.FIRST
+                      ? `See ${nameAt(turnOrder[1])}'s ${turnOrderKnown ? "answer" : "move"}`
+                      : "The Arbiter decides"}
+                  <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                </Button>
               </div>
             )}
           </div>

@@ -213,6 +213,7 @@ export const getDuelInternal = internalQuery({
               pointsAwarded: v.optional(v.record(v.string(), v.number())),
               healthChange: v.optional(v.record(v.string(), v.number())),
               luckRolls: v.optional(v.record(v.string(), v.number())),
+              firstWizard: v.optional(v.id("wizards")),
             }),
           ),
           status: v.union(
@@ -1161,6 +1162,7 @@ export const completeRound = internalMutation({
       pointsAwarded: v.optional(v.record(v.string(), v.number())),
       healthChange: v.optional(v.record(v.string(), v.number())),
       luckRolls: v.optional(v.record(v.string(), v.number())),
+      firstWizard: v.optional(v.id("wizards")),
     }),
   },
   handler: async (ctx, { roundId, outcome }) => {
@@ -2044,6 +2046,7 @@ export const createIntroductionRound = mutation({
       pointsAwarded: v.optional(v.record(v.string(), v.number())),
       healthChange: v.optional(v.record(v.string(), v.number())),
       luckRolls: v.optional(v.record(v.string(), v.number())),
+      firstWizard: v.optional(v.id("wizards")),
     }),
   },
   handler: async (ctx, { duelId, outcome }) => {
@@ -2591,6 +2594,7 @@ export const createConclusionRound = mutation({
       pointsAwarded: v.optional(v.record(v.string(), v.number())),
       healthChange: v.optional(v.record(v.string(), v.number())),
       luckRolls: v.optional(v.record(v.string(), v.number())),
+      firstWizard: v.optional(v.id("wizards")),
     }),
   },
   handler: async (ctx, { duelId, roundNumber, outcome }) => {

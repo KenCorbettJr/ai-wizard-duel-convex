@@ -107,6 +107,8 @@ export type BattleRoundResponse = Omit<
 > & {
   wizard1Luck?: number;
   wizard2Luck?: number;
+  /** Which wizard the AI was told acted first. */
+  firstWizard?: 1 | 2;
 };
 export type DuelConclusionResponse = z.infer<typeof DuelConclusionSchema>;
 
@@ -314,6 +316,12 @@ export const processDuelRound = internalAction({
             [wizard1ID]: wizard1Luck,
             [wizard2ID]: wizard2Luck,
           },
+          ...(battleResult.firstWizard
+            ? {
+                firstWizard:
+                  battleResult.firstWizard === 1 ? wizard1ID : wizard2ID,
+              }
+            : {}),
         },
       });
 
@@ -411,7 +419,7 @@ async function generateBattleRound(
   const wizard2Luck = generateLuck(wizard2Bonus);
 
   // Determine action order randomly
-  const firstWizard = Math.random() < 0.5 ? 1 : 2;
+  const firstWizard: 1 | 2 = Math.random() < 0.5 ? 1 : 2;
 
   // Get all previous rounds for context
   const allRounds = await ctx.runQuery(api.duels.getDuelRounds, {
@@ -477,6 +485,7 @@ async function generateBattleRound(
         ),
         wizard1Luck,
         wizard2Luck,
+        firstWizard,
       };
     }
 
@@ -495,6 +504,7 @@ async function generateBattleRound(
         ...validatedResponse,
         wizard1Luck,
         wizard2Luck,
+        firstWizard,
       };
     } else {
       throw new Error("AI returned invalid response structure");
@@ -512,6 +522,7 @@ async function generateBattleRound(
       ),
       wizard1Luck,
       wizard2Luck,
+      firstWizard,
     };
   }
 }
